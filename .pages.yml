@@ -16,25 +16,15 @@ content:
     path: src/data/databases.json
     list: true
     fields:
-      - { name: country,  label: Country,         type: string,  required: true }
-      - { name: name,     label: Database name,   type: string,  required: true }
-      - { name: type,     label: "Type (claims / EHR / …)", type: string }
-      - { name: coverage, label: Coverage,        type: string }
-      - { name: notes,    label: Notes,           type: text }
-
-  - name: members
-    label: Members & national contacts
-    type: file
-    path: src/data/members.json
-    list: true
-    fields:
-      - { name: country,     label: Country,         type: string, required: true }
-      - { name: code,        label: "ISO code (e.g. JP, KR)", type: string }
-      - { name: lat,         label: Latitude,        type: number, options: { step: 0.0001 } }
-      - { name: lng,         label: Longitude,       type: number, options: { step: 0.0001 } }
-      - { name: institution, label: Institution,     type: string }
-      - { name: contact,     label: Contact person,  type: string }
-      - { name: email,       label: Email,           type: string }
+      - { name: country,  label: Country,                 type: string, required: true }
+      - { name: code,     label: "ISO code (e.g. TW, KR)", type: string }
+      - { name: city,     label: City,                    type: string }
+      - { name: lat,      label: Latitude,                type: number, options: { step: 0.0001 } }
+      - { name: lng,      label: Longitude,               type: number, options: { step: 0.0001 } }
+      - { name: name,     label: Database name,           type: string, required: true }
+      - { name: type,     label: "Type (Claims / EHR / Biobank / …)", type: string }
+      - { name: coverage, label: Coverage,                type: string }
+      - { name: notes,    label: Notes,                   type: text }
 
   - name: publications
     label: Publications

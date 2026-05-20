@@ -1,35 +1,40 @@
 ---
-interface Point {
-  lat: number;
-  lng: number;
-  title: string;
-  body?: string;
+interface DBItem {
+  name: string;
+  type: string;
+  coverage?: string;
   anchor?: string;
 }
 
+interface CountryGroup {
+  country: string;
+  code: string; // ISO 2-letter, lowercase preferred for flagcdn
+  lat: number;
+  lng: number;
+  items: DBItem[];
+}
+
 interface Props {
-  items: Point[];
+  groups: CountryGroup[];
   height?: string;
   initialCenter?: [number, number];
   initialZoom?: number;
 }
 
 const {
-  items,
-  height = "520px",
-  initialCenter = [30, 80],
+  groups,
+  height = "540px",
+  initialCenter = [30, 60],
   initialZoom = 3,
 } = Astro.props;
 
 const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
-const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
 <div
   id={mapId}
-  data-base={base}
   style={`height:${height};`}
   class="rounded-lg border border-slate-200 overflow-hidden shadow-sm bg-slate-50"
   aria-label="Interactive map of AsPEN locations"
@@ -37,7 +42,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 <script
   is:inline
-  define:vars={{ mapId, items, initialCenter, initialZoom }}
+  define:vars={{ mapId, groups, initialCenter, initialZoom }}
 >
   const init = () => {
     const map = L.map(mapId, { scrollWheelZoom: false }).setView(initialCenter, initialZoom);
@@ -47,24 +52,47 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       maxZoom: 10,
     }).addTo(map);
 
-    const brand = "#3a8a6e";
-    const icon = L.divIcon({
-      className: "aspen-marker",
-      html: `<span style="display:block;width:14px;height:14px;border-radius:50%;background:${brand};border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)"></span>`,
-      iconSize: [14, 14],
-      iconAnchor: [7, 7],
-    });
+    const markers = groups.map((g) => {
+      const flagUrl = `https://flagcdn.com/w40/${g.code.toLowerCase()}.png`;
+      const flagUrl2x = `https://flagcdn.com/w80/${g.code.toLowerCase()}.png`;
+      const count = g.items.length;
+      const icon = L.divIcon({
+        className: "aspen-flag-marker",
+        html: `<div style="position:relative;display:flex;align-items:center;justify-content:center">
+          <img src="${flagUrl}" srcset="${flagUrl2x} 2x" alt="${g.country}" style="width:36px;height:24px;border:2px solid #fff;border-radius:3px;box-shadow:0 2px 6px rgba(0,0,0,.35);display:block" />
+          ${count > 1 ? `<span style="position:absolute;top:-8px;right:-10px;background:#3a8a6e;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;padding:0 4px;border-radius:9px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3)">${count}</span>` : ""}
+        </div>`,
+        iconSize: [40, 28],
+        iconAnchor: [20, 14],
+      });
 
-    const markers = items.map((it) => {
-      const m = L.marker([it.lat, it.lng], { icon }).addTo(map);
-      const anchorLink = it.anchor
-        ? `<a href="#${it.anchor}" style="color:#2d6e57;font-weight:600;text-decoration:underline">Jump to details ↓</a>`
-        : "";
+      const m = L.marker([g.lat, g.lng], { icon }).addTo(map);
+
+      const list = g.items
+        .map((it) => {
+          const link = it.anchor
+            ? `<a href="#${it.anchor}" style="color:#225641;font-weight:600;text-decoration:none;display:block;padding:6px 0;border-bottom:1px solid #eef2f0" onmouseover="this.style.background='#f5faf7'" onmouseout="this.style.background=''">
+                <strong>${it.name}</strong><br>
+                <span style="font-size:11px;color:#556">${it.type}${it.coverage ? " · " + it.coverage : ""}</span>
+              </a>`
+            : `<div style="padding:6px 0;border-bottom:1px solid #eef2f0">
+                <strong>${it.name}</strong><br>
+                <span style="font-size:11px;color:#556">${it.type}${it.coverage ? " · " + it.coverage : ""}</span>
+              </div>`;
+          return link;
+        })
+        .join("");
+
       m.bindPopup(
-        `<div style="font-family:Inter,system-ui,sans-serif"><strong style="color:#225641">${it.title}</strong>${
-          it.body ? `<div style="margin-top:4px;font-size:12px;color:#334">${it.body}</div>` : ""
-        }${anchorLink ? `<div style="margin-top:6px;font-size:12px">${anchorLink}</div>` : ""}</div>`,
-        { maxWidth: 280 }
+        `<div style="font-family:Inter,system-ui,sans-serif;min-width:240px;max-width:320px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;padding-bottom:6px;border-bottom:2px solid #3a8a6e">
+            <img src="${flagUrl}" srcset="${flagUrl2x} 2x" alt="" style="width:24px;height:16px;border:1px solid #ddd;border-radius:2px" />
+            <strong style="color:#225641;font-size:15px">${g.country}</strong>
+            <span style="font-size:11px;color:#777;margin-left:auto">${count} ${count === 1 ? "database" : "databases"}</span>
+          </div>
+          <div>${list}</div>
+        </div>`,
+        { maxWidth: 340 }
       );
       return m;
     });
@@ -74,7 +102,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       map.fitBounds(group.getBounds(), { padding: [40, 40] });
     }
 
-    // Re-enable scroll-zoom only after click, so page scroll isn't hijacked
     map.on("click", () => map.scrollWheelZoom.enable());
     map.on("mouseout", () => map.scrollWheelZoom.disable());
   };

@@ -4,19 +4,41 @@ import PageHeader from "../components/PageHeader.astro";
 import WorldMap from "../components/WorldMap.astro";
 import databases from "../data/databases.json";
 
-const grouped: Record<string, typeof databases> = {};
-for (const d of databases) {
-  if (!grouped[d.country]) grouped[d.country] = [];
-  grouped[d.country].push(d);
-}
+const countryMeta: Record<
+  string,
+  { code: string; flag: string; lat: number; lng: number; region: "asia" | "external" }
+> = {
+  "South Korea":    { code: "KR", flag: "🇰🇷", lat: 36.5,  lng: 127.8,  region: "asia" },
+  Taiwan:           { code: "TW", flag: "🇹🇼", lat: 23.7,  lng: 121.0,  region: "asia" },
+  "Hong Kong":      { code: "HK", flag: "🇭🇰", lat: 22.32, lng: 114.17, region: "asia" },
+  "United Kingdom": { code: "GB", flag: "🇬🇧", lat: 51.5,  lng: -0.13,  region: "external" },
+};
 
-const mapItems = databases.map((d) => ({
-  lat: d.lat,
-  lng: d.lng,
-  title: d.name,
-  body: `${d.type} · ${d.country}${d.city ? ` — ${d.city}` : ""}`,
-  anchor: `db-${d.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`,
-}));
+const groupedMap = new Map<string, typeof databases>();
+for (const d of databases) {
+  if (!groupedMap.has(d.country)) groupedMap.set(d.country, []);
+  groupedMap.get(d.country)!.push(d);
+}
+const grouped = Array.from(groupedMap.entries());
+
+const asianGroups = grouped.filter(([c]) => countryMeta[c]?.region === "asia");
+const externalGroups = grouped.filter(([c]) => countryMeta[c]?.region === "external");
+
+const mapGroups = asianGroups.map(([country, dbs]) => {
+  const meta = countryMeta[country]!;
+  return {
+    country,
+    code: meta.code,
+    lat: meta.lat,
+    lng: meta.lng,
+    items: dbs.map((d) => ({
+      name: d.name,
+      type: d.type,
+      coverage: d.coverage,
+      anchor: `db-${d.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`,
+    })),
+  };
+});
 
 const typeColor: Record<string, string> = {
   Claims: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -29,52 +51,102 @@ const typeColor: Record<string, string> = {
 
 <BaseLayout
   title="Databases — AsPEN"
-  description="Healthcare databases accessible to AsPEN collaborators across Asia and partner sites."
+  description="Healthcare databases accessible to AsPEN collaborators across East Asia, plus an external control."
 >
   <PageHeader
     eyebrow="Data"
     title="Databases"
-    description="A curated set of population-level health databases used in AsPEN multi-national studies — drawn from the NeuroGEN Asian sites (Tsai et al., Clin Epidemiol 2023) plus the UK CPRD as a European partner data source. Click a map marker to jump to the database card."
+    description="A curated set of population-level health databases used in AsPEN multi-national studies — the NeuroGEN East-Asian sites (Tsai et al., Clin Epidemiol 2023) plus the UK CPRD as an external-control data source. Click a flag on the map to see every database for that country."
   />
 
-  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-    <WorldMap
-      items={mapItems}
-      height="540px"
-      initialCenter={[35, 60]}
-      initialZoom={3}
-    />
+  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+    <div>
+      <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-3">East Asia network</h2>
+      <WorldMap
+        groups={mapGroups}
+        height="520px"
+        initialCenter={[30, 122]}
+        initialZoom={4}
+      />
+    </div>
 
     <div class="space-y-10">
-      {Object.entries(grouped).map(([country, dbs]) => (
-        <article>
-          <header class="flex items-baseline gap-3 mb-4 border-b border-slate-200 pb-2">
-            <h2 class="text-2xl font-bold text-slate-900">{country}</h2>
-            <span class="text-sm text-slate-500">{dbs.length} {dbs.length === 1 ? "database" : "databases"}</span>
-          </header>
-          <div class="grid gap-4 md:grid-cols-2">
-            {dbs.map((d) => {
-              const anchor = `db-${d.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
-              const chip = typeColor[d.type] ?? "bg-slate-100 text-slate-700 border-slate-200";
-              return (
-                <div
-                  id={anchor}
-                  class="scroll-mt-24 border border-slate-200 rounded-lg p-5 bg-white hover:shadow-md transition"
-                >
-                  <div class="flex items-start justify-between gap-3 mb-2">
-                    <h3 class="font-semibold text-slate-900 leading-snug">{d.name}</h3>
-                    <span class={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border ${chip}`}>{d.type}</span>
+      {asianGroups.map(([country, dbs]) => {
+        const meta = countryMeta[country];
+        return (
+          <article>
+            <header class="flex items-baseline gap-3 mb-4 border-b border-slate-200 pb-2">
+              <span class="text-3xl leading-none">{meta?.flag ?? "🏳️"}</span>
+              <h2 class="text-2xl font-bold text-slate-900">{country}</h2>
+              <span class="text-sm text-slate-500">{dbs.length} {dbs.length === 1 ? "database" : "databases"}</span>
+            </header>
+            <div class="grid gap-4 md:grid-cols-2">
+              {dbs.map((d) => {
+                const anchor = `db-${d.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
+                const chip = typeColor[d.type] ?? "bg-slate-100 text-slate-700 border-slate-200";
+                return (
+                  <div
+                    id={anchor}
+                    class="scroll-mt-24 border border-slate-200 rounded-lg p-5 bg-white hover:shadow-md transition"
+                  >
+                    <div class="flex items-start justify-between gap-3 mb-2">
+                      <h3 class="font-semibold text-slate-900 leading-snug">{d.name}</h3>
+                      <span class={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border ${chip}`}>{d.type}</span>
+                    </div>
+                    {d.city && <p class="text-xs text-slate-500 mb-2">{d.city}</p>}
+                    <p class="text-sm text-slate-700"><strong>Coverage:</strong> {d.coverage}</p>
+                    <p class="text-sm text-slate-600 mt-2 leading-relaxed">{d.notes}</p>
                   </div>
-                  {d.city && <p class="text-xs text-slate-500 mb-2">{d.city}</p>}
-                  <p class="text-sm text-slate-700"><strong>Coverage:</strong> {d.coverage}</p>
-                  <p class="text-sm text-slate-600 mt-2 leading-relaxed">{d.notes}</p>
-                </div>
-              );
-            })}
-          </div>
-        </article>
-      ))}
+                );
+              })}
+            </div>
+          </article>
+        );
+      })}
     </div>
+
+    {externalGroups.length > 0 && (
+      <div class="mt-16">
+        <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">External control</h2>
+        <p class="text-sm text-slate-600 max-w-3xl mb-6">
+          For comparative analyses that benchmark Asian findings against a Western European setting, AsPEN collaborators commonly draw on the UK <strong>CPRD</strong> as an external-control data source.
+        </p>
+        <div class="space-y-8">
+          {externalGroups.map(([country, dbs]) => {
+            const meta = countryMeta[country];
+            return (
+              <article>
+                <header class="flex items-baseline gap-3 mb-4 border-b border-slate-200 pb-2">
+                  <span class="text-3xl leading-none">{meta?.flag ?? "🏳️"}</span>
+                  <h2 class="text-2xl font-bold text-slate-900">{country}</h2>
+                  <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">External control</span>
+                </header>
+                <div class="grid gap-4 md:grid-cols-2">
+                  {dbs.map((d) => {
+                    const anchor = `db-${d.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
+                    const chip = typeColor[d.type] ?? "bg-slate-100 text-slate-700 border-slate-200";
+                    return (
+                      <div
+                        id={anchor}
+                        class="scroll-mt-24 border border-slate-200 rounded-lg p-5 bg-white hover:shadow-md transition"
+                      >
+                        <div class="flex items-start justify-between gap-3 mb-2">
+                          <h3 class="font-semibold text-slate-900 leading-snug">{d.name}</h3>
+                          <span class={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border ${chip}`}>{d.type}</span>
+                        </div>
+                        {d.city && <p class="text-xs text-slate-500 mb-2">{d.city}</p>}
+                        <p class="text-sm text-slate-700"><strong>Coverage:</strong> {d.coverage}</p>
+                        <p class="text-sm text-slate-600 mt-2 leading-relaxed">{d.notes}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+    )}
 
     <p class="text-xs text-slate-500 italic">
       Database descriptions adapted from the NeuroGEN data-infrastructure paper (Tsai DHT et al., <em>Clinical Epidemiology</em> 2023; DOI: 10.2147/CLEP.S426485) and the NHIRD review (Hsieh CY et al., <em>Clinical Epidemiology</em> 2025; DOI: 10.2147/CLEP.S553894). Access policies and coverage may have changed since publication — please verify with each data custodian before study planning.
