@@ -1,17 +1,17 @@
 [
   {
-    "country": "Japan",
-    "name": "Japan Medical Data Center (JMDC)",
-    "type": "Claims (employer-based)",
-    "coverage": "~16M individuals",
-    "notes": "Working-age population claims with health-check data."
-  },
-  {
     "country": "Taiwan",
     "name": "National Health Insurance Research Database (NHIRD)",
-    "type": "Claims (universal NHI)",
+    "type": "Claims (NHI)",
     "coverage": "~23M (entire population)",
-    "notes": "Population-wide outpatient, inpatient, and pharmacy claims."
+    "notes": "Population-based outpatient, inpatient, and pharmacy claims."
+  },
+  {
+    "country": "South Korea",
+    "name": "National Health Insurance Service-National Health Insurance Database (NHIS-NHID)",
+    "type": "Claims",
+    "coverage": "~50M (HIRA/NHIS, nationwide)",
+    "notes": "Population-based outpatient, inpatient, and pharmacy claims."
   },
   {
     "country": "Hong Kong",
@@ -21,11 +21,11 @@
     "notes": "Hospital Authority territory-wide electronic medical records."
   },
   {
-    "country": "South Korea",
-    "name": "HIRA / NHIS / Ajou Univ. School of Medicine DB",
-    "type": "Claims + EHR",
-    "coverage": "~50M (HIRA/NHIS, nationwide)",
-    "notes": "Multiple nationwide and institutional sources."
+    "country": "Japan",
+    "name": "Japan Medical Data Center (JMDC)",
+    "type": "Claims (employer-based)",
+    "coverage": "~16M individuals",
+    "notes": "Working-age population claims with health-check data."
   },
   {
     "country": "Australia",
