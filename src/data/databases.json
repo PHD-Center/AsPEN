@@ -1,62 +1,21 @@
 [
   {
-    "country": "Taiwan",
-    "name": "National Health Insurance Research Database (NHIRD)",
-    "type": "Claims (NHI)",
-    "coverage": "~23M (entire population)",
-    "notes": "Population-based outpatient, inpatient, and pharmacy claims."
-  },
-  {
     "country": "South Korea",
-    "name": "National Health Insurance Service-National Health Insurance Database (NHIS-NHID)",
-    "type": "Claims",
-    "coverage": "~50M (HIRA/NHIS, nationwide)",
-    "notes": "Population-based outpatient, inpatient, and pharmacy claims."
-  },
-  {
-    "country": "Hong Kong",
-    "name": "Clinical Data Analysis and Reporting System (CDARS)",
-    "type": "National EHR",
-    "coverage": ">7 million (since 1995)",
-    "notes": "Hospital Authority territory-wide electronic medical records covering public-sector clinical care."
-  },
-  {
-    "country": "Japan",
-    "name": "Japan Medical Data Center (JMDC)",
-    "type": "Claims",
-    "coverage": ">2.3 million, mostly working-age (since 2005)",
-    "notes": "Employer-based claims linked with annual health-check data."
-  },
-  {
-    "country": "Japan",
-    "name": "National Database of Health Insurance Claims (NDB)",
-    "type": "Claims",
-    "coverage": ">128 million (since 2009)",
-    "notes": "Nationwide insurance claims; access restricted to government and academic applicants."
-  },
-  {
-    "country": "Japan",
-    "name": "Japan Medical Data Center (JMDC)",
-    "type": "Claims (employer-based)",
-    "coverage": "~16M individuals",
-    "notes": "Working-age population claims with health-check data."
-  },
-  {
-    "country": "South Korea",
+    "code": "KR",
+    "city": "Seoul",
+    "lat": 37.5665,
+    "lng": 126.978,
     "name": "National Health Insurance Service – National Health Information Database (NHIS-NHID)",
     "type": "Claims",
-    "coverage": "~50 million (compulsory NHI)",
+    "coverage": "~50 million (compulsory NHI, nationwide)",
     "notes": "Population-level claims with periodic national health screening linkage."
   },
   {
-    "country": "Singapore",
-    "name": "National Electronic Health Record (NEHR)",
-    "type": "National EHR",
-    "coverage": ">5 million (since 2011)",
-    "notes": "Singapore's national electronic health record system."
-  },
-  {
     "country": "Taiwan",
+    "code": "TW",
+    "city": "Taipei",
+    "lat": 25.033,
+    "lng": 121.5654,
     "name": "National Health Insurance Research Database (NHIRD)",
     "type": "Claims",
     "coverage": ">23 million (>99% of population, since 1995)",
@@ -64,6 +23,10 @@
   },
   {
     "country": "Taiwan",
+    "code": "TW",
+    "city": "Taoyuan / Linkou",
+    "lat": 25.0,
+    "lng": 121.39,
     "name": "Chang Gung Research Database (CGRD)",
     "type": "Multi-institutional EHR",
     "coverage": "~1.3M outpatients + ~200K inpatients per year (~6–10% of national population)",
@@ -71,30 +34,35 @@
   },
   {
     "country": "Taiwan",
-    "name": "Taiwan Stroke Registry (TSR)",
-    "type": "Registry",
-    "coverage": ">100,000 patients (since 2006)",
-    "notes": "Prospective registry of acute stroke cases."
+    "code": "TW",
+    "city": "Taipei",
+    "lat": 25.06,
+    "lng": 121.6,
+    "name": "Taiwan Biobank (TWB)",
+    "type": "Biobank",
+    "coverage": "~200,000 community participants (target 1 million)",
+    "notes": "Population-based biomedical biobank linking genomic, lifestyle, and clinical data."
   },
   {
-    "country": "Taiwan",
-    "name": "Taiwan Cancer Registry (TCR)",
-    "type": "Registry",
-    "coverage": ">720,000 patients (nationwide since 2003)",
-    "notes": "National cancer surveillance registry."
+    "country": "Hong Kong",
+    "code": "HK",
+    "city": "Hong Kong",
+    "lat": 22.3193,
+    "lng": 114.1694,
+    "name": "Clinical Data Analysis and Reporting System (CDARS)",
+    "type": "National EHR",
+    "coverage": ">7 million (Hospital Authority territory-wide, since 1995)",
+    "notes": "Public-sector electronic medical records covering the great majority of Hong Kong residents."
   },
   {
-    "country": "Thailand",
-    "name": "Buddhachinaraj Hospital Database (BH)",
-    "type": "Single-hospital EHR",
-    "coverage": ">350,000 patients (since 2008)",
-    "notes": "Tertiary referral hospital electronic medical records."
-  },
-  {
-    "country": "Thailand",
-    "name": "Hospital Information (HI) — Ubon Ratchathani",
-    "type": "Multi-hospital EHR",
-    "coverage": ">1 million patients across 21 community hospitals (since 2003)",
-    "notes": "Networked electronic medical records from 21 community hospitals."
+    "country": "United Kingdom",
+    "code": "GB",
+    "city": "London",
+    "lat": 51.5074,
+    "lng": -0.1278,
+    "name": "Clinical Practice Research Datalink (CPRD)",
+    "type": "Primary-care EHR",
+    "coverage": "~60 million patients (~20% currently active)",
+    "notes": "MHRA-administered UK primary-care EHR with linkage to Hospital Episode Statistics, ONS mortality, and other national datasets."
   }
 ]

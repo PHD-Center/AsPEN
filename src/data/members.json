@@ -1,9 +1,10 @@
 [
-  { "country": "Japan", "code": "JP", "lat": 36.2048, "lng": 138.2529, "contact": "—", "institution": "—", "email": "" },
-  { "country": "South Korea", "code": "KR", "lat": 35.9078, "lng": 127.7669, "contact": "Ju-Young Shin", "institution": "Seoul National University (SNU)", "email": "" },
-  { "country": "Taiwan", "code": "TW", "lat": 23.6978, "lng": 120.9605, "contact": "—", "institution": "—", "email": "" },
-  { "country": "Hong Kong", "code": "HK", "lat": 22.3193, "lng": 114.1694, "contact": "—", "institution": "—", "email": "" },
-  { "country": "Singapore", "code": "SG", "lat": 1.3521, "lng": 103.8198, "contact": "—", "institution": "—", "email": "" },
-  { "country": "Thailand", "code": "TH", "lat": 15.87, "lng": 100.9925, "contact": "—", "institution": "—", "email": "" },
-  { "country": "Australia", "code": "AU", "lat": -25.2744, "lng": 133.7751, "contact": "—", "institution": "—", "email": "" }
+  { "country": "Japan",          "code": "JP", "lat": 35.6762, "lng": 139.6503, "contact": "—",              "institution": "—",                                "email": "" },
+  { "country": "South Korea",    "code": "KR", "lat": 37.5665, "lng": 126.978,  "contact": "Ju-Young Shin",  "institution": "Seoul National University (SNU)",  "email": "" },
+  { "country": "Taiwan",         "code": "TW", "lat": 23.6978, "lng": 120.9605, "contact": "Edward Chia-Cheng Lai", "institution": "National Cheng Kung University",      "email": "" },
+  { "country": "Hong Kong",      "code": "HK", "lat": 22.3193, "lng": 114.1694, "contact": "Esther W. Chan / Celine S. L. Chui", "institution": "University of Hong Kong",  "email": "" },
+  { "country": "Singapore",      "code": "SG", "lat": 1.3521,  "lng": 103.8198, "contact": "—",              "institution": "—",                                "email": "" },
+  { "country": "Thailand",       "code": "TH", "lat": 13.7563, "lng": 100.5018, "contact": "—",              "institution": "—",                                "email": "" },
+  { "country": "Australia",      "code": "AU", "lat": -34.9285, "lng": 138.6007, "contact": "—",             "institution": "—",                                "email": "" },
+  { "country": "United Kingdom", "code": "GB", "lat": 51.5074, "lng": -0.1278,  "contact": "Kenneth K. C. Man", "institution": "UCL School of Pharmacy",         "email": "" }
 ]

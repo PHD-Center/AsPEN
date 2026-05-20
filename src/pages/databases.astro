@@ -1,41 +1,83 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/PageHeader.astro";
+import WorldMap from "../components/WorldMap.astro";
 import databases from "../data/databases.json";
+
+const grouped: Record<string, typeof databases> = {};
+for (const d of databases) {
+  if (!grouped[d.country]) grouped[d.country] = [];
+  grouped[d.country].push(d);
+}
+
+const mapItems = databases.map((d) => ({
+  lat: d.lat,
+  lng: d.lng,
+  title: d.name,
+  body: `${d.type} · ${d.country}${d.city ? ` — ${d.city}` : ""}`,
+  anchor: `db-${d.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`,
+}));
+
+const typeColor: Record<string, string> = {
+  Claims: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  "National EHR": "bg-sky-50 text-sky-700 border-sky-200",
+  "Multi-institutional EHR": "bg-indigo-50 text-indigo-700 border-indigo-200",
+  "Primary-care EHR": "bg-violet-50 text-violet-700 border-violet-200",
+  Biobank: "bg-amber-50 text-amber-700 border-amber-200",
+};
 ---
 
-<BaseLayout title="Databases — AsPEN" description="Healthcare databases participating in the AsPEN network across Asia/Pacific.">
+<BaseLayout
+  title="Databases — AsPEN"
+  description="Healthcare databases accessible to AsPEN collaborators across Asia and partner sites."
+>
   <PageHeader
     eyebrow="Data"
     title="Databases"
-    description="Population-level health data sources contributed by AsPEN member sites. Coverage and access policies vary by jurisdiction."
+    description="A curated set of population-level health databases used in AsPEN multi-national studies — drawn from the NeuroGEN Asian sites (Tsai et al., Clin Epidemiol 2023) plus the UK CPRD as a European partner data source. Click a map marker to jump to the database card."
   />
 
-  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12">
-    <div class="overflow-x-auto border border-slate-200 rounded-lg">
-      <table class="min-w-full divide-y divide-slate-200 text-sm">
-        <thead class="bg-slate-50">
-          <tr>
-            <th class="px-4 py-3 text-left font-semibold text-slate-700">Country</th>
-            <th class="px-4 py-3 text-left font-semibold text-slate-700">Database</th>
-            <th class="px-4 py-3 text-left font-semibold text-slate-700">Type</th>
-            <th class="px-4 py-3 text-left font-semibold text-slate-700">Coverage</th>
-            <th class="px-4 py-3 text-left font-semibold text-slate-700">Notes</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 bg-white">
-          {databases.map((d) => (
-            <tr class="hover:bg-slate-50">
-              <td class="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">{d.country}</td>
-              <td class="px-4 py-3 text-slate-800">{d.name}</td>
-              <td class="px-4 py-3 text-slate-600 whitespace-nowrap">{d.type}</td>
-              <td class="px-4 py-3 text-slate-600 whitespace-nowrap">{d.coverage}</td>
-              <td class="px-4 py-3 text-slate-600">{d.notes}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 space-y-10">
+    <WorldMap
+      items={mapItems}
+      height="540px"
+      initialCenter={[35, 60]}
+      initialZoom={3}
+    />
+
+    <div class="space-y-10">
+      {Object.entries(grouped).map(([country, dbs]) => (
+        <article>
+          <header class="flex items-baseline gap-3 mb-4 border-b border-slate-200 pb-2">
+            <h2 class="text-2xl font-bold text-slate-900">{country}</h2>
+            <span class="text-sm text-slate-500">{dbs.length} {dbs.length === 1 ? "database" : "databases"}</span>
+          </header>
+          <div class="grid gap-4 md:grid-cols-2">
+            {dbs.map((d) => {
+              const anchor = `db-${d.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
+              const chip = typeColor[d.type] ?? "bg-slate-100 text-slate-700 border-slate-200";
+              return (
+                <div
+                  id={anchor}
+                  class="scroll-mt-24 border border-slate-200 rounded-lg p-5 bg-white hover:shadow-md transition"
+                >
+                  <div class="flex items-start justify-between gap-3 mb-2">
+                    <h3 class="font-semibold text-slate-900 leading-snug">{d.name}</h3>
+                    <span class={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border ${chip}`}>{d.type}</span>
+                  </div>
+                  {d.city && <p class="text-xs text-slate-500 mb-2">{d.city}</p>}
+                  <p class="text-sm text-slate-700"><strong>Coverage:</strong> {d.coverage}</p>
+                  <p class="text-sm text-slate-600 mt-2 leading-relaxed">{d.notes}</p>
+                </div>
+              );
+            })}
+          </div>
+        </article>
+      ))}
     </div>
-    <p class="mt-6 text-xs text-slate-500">Entries marked "—" are placeholders pending migration of content from the previous AsPEN site.</p>
+
+    <p class="text-xs text-slate-500 italic">
+      Database descriptions adapted from the NeuroGEN data-infrastructure paper (Tsai DHT et al., <em>Clinical Epidemiology</em> 2023; DOI: 10.2147/CLEP.S426485) and the NHIRD review (Hsieh CY et al., <em>Clinical Epidemiology</em> 2025; DOI: 10.2147/CLEP.S553894). Access policies and coverage may have changed since publication — please verify with each data custodian before study planning.
+    </p>
   </section>
 </BaseLayout>
