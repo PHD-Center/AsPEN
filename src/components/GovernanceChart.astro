@@ -1,8 +1,6 @@
 ---
 // AsPEN Governance org chart.
 // Top: Chair. Bottom: two groups under the Chair.
-// To edit names/roles, change the constants below. To rename the secretariat group,
-// edit the `secretariat.title` field.
 
 const chair = {
   name: "Ju-Young Shin",
@@ -13,16 +11,15 @@ const chair = {
 const academic = {
   title: "Academic & Education",
   members: [
-    { name: "Edward Chia-Cheng Lai", role: "Education Lead", inst: "NCKU" },
-    { name: "Daniel Hsiang-Te Tsai", role: "Education Secretary", inst: "NCKU / SGUL" },
+    { name: "Edward Lai", role: "Education Lead", inst: "NCKU" },
+    { name: "Daniel Tsai", role: "Education Secretary", inst: "NCKU / SGUL" },
   ],
 };
 
-const secretariat = {
-  // TODO: replace this label with the actual group name once decided
-  title: "Secretariat",
+const operations = {
+  title: "Operations & Coordination",
   members: [{ name: "Ju-Young Shin", role: "Lead", inst: "SKKU" }],
-  blurb: "Led by Ju-Young Shin with the SKKU team; handles operational coordination, ISPE liaison, and study governance.",
+  blurb: "Led by Ju-Young Shin with the SKKU team; handles operational coordination, ISPE liaison, and multi-country study governance.",
 };
 ---
 
@@ -43,7 +40,7 @@ const secretariat = {
   <div class="relative grid grid-cols-1 md:grid-cols-2 gap-6">
     <div class="hidden md:block absolute top-0 left-1/4 right-1/4 h-px bg-slate-300"></div>
 
-    {[academic, secretariat].map((group) => (
+    {[academic, operations].map((group) => (
       <div class="flex flex-col items-center">
         <div class="hidden md:block w-px h-8 bg-slate-300"></div>
         <div class="md:hidden w-px h-4 bg-slate-300"></div>

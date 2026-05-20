@@ -59,11 +59,25 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   </Section>
 
   <Section id="current-chair" eyebrow="05" title="Current Chair">
-    <ChairCard
-      name="Ju-Young Shin"
-      affiliation="SKKU · SNU"
-      photo={`${base}/images/Judy.png`}
-      bio="Professor of pharmacoepidemiology and pharmacovigilance, with active research in drug utilization and safety studies using nationwide healthcare databases. Editorial roles include Pharmacoepidemiology and Drug Safety."
-    />
+    <div class="not-prose grid gap-8 md:grid-cols-[auto_1fr] items-start">
+      <div class="shrink-0 mx-auto md:mx-0">
+        <div class="relative">
+          <div class="absolute -inset-2 bg-gradient-to-br from-accent-500/15 to-brand-500/15 rounded-2xl blur-lg"></div>
+          <img
+            src={`${base}/images/Judy.png`}
+            alt="Ju-Young Shin"
+            class="relative w-52 h-64 object-cover object-center rounded-2xl shadow-md border border-slate-200"
+          />
+        </div>
+      </div>
+      <div>
+        <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold">Current Chair</p>
+        <h3 class="mt-1 text-3xl font-bold text-slate-900">Ju-Young Shin</h3>
+        <p class="mt-1 text-slate-600">Sungkyunkwan University (SKKU) · Seoul National University (SNU)</p>
+        <p class="mt-5 text-slate-700 leading-relaxed">
+          Professor of pharmacoepidemiology and pharmacovigilance, with active research in drug utilization and safety studies using nationwide healthcare databases. Editorial roles include <em>Pharmacoepidemiology and Drug Safety</em>.
+        </p>
+      </div>
+    </div>
   </Section>
 </BaseLayout>
