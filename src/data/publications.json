@@ -1,7 +1,7 @@
 [
   {
     "year": 2013,
-    "authors": "Andersen M, Bergman U, Choi NK, Gerhard T, Huang C, Jalbert J, ..., Sundstrom A, Yang YH (n=19).",
+    "authors": "Andersen M, Bergman U, Choi NK, Gerhard T, Huang C, Jalbert J, ..., Sundstrom A, Yang YH.",
     "title": "The Asian Pharmacoepidemiology Network (AsPEN): promoting multi-national collaboration for pharmacoepidemiologic research in Asia",
     "journal": "Pharmacoepidemiology and Drug Safety",
     "doi": "10.1002/pds.3439",
@@ -12,7 +12,7 @@
   },
   {
     "year": 2013,
-    "authors": "Pratt N, Andersen M, Bergman U, Choi NK, Gerhard T, Huang C, ..., Yang YH, Roughead EE (n=18).",
+    "authors": "Pratt N, Andersen M, Bergman U, Choi NK, Gerhard T, Huang C, ..., Yang YH, Roughead EE.",
     "title": "Multi-country rapid adverse drug event assessment: the Asian Pharmacoepidemiology Network (AsPEN) antipsychotic and acute hyperglycaemia study",
     "journal": "Pharmacoepidemiology and Drug Safety",
     "doi": "10.1002/pds.3440",
@@ -24,7 +24,7 @@
   },
   {
     "year": 2015,
-    "authors": "Lai ECC, Man KKC, Chaiyakunapruk N, Cheng CL, Chien HC, Chui CSL, ..., Zhang Y, Setoguchi S (n=23).",
+    "authors": "Lai ECC, Man KKC, Chaiyakunapruk N, Cheng CL, Chien HC, Chui CSL, ..., Zhang Y, Setoguchi S.",
     "title": "Databases in the Asia-Pacific Region: the potential for a distributed network approach",
     "journal": "Epidemiology",
     "doi": "10.1097/EDE.0000000000000325",
@@ -37,7 +37,7 @@
   },
   {
     "year": 2018,
-    "authors": "Lai ECC, Ryan P, Zhang Y, Schuemie M, Hardy NC, Kamijima Y, ..., Yang YH, Setoguchi S (n=16).",
+    "authors": "Lai ECC, Ryan P, Zhang Y, Schuemie M, Hardy NC, Kamijima Y, ..., Yang YH, Setoguchi S.",
     "title": "Applying a common data model to Asian databases for multinational pharmacoepidemiologic studies: opportunities and challenges",
     "journal": "Clinical Epidemiology",
     "doi": "10.2147/CLEP.S149961",
@@ -50,7 +50,7 @@
   },
   {
     "year": 2021,
-    "authors": "Brauer R, Alfageh B, Blais JE, Chan EWY, Chui CSL, Hayes JF, ..., Wei L, Wong ICK (n=13).",
+    "authors": "Brauer R, Alfageh B, Blais JE, Chan EWY, Chui CSL, Hayes JF, ..., Wei L, Wong ICK.",
     "title": "Psychotropic medicine consumption in 65 countries and regions, 2008–19: a longitudinal study",
     "journal": "The Lancet Psychiatry",
     "doi": "10.1016/S2215-0366(21)00292-3",
@@ -63,7 +63,7 @@
   },
   {
     "year": 2021,
-    "authors": "Ju C, Wong ICK, Lau WCY, Man KKC, Brauer R, Ma TT, ..., Li X, Wei L (n=13).",
+    "authors": "Ju C, Wong ICK, Lau WCY, Man KKC, Brauer R, Ma TT, ..., Li X, Wei L.",
     "title": "Global trends in symptomatic medication use against dementia in 66 countries/regions from 2008 to 2018",
     "journal": "European Journal of Neurology",
     "doi": "10.1111/ene.15053",
@@ -76,7 +76,7 @@
   },
   {
     "year": 2022,
-    "authors": "Ju C, Wei L, Man KKC, Wang Z, Ma TT, Chan AYL, ..., Wong ICK, Lau WCY (n=13).",
+    "authors": "Ju C, Wei L, Man KKC, Wang Z, Ma TT, Chan AYL, ..., Wong ICK, Lau WCY.",
     "title": "Global, regional, and national trends in opioid analgesic consumption from 2015 to 2019: a longitudinal study",
     "journal": "The Lancet Public Health",
     "doi": "10.1016/S2468-2667(22)00013-5",
@@ -89,7 +89,7 @@
   },
   {
     "year": 2023,
-    "authors": "Tsai DHT, Bell JS, Abtahi S, Baak BN, Bazelier MT, Brauer R, ..., Wong ICK, Lai ECC (n=35).",
+    "authors": "Tsai DHT, Bell JS, Abtahi S, Baak BN, Bazelier MT, Brauer R, ..., Wong ICK, Lai ECC.",
     "title": "Cross-Regional Data Initiative for the Assessment and Development of Treatment for Neurological and Mental Disorders (NeuroGEN)",
     "journal": "Clinical Epidemiology",
     "doi": "10.2147/CLEP.S426485",
@@ -104,7 +104,7 @@
   },
   {
     "year": 2023,
-    "authors": "Chan AYL, Yuen ASC, Tsai DHT, Lau WCY, Jani YH, Hsia Y, ..., Wong ICK, Man KKC (n=14).",
+    "authors": "Chan AYL, Yuen ASC, Tsai DHT, Lau WCY, Jani YH, Hsia Y, ..., Wong ICK, Man KKC.",
     "title": "Gabapentinoid consumption in 65 countries and regions from 2008 to 2018: a longitudinal trend study",
     "journal": "Nature Communications",
     "doi": "10.1038/s41467-023-40637-8",
@@ -117,7 +117,7 @@
   },
   {
     "year": 2023,
-    "authors": "Lee H, Baek YH, Kim JH, Liao TC, Lau WCY, Man KKC, ..., Wong ICK, Shin JY (n=16).",
+    "authors": "Lee H, Baek YH, Kim JH, Liao TC, Lau WCY, Man KKC, ..., Wong ICK, Shin JY.",
     "title": "Trends of polypharmacy among older people in Asia, Australia and the United Kingdom: a multinational population-based study",
     "journal": "Age and Ageing",
     "doi": "10.1093/ageing/afad014",
@@ -130,7 +130,7 @@
   },
   {
     "year": 2023,
-    "authors": "Sing CW, Lin TC, Bartholomew S, Bell JS, Bennett C, Beyene K, ..., Cheung CL, Wong ICK (n=44).",
+    "authors": "Sing CW, Lin TC, Bartholomew S, Bell JS, Bennett C, Beyene K, ..., Cheung CL, Wong ICK.",
     "title": "Global epidemiology of hip fractures: secular trends in incidence rate, post-fracture treatment, and all-cause mortality",
     "journal": "Journal of Bone and Mineral Research",
     "doi": "10.1002/jbmr.4821",
@@ -143,7 +143,7 @@
   },
   {
     "year": 2024,
-    "authors": "Chan AYL, Gao L, Hsieh MH, Kjerpeseth LJ, Avelar R, Banaschewski T, ..., Man KKC, Wong ICK (n=28).",
+    "authors": "Chan AYL, Gao L, Hsieh MH, Kjerpeseth LJ, Avelar R, Banaschewski T, ..., Man KKC, Wong ICK.",
     "title": "Maternal diabetes and risk of attention-deficit/hyperactivity disorder in offspring in a multinational cohort of 3.6 million mother–child pairs",
     "journal": "Nature Medicine",
     "doi": "10.1038/s41591-024-02917-8",
@@ -158,7 +158,7 @@
   },
   {
     "year": 2024,
-    "authors": "Wittstrom F, Cesta CE, Bateman BT, Bendix M, Bliddal M, Chan AYL, ..., Zoega H, Reutfors J (n=30).",
+    "authors": "Wittstrom F, Cesta CE, Bateman BT, Bendix M, Bliddal M, Chan AYL, ..., Zoega H, Reutfors J.",
     "title": "Lithium use during pregnancy in 14 countries: a comparative analysis of prescribing patterns",
     "journal": "JAMA Network Open",
     "doi": "10.1001/jamanetworkopen.2024.51117",
@@ -172,7 +172,7 @@
   },
   {
     "year": 2025,
-    "authors": "Chan AYL, Bahmanyar S, Beyene K, Bushnell G, Carleton B, Chan AHY, ..., Man KKC, Wong ICK (n=48).",
+    "authors": "Chan AYL, Bahmanyar S, Beyene K, Bushnell G, Carleton B, Chan AHY, ..., Man KKC, Wong ICK.",
     "title": "International trends in opioid prescribing by age and sex from 2001 to 2019: a population-based study from 18 countries and one special administrative region",
     "journal": "CNS Drugs",
     "doi": "10.1007/s40263-025-01215-2",
@@ -185,7 +185,7 @@
   },
   {
     "year": 2025,
-    "authors": "Luo H, Koponen M, Roethlein C, Becker C, Bell JS, Beyene K, ..., Wong GHY, Wong ICK (n=27).",
+    "authors": "Luo H, Koponen M, Roethlein C, Becker C, Bell JS, Beyene K, ..., Wong GHY, Wong ICK.",
     "title": "A multinational cohort study of trends in survival following dementia diagnosis",
     "journal": "Communications Medicine",
     "doi": "10.1038/s43856-025-00923-6",
@@ -198,7 +198,7 @@
   },
   {
     "year": 2025,
-    "authors": "Brett J, Cesta CE, Gillies MB, Bateman BT, Chan AYL, Cheng MC, ..., Man KKC, Zoega H (n=31).",
+    "authors": "Brett J, Cesta CE, Gillies MB, Bateman BT, Chan AYL, Cheng MC, ..., Man KKC, Zoega H.",
     "title": "Global trends in analgesic opioid use in pregnancy",
     "journal": "Anesthesiology",
     "doi": "10.1097/ALN.0000000000005418",
@@ -211,7 +211,7 @@
   },
   {
     "year": 2025,
-    "authors": "Baxter SM, Lund LC, Andersen JH, Brix TH, Hegedus L, Hsieh MH, ..., Hicks B, Pottegard A (n=27).",
+    "authors": "Baxter SM, Lund LC, Andersen JH, Brix TH, Hegedus L, Hsieh MH, ..., Hicks B, Pottegard A.",
     "title": "Glucagon-like peptide 1 receptor agonists and thyroid cancer risk: an international multisite cohort study",
     "journal": "Thyroid",
     "doi": "10.1089/thy.2024.0387",
@@ -224,7 +224,7 @@
   },
   {
     "year": 2025,
-    "authors": "Lam ICH, Chai Y, Man KKC, Lau WCY, Luo H, Lin X, ..., Wan EYF, Wong ICK (n=13).",
+    "authors": "Lam ICH, Chai Y, Man KKC, Lau WCY, Luo H, Lin X, ..., Wan EYF, Wong ICK.",
     "title": "The short-, medium- and long-term risk and the multi-organ involvement of clinical sequelae after COVID-19 infection: a multinational network cohort study",
     "journal": "Journal of the Royal Society of Medicine",
     "doi": "10.1177/01410768251352666",
@@ -237,7 +237,7 @@
   },
   {
     "year": 2025,
-    "authors": "Chai Y, Lam ICH, Man KKC, Hayes JF, Wan EYF, Li X, ..., Wong ICK, Luo H (n=14).",
+    "authors": "Chai Y, Lam ICH, Man KKC, Hayes JF, Wan EYF, Li X, ..., Wong ICK, Luo H.",
     "title": "Psychiatric and neuropsychiatric sequelae of COVID-19 within 2 years: a multinational cohort study",
     "journal": "BMC Medicine",
     "doi": "10.1186/s12916-025-03952-z",
@@ -250,7 +250,7 @@
   },
   {
     "year": 2024,
-    "authors": "Luo H, Chai Y, Li S, Lau WCY, Torre CO, Hayes J, ..., Man KKC, Wong ICK (n=19).",
+    "authors": "Luo H, Chai Y, Li S, Lau WCY, Torre CO, Hayes J, ..., Man KKC, Wong ICK.",
     "title": "Psychotropic drug prescribing before and during the COVID-19 pandemic among people with depressive and anxiety disorders: a multinational network study",
     "journal": "The Lancet Psychiatry",
     "doi": "10.1016/S2215-0366(24)00245-1",
@@ -265,7 +265,7 @@
   },
   {
     "year": 2025,
-    "authors": "Chan AYL, Yuen ASC, Hsia Y, Lau WCY, Cross JH, Walker MC, ..., Man KKC, Wong ICK (n=12).",
+    "authors": "Chan AYL, Yuen ASC, Hsia Y, Lau WCY, Cross JH, Walker MC, ..., Man KKC, Wong ICK.",
     "title": "Antiseizure medications consumption in 73 countries and regions from 2012 to 2022: a longitudinal trend study",
     "journal": "EClinicalMedicine",
     "doi": "10.1016/j.eclinm.2025.103558",
@@ -279,7 +279,7 @@
   },
   {
     "year": 2025,
-    "authors": "Morales DR, Bu F, Viernes B, DuVall SL, Matheny ME, Simon KR, ..., Khera R, Suchard MA (n=31).",
+    "authors": "Morales DR, Bu F, Viernes B, DuVall SL, Matheny ME, Simon KR, ..., Khera R, Suchard MA.",
     "title": "Risk of thyroid tumors with GLP-1 receptor agonists: a retrospective cohort study",
     "journal": "Diabetes Care",
     "doi": "10.2337/dc25-0154",
@@ -292,7 +292,7 @@
   },
   {
     "year": 2026,
-    "authors": "Ko HY, Au PCM, Cheng MC, Cheung CL, Choi A, Hsieh MH, ..., Shin JY, Park S (n=16).",
+    "authors": "Ko HY, Au PCM, Cheng MC, Cheung CL, Choi A, Hsieh MH, ..., Shin JY, Park S.",
     "title": "Emulating six cardiovascular outcome trials of antidiabetic drugs using real-world databases from Korea and Taiwan",
     "journal": "Clinical Pharmacology & Therapeutics",
     "doi": "10.1002/cpt.70027",
@@ -305,7 +305,7 @@
   },
   {
     "year": 2026,
-    "authors": "Bu F, Wu R, Ostropolets A, Aminorroaya A, Chen HY, Chai Y, ..., Hripcsak G, Suchard MA (n=21).",
+    "authors": "Bu F, Wu R, Ostropolets A, Aminorroaya A, Chen HY, Chai Y, ..., Hripcsak G, Suchard MA.",
     "title": "Comparative cardiovascular effectiveness of glucagon-like peptide 1 receptor agonists and sodium-glucose cotransporter 2 inhibitors in diabetes mellitus",
     "journal": "Journal of the American College of Cardiology",
     "doi": "10.1016/j.jacc.2026.02.5123",
@@ -320,7 +320,7 @@
   },
   {
     "year": 2026,
-    "authors": "Kim C, Bu F, Blacketer C, Ostropolets A, Duarte-Salles T, Viernes B, ..., Suchard MA, Lu Y (n=34).",
+    "authors": "Kim C, Bu F, Blacketer C, Ostropolets A, Duarte-Salles T, Viernes B, ..., Suchard MA, Lu Y.",
     "title": "Real-world evidence for comparative safety of second-line antihyperglycemic agents in older adults with type 2 diabetes",
     "journal": "Nature Communications",
     "doi": "10.1038/s41467-026-71307-0",
