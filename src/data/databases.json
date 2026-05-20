@@ -16,9 +16,23 @@
   {
     "country": "Hong Kong",
     "name": "Clinical Data Analysis and Reporting System (CDARS)",
-    "type": "EHR (public hospitals)",
-    "coverage": "~7M (public sector users)",
-    "notes": "Hospital Authority territory-wide electronic medical records."
+    "type": "National EHR",
+    "coverage": ">7 million (since 1995)",
+    "notes": "Hospital Authority territory-wide electronic medical records covering public-sector clinical care."
+  },
+  {
+    "country": "Japan",
+    "name": "Japan Medical Data Center (JMDC)",
+    "type": "Claims",
+    "coverage": ">2.3 million, mostly working-age (since 2005)",
+    "notes": "Employer-based claims linked with annual health-check data."
+  },
+  {
+    "country": "Japan",
+    "name": "National Database of Health Insurance Claims (NDB)",
+    "type": "Claims",
+    "coverage": ">128 million (since 2009)",
+    "notes": "Nationwide insurance claims; access restricted to government and academic applicants."
   },
   {
     "country": "Japan",
@@ -28,24 +42,59 @@
     "notes": "Working-age population claims with health-check data."
   },
   {
-    "country": "Australia",
-    "name": "PBS / MBS linked datasets",
+    "country": "South Korea",
+    "name": "National Health Insurance Service – National Health Information Database (NHIS-NHID)",
     "type": "Claims",
-    "coverage": "~25M",
-    "notes": "Pharmaceutical Benefits Scheme and Medicare Benefits Schedule."
+    "coverage": "~50 million (compulsory NHI)",
+    "notes": "Population-level claims with periodic national health screening linkage."
   },
   {
     "country": "Singapore",
-    "name": "National health datasets (placeholder)",
-    "type": "Claims / EHR",
-    "coverage": "—",
-    "notes": "Details to be confirmed from migrated content."
+    "name": "National Electronic Health Record (NEHR)",
+    "type": "National EHR",
+    "coverage": ">5 million (since 2011)",
+    "notes": "Singapore's national electronic health record system."
+  },
+  {
+    "country": "Taiwan",
+    "name": "National Health Insurance Research Database (NHIRD)",
+    "type": "Claims",
+    "coverage": ">23 million (>99% of population, since 1995)",
+    "notes": "Universal single-payer claims; 70+ billion records and 3.4 billion medical images as of 2024, now including structured laboratory and imaging data."
+  },
+  {
+    "country": "Taiwan",
+    "name": "Chang Gung Research Database (CGRD)",
+    "type": "Multi-institutional EHR",
+    "coverage": "~1.3M outpatients + ~200K inpatients per year (~6–10% of national population)",
+    "notes": "Standardized electronic medical records from seven Chang Gung Memorial Hospitals; available since 2000 with ~1-month data latency."
+  },
+  {
+    "country": "Taiwan",
+    "name": "Taiwan Stroke Registry (TSR)",
+    "type": "Registry",
+    "coverage": ">100,000 patients (since 2006)",
+    "notes": "Prospective registry of acute stroke cases."
+  },
+  {
+    "country": "Taiwan",
+    "name": "Taiwan Cancer Registry (TCR)",
+    "type": "Registry",
+    "coverage": ">720,000 patients (nationwide since 2003)",
+    "notes": "National cancer surveillance registry."
   },
   {
     "country": "Thailand",
-    "name": "Universal Coverage Scheme (UCS)",
-    "type": "Claims",
-    "coverage": "~48M",
-    "notes": "National universal coverage scheme claims."
+    "name": "Buddhachinaraj Hospital Database (BH)",
+    "type": "Single-hospital EHR",
+    "coverage": ">350,000 patients (since 2008)",
+    "notes": "Tertiary referral hospital electronic medical records."
+  },
+  {
+    "country": "Thailand",
+    "name": "Hospital Information (HI) — Ubon Ratchathani",
+    "type": "Multi-hospital EHR",
+    "coverage": ">1 million patients across 21 community hospitals (since 2003)",
+    "notes": "Networked electronic medical records from 21 community hospitals."
   }
 ]

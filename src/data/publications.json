@@ -16,5 +16,167 @@
     "doi": "10.1002/pds.3440",
     "pmid": "23696036",
     "tags": ["PSSA", "antipsychotics"]
+  },
+  {
+    "year": 2015,
+    "authors": "Lai EC, Man KKC, Chaiyakunapruk N, Cheng CL, Chien HC, Chui CSL, Dilokthornsakul P, Hardy NC, Hsieh CY, Hsu CY, Kubota K, Lin TC, Liu Y, Park BJ, Pratt N, Roughead EE, Shin JY, et al.",
+    "title": "Databases in the Asia-Pacific Region: the potential for a distributed network approach",
+    "journal": "Epidemiology",
+    "doi": "10.1097/EDE.0000000000000325",
+    "pmid": "26133022",
+    "tags": ["databases", "infrastructure", "distributed-network"]
+  },
+  {
+    "year": 2018,
+    "authors": "Lai EC, Ryan P, Zhang Y, Schuemie M, Hardy NC, Kamijima Y, Kimura S, Kubota K, Man KKC, Cho SY, Park RW, Stang P, Su CC, Wong ICK, Kao Yang YH, Setoguchi S.",
+    "title": "Applying a common data model to Asian databases for multinational pharmacoepidemiologic studies: opportunities and challenges",
+    "journal": "Clinical Epidemiology",
+    "doi": "10.2147/CLEP.S149961",
+    "pmid": "30100761",
+    "tags": ["CDM", "databases", "infrastructure"]
+  },
+  {
+    "year": 2021,
+    "authors": "Brauer R, Alfageh B, Blais JE, Chan EW, Chui CSL, Hayes JF, Man KKC, Lau WCY, Yan VKC, Beykloo MY, Wang Z, Wei L, Wong ICK.",
+    "title": "Psychotropic medicine consumption in 65 countries and regions, 2008–19: a longitudinal study",
+    "journal": "The Lancet Psychiatry",
+    "doi": "10.1016/S2215-0366(21)00292-3",
+    "pmid": "34801129",
+    "tags": ["psychotropic", "drug-utilization", "multinational"]
+  },
+  {
+    "year": 2021,
+    "authors": "Ju C, Wong ICK, Lau WCY, Man KKC, Brauer R, Ma TT, Alsharif A, Alwafi H, Lau KK, Chan EW, Chui CSL, Li X, Wei L.",
+    "title": "Global trends in symptomatic medication use against dementia in 66 countries/regions from 2008 to 2018",
+    "journal": "European Journal of Neurology",
+    "doi": "10.1111/ene.15053",
+    "pmid": "34363297",
+    "tags": ["dementia", "drug-utilization", "multinational"]
+  },
+  {
+    "year": 2022,
+    "authors": "Ju C, Wei L, Man KKC, Wang Z, Ma TT, Chan AYL, Brauer R, Chui CSL, Chan EW, Jani YH, Hsia Y, Wong ICK, Lau WCY.",
+    "title": "Global, regional, and national trends in opioid analgesic consumption from 2015 to 2019: a longitudinal study",
+    "journal": "The Lancet Public Health",
+    "doi": "10.1016/S2468-2667(22)00013-5",
+    "pmid": "35366408",
+    "tags": ["opioid", "drug-utilization", "multinational"]
+  },
+  {
+    "year": 2023,
+    "authors": "Tsai DHT, Bell JS, Abtahi S, Baak BN, Bazelier MT, Brauer R, Chan AYL, Chan EW, Chui CSL, Klungel OH, Lau WCY, Man KKC, Setoguchi S, Shao SC, Shin JY, Tolppanen AM, Wei L, Wong ICK, Lai ECC, et al.",
+    "title": "Cross-Regional Data Initiative for the Assessment and Development of Treatment for Neurological and Mental Disorders (NeuroGEN)",
+    "journal": "Clinical Epidemiology",
+    "doi": "10.2147/CLEP.S426485",
+    "pmid": "38146486",
+    "tags": ["NeuroGEN", "databases", "infrastructure", "neurology", "mental-health"]
+  },
+  {
+    "year": 2023,
+    "authors": "Chan AYL, Yuen ASC, Tsai DHT, Lau WCY, Jani YH, Hsia Y, Lai ECC, Man KKC, Wong ICK, et al.",
+    "title": "Gabapentinoid consumption in 65 countries and regions from 2008 to 2018: a longitudinal trend study",
+    "journal": "Nature Communications",
+    "doi": "10.1038/s41467-023-40637-8",
+    "pmid": "37591833",
+    "tags": ["gabapentinoid", "drug-utilization", "multinational"]
+  },
+  {
+    "year": 2023,
+    "authors": "Lee H, Baek YH, Kim JH, Bell JS, Ilomäki J, Hartikainen S, Tolppanen AM, Wong ICK, Lai ECC, Man KKC, Shin JY, et al.",
+    "title": "Trends of polypharmacy among older people in Asia, Australia and the United Kingdom: a multinational population-based study",
+    "journal": "Age and Ageing",
+    "doi": "10.1093/ageing/afad014",
+    "pmid": "36821644",
+    "tags": ["polypharmacy", "older-adults", "multinational"]
+  },
+  {
+    "year": 2023,
+    "authors": "Sing CW, Lin TC, Bartholomew S, Bell JS, Bennett C, Beyene K, Bosco-Levy P, Brauer R, Brown BD, Brunetti VC, Chan AYL, Cheng CL, Chui CSL, et al. (incl. Lai ECC, Shin JY).",
+    "title": "Global epidemiology of hip fractures: secular trends in incidence rate, post-fracture treatment, and all-cause mortality",
+    "journal": "Journal of Bone and Mineral Research",
+    "doi": "10.1002/jbmr.4821",
+    "pmid": "37118993",
+    "tags": ["hip-fracture", "epidemiology", "multinational"]
+  },
+  {
+    "year": 2024,
+    "authors": "Chen H, Lau WCY, Wong ICK, Man KKC, Lai ECC, Cesta CE, Zoega H, et al.",
+    "title": "Maternal diabetes and risk of attention-deficit/hyperactivity disorder in offspring in a multinational cohort of 3.6 million mother–child pairs",
+    "journal": "Nature Medicine",
+    "doi": "10.1038/s41591-024-02917-8",
+    "pmid": "38589601",
+    "tags": ["NeuroGEN", "ADHD", "pregnancy", "diabetes", "multinational"]
+  },
+  {
+    "year": 2024,
+    "authors": "Wittström F, Cesta CE, Bateman BT, Bröms G, Cohen JM, Engeland A, Furu K, Gissler M, Havard A, Hernandez-Diaz S, Huybrechts KF, Karlsson P, Kieler H, Lai ECC, Man KKC, Pazzagli L, Reutfors J, Shin JY, et al.",
+    "title": "Lithium use during pregnancy in 14 countries: a comparative analysis of prescribing patterns",
+    "journal": "JAMA Network Open",
+    "doi": "10.1001/jamanetworkopen.2024.51117",
+    "pmid": "39680408",
+    "tags": ["lithium", "pregnancy", "drug-utilization", "multinational"]
+  },
+  {
+    "year": 2025,
+    "authors": "Chan AYL, Bahmanyar S, Beyene K, Bell JS, Brett J, Chui CSL, Hartikainen S, Ilomäki J, Klungel OH, Lai ECC, Man KKC, Pratt N, Roughead EE, Shin JY, Wong ICK, et al.",
+    "title": "International trends in opioid prescribing by age and sex from 2001 to 2019: a population-based study from 18 countries and one special administrative region",
+    "journal": "CNS Drugs",
+    "doi": "10.1007/s40263-025-01215-2",
+    "pmid": "40889082",
+    "tags": ["opioid", "drug-utilization", "multinational"]
+  },
+  {
+    "year": 2025,
+    "authors": "Luo H, Koponen M, Roethlein C, Lau KK, Sjölander A, Bell JS, Lai ECC, Man KKC, et al.",
+    "title": "A multinational cohort study of trends in survival following dementia diagnosis",
+    "journal": "Communications Medicine",
+    "doi": "10.1038/s43856-025-00923-6",
+    "pmid": "40437158",
+    "tags": ["dementia", "survival", "multinational"]
+  },
+  {
+    "year": 2025,
+    "authors": "Brett J, Cesta CE, Gillies MB, Havard A, Bateman BT, Cohen JM, Furu K, Hernandez-Diaz S, Karlsson P, Lai ECC, Man KKC, Shin JY, Wong ICK, et al.",
+    "title": "Global trends in analgesic opioid use in pregnancy",
+    "journal": "Anesthesiology",
+    "doi": "10.1097/ALN.0000000000005418",
+    "pmid": "39946665",
+    "tags": ["opioid", "pregnancy", "multinational"]
+  },
+  {
+    "year": 2025,
+    "authors": "Baxter SM, Lund LC, Andersen JH, Bell JS, Bittman J, Bosco-Levy P, Boudemaghe T, Lai ECC, Shin JY, et al.",
+    "title": "Glucagon-like peptide 1 receptor agonists and thyroid cancer risk: an international multisite cohort study",
+    "journal": "Thyroid",
+    "doi": "10.1089/thy.2024.0387",
+    "pmid": "39772758",
+    "tags": ["GLP-1", "thyroid-cancer", "multinational"]
+  },
+  {
+    "year": 2025,
+    "authors": "Lam ICH, Chai Y, Man KKC, Lau WCY, Luo H, Lin X, Yin C, Chui CSL, Li X, Zhang Q, Chan EWY, Wan EYF, Wong ICK.",
+    "title": "The short-, medium- and long-term risk and the multi-organ involvement of clinical sequelae after COVID-19 infection: a multinational network cohort study",
+    "journal": "Journal of the Royal Society of Medicine",
+    "doi": "10.1177/01410768251352666",
+    "pmid": "40626567",
+    "tags": ["COVID-19", "post-acute-sequelae", "multinational"]
+  },
+  {
+    "year": 2025,
+    "authors": "Chai Y, Lam ICH, Man KKC, Hayes JF, Wan EYF, Li X, Chui CSL, Lau WCY, Lin X, Yin C, Fan M, Chan EW, Wong ICK, Luo H.",
+    "title": "Psychiatric and neuropsychiatric sequelae of COVID-19 within 2 years: a multinational cohort study",
+    "journal": "BMC Medicine",
+    "doi": "10.1186/s12916-025-03952-z",
+    "pmid": "40055683",
+    "tags": ["COVID-19", "psychiatry", "multinational"]
+  },
+  {
+    "year": 2026,
+    "authors": "Ko HY, Au PCM, Cheng MC, Lai ECC, Man KKC, Shin JY, et al.",
+    "title": "Emulating six cardiovascular outcome trials of antidiabetic drugs using real-world databases from Korea and Taiwan",
+    "journal": "Clinical Pharmacology & Therapeutics",
+    "doi": "10.1002/cpt.70027",
+    "pmid": "40820495",
+    "tags": ["antidiabetic", "cardiovascular", "target-trial-emulation"]
   }
 ]

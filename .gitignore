@@ -6,3 +6,8 @@ dist/
 .DS_Store
 Thumbs.db
 *.log
+
+# Reference papers (kept locally, not committed)
+*.pdf
+*.docx
+!public/**/*.pdf
