@@ -304,35 +304,6 @@
     ]
   },
   {
-    "year": 2026,
-    "authors": "Bu F, Wu R, Ostropolets A, Aminorroaya A, Chen HY, Chai Y, ..., Hripcsak G, Suchard MA.",
-    "title": "Comparative cardiovascular effectiveness of glucagon-like peptide 1 receptor agonists and sodium-glucose cotransporter 2 inhibitors in diabetes mellitus",
-    "journal": "Journal of the American College of Cardiology",
-    "doi": "10.1016/j.jacc.2026.02.5123",
-    "pmid": "41984016",
-    "tags": [
-      "GLP-1",
-      "SGLT2",
-      "cardiovascular",
-      "diabetes",
-      "multinational"
-    ]
-  },
-  {
-    "year": 2026,
-    "authors": "Kim C, Bu F, Blacketer C, Ostropolets A, Duarte-Salles T, Viernes B, ..., Suchard MA, Lu Y.",
-    "title": "Real-world evidence for comparative safety of second-line antihyperglycemic agents in older adults with type 2 diabetes",
-    "journal": "Nature Communications",
-    "doi": "10.1038/s41467-026-71307-0",
-    "pmid": "41935054",
-    "tags": [
-      "antidiabetic",
-      "older-adults",
-      "drug-safety",
-      "multinational"
-    ]
-  },
-  {
     "year": 2020,
     "authors": "Ilomaki J, Bell JS, Chan AYL, Tolppanen AM, Luo H, Wei L, ..., Cook S, Wong ICK.",
     "title": "Application of Healthcare 'Big Data' in CNS Drug Research: The Example of the Neurological and Mental Health Global Epidemiology Network (NeuroGEN)",
@@ -359,6 +330,238 @@
       "databases",
       "infrastructure",
       "multinational"
+    ]
+  },
+  {
+    "year": 2022,
+    "authors": "Man KKC, Shao SC, Chaiyakunapruk N, Dilokthornsakul P, Kubota K, Li J, ..., Kao Yang YH, Lai ECC.",
+    "title": "Metabolic events associated with the use of antipsychotics in children,  adolescents and young adults: a multinational sequence symmetry study",
+    "journal": "Eur Child Adolesc Psychiatry",
+    "doi": "10.1007/s00787-020-01674-6",
+    "pmid": "33185773",
+    "tags": [
+      "antipsychotics",
+      "metabolic",
+      "sequence-symmetry",
+      "multinational",
+      "pediatric"
+    ]
+  },
+  {
+    "year": 2020,
+    "authors": "Su CC, Chia-Cheng Lai E, Kao Yang YH, Man KKC, Kubota K, Stang P, ..., Wong ICK, Setoguchi S.",
+    "title": "Incidence, prevalence and prescription patterns of antipsychotic medications use  in Asia and US: A cross-nation comparison with common data model",
+    "journal": "J Psychiatr Res",
+    "doi": "10.1016/j.jpsychires.2020.08.025",
+    "pmid": "32947205",
+    "tags": [
+      "antipsychotics",
+      "drug-utilization",
+      "CDM",
+      "multinational"
+    ]
+  },
+  {
+    "year": 2018,
+    "authors": "Kubota K, Kamijima Y, Kao Yang YH, Kimura S, Chia-Cheng Lai E, Man KKC, ..., Zhang Y, Setoguchi S.",
+    "title": "Penetration of new antidiabetic medications in East Asian countries and the  United States: A cross-national comparative study",
+    "journal": "PLoS One",
+    "doi": "10.1371/journal.pone.0208796",
+    "pmid": "30540837",
+    "tags": [
+      "antidiabetic",
+      "drug-utilization",
+      "multinational"
+    ]
+  },
+  {
+    "year": 2018,
+    "authors": "Lai ECC, Shin JY, Kubota K, Man KKC, Park BJ, Pratt N, Roughead EE, Wong ICK, Kao Yang YH, Setoguchi S.",
+    "title": "Comparative safety of NSAIDs for gastrointestinal events in Asia-Pacific  populations: A multi-database, international cohort study",
+    "journal": "Pharmacoepidemiol Drug Saf",
+    "doi": "10.1002/pds.4663",
+    "pmid": "30232832",
+    "tags": [
+      "NSAIDs",
+      "gastrointestinal",
+      "drug-safety",
+      "multinational"
+    ]
+  },
+  {
+    "year": 2018,
+    "authors": "Raman SR, Man KKC, Bahmanyar S, Berard A, Bilder S, Boukhris T, ..., Ip P, Wong ICK.",
+    "title": "Trends in attention-deficit hyperactivity disorder medication use: a  retrospective observational study using population-based databases",
+    "journal": "Lancet Psychiatry",
+    "doi": "10.1016/S2215-0366(18)30293-1",
+    "pmid": "30220514",
+    "tags": [
+      "ADHD",
+      "drug-utilization",
+      "multinational"
+    ]
+  },
+  {
+    "year": 2017,
+    "authors": "Lai ECC, Pratt N, Hsieh CY, Lin SJ, Pottegard A, Roughead EE, Kao Yang YH, Hallas J.",
+    "title": "Sequence symmetry analysis in pharmacovigilance and pharmacoepidemiologic  studies",
+    "journal": "Eur J Epidemiol",
+    "doi": "10.1007/s10654-017-0281-8",
+    "pmid": "28698923",
+    "tags": [
+      "sequence-symmetry",
+      "methodology",
+      "review"
+    ]
+  },
+  {
+    "year": 2016,
+    "authors": "Roughead EE, Chan EWY, Choi NK, Griffiths J, Jin XM, Lee J, ..., Yang YK, Pratt NL.",
+    "title": "Proton pump inhibitors and risk of Clostridium difficile infection: a  multi-country study using sequence symmetry analysis",
+    "journal": "Expert Opin Drug Saf",
+    "doi": "10.1080/14740338.2016.1238071",
+    "pmid": "27645304",
+    "tags": [
+      "PPI",
+      "C.-difficile",
+      "sequence-symmetry",
+      "multinational"
+    ]
+  },
+  {
+    "year": 2015,
+    "authors": "Roughead EE, Chan EWY, Choi NK, Kimura M, Kimura T, Kubota K, ..., Yang YH, Pratt NL.",
+    "title": "Variation in Association Between Thiazolidinediones and Heart Failure Across  Ethnic Groups: Retrospective analysis of Large Healthcare Claims Databases in Six Countries",
+    "journal": "Drug Saf",
+    "doi": "10.1007/s40264-015-0318-4",
+    "pmid": "26216600",
+    "tags": [
+      "thiazolidinediones",
+      "heart-failure",
+      "multinational"
+    ]
+  },
+  {
+    "year": 2015,
+    "authors": "Pratt N, Chan EWY, Choi NK, Kimura M, Kimura T, Kubota K, ..., Kao Yang YH, Roughead EE.",
+    "title": "Prescription sequence symmetry analysis: assessing risk, temporality, and  consistency for adverse drug reactions across datasets in five countries",
+    "journal": "Pharmacoepidemiol Drug Saf",
+    "doi": "10.1002/pds.3780",
+    "pmid": "25907076",
+    "tags": [
+      "sequence-symmetry",
+      "methodology",
+      "multinational"
+    ]
+  },
+  {
+    "year": 2022,
+    "authors": "Tong X, Li X, Pratt NL, Hillen JB, Stanford T, Ward M, ..., Leung WK, Wong ICK.",
+    "title": "Monoclonal antibodies and Fc-fusion protein biologic medicines: A multinational  cross-sectional investigation of accessibility and affordability in Asia Pacific regions between 2010 and 2020",
+    "journal": "Lancet Reg Health West Pac",
+    "doi": "10.1016/j.lanwpc.2022.100506",
+    "pmid": "35789824",
+    "tags": [
+      "biologics",
+      "accessibility",
+      "multinational"
+    ]
+  },
+  {
+    "year": 2022,
+    "authors": "Shen CY, Au PC, Baek YH, Cheung CL, Chung WP, Kim JH, ..., Wong ICK, Lai ECC.",
+    "title": "Comparative Treatment Persistence with Bone-Targeting Agents Among Asian Patients  with Bone Metastases from Solid Tumors: A Multinational Retrospective Cohort Study",
+    "journal": "BioDrugs",
+    "doi": "10.1007/s40259-022-00528-8",
+    "pmid": "35412221",
+    "tags": [
+      "bone-targeting",
+      "oncology",
+      "multinational"
+    ]
+  },
+  {
+    "year": 2021,
+    "authors": "Man KKC, Shao SC, Chang YC, Chi MH, Jeong HE, Lin SJ, ..., Yang YK, Lai ECC.",
+    "title": "Cardiovascular and metabolic risk of antipsychotics in children and young adults:  a multinational self-controlled case series study",
+    "journal": "Epidemiol Psychiatr Sci",
+    "doi": "10.1017/S2045796021000494",
+    "pmid": "34751642",
+    "tags": [
+      "antipsychotics",
+      "cardiovascular",
+      "sccs",
+      "multinational",
+      "pediatric"
+    ]
+  },
+  {
+    "year": 2021,
+    "authors": "Jeong HE, Lee H, Lai ECC, Liao TC, Man KKC, Wong ICK, Coghill D, Chi MH, Hsieh CY, Shin JY.",
+    "title": "Association between methylphenidate and risk of myocardial infarction: A  multinational self-controlled case series study",
+    "journal": "Pharmacoepidemiol Drug Saf",
+    "doi": "10.1002/pds.5322",
+    "pmid": "34216049",
+    "tags": [
+      "methylphenidate",
+      "myocardial-infarction",
+      "sccs",
+      "multinational"
+    ]
+  },
+  {
+    "year": 2021,
+    "authors": "Wang GH, Man KKC, Chang WH, Liao TC, Lai ECC.",
+    "title": "Use of antipsychotic drugs and cholinesterase inhibitors and risk of falls and  fractures: self-controlled case series",
+    "journal": "BMJ",
+    "doi": "10.1136/bmj.n1925",
+    "pmid": "34503972",
+    "tags": [
+      "antipsychotics",
+      "cholinesterase",
+      "falls",
+      "sccs",
+      "multinational"
+    ]
+  },
+  {
+    "year": 2021,
+    "authors": "Liu JM, Shen CY, Lau WCY, Shao SC, Man KKC, Hsu RJ, Wu CT, Lai ECC.",
+    "title": "Association between Androgen Deprivation Therapy and Risk of Dementia in Men with  Prostate Cancer",
+    "journal": "Cancers (Basel)",
+    "doi": "10.3390/cancers13153861",
+    "pmid": "34359762",
+    "tags": [
+      "androgen-deprivation",
+      "prostate-cancer",
+      "dementia",
+      "multinational"
+    ]
+  },
+  {
+    "year": 2021,
+    "authors": "Sing CW, Lin TC, Bartholomew S, Bell JS, Bennett C, Beyene K, ..., Zhao H, Wong ICK.",
+    "title": "Global epidemiology of hip fractures: a study protocol using a common analytical  platform among multiple countries",
+    "journal": "BMJ Open",
+    "doi": "10.1136/bmjopen-2020-047258",
+    "pmid": "34321298",
+    "tags": [
+      "hip-fracture",
+      "methodology",
+      "multinational"
+    ]
+  },
+  {
+    "year": 2020,
+    "authors": "Ilomaki J, Lai ECC, Bell JS.",
+    "title": "Using clinical registries, administrative data and electronic medical records to  improve medication safety and effectiveness in dementia",
+    "journal": "Curr Opin Psychiatry",
+    "doi": "10.1097/YCO.0000000000000579",
+    "pmid": "31972590",
+    "tags": [
+      "dementia",
+      "data-sources",
+      "methodology"
     ]
   }
 ]
