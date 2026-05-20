@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/PageHeader.astro";
 import Section from "../components/Section.astro";
 import ChairCard from "../components/ChairCard.astro";
+import GovernanceChart from "../components/GovernanceChart.astro";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
@@ -43,7 +44,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   <Section id="governance" eyebrow="03" title="Governance">
     <p>AsPEN is a <strong>Special Interest Group (SIG)</strong> of the International Society for Pharmacoepidemiology (ISPE), established in April 2012.</p>
     <p>The group meets multiple times per year by teleconference, and face-to-face at ISPE's Asian Conference on Pharmacoepidemiology (ACPE) and/or the annual International Conference on Pharmacoepidemiology and Therapeutic Risk Management (ICPE).</p>
-    <p>Leadership rotates between national groups; a Chair coordinates programme strategy, ISPE liaison, and multi-country study governance.</p>
+    <p>Leadership rotates between national groups; the Chair coordinates programme strategy, ISPE liaison, and multi-country study governance.</p>
+    <GovernanceChart />
   </Section>
 
   <Section id="how-to-join" eyebrow="04" title="How to join">
@@ -59,7 +61,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   <Section id="current-chair" eyebrow="05" title="Current Chair">
     <ChairCard
       name="Ju-Young Shin"
-      affiliation="Seoul National University (SNU)"
+      affiliation="SKKU · SNU"
+      photo={`${base}/images/chair-ju-young-shin.jpg`}
       bio="Professor of pharmacoepidemiology and pharmacovigilance, with active research in drug utilization and safety studies using nationwide healthcare databases. Editorial roles include Pharmacoepidemiology and Drug Safety."
     />
   </Section>
