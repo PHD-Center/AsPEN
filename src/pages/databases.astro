@@ -13,6 +13,7 @@ const countryMeta: Record<
   Taiwan:           { code: "TW", flag: "🇹🇼", lat: 23.7,  lng: 121.0,  region: "asia" },
   "Hong Kong":      { code: "HK", flag: "🇭🇰", lat: 22.32, lng: 114.17, region: "asia" },
   "United Kingdom": { code: "GB", flag: "🇬🇧", lat: 51.5,  lng: -0.13,  region: "external" },
+  "United States":  { code: "US", flag: "🇺🇸", lat: 38.91, lng: -77.04, region: "external" },
 };
 
 const groupedMap = new Map<string, typeof databases>();
@@ -25,7 +26,9 @@ const grouped = Array.from(groupedMap.entries());
 const asianGroups = grouped.filter(([c]) => countryMeta[c]?.region === "asia");
 const externalGroups = grouped.filter(([c]) => countryMeta[c]?.region === "external");
 
-const mapGroups = asianGroups.map(([country, dbs]) => {
+// Map markers include every country (East Asia + UK + US). The map is centered on
+// East Asia by default; users can pan/zoom out to reach UK and US.
+const mapGroups = grouped.map(([country, dbs]) => {
   const meta = countryMeta[country]!;
   return {
     country,
@@ -57,7 +60,7 @@ const typeColor: Record<string, string> = {
   <PageHeader
     eyebrow="Data"
     title="Databases"
-    description="A curated set of population-level health databases used in AsPEN multi-national studies — the NeuroGEN East-Asian sites (Tsai et al., Clin Epidemiol 2023) plus the UK CPRD as an external-control data source. Click a flag on the map to see every database for that country."
+    description="A curated set of population-level health databases used in AsPEN multi-national studies — the NeuroGEN East-Asian sites (Tsai et al., Clin Epidemiol 2023) plus international partner data sources (UK CPRD, US Medicare and Medicaid). The map is focused on East Asia; pan or zoom out to view UK and US partner sites."
   />
 
   <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 space-y-12">
@@ -108,9 +111,9 @@ const typeColor: Record<string, string> = {
 
     {externalGroups.length > 0 && (
       <div class="mt-16">
-        <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">External control</h2>
+        <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">International partner sites</h2>
         <p class="text-sm text-slate-600 max-w-3xl mb-6">
-          For comparative analyses that benchmark Asian findings against a Western European setting, AsPEN collaborators commonly draw on the UK <strong>CPRD</strong> as an external-control data source.
+          For comparative analyses that benchmark Asian findings against Western settings, AsPEN collaborators draw on data partners outside East Asia: the UK <strong>CPRD</strong> and the US <strong>Medicare</strong> / <strong>Medicaid</strong> programmes (per the NeuroGEN data initiative).
         </p>
         <div class="space-y-8">
           {externalGroups.map(([country, dbs]) => {
@@ -120,7 +123,7 @@ const typeColor: Record<string, string> = {
                 <header class="flex items-baseline gap-3 mb-4 border-b border-slate-200 pb-2">
                   <span class="text-3xl leading-none">{meta?.flag ?? "🏳️"}</span>
                   <h2 class="text-2xl font-bold text-slate-900">{country}</h2>
-                  <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">External control</span>
+                  <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">Partner site</span>
                 </header>
                 <div class="grid gap-4 md:grid-cols-2">
                   {dbs.map((d) => {

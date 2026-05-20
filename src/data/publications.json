@@ -331,5 +331,34 @@
       "drug-safety",
       "multinational"
     ]
+  },
+  {
+    "year": 2020,
+    "authors": "Ilomaki J, Bell JS, Chan AYL, Tolppanen AM, Luo H, Wei L, ..., Cook S, Wong ICK.",
+    "title": "Application of Healthcare 'Big Data' in CNS Drug Research: The Example of the Neurological and Mental Health Global Epidemiology Network (NeuroGEN)",
+    "journal": "CNS Drugs",
+    "doi": "10.1007/s40263-020-00742-4",
+    "pmid": "32572794",
+    "tags": [
+      "NeuroGEN",
+      "overview",
+      "neurology",
+      "mental-health",
+      "multinational"
+    ]
+  },
+  {
+    "year": 2021,
+    "authors": "Duszynski KM, Stark JH, Cohet C, Huang WT, Shin JY, Lai ECC, ..., Chen RT, Pratt NL.",
+    "title": "Suitability of databases in the Asia-Pacific for collaborative monitoring of vaccine safety",
+    "journal": "Pharmacoepidemiology and Drug Safety",
+    "doi": "10.1002/pds.5214",
+    "pmid": "33634545",
+    "tags": [
+      "vaccine-safety",
+      "databases",
+      "infrastructure",
+      "multinational"
+    ]
   }
 ]

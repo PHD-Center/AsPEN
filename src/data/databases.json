@@ -49,10 +49,21 @@
     "city": "Seoul",
     "lat": 37.5665,
     "lng": 126.978,
+    "name": "Health Insurance Review and Assessment Service (HIRA)",
+    "type": "Claims",
+    "coverage": "~50 million (essentially the entire Korean population under universal NHI)",
+    "notes": "Independent agency that reviews claims for reimbursement appropriateness; provides researchers a separate access pathway to Korean NHI claims since 2009 (open data initiative 2013)."
+  },
+  {
+    "country": "South Korea",
+    "code": "KR",
+    "city": "Seoul",
+    "lat": 37.5665,
+    "lng": 126.978,
     "name": "National Health Insurance Service – National Health Information Database (NHIS-NHID)",
     "type": "Claims",
     "coverage": "~50 million (compulsory NHI, nationwide)",
-    "notes": "Population-level claims with periodic national health screening linkage."
+    "notes": "Population-level claims with periodic national health screening linkage; complementary to HIRA, with stronger linkage to enrolment and health-check data."
   },
   {
     "country": "Taiwan",
@@ -108,5 +119,27 @@
     "type": "Primary-care EHR",
     "coverage": "~60 million patients (~20% currently active)",
     "notes": "MHRA-administered UK primary-care EHR with linkage to Hospital Episode Statistics, ONS mortality, and other national datasets."
+  },
+  {
+    "country": "United States",
+    "code": "US",
+    "city": "Washington, D.C.",
+    "lat": 38.9072,
+    "lng": -77.0369,
+    "name": "Medicare (20% sample)",
+    "type": "Claims",
+    "coverage": "~13 million beneficiaries (20% random sample of ~65M Medicare population aged 65+)",
+    "notes": "US federal insurance for those aged 65+ and selected disability groups; widely used in NeuroGEN multi-database studies."
+  },
+  {
+    "country": "United States",
+    "code": "US",
+    "city": "Washington, D.C.",
+    "lat": 38.9072,
+    "lng": -77.0369,
+    "name": "Medicaid",
+    "type": "Claims",
+    "coverage": "~70 million beneficiaries (US public insurance for low-income / disability)",
+    "notes": "Federal–state public insurance programme used as a partner data source in NeuroGEN multi-database collaborations."
   }
 ]
