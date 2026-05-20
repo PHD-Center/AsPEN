@@ -1,0 +1,128 @@
+# Pages CMS configuration — defines the friendly editor UI at
+# https://app.pagescms.org/PHD-Center/AsPEN
+#
+# Reference: https://pagescms.org/docs/configuration/
+#
+# After editing this file, the change takes effect on next page refresh in the CMS.
+
+content:
+  # ────────────────────────────────────────────────────────────────
+  # Tabular data (top-level JSON arrays) — edited as friendly tables
+  # ────────────────────────────────────────────────────────────────
+
+  - name: databases
+    label: Databases
+    type: file
+    path: src/data/databases.json
+    list: true
+    fields:
+      - { name: country,  label: Country,         type: string,  required: true }
+      - { name: name,     label: Database name,   type: string,  required: true }
+      - { name: type,     label: "Type (claims / EHR / …)", type: string }
+      - { name: coverage, label: Coverage,        type: string }
+      - { name: notes,    label: Notes,           type: text }
+
+  - name: members
+    label: Members & national contacts
+    type: file
+    path: src/data/members.json
+    list: true
+    fields:
+      - { name: country,     label: Country,         type: string, required: true }
+      - { name: code,        label: "ISO code (e.g. JP, KR)", type: string }
+      - { name: lat,         label: Latitude,        type: number, options: { step: 0.0001 } }
+      - { name: lng,         label: Longitude,       type: number, options: { step: 0.0001 } }
+      - { name: institution, label: Institution,     type: string }
+      - { name: contact,     label: Contact person,  type: string }
+      - { name: email,       label: Email,           type: string }
+
+  - name: publications
+    label: Publications
+    type: file
+    path: src/data/publications.json
+    list: true
+    fields:
+      - { name: year,    label: Year,    type: number, required: true }
+      - { name: authors, label: Authors, type: text,   required: true }
+      - { name: title,   label: Title,   type: text,   required: true }
+      - { name: journal, label: Journal, type: string }
+      - { name: doi,     label: DOI,     type: string }
+      - { name: pmid,    label: PMID,    type: string }
+      - name: tags
+        label: Tags
+        type: string
+        list: true
+
+  - name: history
+    label: History timeline
+    type: file
+    path: src/data/history.json
+    list: true
+    fields:
+      - { name: year,  label: Year,  type: string, required: true }
+      - { name: title, label: Title, type: string, required: true }
+      - { name: body,  label: Body,  type: text }
+
+  # ────────────────────────────────────────────────────────────────
+  # Markdown collections — each entry is one .md file
+  # ────────────────────────────────────────────────────────────────
+
+  - name: spotlight
+    label: Spotlight features
+    type: collection
+    path: src/content/spotlight
+    filename: "{primary}.md"
+    view:
+      fields: [title, date]
+      primary: title
+      sort: [date]
+    fields:
+      - { name: title, label: Title, type: string, required: true }
+      - { name: date,  label: Date,  type: date,   required: true }
+      - { name: body,  label: Body,  type: rich-text }
+
+  - name: activities
+    label: AsPEN studies (Activities)
+    type: collection
+    path: src/content/activities
+    filename: "{primary}.md"
+    view:
+      fields: [title, year, order]
+      primary: title
+      sort: [order]
+    fields:
+      - { name: title, label: Title, type: string, required: true }
+      - { name: year,  label: Year,  type: number }
+      - { name: order, label: "Display order (lower first)", type: number }
+      - { name: body,  label: Body,  type: rich-text }
+
+  # ────────────────────────────────────────────────────────────────
+  # Files you can edit as raw text (advanced — for theming / config)
+  # ────────────────────────────────────────────────────────────────
+
+  - name: styles
+    label: "Theme: brand colours (advanced)"
+    type: file
+    path: src/styles/globals.css
+    fields:
+      - name: body
+        label: CSS content
+        type: code
+        options: { language: css }
+
+  - name: readme
+    label: README
+    type: file
+    path: README.md
+    fields:
+      - name: body
+        label: README content
+        type: rich-text
+
+media:
+  input: public/images
+  output: /AsPEN/images   # served path; matches astro `base`
+
+settings:
+  content:
+    merge: true
