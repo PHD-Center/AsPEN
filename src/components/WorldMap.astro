@@ -99,10 +99,8 @@ const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
       return m;
     });
 
-    if (markers.length > 1) {
-      const group = L.featureGroup(markers);
-      map.fitBounds(group.getBounds(), { padding: [40, 40] });
-    }
+    // Auto-fit removed: respect the caller's initialCenter/initialZoom so the
+    // map can stay focused (e.g. East Asia) even when markers exist elsewhere.
 
     map.on("click", () => map.scrollWheelZoom.enable());
     map.on("mouseout", () => map.scrollWheelZoom.disable());
