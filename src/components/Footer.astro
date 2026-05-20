@@ -1,0 +1,30 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const year = new Date().getFullYear();
+---
+
+<footer class="mt-24 border-t border-slate-200 bg-slate-50">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 grid gap-8 md:grid-cols-3 text-sm">
+    <div>
+      <p class="font-semibold text-slate-800">AsPEN</p>
+      <p class="text-slate-600 mt-1">Asian Pharmacoepidemiology Network — a Special Interest Group of ISPE.</p>
+    </div>
+    <div>
+      <p class="font-semibold text-slate-800">Links</p>
+      <ul class="mt-2 space-y-1">
+        <li><a class="hover:text-brand-600" href="https://www.pharmacoepi.org/communities/sigs/aspen/" target="_blank" rel="noopener">ISPE Community page</a></li>
+        <li><a class="hover:text-brand-600" href={`${base}/contact/`}>Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="font-semibold text-slate-800">Get involved</p>
+      <ul class="mt-2 space-y-1">
+        <li><a class="hover:text-brand-600" href={`${base}/about/#how-to-join`}>How to join</a></li>
+        <li><a class="hover:text-brand-600" href={`${base}/members/`}>National groups</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+    © {year} AsPEN SIG. All rights reserved.
+  </div>
+</footer>

@@ -1,0 +1,66 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import Section from "../components/Section.astro";
+import ChairCard from "../components/ChairCard.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+
+<BaseLayout title="About AsPEN" description="Goal, mission, governance, how to join, and current chair of the Asian Pharmacoepidemiology Network.">
+  <PageHeader
+    eyebrow="About"
+    title="About AsPEN"
+    description="A multi-national research network supporting pharmacoepidemiologic studies and prompt safety-signal validation across Asia."
+  />
+
+  <nav aria-label="Section" class="border-b border-slate-200 bg-white sticky top-16 z-20">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 flex flex-wrap gap-1 py-2 text-sm">
+      <a href="#goal" class="px-3 py-1.5 rounded hover:bg-slate-100 text-slate-700">Goal</a>
+      <a href="#mission" class="px-3 py-1.5 rounded hover:bg-slate-100 text-slate-700">Mission</a>
+      <a href="#governance" class="px-3 py-1.5 rounded hover:bg-slate-100 text-slate-700">Governance</a>
+      <a href="#how-to-join" class="px-3 py-1.5 rounded hover:bg-slate-100 text-slate-700">How to join</a>
+      <a href="#current-chair" class="px-3 py-1.5 rounded hover:bg-slate-100 text-slate-700">Current Chair</a>
+    </div>
+  </nav>
+
+  <Section id="goal" eyebrow="01" title="Goal">
+    <p>To study the effectiveness and safety of medications commonly used in Asia using databases from individual Asian countries, and to facilitate prompt identification and validation of emerging safety issues across the region.</p>
+  </Section>
+
+  <Section id="mission" eyebrow="02" title="Mission">
+    <blockquote class="border-l-4 border-brand-500 pl-4 italic text-slate-700">
+      Develop and advance multi-national database research in Pharmacoepidemiology in the Asia/Pacific region.
+    </blockquote>
+    <p>Three objectives flow from this mission:</p>
+    <ul>
+      <li>Conduct pharmacoepidemiologic research using databases at AsPEN sites.</li>
+      <li>Provide educational opportunities for local and international researchers, policy makers, and healthcare practitioners.</li>
+      <li>Facilitate collaborations and communications across countries, regions, and research groups.</li>
+    </ul>
+  </Section>
+
+  <Section id="governance" eyebrow="03" title="Governance">
+    <p>AsPEN is a <strong>Special Interest Group (SIG)</strong> of the International Society for Pharmacoepidemiology (ISPE), established in April 2012.</p>
+    <p>The group meets multiple times per year by teleconference, and face-to-face at ISPE's Asian Conference on Pharmacoepidemiology (ACPE) and/or the annual International Conference on Pharmacoepidemiology and Therapeutic Risk Management (ICPE).</p>
+    <p>Leadership rotates between national groups; a Chair coordinates programme strategy, ISPE liaison, and multi-country study governance.</p>
+  </Section>
+
+  <Section id="how-to-join" eyebrow="04" title="How to join">
+    <p>AsPEN participation is open to researchers, healthcare professionals, regulators, and graduate students with an interest in pharmacoepidemiology in Asia/Pacific.</p>
+    <ol>
+      <li>Become a member of <a href="https://www.pharmacoepi.org/" target="_blank" rel="noopener">ISPE</a> (student rates available).</li>
+      <li>Sign in to the <a href="https://www.pharmacoepi.org/communities/sigs/aspen/" target="_blank" rel="noopener">ISPE Community → AsPEN SIG</a> page and request to join.</li>
+      <li>Reach out to your <a href={`${base}/members/`}>national group lead</a> to discuss local data access and collaboration opportunities.</li>
+    </ol>
+    <p>For general inquiries, see the <a href={`${base}/contact/`}>Contact</a> page.</p>
+  </Section>
+
+  <Section id="current-chair" eyebrow="05" title="Current Chair">
+    <ChairCard
+      name="Ju-Young Shin"
+      affiliation="Seoul National University (SNU)"
+      bio="Professor of pharmacoepidemiology and pharmacovigilance, with active research in drug utilization and safety studies using nationwide healthcare databases. Editorial roles include Pharmacoepidemiology and Drug Safety."
+    />
+  </Section>
+</BaseLayout>

@@ -1,0 +1,9 @@
+[
+  { "country": "Japan", "code": "JP", "lat": 36.2048, "lng": 138.2529, "contact": "—", "institution": "—", "email": "" },
+  { "country": "South Korea", "code": "KR", "lat": 35.9078, "lng": 127.7669, "contact": "Ju-Young Shin", "institution": "Seoul National University (SNU)", "email": "" },
+  { "country": "Taiwan", "code": "TW", "lat": 23.6978, "lng": 120.9605, "contact": "—", "institution": "—", "email": "" },
+  { "country": "Hong Kong", "code": "HK", "lat": 22.3193, "lng": 114.1694, "contact": "—", "institution": "—", "email": "" },
+  { "country": "Singapore", "code": "SG", "lat": 1.3521, "lng": 103.8198, "contact": "—", "institution": "—", "email": "" },
+  { "country": "Thailand", "code": "TH", "lat": 15.87, "lng": 100.9925, "contact": "—", "institution": "—", "email": "" },
+  { "country": "Australia", "code": "AU", "lat": -25.2744, "lng": 133.7751, "contact": "—", "institution": "—", "email": "" }
+]

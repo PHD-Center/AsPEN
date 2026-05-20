@@ -1,0 +1,20 @@
+[
+  {
+    "year": 2013,
+    "authors": "Andersen M, Bergman U, Choi NK, Gerhard T, Huang C, Jalbert J, et al.",
+    "title": "The Asian Pharmacoepidemiology Network (AsPEN): promoting multi-national collaboration for pharmacoepidemiologic research in Asia",
+    "journal": "Pharmacoepidemiology and Drug Safety",
+    "doi": "10.1002/pds.3439",
+    "pmid": "23653370",
+    "tags": ["overview"]
+  },
+  {
+    "year": 2013,
+    "authors": "Pratt N, Andersen M, Bergman U, Choi NK, Gerhard T, Huang C, et al.",
+    "title": "Multi-country rapid adverse drug event assessment: the Asian Pharmacoepidemiology Network (AsPEN) antipsychotic and acute hyperglycaemia study",
+    "journal": "Pharmacoepidemiology and Drug Safety",
+    "doi": "10.1002/pds.3440",
+    "pmid": "23696036",
+    "tags": ["PSSA", "antipsychotics"]
+  }
+]

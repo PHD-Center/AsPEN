@@ -1,0 +1,34 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import { getCollection } from "astro:content";
+
+const spotlight = (await getCollection("spotlight")).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+---
+
+<BaseLayout title="Spotlight — AsPEN" description="Featured studies, datasets, and methodologic contributions from the AsPEN community.">
+  <PageHeader
+    eyebrow="Activities → Spotlight"
+    title="Spotlight"
+    description="Short features highlighting an AsPEN-affiliated study, dataset, or methodologic contribution."
+  />
+
+  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12 grid gap-6 md:grid-cols-2">
+    {spotlight.map(async (entry) => {
+      const { Content } = await entry.render();
+      const d = entry.data.date;
+      const dateStr = d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+      return (
+        <article class="border border-slate-200 rounded-lg p-6 bg-white">
+          <p class="text-xs uppercase tracking-wide text-brand-600 font-semibold">{dateStr}</p>
+          <h2 class="mt-1 text-xl font-bold text-slate-900">{entry.data.title}</h2>
+          <div class="prose prose-slate max-w-none mt-3 text-sm">
+            <Content />
+          </div>
+        </article>
+      );
+    })}
+  </section>
+</BaseLayout>

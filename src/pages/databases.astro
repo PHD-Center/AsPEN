@@ -1,0 +1,41 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import databases from "../data/databases.json";
+---
+
+<BaseLayout title="Databases — AsPEN" description="Healthcare databases participating in the AsPEN network across Asia/Pacific.">
+  <PageHeader
+    eyebrow="Data"
+    title="Databases"
+    description="Population-level health data sources contributed by AsPEN member sites. Coverage and access policies vary by jurisdiction."
+  />
+
+  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12">
+    <div class="overflow-x-auto border border-slate-200 rounded-lg">
+      <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <thead class="bg-slate-50">
+          <tr>
+            <th class="px-4 py-3 text-left font-semibold text-slate-700">Country</th>
+            <th class="px-4 py-3 text-left font-semibold text-slate-700">Database</th>
+            <th class="px-4 py-3 text-left font-semibold text-slate-700">Type</th>
+            <th class="px-4 py-3 text-left font-semibold text-slate-700">Coverage</th>
+            <th class="px-4 py-3 text-left font-semibold text-slate-700">Notes</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 bg-white">
+          {databases.map((d) => (
+            <tr class="hover:bg-slate-50">
+              <td class="px-4 py-3 font-medium text-slate-900 whitespace-nowrap">{d.country}</td>
+              <td class="px-4 py-3 text-slate-800">{d.name}</td>
+              <td class="px-4 py-3 text-slate-600 whitespace-nowrap">{d.type}</td>
+              <td class="px-4 py-3 text-slate-600 whitespace-nowrap">{d.coverage}</td>
+              <td class="px-4 py-3 text-slate-600">{d.notes}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-6 text-xs text-slate-500">Entries marked "—" are placeholders pending migration of content from the previous AsPEN site.</p>
+  </section>
+</BaseLayout>

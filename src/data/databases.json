@@ -1,0 +1,51 @@
+[
+  {
+    "country": "Japan",
+    "name": "Japan Medical Data Center (JMDC)",
+    "type": "Claims (employer-based)",
+    "coverage": "~16M individuals",
+    "notes": "Working-age population claims with health-check data."
+  },
+  {
+    "country": "Taiwan",
+    "name": "National Health Insurance Research Database (NHIRD)",
+    "type": "Claims (universal NHI)",
+    "coverage": "~23M (entire population)",
+    "notes": "Population-wide outpatient, inpatient, and pharmacy claims."
+  },
+  {
+    "country": "Hong Kong",
+    "name": "Clinical Data Analysis and Reporting System (CDARS)",
+    "type": "EHR (public hospitals)",
+    "coverage": "~7M (public sector users)",
+    "notes": "Hospital Authority territory-wide electronic medical records."
+  },
+  {
+    "country": "South Korea",
+    "name": "HIRA / NHIS / Ajou Univ. School of Medicine DB",
+    "type": "Claims + EHR",
+    "coverage": "~50M (HIRA/NHIS, nationwide)",
+    "notes": "Multiple nationwide and institutional sources."
+  },
+  {
+    "country": "Australia",
+    "name": "PBS / MBS linked datasets",
+    "type": "Claims",
+    "coverage": "~25M",
+    "notes": "Pharmaceutical Benefits Scheme and Medicare Benefits Schedule."
+  },
+  {
+    "country": "Singapore",
+    "name": "National health datasets (placeholder)",
+    "type": "Claims / EHR",
+    "coverage": "—",
+    "notes": "Details to be confirmed from migrated content."
+  },
+  {
+    "country": "Thailand",
+    "name": "Universal Coverage Scheme (UCS)",
+    "type": "Claims",
+    "coverage": "~48M",
+    "notes": "National universal coverage scheme claims."
+  }
+]
