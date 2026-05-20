@@ -51,6 +51,17 @@ const typeColor: Record<string, string> = {
   "Primary-care EHR": "bg-violet-50 text-violet-700 border-violet-200",
   Biobank: "bg-amber-50 text-amber-700 border-amber-200",
 };
+
+// Other sites listed in the 2015 AsPEN database survey (Lai ECC et al., Epidemiology 2015)
+// that are not part of the current active network. Reference only — not on the map.
+const otherSites = [
+  { country: "China (PRC)", flag: "🇨🇳", name: "Hospital Information System of West China Hospital (HIS-WCH)", note: "Single-hospital EHR, Sichuan University; included in the 2015 AsPEN database survey." },
+  { country: "Singapore",   flag: "🇸🇬", name: "National Electronic Health Record (NEHR)",                       note: "Singapore's national EHR; listed in the 2015 AsPEN survey." },
+  { country: "Taiwan",      flag: "🇹🇼", name: "Taiwan Stroke Registry (TSR)",                                   note: "Prospective registry of acute stroke cases, since 2006." },
+  { country: "Taiwan",      flag: "🇹🇼", name: "Taiwan Cancer Registry (TCR)",                                   note: "National cancer surveillance registry, nationwide since 2003." },
+  { country: "Thailand",    flag: "🇹🇭", name: "Buddhachinaraj Hospital Database (BHD)",                         note: "Tertiary referral hospital EHR." },
+  { country: "Thailand",    flag: "🇹🇭", name: "Hospital Information (HI) — Ubon Ratchathani",                   note: "21-community-hospital EHR network." },
+];
 ---
 
 <BaseLayout
@@ -70,7 +81,7 @@ const typeColor: Record<string, string> = {
         groups={mapGroups}
         height="540px"
         initialCenter={[31, 126]}
-        initialZoom={4}
+        initialZoom={5}
       />
     </div>
 
@@ -151,6 +162,24 @@ const typeColor: Record<string, string> = {
         </div>
       </div>
     )}
+
+    <div class="mt-16">
+      <h2 class="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2">Other sites</h2>
+      <p class="text-sm text-slate-600 max-w-3xl mb-5">
+        Additional data sources documented in the 2015 AsPEN database survey (Lai ECC et al., <em>Epidemiology</em> 2015) that are not part of the current active network.
+      </p>
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {otherSites.map((s) => (
+          <div class="border border-slate-200 rounded-lg p-4 bg-slate-50/50">
+            <p class="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+              <span class="text-base leading-none">{s.flag}</span>{s.country}
+            </p>
+            <p class="mt-1 text-sm font-medium text-slate-800 leading-snug">{s.name}</p>
+            <p class="mt-1 text-xs text-slate-500 leading-relaxed">{s.note}</p>
+          </div>
+        ))}
+      </div>
+    </div>
 
     <p class="text-xs text-slate-500 italic">
       Database descriptions adapted from the NeuroGEN data-infrastructure paper (Tsai DHT et al., <em>Clinical Epidemiology</em> 2023; DOI: 10.2147/CLEP.S426485) and the NHIRD review (Hsieh CY et al., <em>Clinical Epidemiology</em> 2025; DOI: 10.2147/CLEP.S553894). Access policies and coverage may have changed since publication — please verify with each data custodian before study planning.
