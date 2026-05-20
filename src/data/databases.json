@@ -1,5 +1,49 @@
 [
   {
+    "country": "Japan",
+    "code": "JP",
+    "city": "Tokyo",
+    "lat": 35.6762,
+    "lng": 139.6503,
+    "name": "National Database of Health Insurance Claims and Specific Health Checkups (NDB)",
+    "type": "Claims",
+    "coverage": "≈120 million — effectively the entire Japanese population (since 2008)",
+    "notes": "Operated by the Ministry of Health, Labour and Welfare; nationwide insurance claims and specific health checkup records used for medical-cost optimization research."
+  },
+  {
+    "country": "Japan",
+    "code": "JP",
+    "city": "Tokyo",
+    "lat": 35.6762,
+    "lng": 139.6503,
+    "name": "JMDC Claims Database",
+    "type": "Claims",
+    "coverage": "~13.5 million members (≈9.4% of national population, working-age skew)",
+    "notes": "Operated by JMDC Inc.; receipts, health-checkup results, and enrolment records pooled from ~179 health insurance societies. Excellent longitudinal traceability (up to 17 years)."
+  },
+  {
+    "country": "Japan",
+    "code": "JP",
+    "city": "Tokyo",
+    "lat": 35.6762,
+    "lng": 139.6503,
+    "name": "DeSC Database",
+    "type": "Claims",
+    "coverage": "~9.3 million members (≈8% of population) across employer / national / late-stage elderly insurers (since 2014)",
+    "notes": "Operated by DeSC Healthcare, Inc.; first commercial Japanese DB to span Employee Health Insurance, National Health Insurance, and Late-Stage Elderly Healthcare in a single dataset."
+  },
+  {
+    "country": "Japan",
+    "code": "JP",
+    "city": "Tokyo",
+    "lat": 35.6762,
+    "lng": 139.6503,
+    "name": "Medical Data Vision (MDV) Database",
+    "type": "Hospital-based EHR + DPC claims",
+    "coverage": "≈48 million patients across 519 acute-care DPC hospitals (≈29% of acute-hospital admissions in Japan)",
+    "notes": "Operated by Medical Data Vision Co., Ltd.; inpatient and outpatient DPC claims plus laboratory results — strong for in-hospital exposure, severity, and outcomes research."
+  },
+  {
     "country": "South Korea",
     "code": "KR",
     "city": "Seoul",

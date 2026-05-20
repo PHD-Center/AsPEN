@@ -8,6 +8,7 @@ const countryMeta: Record<
   string,
   { code: string; flag: string; lat: number; lng: number; region: "asia" | "external" }
 > = {
+  Japan:            { code: "JP", flag: "🇯🇵", lat: 35.68, lng: 139.65, region: "asia" },
   "South Korea":    { code: "KR", flag: "🇰🇷", lat: 36.5,  lng: 127.8,  region: "asia" },
   Taiwan:           { code: "TW", flag: "🇹🇼", lat: 23.7,  lng: 121.0,  region: "asia" },
   "Hong Kong":      { code: "HK", flag: "🇭🇰", lat: 22.32, lng: 114.17, region: "asia" },
@@ -64,8 +65,8 @@ const typeColor: Record<string, string> = {
       <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-3">East Asia network</h2>
       <WorldMap
         groups={mapGroups}
-        height="520px"
-        initialCenter={[30, 122]}
+        height="540px"
+        initialCenter={[31, 126]}
         initialZoom={4}
       />
     </div>
