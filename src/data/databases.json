@@ -1,5 +1,38 @@
 [
   {
+    "country": "Taiwan",
+    "code": "TW",
+    "city": "Taipei",
+    "lat": 25.033,
+    "lng": 121.5654,
+    "name": "National Health Insurance Research Database (NHIRD)",
+    "type": "Claims",
+    "coverage": ">23 million (>99% of population, since 1995)",
+    "notes": "Universal single-payer claims; 70+ billion records and 3.4 billion medical images as of 2024, now including structured laboratory and imaging data."
+  },
+  {
+    "country": "Taiwan",
+    "code": "TW",
+    "city": "Taoyuan / Linkou",
+    "lat": 25.0,
+    "lng": 121.39,
+    "name": "Chang Gung Research Database (CGRD)",
+    "type": "Multi-institutional EHR",
+    "coverage": "~1.3M outpatients + ~200K inpatients per year (~6–10% of national population)",
+    "notes": "Standardized electronic medical records from seven Chang Gung Memorial Hospitals; available since 2000 with ~1-month data latency."
+  },
+  {
+    "country": "Taiwan",
+    "code": "TW",
+    "city": "Taipei",
+    "lat": 25.06,
+    "lng": 121.6,
+    "name": "Taiwan Biobank (TWB)",
+    "type": "Biobank",
+    "coverage": "~200,000 community participants (target 1 million)",
+    "notes": "Population-based biomedical biobank linking genomic, lifestyle, and clinical data."
+  },
+  {
     "country": "Japan",
     "code": "JP",
     "city": "Tokyo",
@@ -64,39 +97,6 @@
     "type": "Claims",
     "coverage": "~50 million (compulsory NHI, nationwide)",
     "notes": "Population-level claims with periodic national health screening linkage; complementary to HIRA, with stronger linkage to enrolment and health-check data."
-  },
-  {
-    "country": "Taiwan",
-    "code": "TW",
-    "city": "Taipei",
-    "lat": 25.033,
-    "lng": 121.5654,
-    "name": "National Health Insurance Research Database (NHIRD)",
-    "type": "Claims",
-    "coverage": ">23 million (>99% of population, since 1995)",
-    "notes": "Universal single-payer claims; 70+ billion records and 3.4 billion medical images as of 2024, now including structured laboratory and imaging data."
-  },
-  {
-    "country": "Taiwan",
-    "code": "TW",
-    "city": "Taoyuan / Linkou",
-    "lat": 25.0,
-    "lng": 121.39,
-    "name": "Chang Gung Research Database (CGRD)",
-    "type": "Multi-institutional EHR",
-    "coverage": "~1.3M outpatients + ~200K inpatients per year (~6–10% of national population)",
-    "notes": "Standardized electronic medical records from seven Chang Gung Memorial Hospitals; available since 2000 with ~1-month data latency."
-  },
-  {
-    "country": "Taiwan",
-    "code": "TW",
-    "city": "Taipei",
-    "lat": 25.06,
-    "lng": 121.6,
-    "name": "Taiwan Biobank (TWB)",
-    "type": "Biobank",
-    "coverage": "~200,000 community participants (target 1 million)",
-    "notes": "Population-based biomedical biobank linking genomic, lifestyle, and clinical data."
   },
   {
     "country": "Hong Kong",
