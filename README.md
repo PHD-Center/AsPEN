@@ -42,7 +42,7 @@ After saving, commit and push to `main` — GitHub Actions rebuilds and redeploy
 
 1. Create a GitHub repo and push this folder.
 2. Repo **Settings → Pages → Source = GitHub Actions**.
-3. `site` and `base` are pre-set for `https://aspensig.github.io/aspensig/`. Change them only if you fork to a different owner or use a custom domain.
+3. `site` and `base` are pre-set for `https://phd-center.github.io/aspensig/`. Change them only if you fork to a different owner or use a custom domain.
 5. Push to `main`; the workflow at `.github/workflows/deploy.yml` builds and deploys.
 
 ### Switching to `aspensig.asia`
