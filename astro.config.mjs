@@ -2,12 +2,12 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 
-// When deploying to https://<owner>.github.io/aspensig-site/ keep `base: '/aspensig-site'`.
-// When deploying to a custom apex domain (aspensig.asia) or to `<owner>.github.io` root,
-// set base to '/' (or remove it).
+// Deployment target: https://aspensig.github.io/aspensig/
+// If you later switch to a custom apex domain (e.g. aspensig.asia),
+// change `site` and set `base: '/'`.
 export default defineConfig({
-  site: 'https://example.github.io',
-  base: '/aspensig-site',
+  site: 'https://aspensig.github.io',
+  base: '/aspensig',
   trailingSlash: 'ignore',
   vite: {
     plugins: [tailwindcss()],

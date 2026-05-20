@@ -6,7 +6,7 @@ Static site for the AsPEN Special Interest Group, built with [Astro](https://ast
 
 ```bash
 npm install
-npm run dev          # http://localhost:4321/aspensig-site/
+npm run dev          # http://localhost:4321/aspensig/
 npm run build        # output to ./dist
 npm run preview      # serve the production build locally
 ```
@@ -42,8 +42,7 @@ After saving, commit and push to `main` — GitHub Actions rebuilds and redeploy
 
 1. Create a GitHub repo and push this folder.
 2. Repo **Settings → Pages → Source = GitHub Actions**.
-3. Update `site` in `astro.config.mjs` to match your GitHub owner (e.g. `https://aspensig.github.io`).
-4. If your repo name is *not* `<owner>.github.io`, leave `base: '/aspensig-site'` to match the repo name. Otherwise set `base: '/'`.
+3. `site` and `base` are pre-set for `https://aspensig.github.io/aspensig/`. Change them only if you fork to a different owner or use a custom domain.
 5. Push to `main`; the workflow at `.github/workflows/deploy.yml` builds and deploys.
 
 ### Switching to `aspensig.asia`
