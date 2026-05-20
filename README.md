@@ -26,17 +26,56 @@ public/                            static assets (images, favicon, CNAME)
 
 ## Editing content (non-developer guide)
 
+You can edit everything **directly on GitHub.com — no local install needed.**
+
+### Quick edits in the browser
+
+1. Open the file on GitHub (e.g. https://github.com/PHD-Center/AsPEN/blob/main/src/data/databases.json).
+2. Click the ✏️ pencil icon (top right of the file view).
+3. Make your changes.
+4. Scroll down, write a short "Commit message" (e.g. *"Update Taiwan NHIRD coverage"*), and click **Commit changes**.
+5. Wait ~1 minute — GitHub Actions rebuilds, then refresh https://phd-center.github.io/AsPEN/.
+
+Track progress at https://github.com/PHD-Center/AsPEN/actions — green check = live, red X = something broke (just revert your last edit by clicking the file's history).
+
+### Where to edit what
+
 | Want to update… | Edit this file |
 |---|---|
+| Brand colour (whole site) | `src/styles/globals.css` — change the `--color-brand-*` hex values |
+| Hero headline / subhead | `src/components/Hero.astro` |
 | Mission / Chair / About text | `src/pages/about.astro` |
 | Databases table | `src/data/databases.json` |
 | National members & contacts | `src/data/members.json` |
 | Publications list | `src/data/publications.json` |
 | History timeline | `src/data/history.json` |
-| Add a Spotlight study | new `.md` in `src/content/spotlight/` |
-| Add an AsPEN study | new `.md` in `src/content/activities/` |
+| Add a Spotlight study | new `.md` file in `src/content/spotlight/` (copy `sample-spotlight.md`) |
+| Add an AsPEN study | new `.md` file in `src/content/activities/` |
+| Contact email | `src/pages/contact.astro` — change the `contactEmail` line |
+| Favicon | replace `public/favicon.svg` |
 
-After saving, commit and push to `main` — GitHub Actions rebuilds and redeploys automatically.
+### Changing the brand colour
+
+The whole site uses six "brand" tokens defined in `src/styles/globals.css`. To re-theme, edit only those six hex values and push — Tailwind picks them up at build time.
+
+```css
+@theme {
+  --color-brand-50:  #e8f4ee;   /* very pale  — backgrounds */
+  --color-brand-100: #c8e4d2;   /* pale       — chips/tags */
+  --color-brand-500: #3a8a6e;   /* primary    — main accent */
+  --color-brand-600: #2d6e57;   /* darker     — buttons, links */
+  --color-brand-700: #225641;   /* darkest    — hover states */
+  --color-brand-900: #0f2e22;   /* near-black */
+
+  --color-accent-500: #2a8b85;  /* used only for the Hero gradient's "from" stop */
+}
+```
+
+Tools that help pick a palette:
+- https://uicolors.app/create — paste your main hex (the `-500`), it generates the 50–900 scale
+- https://tints.dev/ — similar, plus copy-as-CSS
+
+After editing, commit on GitHub → wait ~1 min → reload the site.
 
 ## Deployment
 
