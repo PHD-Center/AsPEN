@@ -122,6 +122,28 @@
     "notes": "MHRA-administered UK primary-care EHR with linkage to Hospital Episode Statistics, ONS mortality, and other national datasets."
   },
   {
+    "country": "United Kingdom",
+    "code": "GB",
+    "city": "London",
+    "lat": 51.5074,
+    "lng": -0.1278,
+    "name": "The Health Improvement Network (THIN)",
+    "type": "Primary-care EHR",
+    "coverage": "~17 million patients (~6% of UK population, since 2003)",
+    "notes": "UK primary-care EHR drawn from contributing general practices; complementary to CPRD, mapped to international coding systems. Listed as a NeuroGEN partner database."
+  },
+  {
+    "country": "United Kingdom",
+    "code": "GB",
+    "city": "Stockport (UK-wide)",
+    "lat": 53.4106,
+    "lng": -2.1575,
+    "name": "UK Biobank (UKB)",
+    "type": "Biobank",
+    "coverage": "~500,000 community participants aged 40–69 at recruitment (2006–2010)",
+    "notes": "Population-based biomedical biobank linking genomic, lifestyle, imaging, and electronic medical record data. NeuroGEN partner biomedical database."
+  },
+  {
     "country": "United States",
     "code": "US",
     "city": "Washington, D.C.",
