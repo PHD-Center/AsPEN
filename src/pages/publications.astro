@@ -4,7 +4,6 @@ import PageHeader from "../components/PageHeader.astro";
 import pubsRaw from "../data/publications.json";
 
 const publications = [...pubsRaw].sort((a, b) => b.year - a.year);
-const allTags = Array.from(new Set(publications.flatMap((p) => p.tags))).sort();
 const years = Array.from(new Set(publications.map((p) => p.year))).sort((a, b) => b - a);
 ---
 
@@ -12,23 +11,16 @@ const years = Array.from(new Set(publications.map((p) => p.year))).sort((a, b) =
   <PageHeader
     eyebrow="Publications"
     title="Publications"
-    description="Peer-reviewed output from AsPEN collaborations. Filter by year, topic, or search by keyword."
+    description="Peer-reviewed output from AsPEN collaborations. Filter by year, or search by keyword."
   />
 
   <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12">
-    <div class="grid gap-3 sm:grid-cols-3 mb-6">
+    <div class="grid gap-3 sm:grid-cols-2 mb-6">
       <label class="block">
         <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Year</span>
         <select id="filter-year" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm">
           <option value="">All years</option>
           {years.map((y) => <option value={y}>{y}</option>)}
-        </select>
-      </label>
-      <label class="block">
-        <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Topic</span>
-        <select id="filter-tag" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm">
-          <option value="">All topics</option>
-          {allTags.map((t) => <option value={t}>{t}</option>)}
         </select>
       </label>
       <label class="block">
@@ -38,23 +30,36 @@ const years = Array.from(new Set(publications.map((p) => p.year))).sort((a, b) =
     </div>
 
     <ul id="pub-list" class="divide-y divide-slate-200 border border-slate-200 rounded-lg overflow-hidden bg-white">
-      {publications.map((p) => (
-        <li
-          class="p-5 hover:bg-slate-50"
-          data-year={p.year}
-          data-tags={p.tags.join(",")}
-          data-search={`${p.title} ${p.authors} ${p.journal}`.toLowerCase()}
-        >
-          <p class="text-xs text-slate-500">{p.year} · {p.journal}</p>
-          <p class="font-semibold text-slate-900 mt-1">{p.title}</p>
-          <p class="text-sm text-slate-600 mt-1">{p.authors}</p>
-          <div class="mt-2 flex flex-wrap gap-2 text-xs">
-            {p.tags.map((t) => <span class="inline-block bg-brand-50 text-brand-700 px-2 py-0.5 rounded">{t}</span>)}
-            {p.doi && <a class="text-brand-600 hover:underline" href={`https://doi.org/${p.doi}`} target="_blank" rel="noopener">DOI: {p.doi}</a>}
-            {p.pmid && <a class="text-brand-600 hover:underline" href={`https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`} target="_blank" rel="noopener">PMID: {p.pmid}</a>}
-          </div>
-        </li>
-      ))}
+      {publications.map((p) => {
+        const featured = (p as { featured?: boolean }).featured;
+        const blurb = (p as { blurb?: string }).blurb;
+        return (
+          <li
+            class={`p-5 hover:bg-slate-50 ${featured ? "border-l-4 border-l-brand-500 bg-brand-50/30" : ""}`}
+            data-year={p.year}
+            data-search={`${p.title} ${p.authors} ${p.journal}`.toLowerCase()}
+          >
+            <div class="flex items-center gap-2 text-xs text-slate-500">
+              {featured && (
+                <span class="inline-flex items-center gap-1 bg-gradient-to-r from-brand-600 to-brand-700 text-white font-semibold px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider">
+                  ⭐ Landmark
+                </span>
+              )}
+              <span>{p.year} · {p.journal}</span>
+            </div>
+            <p class="font-semibold text-slate-900 mt-1.5 leading-snug">{p.title}</p>
+            {blurb && (
+              <p class="text-sm text-brand-700 italic mt-1.5 leading-relaxed">{blurb}</p>
+            )}
+            <p class="text-sm text-slate-600 mt-1.5">{p.authors}</p>
+            <div class="mt-2 flex flex-wrap gap-2 text-xs">
+              {p.tags.map((t) => <span class="inline-block bg-brand-50 text-brand-700 px-2 py-0.5 rounded">{t}</span>)}
+              {p.doi && <a class="text-brand-600 hover:underline" href={`https://doi.org/${p.doi}`} target="_blank" rel="noopener">DOI: {p.doi}</a>}
+              {p.pmid && <a class="text-brand-600 hover:underline" href={`https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`} target="_blank" rel="noopener">PMID: {p.pmid}</a>}
+            </div>
+          </li>
+        );
+      })}
     </ul>
     <p id="pub-empty" class="hidden mt-6 text-sm text-slate-500 italic">No publications match your filters.</p>
   </section>
@@ -64,26 +69,23 @@ const years = Array.from(new Set(publications.map((p) => p.year))).sort((a, b) =
       const list = document.getElementById("pub-list");
       const empty = document.getElementById("pub-empty");
       const fYear = document.getElementById("filter-year");
-      const fTag = document.getElementById("filter-tag");
       const fQ = document.getElementById("filter-q");
       if (!list) return;
       const items = Array.from(list.querySelectorAll("li"));
       const apply = () => {
         const y = fYear.value;
-        const t = fTag.value;
         const q = fQ.value.trim().toLowerCase();
         let shown = 0;
         items.forEach((li) => {
           const matchYear = !y || li.dataset.year === y;
-          const matchTag = !t || (li.dataset.tags || "").split(",").includes(t);
           const matchQ = !q || (li.dataset.search || "").includes(q);
-          const visible = matchYear && matchTag && matchQ;
+          const visible = matchYear && matchQ;
           li.style.display = visible ? "" : "none";
           if (visible) shown++;
         });
         empty.classList.toggle("hidden", shown !== 0);
       };
-      [fYear, fTag, fQ].forEach((el) => el.addEventListener("input", apply));
+      [fYear, fQ].forEach((el) => el.addEventListener("input", apply));
     })();
   </script>
 </BaseLayout>

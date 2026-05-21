@@ -8,7 +8,9 @@
     "pmid": "23653370",
     "tags": [
       "overview"
-    ]
+    ],
+    "featured": true,
+    "blurb": "Founding methodology paper of AsPEN — describes the multi-national network and its rapid adverse drug event assessment approach."
   },
   {
     "year": 2013,
@@ -32,8 +34,10 @@
     "tags": [
       "databases",
       "infrastructure",
-      "distributed-network"
-    ]
+      "distributed network"
+    ],
+    "featured": true,
+    "blurb": "Foundational survey of population-level databases across the Asia-Pacific region; primary reference for this site's Databases page."
   },
   {
     "year": 2018,
@@ -57,7 +61,7 @@
     "pmid": "34801129",
     "tags": [
       "psychotropic",
-      "drug-utilization",
+      "drug utilization",
       "multinational"
     ]
   },
@@ -70,7 +74,7 @@
     "pmid": "34363297",
     "tags": [
       "dementia",
-      "drug-utilization",
+      "drug utilization",
       "multinational"
     ]
   },
@@ -83,7 +87,7 @@
     "pmid": "35366408",
     "tags": [
       "opioid",
-      "drug-utilization",
+      "drug utilization",
       "multinational"
     ]
   },
@@ -99,8 +103,10 @@
       "databases",
       "infrastructure",
       "neurology",
-      "mental-health"
-    ]
+      "mental health"
+    ],
+    "featured": true,
+    "blurb": "Detailed description of NeuroGEN's 15-database data infrastructure spanning Asia, Oceania, Europe and North America."
   },
   {
     "year": 2023,
@@ -111,7 +117,7 @@
     "pmid": "37591833",
     "tags": [
       "gabapentinoid",
-      "drug-utilization",
+      "drug utilization",
       "multinational"
     ]
   },
@@ -124,7 +130,7 @@
     "pmid": "36821644",
     "tags": [
       "polypharmacy",
-      "older-adults",
+      "older adults",
       "multinational"
     ]
   },
@@ -136,7 +142,7 @@
     "doi": "10.1002/jbmr.4821",
     "pmid": "37118993",
     "tags": [
-      "hip-fracture",
+      "hip fracture",
       "epidemiology",
       "multinational"
     ]
@@ -166,7 +172,7 @@
     "tags": [
       "lithium",
       "pregnancy",
-      "drug-utilization",
+      "drug utilization",
       "multinational"
     ]
   },
@@ -179,7 +185,7 @@
     "pmid": "40889082",
     "tags": [
       "opioid",
-      "drug-utilization",
+      "drug utilization",
       "multinational"
     ]
   },
@@ -217,8 +223,8 @@
     "doi": "10.1089/thy.2024.0387",
     "pmid": "39772758",
     "tags": [
-      "GLP-1",
-      "thyroid-cancer",
+      "GLP 1",
+      "thyroid cancer",
       "multinational"
     ]
   },
@@ -230,8 +236,8 @@
     "doi": "10.1177/01410768251352666",
     "pmid": "40626567",
     "tags": [
-      "COVID-19",
-      "post-acute-sequelae",
+      "COVID 19",
+      "post acute sequelae",
       "multinational"
     ]
   },
@@ -243,7 +249,7 @@
     "doi": "10.1186/s12916-025-03952-z",
     "pmid": "40055683",
     "tags": [
-      "COVID-19",
+      "COVID 19",
       "psychiatry",
       "multinational"
     ]
@@ -257,7 +263,7 @@
     "pmid": "39241791",
     "tags": [
       "psychotropic",
-      "COVID-19",
+      "COVID 19",
       "depression",
       "anxiety",
       "multinational"
@@ -273,7 +279,7 @@
     "tags": [
       "antiseizure",
       "epilepsy",
-      "drug-utilization",
+      "drug utilization",
       "multinational"
     ]
   },
@@ -285,8 +291,8 @@
     "doi": "10.2337/dc25-0154",
     "pmid": "40465422",
     "tags": [
-      "GLP-1",
-      "thyroid-cancer",
+      "GLP 1",
+      "thyroid cancer",
       "multinational"
     ]
   },
@@ -300,7 +306,7 @@
     "tags": [
       "antidiabetic",
       "cardiovascular",
-      "target-trial-emulation"
+      "target trial emulation"
     ]
   },
   {
@@ -314,9 +320,11 @@
       "NeuroGEN",
       "overview",
       "neurology",
-      "mental-health",
+      "mental health",
       "multinational"
-    ]
+    ],
+    "featured": true,
+    "blurb": "Narrative introduction to NeuroGEN — how international 'big data' platforms are applied to CNS drug research."
   },
   {
     "year": 2021,
@@ -326,7 +334,7 @@
     "doi": "10.1002/pds.5214",
     "pmid": "33634545",
     "tags": [
-      "vaccine-safety",
+      "vaccine safety",
       "databases",
       "infrastructure",
       "multinational"
@@ -342,7 +350,7 @@
     "tags": [
       "antipsychotics",
       "metabolic",
-      "sequence-symmetry",
+      "sequence symmetry",
       "multinational",
       "pediatric"
     ]
@@ -356,7 +364,7 @@
     "pmid": "32947205",
     "tags": [
       "antipsychotics",
-      "drug-utilization",
+      "drug utilization",
       "CDM",
       "multinational"
     ]
@@ -370,7 +378,7 @@
     "pmid": "30540837",
     "tags": [
       "antidiabetic",
-      "drug-utilization",
+      "drug utilization",
       "multinational"
     ]
   },
@@ -384,7 +392,7 @@
     "tags": [
       "NSAIDs",
       "gastrointestinal",
-      "drug-safety",
+      "drug safety",
       "multinational"
     ]
   },
@@ -397,7 +405,7 @@
     "pmid": "30220514",
     "tags": [
       "ADHD",
-      "drug-utilization",
+      "drug utilization",
       "multinational"
     ]
   },
@@ -409,7 +417,7 @@
     "doi": "10.1007/s10654-017-0281-8",
     "pmid": "28698923",
     "tags": [
-      "sequence-symmetry",
+      "sequence symmetry",
       "methodology",
       "review"
     ]
@@ -423,8 +431,8 @@
     "pmid": "27645304",
     "tags": [
       "PPI",
-      "C.-difficile",
-      "sequence-symmetry",
+      "C. difficile",
+      "sequence symmetry",
       "multinational"
     ]
   },
@@ -437,7 +445,7 @@
     "pmid": "26216600",
     "tags": [
       "thiazolidinediones",
-      "heart-failure",
+      "heart failure",
       "multinational"
     ]
   },
@@ -449,7 +457,7 @@
     "doi": "10.1002/pds.3780",
     "pmid": "25907076",
     "tags": [
-      "sequence-symmetry",
+      "sequence symmetry",
       "methodology",
       "multinational"
     ]
@@ -475,7 +483,7 @@
     "doi": "10.1007/s40259-022-00528-8",
     "pmid": "35412221",
     "tags": [
-      "bone-targeting",
+      "bone targeting",
       "oncology",
       "multinational"
     ]
@@ -504,7 +512,7 @@
     "pmid": "34216049",
     "tags": [
       "methylphenidate",
-      "myocardial-infarction",
+      "myocardial infarction",
       "sccs",
       "multinational"
     ]
@@ -532,8 +540,8 @@
     "doi": "10.3390/cancers13153861",
     "pmid": "34359762",
     "tags": [
-      "androgen-deprivation",
-      "prostate-cancer",
+      "androgen deprivation",
+      "prostate cancer",
       "dementia",
       "multinational"
     ]
@@ -546,7 +554,7 @@
     "doi": "10.1136/bmjopen-2020-047258",
     "pmid": "34321298",
     "tags": [
-      "hip-fracture",
+      "hip fracture",
       "methodology",
       "multinational"
     ]
@@ -560,7 +568,7 @@
     "pmid": "31972590",
     "tags": [
       "dementia",
-      "data-sources",
+      "data sources",
       "methodology"
     ]
   },
@@ -572,9 +580,9 @@
     "doi": "10.1136/bmj.l1204",
     "pmid": "30971393",
     "tags": [
-      "5-alpha-reductase",
+      "5 alpha reductase",
       "diabetes",
-      "drug-safety"
+      "drug safety"
     ]
   }
 ]
