@@ -22,7 +22,9 @@
     "tags": [
       "PSSA",
       "antipsychotics"
-    ]
+    ],
+    "featured": true,
+    "blurb": "First multi-country application of AsPEN's PSSA framework — proof-of-concept for the network's rapid adverse drug event assessment methodology."
   },
   {
     "year": 2015,
