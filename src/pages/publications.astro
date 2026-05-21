@@ -8,16 +8,19 @@ const years = Array.from(new Set(publications.map((p) => p.year))).sort((a, b) =
 
 // Curated achievement milestones per year. Edit this list to tell the AsPEN story.
 // `year` drives the filter; click jumps to that year's publications below.
-const milestones: { year: number; text: string }[] = [
+// Each milestone may optionally link to a specific paper by PMID — clicking will
+// scroll the publication list below to that paper. Milestones without `pmid`
+// (e.g. organisational events) just sit on the timeline.
+const milestones: { year: number; text: string; pmid?: string }[] = [
   { year: 2012, text: "AsPEN founded as an ISPE Special Interest Group" },
-  { year: 2013, text: "First multi-country adverse drug event assessment — antipsychotics × acute hyperglycaemia (PSSA)" },
-  { year: 2015, text: "Asia-Pacific database survey published in Epidemiology — landmark catalogue of 11 Asian databases" },
-  { year: 2018, text: "Common Data Model framework applied to Asian databases (Clinical Epidemiology)" },
-  { year: 2020, text: "NeuroGEN initiative introduced — big data for CNS drug research (CNS Drugs)" },
-  { year: 2021, text: "Vaccine-safety database suitability assessed across 19 Asia-Pacific countries (Pharmacoepidemiol Drug Saf)" },
-  { year: 2023, text: "NeuroGEN data infrastructure formalised — 15 databases across Asia, Oceania, Europe and North America" },
-  { year: 2024, text: "Multi-national pregnancy outcomes study — 3.6 million mother–child pairs (Nature Medicine)" },
-  { year: 2026, text: "Asian DUPLICATE initiative — emulating randomized trials using real-world databases across Asia" },
+  { year: 2013, text: "First multi-country PSSA — antipsychotics × acute hyperglycaemia", pmid: "23696036" },
+  { year: 2015, text: "Asia-Pacific database survey (Epidemiology) — 11 Asian databases", pmid: "26133022" },
+  { year: 2018, text: "Common Data Model framework applied to Asian databases", pmid: "30100761" },
+  { year: 2020, text: "NeuroGEN initiative introduced — big data for CNS drug research", pmid: "32572794" },
+  { year: 2021, text: "Vaccine-safety database suitability — 19 Asia-Pacific countries", pmid: "33634545" },
+  { year: 2023, text: "NeuroGEN data infrastructure formalised — 15 databases, 4 continents", pmid: "38146486" },
+  { year: 2024, text: "Multi-national pregnancy outcomes — 3.6M mother–child pairs (Nature Medicine)", pmid: "38589601" },
+  { year: 2026, text: "Asian DUPLICATE initiative — emulating RCTs with real-world databases", pmid: "40820495" },
 ];
 ---
 
@@ -29,26 +32,28 @@ const milestones: { year: number; text: string }[] = [
   />
 
   <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
-    <!-- Year milestone timeline -->
-    <div class="mb-10">
-      <p class="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-4 flex items-baseline gap-2">
+    <!-- Year milestone timeline (number line) -->
+    <div class="mb-12">
+      <p class="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-5 flex items-baseline gap-2">
         Key milestones
-        <span class="text-[10px] font-normal text-slate-400 normal-case tracking-normal">click any year to filter publications below</span>
+        <span class="text-xs font-normal text-slate-400 normal-case tracking-normal">click any milestone to jump to that paper</span>
       </p>
 
-      <div class="relative">
-        <div class="flex gap-3 overflow-x-auto pb-3 -mx-1 px-1" id="milestone-strip">
+      <div class="relative overflow-x-auto pb-4 pt-1">
+        <div class="relative flex items-start gap-2" style="min-width: max-content;">
+          <!-- horizontal line behind dots -->
+          <div class="absolute left-4 right-4 top-[28px] h-0.5 bg-slate-200 pointer-events-none"></div>
+
           {milestones.map((m) => (
             <button
               type="button"
+              data-pmid={m.pmid ?? ""}
               data-year-btn={String(m.year)}
-              class="milestone-card group flex-shrink-0 w-56 text-left p-4 rounded-lg border border-slate-200 bg-white hover:border-brand-500 hover:shadow-md transition cursor-pointer"
+              class="milestone-node group relative flex flex-col items-center w-48 shrink-0 cursor-pointer text-center px-2"
             >
-              <div class="flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-brand-500 group-hover:scale-150 transition-transform"></span>
-                <span class="text-sm font-bold text-brand-700 font-mono">{m.year}</span>
-              </div>
-              <p class="text-xs text-slate-700 mt-2 leading-relaxed">{m.text}</p>
+              <span class="relative z-10 w-5 h-5 rounded-full bg-white border-2 border-brand-500 group-hover:bg-brand-500 transition shadow-sm"></span>
+              <span class="text-xl font-bold text-brand-700 font-mono mt-3">{m.year}</span>
+              <p class="text-sm text-slate-700 mt-2 leading-snug">{m.text}</p>
             </button>
           ))}
         </div>
@@ -75,7 +80,8 @@ const milestones: { year: number; text: string }[] = [
         const blurb = (p as { blurb?: string }).blurb;
         return (
           <li
-            class={`p-5 hover:bg-slate-50 ${featured ? "border-l-4 border-l-brand-500 bg-brand-50/30" : ""}`}
+            id={p.pmid ? `pub-${p.pmid}` : undefined}
+            class={`scroll-mt-24 p-5 hover:bg-slate-50 ${featured ? "border-l-4 border-l-brand-500 bg-brand-50/30" : ""}`}
             data-year={String(p.year)}
             data-search={`${p.title} ${p.authors} ${p.journal}`.toLowerCase()}
           >
@@ -105,12 +111,12 @@ const milestones: { year: number; text: string }[] = [
   </section>
 
   <style is:global>
-    .milestone-card.active {
-      border-color: var(--color-brand-600, #2d6e57);
-      background-color: rgba(58, 138, 110, 0.06);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    .milestone-node:hover .text-brand-700 { color: var(--color-brand-900, #0f2e22); }
+    @keyframes pub-flash {
+      0%   { background-color: rgba(58, 138, 110, 0.25); }
+      100% { background-color: transparent; }
     }
-    .milestone-card.active span.text-brand-700 { color: var(--color-brand-700, #225641); }
+    .pub-flash { animation: pub-flash 1.6s ease-out; }
   </style>
 
   <script is:inline>
@@ -142,13 +148,23 @@ const milestones: { year: number; text: string }[] = [
 
       milestoneBtns.forEach((btn) => {
         btn.addEventListener("click", () => {
-          const y = btn.dataset.yearBtn;
-          if (String(fYear.value) === String(y)) {
-            fYear.value = "";
-          } else {
-            fYear.value = y;
-          }
+          const pmid = btn.dataset.pmid;
+          // Always clear filters so the linked paper is visible
+          fYear.value = "";
+          fQ.value = "";
           apply();
+          if (pmid) {
+            const target = document.getElementById("pub-" + pmid);
+            if (target) {
+              target.scrollIntoView({ behavior: "smooth", block: "start" });
+              target.classList.remove("pub-flash");
+              // restart animation
+              void target.offsetWidth;
+              target.classList.add("pub-flash");
+              return;
+            }
+          }
+          // Fallback (e.g. milestone without pmid): just scroll list into view
           list.scrollIntoView({ behavior: "smooth", block: "start" });
         });
       });

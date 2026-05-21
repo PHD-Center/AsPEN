@@ -4,6 +4,7 @@ import PageHeader from "../components/PageHeader.astro";
 
 const contactName = "Daniel Tsai";
 const contactEmail = "danielhttsai@gmail.com";
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const linkedinGroups = [
   {
@@ -12,6 +13,7 @@ const linkedinGroups = [
     href: "https://www.linkedin.com/company/population-health-data-center-ncku/?viewAsMember=true",
     location: "Tainan, Taiwan",
     accent: "from-emerald-500 to-teal-600",
+    logo: `${base}/images/PHDc.png`,
     initials: "PHD",
   },
   {
@@ -20,6 +22,7 @@ const linkedinGroups = [
     href: "https://www.linkedin.com/in/pharmacoepidemiology-lab-7b1b3020a/?locale=en",
     location: "Suwon, South Korea",
     accent: "from-sky-500 to-blue-600",
+    logo: `${base}/images/SKKU.jpg`,
     initials: "PE",
   },
   {
@@ -28,6 +31,7 @@ const linkedinGroups = [
     href: "https://www.linkedin.com/company/csmpr2012/posts/?feedView=all",
     location: "Hong Kong",
     accent: "from-rose-500 to-pink-600",
+    logo: `${base}/images/CSMPR.jpg`,
     initials: "CSM",
   },
 ];
@@ -81,8 +85,12 @@ const linkedinGroups = [
             class="group block bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-lg hover:border-[#0A66C2] transition"
           >
             <div class={`h-20 bg-gradient-to-br ${g.accent} relative`}>
-              <div class="absolute -bottom-8 left-5 w-16 h-16 rounded-lg bg-white border-4 border-white shadow-md grid place-items-center text-slate-900 font-extrabold text-xl tracking-tight">
-                {g.initials}
+              <div class="absolute -bottom-8 left-5 w-16 h-16 rounded-lg bg-white border-4 border-white shadow-md grid place-items-center text-slate-900 font-extrabold text-xl tracking-tight overflow-hidden">
+                {(g as { logo?: string }).logo ? (
+                  <img src={(g as { logo: string }).logo} alt={`${g.name} logo`} class="w-full h-full object-contain" />
+                ) : (
+                  <span>{g.initials}</span>
+                )}
               </div>
               <span class="absolute top-3 right-3 inline-flex items-center gap-1 text-white/95 text-xs font-semibold bg-black/20 backdrop-blur px-2 py-0.5 rounded">
                 <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="currentColor" aria-hidden="true"><path d="M20.5 2h-17A1.5 1.5 0 0 0 2 3.5v17A1.5 1.5 0 0 0 3.5 22h17a1.5 1.5 0 0 0 1.5-1.5v-17A1.5 1.5 0 0 0 20.5 2zM8 19H5v-9h3v9zM6.5 8.25A1.75 1.75 0 1 1 8.3 6.5a1.78 1.78 0 0 1-1.8 1.75zM19 19h-3v-4.74c0-1.42-.6-1.93-1.38-1.93A1.74 1.74 0 0 0 13 14.19a.66.66 0 0 0 0 .14V19h-3v-9h2.9v1.3a3.11 3.11 0 0 1 2.7-1.4c1.55 0 3.36.86 3.36 3.66z"/></svg>
