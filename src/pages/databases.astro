@@ -118,8 +118,8 @@ const otherSites = [
                       <span class={`shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border ${chip}`}>{d.type}</span>
                     </div>
                     {d.city && <p class="text-xs text-slate-500 mb-2">{d.city}</p>}
-                    <p class="text-sm text-slate-700"><strong>Coverage:</strong> {d.coverage}</p>
-                    <p class="text-sm text-slate-600 mt-2 leading-relaxed">{d.notes}</p>
+                    <p class="text-sm text-slate-700 text-justify"><strong>Coverage:</strong> {d.coverage}</p>
+                    <p class="text-sm text-slate-600 mt-2 leading-relaxed text-justify">{d.notes}</p>
                   </div>
                 );
               })}
@@ -174,12 +174,8 @@ const otherSites = [
 
     <div class="mt-12">
       <h2 class="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2">Other sites</h2>
-      <p class="text-sm text-slate-600 max-w-3xl leading-relaxed">
-        Additional data sources documented in the 2015 AsPEN database survey (Lai ECC et al., <em>Epidemiology</em> 2015) that are not part of the current active network include
-        Singapore's <strong>National Electronic Health Record (NEHR)</strong>,
-        and two Thai sites — <strong>Buddhachinaraj Hospital Database (BHD)</strong>
-        (a tertiary referral hospital EHR) and the <strong>Hospital Information network</strong>
-        across 21 community hospitals in Ubon Ratchathani.
+      <p class="text-sm text-slate-600 max-w-3xl leading-relaxed text-justify">
+        Additional data sources documented that are not part of the current active network include Singapore's <strong>National Electronic Health Record (NEHR)</strong>, and two Thai sites — <strong>Buddhachinaraj Hospital Database (BHD)</strong> (a tertiary referral hospital EHR) and the <strong>Hospital Information network</strong> across 21 community hospitals in Ubon Ratchathani.
       </p>
     </div>
 
