@@ -53,9 +53,20 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
     </article>
   </div>
 
-  <!-- Education Co-Leads -->
+  <!-- Operations & Coordination -->
+  <div class="border-l-4 border-brand-300 pl-5 py-1">
+    <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold">Operations & Coordination</p>
+    <p class="text-sm text-slate-700 mt-2 leading-relaxed max-w-3xl">
+      Day-to-day operations are coordinated by the Chair with the <strong>SKKU team</strong> — handling ISPE liaison, multi-country study governance, and collaborative protocols.
+    </p>
+  </div>
+
+  <!-- Academic & Education -->
   <div>
-    <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold mb-4">Academic & Education</p>
+    <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold mb-2">Academic & Education</p>
+    <p class="text-sm text-slate-700 leading-relaxed max-w-3xl mb-5">
+      Develops educational resources, organises webinars and workshops, and mentors early-career pharmacoepidemiologists across AsPEN member sites — supporting capacity building and knowledge exchange throughout the network.
+    </p>
     <div class="grid gap-4 sm:grid-cols-2">
       {educationLeads.map((m) => (
         <article class="group flex items-center gap-4 p-4 rounded-xl bg-white border border-slate-200 hover:border-brand-400 hover:shadow-md transition">
@@ -79,13 +90,5 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
         </article>
       ))}
     </div>
-  </div>
-
-  <!-- Operations note -->
-  <div class="border-l-4 border-brand-300 pl-5 py-1">
-    <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold">Operations & Coordination</p>
-    <p class="text-sm text-slate-700 mt-2 leading-relaxed max-w-3xl">
-      Day-to-day operations are coordinated by the Chair with the <strong>SKKU team</strong> — handling ISPE liaison, multi-country study governance, and collaborative protocols.
-    </p>
   </div>
 </div>
