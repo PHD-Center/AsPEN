@@ -21,7 +21,7 @@
     "type": "Multi-institutional EHR",
     "coverage": "~1.3M outpatients + ~200K inpatients per year (~6–10% of national population)",
     "notes": "Standardized electronic medical records from seven Chang Gung Memorial Hospitals; available since 2000 with ~1-month data latency.",
-    "url": "https://www.phdcenter.org.tw/database/"
+    "url": "https://www.phdcenter.org.tw/chang-gung-research-database-cgrd/"
   },
   {
     "country": "Taiwan",
