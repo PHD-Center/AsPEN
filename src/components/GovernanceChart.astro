@@ -1,5 +1,8 @@
 ---
-// AsPEN Governance — vertical hierarchy: Chair → Operations → Academic & Education
+// AsPEN Governance — 3-tier org chart
+// Tier 1: Chair (top, centered)
+// Tier 2: Operations | Academic & Education (two branches)
+// Tier 3: Edward | Daniel (sub-branches under Education only)
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -28,7 +31,7 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
 ---
 
 <div class="not-prose my-8">
-  <!-- ── CHAIR ───────────────────────────────────────────────── -->
+  <!-- ── TIER 1 · CHAIR ──────────────────────────────────────── -->
   <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold mb-3 text-center">Chair</p>
   <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm max-w-4xl mx-auto">
     <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-accent-500 via-brand-500 to-brand-700"></div>
@@ -50,64 +53,89 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
     </div>
   </article>
 
-  <!-- ── connector ───────────────────────────────────────────── -->
-  <div class="flex flex-col items-center my-2">
-    <div class="w-px h-10 bg-slate-300"></div>
-    <svg width="14" height="14" viewBox="0 0 14 14" class="text-slate-300 -mt-1.5" aria-hidden="true">
-      <path d="M7 12 L1 4 L13 4 Z" fill="currentColor" />
-    </svg>
-  </div>
+  <!-- vertical drop from chair -->
+  <div class="flex justify-center"><div class="w-px h-8 bg-slate-300"></div></div>
 
-  <!-- ── OPERATIONS & COORDINATION ───────────────────────────── -->
-  <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold mb-3 text-center">Operations & Coordination</p>
-  <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm max-w-4xl mx-auto">
-    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-brand-500 to-brand-700"></div>
-    <div class="p-5 sm:p-6 pl-7 sm:pl-9">
-      <p class="text-sm text-slate-700 leading-relaxed">
-        Day-to-day operations are coordinated by the Chair with the <strong>SKKU team</strong> — handling ISPE liaison, multi-country study governance, and collaborative protocols.
-      </p>
-    </div>
-  </article>
+  <!-- ── TIER 2 · OPS | EDUCATION ────────────────────────────── -->
+  <div class="relative max-w-4xl mx-auto">
+    <!-- horizontal T-connector across both branches (desktop only) -->
+    <div class="hidden md:block absolute top-0 left-1/4 right-1/4 h-px bg-slate-300"></div>
 
-  <!-- ── connector ───────────────────────────────────────────── -->
-  <div class="flex flex-col items-center my-2">
-    <div class="w-px h-10 bg-slate-300"></div>
-    <svg width="14" height="14" viewBox="0 0 14 14" class="text-slate-300 -mt-1.5" aria-hidden="true">
-      <path d="M7 12 L1 4 L13 4 Z" fill="currentColor" />
-    </svg>
-  </div>
-
-  <!-- ── ACADEMIC & EDUCATION ────────────────────────────────── -->
-  <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold mb-3 text-center">Academic & Education</p>
-  <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm max-w-4xl mx-auto">
-    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-accent-500 to-brand-500"></div>
-    <div class="p-5 sm:p-7 pl-7 sm:pl-9">
-      <p class="text-sm text-slate-700 leading-relaxed mb-6">
-        Develops educational resources, organises webinars and workshops, and mentors early-career pharmacoepidemiologists across AsPEN member sites — supporting capacity building and knowledge exchange throughout the network.
-      </p>
-      <div class="grid gap-4 sm:grid-cols-2 pt-5 border-t border-slate-100">
-        {educationLeads.map((m) => (
-          <div class="flex items-center gap-4">
-            <div class="shrink-0 w-20 h-20 rounded-full overflow-hidden bg-brand-50 border border-brand-100">
-              {m.photo ? (
-                <img
-                  src={`${base}/images/${m.photo}`}
-                  alt={m.name}
-                  class="block w-full h-full object-cover"
-                  style={`object-position: ${m.pos ?? "center top"}`}
-                />
-              ) : (
-                <div class="w-full h-full grid place-items-center text-brand-700 text-sm font-bold">{initials(m.name)}</div>
-              )}
-            </div>
-            <div class="leading-tight">
-              <p class="font-bold text-slate-900 text-base">{m.name}</p>
-              <p class="text-sm text-brand-700 font-medium mt-0.5">{m.role}</p>
-              <p class="text-xs text-slate-500 mt-0.5">{m.inst}</p>
-            </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <!-- Operations branch -->
+      <div class="flex flex-col items-center">
+        <div class="hidden md:block w-px h-8 bg-slate-300"></div>
+        <div class="md:hidden w-px h-5 bg-slate-300"></div>
+        <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm w-full">
+          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-brand-500 to-brand-700"></div>
+          <div class="p-5 pl-7">
+            <p class="text-[10px] uppercase tracking-[0.25em] text-brand-700 font-bold">Operations & Coordination</p>
+            <p class="text-sm text-slate-700 mt-3 leading-relaxed">
+              Day-to-day operations are coordinated by the Chair with the <strong>SKKU team</strong> — handling ISPE liaison, multi-country study governance, and collaborative protocols.
+            </p>
           </div>
-        ))}
+        </article>
+      </div>
+
+      <!-- Education branch -->
+      <div class="flex flex-col items-center">
+        <div class="hidden md:block w-px h-8 bg-slate-300"></div>
+        <div class="md:hidden w-px h-5 bg-slate-300"></div>
+        <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm w-full">
+          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-accent-500 to-brand-500"></div>
+          <div class="p-5 pl-7">
+            <p class="text-[10px] uppercase tracking-[0.25em] text-brand-700 font-bold">Academic & Education</p>
+            <p class="text-sm text-slate-700 mt-3 leading-relaxed">
+              Develops educational resources, organises webinars and workshops, and mentors early-career pharmacoepidemiologists across AsPEN member sites — supporting capacity building and knowledge exchange.
+            </p>
+          </div>
+        </article>
       </div>
     </div>
-  </article>
+  </div>
+
+  <!-- ── TIER 3 · Member cards under Education only ─────────── -->
+  <div class="max-w-4xl mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <!-- empty column under Operations -->
+      <div class="hidden md:block"></div>
+
+      <!-- Education sub-tree -->
+      <div class="flex flex-col items-center">
+        <!-- vertical drop from Education card -->
+        <div class="w-px h-8 bg-slate-300"></div>
+
+        <!-- horizontal T to two members (desktop) -->
+        <div class="relative w-full">
+          <div class="hidden md:block absolute top-0 left-1/4 right-1/4 h-px bg-slate-300"></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-0">
+            {educationLeads.map((m) => (
+              <div class="flex flex-col items-center">
+                <div class="hidden md:block w-px h-6 bg-slate-300"></div>
+                <article class="group flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-brand-400 hover:shadow-md transition w-full">
+                  <div class="shrink-0 w-14 h-14 rounded-full overflow-hidden bg-brand-50 border border-brand-100">
+                    {m.photo ? (
+                      <img
+                        src={`${base}/images/${m.photo}`}
+                        alt={m.name}
+                        class="block w-full h-full object-cover"
+                        style={`object-position: ${m.pos ?? "center top"}`}
+                      />
+                    ) : (
+                      <div class="w-full h-full grid place-items-center text-brand-700 text-xs font-bold">{initials(m.name)}</div>
+                    )}
+                  </div>
+                  <div class="leading-tight">
+                    <p class="font-bold text-slate-900 text-sm">{m.name}</p>
+                    <p class="text-xs text-brand-700 font-medium mt-0.5">{m.role}</p>
+                    <p class="text-xs text-slate-500 mt-0.5">{m.inst}</p>
+                  </div>
+                </article>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
