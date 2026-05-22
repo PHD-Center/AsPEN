@@ -25,3 +25,6 @@ h1, h2, h3 { font-weight: 800; }
 
 /* Subtle PHDc-green tint on home page (and any page using <body class="home-tint">) */
 .home-tint { background: linear-gradient(180deg, #ffffff 0%, #f6faf8 60%, #eef5f1 100%); }
+
+/* When .text-justify is applied, also stretch the last line so all edges are flush */
+.text-justify { text-align-last: justify; hyphens: auto; }
