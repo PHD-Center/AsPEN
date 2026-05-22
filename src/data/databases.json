@@ -146,6 +146,61 @@
     "notes": "Population-based biomedical biobank linking genomic, lifestyle, imaging, and electronic medical record data. NeuroGEN partner biomedical database."
   },
   {
+    "country": "United Kingdom",
+    "code": "GB",
+    "city": "Edinburgh (Scotland)",
+    "lat": 55.9533,
+    "lng": -3.1883,
+    "name": "Public Health Scotland (ISD)",
+    "type": "National EHR",
+    "coverage": "~5.4 million (entire Scottish population)",
+    "notes": "National prescribing, hospital admissions, and death-records system covering all NHS Scotland — a NeuroGEN partner data source."
+  },
+  {
+    "country": "Netherlands",
+    "code": "NL",
+    "city": "Utrecht",
+    "lat": 52.0907,
+    "lng": 5.1214,
+    "name": "PHARMO Database Network",
+    "type": "Multi-source EHR",
+    "coverage": "~7 million patients (~40% of the Dutch population)",
+    "notes": "Linked pharmacy, primary care, and hospital records across multiple regions of the Netherlands; NeuroGEN partner data source."
+  },
+  {
+    "country": "Finland",
+    "code": "FI",
+    "city": "Helsinki",
+    "lat": 60.1699,
+    "lng": 24.9384,
+    "name": "Finnish healthcare registers (FinReg)",
+    "type": "Claims + registries",
+    "coverage": "~5.5 million (entire Finnish population)",
+    "notes": "Nationwide population registries linking prescriptions, hospital discharges, special-reimbursement, and cause-of-death data — used in NeuroGEN."
+  },
+  {
+    "country": "Australia",
+    "code": "AU",
+    "city": "Canberra (nationwide)",
+    "lat": -35.2809,
+    "lng": 149.13,
+    "name": "Pharmaceutical Benefits Scheme — 10% sample (PBS)",
+    "type": "Claims",
+    "coverage": "~2.5 million (10% random sample of national PBS beneficiaries)",
+    "notes": "Federal subsidised prescription medicine claims for Australia's national PBS — a NeuroGEN partner data source."
+  },
+  {
+    "country": "Australia",
+    "code": "AU",
+    "city": "Melbourne (Victoria)",
+    "lat": -37.8136,
+    "lng": 144.9631,
+    "name": "Victorian Linked Health Data (VLHD)",
+    "type": "Claims + EHR linkages",
+    "coverage": "~6.5 million (entire Victorian population)",
+    "notes": "State-level Victorian admissions, deaths, and dispensing data linked into a single research dataset."
+  },
+  {
     "country": "United States",
     "code": "US",
     "city": "Washington, D.C.",

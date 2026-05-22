@@ -12,8 +12,11 @@ const countryMeta: Record<
   "South Korea":    { code: "KR", flag: "🇰🇷", lat: 36.5,  lng: 127.8,  region: "asia" },
   Taiwan:           { code: "TW", flag: "🇹🇼", lat: 23.7,  lng: 121.0,  region: "asia" },
   "Hong Kong":      { code: "HK", flag: "🇭🇰", lat: 22.32, lng: 114.17, region: "asia" },
-  "United Kingdom": { code: "GB", flag: "🇬🇧", lat: 51.5,  lng: -0.13,  region: "external" },
-  "United States":  { code: "US", flag: "🇺🇸", lat: 38.91, lng: -77.04, region: "external" },
+  "United Kingdom": { code: "GB", flag: "🇬🇧", lat: 51.5,   lng: -0.13,  region: "external" },
+  "United States":  { code: "US", flag: "🇺🇸", lat: 38.91,  lng: -77.04, region: "external" },
+  Netherlands:      { code: "NL", flag: "🇳🇱", lat: 52.09,  lng: 5.12,   region: "external" },
+  Finland:          { code: "FI", flag: "🇫🇮", lat: 60.17,  lng: 24.94,  region: "external" },
+  Australia:        { code: "AU", flag: "🇦🇺", lat: -25.27, lng: 133.78, region: "external" },
 };
 
 const groupedMap = new Map<string, typeof databases>();
@@ -133,7 +136,7 @@ const otherSites = [
       <div class="mt-16">
         <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">International partner sites</h2>
         <p class="text-sm text-slate-600 max-w-3xl mb-6">
-          For comparative analyses that benchmark Asian findings against Western settings, AsPEN collaborators draw on data partners outside East Asia: the UK <strong>CPRD</strong> and the US <strong>Medicare</strong> / <strong>Medicaid</strong> programmes (per the NeuroGEN data initiative).
+          AsPEN collaborators draw on data partners outside East Asia for benchmarking and methodological comparison — including UK, US, European, and Australian sites linked through the NeuroGEN data initiative.
         </p>
         <div class="space-y-8">
           {externalGroups.map(([country, dbs]) => {
