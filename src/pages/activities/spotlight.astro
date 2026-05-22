@@ -3,9 +3,20 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageHeader from "../../components/PageHeader.astro";
 import { getCollection } from "astro:content";
 
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const fallback = `${base}/images/AsPenLogo.png`;
+
 const spotlight = (await getCollection("spotlight")).sort(
   (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
 );
+
+// Derive a teaser from the first paragraph if no `excerpt` field is set.
+function deriveTeaser(body: string): string {
+  const para = (body ?? "").trim().split(/\n\s*\n/)[0] || "";
+  const stripped = para.replace(/[#*`>_~\[\]\(\)]/g, " ").replace(/\s+/g, " ").trim();
+  if (stripped.length <= 220) return stripped;
+  return stripped.slice(0, 217).replace(/\s\S*$/, "") + "…";
+}
 ---
 
 <BaseLayout title="Spotlight — AsPEN" description="Featured studies, datasets, and methodologic contributions from the AsPEN community.">
@@ -16,18 +27,35 @@ const spotlight = (await getCollection("spotlight")).sort(
   />
 
   <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12 grid gap-6 md:grid-cols-2">
-    {spotlight.map(async (entry) => {
-      const { Content } = await entry.render();
+    {spotlight.map((entry) => {
       const d = entry.data.date;
       const dateStr = d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+      const teaser = entry.data.excerpt ?? deriveTeaser((entry as any).body ?? "");
+      const img = entry.data.image ? `${base}/images/${entry.data.image}` : fallback;
+      const isFallback = !entry.data.image;
+      const href = `${base}/activities/spotlight/${entry.slug}/`;
       return (
-        <article class="border border-slate-200 rounded-lg p-6 bg-white">
-          <p class="text-xs uppercase tracking-wide text-brand-600 font-semibold">{dateStr}</p>
-          <h2 class="mt-1 text-xl font-bold text-slate-900">{entry.data.title}</h2>
-          <div class="prose prose-slate max-w-none mt-3 text-sm">
-            <Content />
+        <a
+          href={href}
+          class="group block bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-brand-400 hover:shadow-md transition"
+        >
+          <div class={`aspect-[16/7] overflow-hidden bg-brand-50/60 ${isFallback ? "grid place-items-center p-6" : ""}`}>
+            <img
+              src={img}
+              alt=""
+              class={isFallback ? "h-full w-auto object-contain opacity-80" : "w-full h-full object-cover group-hover:scale-[1.02] transition"}
+            />
           </div>
-        </article>
+          <div class="p-5">
+            <p class="text-xs uppercase tracking-wide text-brand-600 font-semibold">{dateStr}</p>
+            <h2 class="mt-1 text-lg font-bold text-slate-900 leading-snug group-hover:text-brand-700 transition">{entry.data.title}</h2>
+            <p class="mt-2 text-sm text-slate-600 leading-relaxed">{teaser}</p>
+            <span class="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-brand-600">
+              Read more
+              <span aria-hidden="true" class="transition-transform group-hover:translate-x-1">→</span>
+            </span>
+          </div>
+        </a>
       );
     })}
   </section>

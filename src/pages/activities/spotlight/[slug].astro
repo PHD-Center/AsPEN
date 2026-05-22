@@ -1,0 +1,45 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PageHeader from "../../../components/PageHeader.astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const items = await getCollection("spotlight");
+  return items.map((entry) => ({ params: { slug: entry.slug }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const fallback = `${base}/images/AsPenLogo.png`;
+const img = entry.data.image ? `${base}/images/${entry.data.image}` : fallback;
+const isFallback = !entry.data.image;
+const d = entry.data.date;
+const dateStr = d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+---
+
+<BaseLayout title={`${entry.data.title} — Spotlight`} description={`Spotlight feature: ${entry.data.title}`}>
+  <PageHeader
+    eyebrow="Activities → Spotlight"
+    title={entry.data.title}
+    description={dateStr}
+  />
+
+  <article class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10">
+    <div class={`mb-8 aspect-[16/7] overflow-hidden rounded-xl bg-brand-50/60 border border-slate-200 ${isFallback ? "grid place-items-center p-10" : ""}`}>
+      <img
+        src={img}
+        alt=""
+        class={isFallback ? "h-full w-auto object-contain opacity-80" : "w-full h-full object-cover"}
+      />
+    </div>
+
+    <div class="prose prose-slate max-w-none">
+      <Content />
+    </div>
+
+    <p class="mt-12">
+      <a href={`${base}/activities/spotlight/`} class="text-brand-600 hover:underline">← Back to all Spotlight features</a>
+    </p>
+  </article>
+</BaseLayout>
