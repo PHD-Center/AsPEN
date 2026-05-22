@@ -1,5 +1,5 @@
 ---
-// AsPEN Governance — team-style layout (Chair hero + Education Co-Leads + Ops note)
+// AsPEN Governance — org-chart layout (Chair on top, two branches below)
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -20,19 +20,18 @@ const chair: Member = {
 };
 
 const educationLeads: Member[] = [
-  { name: "Edward Lai",  role: "Education Lead",      inst: "NCKU", photo: "Edward.jpg", pos: "75% 25%" },
+  { name: "Edward Lai",  role: "Education Lead",    inst: "NCKU", photo: "Edward.jpg", pos: "75% 25%" },
   { name: "Daniel Tsai", role: "Education Co-Lead", inst: "NCKU", photo: "Daniel.png" },
 ];
 
 const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("");
 ---
 
-<div class="not-prose my-8 space-y-10">
-  <!-- Chair hero -->
-  <div>
-    <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold mb-3">Chair</p>
-    <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm">
-      <!-- subtle gradient accent strip on the left -->
+<div class="not-prose my-8">
+  <!-- ── CHAIR (top) ─────────────────────────────────────────── -->
+  <div class="mb-2">
+    <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold mb-3 text-center">Chair</p>
+    <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm max-w-3xl mx-auto">
       <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-accent-500 via-brand-500 to-brand-700"></div>
       <div class="flex flex-col sm:flex-row items-center sm:items-stretch gap-5 sm:gap-6 p-5 sm:p-7 pl-7 sm:pl-9">
         <div class="shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden bg-brand-50 border border-slate-200">
@@ -53,42 +52,65 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
     </article>
   </div>
 
-  <!-- Operations & Coordination -->
-  <div class="border-l-4 border-brand-300 pl-5 py-1">
-    <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold">Operations & Coordination</p>
-    <p class="text-sm text-slate-700 mt-2 leading-relaxed max-w-3xl">
-      Day-to-day operations are coordinated by the Chair with the <strong>SKKU team</strong> — handling ISPE liaison, multi-country study governance, and collaborative protocols.
-    </p>
-  </div>
+  <!-- ── Vertical drop from Chair ────────────────────────────── -->
+  <div class="flex justify-center"><div class="w-px h-10 bg-slate-300"></div></div>
 
-  <!-- Academic & Education -->
-  <div>
-    <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold mb-2">Academic & Education</p>
-    <p class="text-sm text-slate-700 leading-relaxed max-w-3xl mb-5">
-      Develops educational resources, organises webinars and workshops, and mentors early-career pharmacoepidemiologists across AsPEN member sites — supporting capacity building and knowledge exchange throughout the network.
-    </p>
-    <div class="grid gap-4 sm:grid-cols-2">
-      {educationLeads.map((m) => (
-        <article class="group flex items-center gap-4 p-4 rounded-xl bg-white border border-slate-200 hover:border-brand-400 hover:shadow-md transition">
-          <div class="shrink-0 w-20 h-20 rounded-full overflow-hidden bg-brand-50 border border-brand-100 group-hover:border-brand-300 transition">
-            {m.photo ? (
-              <img
-                src={`${base}/images/${m.photo}`}
-                alt={m.name}
-                class="block w-full h-full object-cover"
-                style={`object-position: ${m.pos ?? "center top"}`}
-              />
-            ) : (
-              <div class="w-full h-full grid place-items-center text-brand-700 text-sm font-bold">{initials(m.name)}</div>
-            )}
-          </div>
-          <div class="leading-tight">
-            <p class="font-bold text-slate-900 text-base">{m.name}</p>
-            <p class="text-sm text-brand-700 font-medium mt-0.5">{m.role}</p>
-            <p class="text-xs text-slate-500 mt-0.5">{m.inst}</p>
-          </div>
-        </article>
-      ))}
+  <!-- ── Branch container with T-connector at top ───────────── -->
+  <div class="relative grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Horizontal connector spanning both branches (desktop) -->
+    <div class="hidden md:block absolute top-0 left-1/4 right-1/4 h-px bg-slate-300"></div>
+
+    <!-- ── Operations & Coordination ─────────────────────────── -->
+    <div class="flex flex-col items-center">
+      <div class="hidden md:block w-px h-10 bg-slate-300"></div>
+      <div class="md:hidden w-px h-6 bg-slate-300"></div>
+      <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm w-full">
+        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-brand-500 to-brand-700"></div>
+        <div class="p-5 sm:p-6 pl-6 sm:pl-7">
+          <p class="text-[10px] uppercase tracking-[0.25em] text-brand-700 font-bold">Operations & Coordination</p>
+          <p class="text-sm text-slate-700 mt-3 leading-relaxed">
+            Day-to-day operations are coordinated by the Chair with the <strong>SKKU team</strong> — handling ISPE liaison, multi-country study governance, and collaborative protocols.
+          </p>
+        </div>
+      </article>
+    </div>
+
+    <!-- ── Academic & Education ──────────────────────────────── -->
+    <div class="flex flex-col items-center">
+      <div class="hidden md:block w-px h-10 bg-slate-300"></div>
+      <div class="md:hidden w-px h-6 bg-slate-300"></div>
+      <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm w-full">
+        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-accent-500 to-brand-500"></div>
+        <div class="p-5 sm:p-6 pl-6 sm:pl-7">
+          <p class="text-[10px] uppercase tracking-[0.25em] text-brand-700 font-bold">Academic & Education</p>
+          <p class="text-sm text-slate-700 mt-3 leading-relaxed mb-4">
+            Develops educational resources, organises webinars and workshops, and mentors early-career pharmacoepidemiologists across AsPEN member sites.
+          </p>
+          <ul class="space-y-3 pt-3 border-t border-slate-100">
+            {educationLeads.map((m) => (
+              <li class="flex items-center gap-3">
+                <div class="shrink-0 w-14 h-14 rounded-full overflow-hidden bg-brand-50 border border-brand-100">
+                  {m.photo ? (
+                    <img
+                      src={`${base}/images/${m.photo}`}
+                      alt={m.name}
+                      class="block w-full h-full object-cover"
+                      style={`object-position: ${m.pos ?? "center top"}`}
+                    />
+                  ) : (
+                    <div class="w-full h-full grid place-items-center text-brand-700 text-xs font-bold">{initials(m.name)}</div>
+                  )}
+                </div>
+                <div class="leading-tight">
+                  <p class="font-bold text-slate-900 text-sm">{m.name}</p>
+                  <p class="text-xs text-brand-700 font-medium mt-0.5">{m.role}</p>
+                  <p class="text-xs text-slate-500 mt-0.5">{m.inst}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </article>
     </div>
   </div>
 </div>
