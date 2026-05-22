@@ -20,6 +20,7 @@ const countryMeta: Record<
   Australia:        { code: "AU",     flag: "🇦🇺",                       lat: -25.27, lng: 133.78, region: "external" },
 };
 
+// Group databases by country for the cards (Scotland's ISD goes under UK section)
 const groupedMap = new Map<string, typeof databases>();
 for (const d of databases) {
   if (!groupedMap.has(d.country)) groupedMap.set(d.country, []);
@@ -30,12 +31,18 @@ const grouped = Array.from(groupedMap.entries());
 const asianGroups = grouped.filter(([c]) => countryMeta[c]?.region === "asia");
 const externalGroups = grouped.filter(([c]) => countryMeta[c]?.region === "external");
 
-// Map markers include every country (East Asia + UK + US). The map is centered on
-// East Asia by default; users can pan/zoom out to reach UK and US.
-const mapGroups = grouped.map(([country, dbs]) => {
-  const meta = countryMeta[country]!;
+// Separate grouping for the MAP — allows mapAs override so e.g. Scotland gets its
+// own flag marker even though the ISD database is listed under United Kingdom.
+const mapGroupedMap = new Map<string, typeof databases>();
+for (const d of databases) {
+  const key = (d as { mapAs?: string }).mapAs ?? d.country;
+  if (!mapGroupedMap.has(key)) mapGroupedMap.set(key, []);
+  mapGroupedMap.get(key)!.push(d);
+}
+const mapGroups = Array.from(mapGroupedMap.entries()).map(([key, dbs]) => {
+  const meta = countryMeta[key]!;
   return {
-    country,
+    country: key,
     code: meta.code,
     lat: meta.lat,
     lng: meta.lng,

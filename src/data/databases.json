@@ -146,15 +146,16 @@
     "notes": "Population-based biomedical biobank linking genomic, lifestyle, imaging, and electronic medical record data. NeuroGEN partner biomedical database."
   },
   {
-    "country": "Scotland",
-    "code": "gb-sct",
-    "city": "Edinburgh",
+    "country": "United Kingdom",
+    "code": "GB",
+    "city": "Edinburgh (Scotland)",
     "lat": 55.9533,
     "lng": -3.1883,
     "name": "Public Health Scotland (ISD)",
     "type": "National EHR",
     "coverage": "~5.4 million (entire Scottish population)",
-    "notes": "National prescribing, hospital admissions, and death-records system covering all NHS Scotland — a NeuroGEN partner data source."
+    "notes": "National prescribing, hospital admissions, and death-records system covering all NHS Scotland — a NeuroGEN partner data source.",
+    "mapAs": "Scotland"
   },
   {
     "country": "Netherlands",
