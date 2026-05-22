@@ -112,8 +112,8 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
             {educationLeads.map((m) => (
               <div class="flex flex-col items-center">
                 <div class="hidden md:block w-px h-6 bg-slate-300"></div>
-                <article class="group flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-brand-400 hover:shadow-md transition w-full">
-                  <div class="shrink-0 w-14 h-14 rounded-full overflow-hidden bg-brand-50 border border-brand-100">
+                <article class="group flex items-center gap-4 p-4 rounded-xl bg-white border border-slate-200 hover:border-brand-400 hover:shadow-md transition w-full">
+                  <div class="shrink-0 w-20 h-20 rounded-full overflow-hidden bg-brand-50 border border-brand-100 ring-2 ring-white shadow-sm">
                     {m.photo ? (
                       <img
                         src={`${base}/images/${m.photo}`}
@@ -122,12 +122,12 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
                         style={`object-position: ${m.pos ?? "center top"}`}
                       />
                     ) : (
-                      <div class="w-full h-full grid place-items-center text-brand-700 text-xs font-bold">{initials(m.name)}</div>
+                      <div class="w-full h-full grid place-items-center text-brand-700 text-sm font-bold">{initials(m.name)}</div>
                     )}
                   </div>
                   <div class="leading-tight">
-                    <p class="font-bold text-slate-900 text-sm">{m.name}</p>
-                    <p class="text-xs text-brand-700 font-medium mt-0.5">{m.role}</p>
+                    <p class="font-bold text-slate-900 text-base">{m.name}</p>
+                    <p class="text-sm text-brand-700 font-medium mt-0.5">{m.role}</p>
                     <p class="text-xs text-slate-500 mt-0.5">{m.inst}</p>
                   </div>
                 </article>
