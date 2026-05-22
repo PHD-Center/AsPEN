@@ -39,11 +39,11 @@ function deriveTeaser(body: string): string {
           href={href}
           class="group block bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-brand-400 hover:shadow-md transition"
         >
-          <div class={`aspect-[16/7] overflow-hidden bg-brand-50/60 ${isFallback ? "grid place-items-center p-6" : ""}`}>
+          <div class={`aspect-[16/7] overflow-hidden ${isFallback ? "bg-brand-50 grid place-items-center" : "bg-brand-50/60"}`}>
             <img
               src={img}
               alt=""
-              class={isFallback ? "h-full w-auto object-contain opacity-80" : "w-full h-full object-cover group-hover:scale-[1.02] transition"}
+              class={isFallback ? "h-20 sm:h-24 w-auto opacity-70" : "w-full h-full object-cover group-hover:scale-[1.02] transition"}
             />
           </div>
           <div class="p-5">

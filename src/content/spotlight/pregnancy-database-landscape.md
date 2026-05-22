@@ -1,6 +1,6 @@
 ---
 title: "Mapping the Global Landscape of Pregnancy Healthcare Databases"
-date: 2026-05-22
+date: 2026-02-12
 ---
 
 The Asian Pharmacoepidemiology Network (AsPEN) recently endorsed a multinational collaborative study examining the landscape of pregnancy-related healthcare databases across the globe. Conducted by researchers from 15 countries and regions, the project characterized 19 large-scale databases used in perinatal pharmacoepidemiology research, including claims databases, electronic health records, and national registries.
