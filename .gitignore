@@ -11,3 +11,10 @@ Thumbs.db
 *.pdf
 *.docx
 !public/**/*.pdf
+
+# Sensitive — never commit
+github-recovery-codes.txt
+*recovery-codes*
+*.key
+*.pem
+.env*
