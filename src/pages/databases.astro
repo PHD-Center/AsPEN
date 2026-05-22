@@ -18,6 +18,8 @@ const countryMeta: Record<
   Netherlands:      { code: "NL",     flag: "🇳🇱",                       lat: 52.09,  lng: 5.12,   region: "external" },
   Finland:          { code: "FI",     flag: "🇫🇮",                       lat: 60.17,  lng: 24.94,  region: "external" },
   Australia:        { code: "AU",     flag: "🇦🇺",                       lat: -25.27, lng: 133.78, region: "external" },
+  Singapore:        { code: "SG",     flag: "🇸🇬",                       lat: 1.35,   lng: 103.82, region: "external" },
+  Thailand:         { code: "TH",     flag: "🇹🇭",                       lat: 13.76,  lng: 100.50, region: "external" },
 };
 
 // Group databases by country for the cards (Scotland's ISD goes under UK section)
@@ -54,6 +56,29 @@ const mapGroups = Array.from(mapGroupedMap.entries()).map(([key, dbs]) => {
     })),
   };
 });
+
+// Singapore + Thailand — appear on the map (no anchor since they live in the prose section)
+// Inline rather than in databases.json because they're "other sites", not active.
+const otherMapEntries: Record<string, { name: string; type: string; coverage?: string }[]> = {
+  Singapore: [
+    { name: "National Electronic Health Record (NEHR)", type: "National EHR" },
+  ],
+  Thailand: [
+    { name: "Buddhachinaraj Hospital Database (BHD)", type: "Single-hospital EHR" },
+    { name: "Hospital Information (HI) — Ubon Ratchathani", type: "Multi-hospital EHR" },
+  ],
+};
+for (const [country, items] of Object.entries(otherMapEntries)) {
+  const meta = countryMeta[country];
+  if (!meta) continue;
+  mapGroups.push({
+    country,
+    code: meta.code,
+    lat: meta.lat,
+    lng: meta.lng,
+    items: items.map((it) => ({ name: it.name, type: it.type, coverage: it.coverage ?? "", anchor: "other-sites" })),
+  });
+}
 
 const typeColor: Record<string, string> = {
   Claims: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -183,8 +208,8 @@ const otherSites = [
       </div>
     )}
 
-    <div class="mt-12">
-      <h2 class="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2">Other sites</h2>
+    <div class="mt-12" id="other-sites">
+      <h2 class="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2 scroll-mt-24">Other sites</h2>
       <p class="text-sm text-slate-600 max-w-3xl leading-relaxed">
         Additional data sources documented that are not part of the current active network include Singapore's <strong>National Electronic Health Record (NEHR)</strong>, and two Thai sites — <strong>Buddhachinaraj Hospital Database (BHD)</strong> (a tertiary referral hospital EHR) and the <strong>Hospital Information network</strong> across 21 community hospitals in Ubon Ratchathani.
       </p>
