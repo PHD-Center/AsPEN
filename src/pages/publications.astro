@@ -12,7 +12,7 @@ const years = Array.from(new Set(publications.map((p) => p.year))).sort((a, b) =
 // scroll the publication list below to that paper. Milestones without `pmid`
 // (e.g. organisational events) just sit on the timeline.
 const milestones: { year: number; text: string; pmid?: string }[] = [
-  { year: 2012, text: "AsPEN founded as an ISPE Special Interest Group" },
+  { year: 2012, text: "AsPEN founded as an ISPE Special Interest Group", pmid: "23653370" },
   { year: 2013, text: "First multi-country PSSA — antipsychotics × acute hyperglycaemia", pmid: "23696036" },
   { year: 2015, text: "Asia-Pacific database survey (Epidemiology) — 11 Asian databases", pmid: "26133022" },
   { year: 2018, text: "Common Data Model framework applied to Asian databases", pmid: "30100761" },

@@ -20,7 +20,8 @@
     "name": "Chang Gung Research Database (CGRD)",
     "type": "Multi-institutional EHR",
     "coverage": "~1.3M outpatients + ~200K inpatients per year (~6–10% of national population)",
-    "notes": "Standardized electronic medical records from seven Chang Gung Memorial Hospitals; available since 2000 with ~1-month data latency."
+    "notes": "Standardized electronic medical records from seven Chang Gung Memorial Hospitals; available since 2000 with ~1-month data latency.",
+    "url": "https://www.phdcenter.org.tw/database/"
   },
   {
     "country": "Taiwan",
@@ -31,7 +32,8 @@
     "name": "Taiwan Biobank (TWB)",
     "type": "Biobank",
     "coverage": "~200,000 community participants (target 1 million)",
-    "notes": "Population-based biomedical biobank linking genomic, lifestyle, and clinical data."
+    "notes": "Population-based biomedical biobank linking genomic, lifestyle, and clinical data.",
+    "url": "https://www.phdcenter.org.tw/database/"
   },
   {
     "country": "Japan",
