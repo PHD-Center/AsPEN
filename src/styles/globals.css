@@ -25,3 +25,11 @@ h1, h2, h3 { font-weight: 800; }
 
 /* Subtle PHDc-green tint on home page (and any page using <body class="home-tint">) */
 .home-tint { background: linear-gradient(180deg, #ffffff 0%, #f6faf8 60%, #eef5f1 100%); }
+
+/* Article body — paragraph spacing for Spotlight and similar long-form pages */
+.article-prose { color: #334155; line-height: 1.75; font-size: 17px; }
+.article-prose p { margin: 1.5rem 0; }
+.article-prose p:first-child { margin-top: 0; }
+.article-prose p:last-child { margin-bottom: 0; }
+.article-prose strong { color: #1e293b; font-weight: 700; }
+.article-prose em { color: inherit; }

@@ -26,15 +26,16 @@ const dateStr = d.toLocaleDateString("en-US", { year: "numeric", month: "short",
   />
 
   <article class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10">
-    <div class={`mb-8 aspect-[16/7] overflow-hidden rounded-xl border border-slate-200 ${isFallback ? "bg-brand-50 grid place-items-center" : "bg-brand-50/60"}`}>
+    <div class={`mb-10 aspect-[16/7] overflow-hidden rounded-xl border border-slate-200 ${isFallback ? "bg-brand-50 flex items-center justify-center p-6" : "bg-brand-50/60"}`}>
       <img
         src={img}
         alt=""
-        class={isFallback ? "h-28 sm:h-32 w-auto opacity-70" : "w-full h-full object-cover"}
+        class={isFallback ? "max-h-full w-auto opacity-80" : "w-full h-full object-cover"}
+        style={isFallback ? "max-height: min(100%, 240px)" : undefined}
       />
     </div>
 
-    <div class="prose prose-slate prose-lg max-w-none prose-p:my-6 prose-p:leading-relaxed">
+    <div class="article-prose">
       <Content />
     </div>
 
