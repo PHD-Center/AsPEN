@@ -52,7 +52,7 @@ export const NHIRD: Registry = {
   link: "https://www.phdcenter.org.tw/database/",
   tone: "teal",
   area: "nhird",
-  bbox: { top: "20%", left: "20%", width: "55%", height: "20%" },
+  bbox: { top: "16%", left: "35%", width: "35%", height: "8%" },
 };
 
 /** Inner satellites of NHIRD (rendered inside the central card) */
@@ -71,7 +71,7 @@ export const MATERNAL_CHILD: Registry = {
   description: "Multi-generational linkage joining birth certificate data with NHI claims for mother, father, and child — enabling perinatal exposure / paediatric outcome studies.",
   tone: "brown",
   area: "mch",
-  bbox: { top: "42%", left: "20%", width: "27%", height: "33%" },
+  bbox: { top: "30%", left: "18%", width: "32%", height: "42%" },
 };
 
 export const SATELLITES: Registry[] = [
@@ -83,7 +83,7 @@ export const SATELLITES: Registry[] = [
     description: "National Health Interview Survey — population-based survey on lifestyle factors (physical activity, diet, smoking, alcohol, sleep) conducted by the Health Promotion Administration.",
     tone: "orange",
     area: "top1",
-    bbox: { top: "2%", left: "18%", width: "13%", height: "12%" },
+    bbox: { top: "4%", left: "19%", width: "13%", height: "13%" },
   },
   {
     id: "hex",
@@ -92,7 +92,7 @@ export const SATELLITES: Registry[] = [
     description: "Adult preventive health examination records covered by NHI — biochemistry, haematology, urinalysis, and lifestyle interview data.",
     tone: "amber",
     area: "top2",
-    bbox: { top: "2%", left: "32%", width: "13%", height: "12%" },
+    bbox: { top: "4%", left: "33%", width: "14%", height: "13%" },
   },
   {
     id: "covid",
@@ -101,7 +101,7 @@ export const SATELLITES: Registry[] = [
     description: "Taiwan CDC pandemic data — national COVID-19 vaccination records and confirmed-case surveillance, linkable to NHIRD via national identifier.",
     tone: "green",
     area: "top3",
-    bbox: { top: "2%", left: "46%", width: "13%", height: "12%" },
+    bbox: { top: "4%", left: "48%", width: "13%", height: "13%" },
   },
   {
     id: "twb",
@@ -111,7 +111,7 @@ export const SATELLITES: Registry[] = [
     link: "https://www.phdcenter.org.tw/taiwan-biobank-twb/",
     tone: "sky",
     area: "top4",
-    bbox: { top: "2%", left: "60%", width: "15%", height: "12%" },
+    bbox: { top: "4%", left: "62%", width: "18%", height: "13%" },
   },
 
   // ── LEFT COLUMN ────────────────────────────────────────────
@@ -122,7 +122,7 @@ export const SATELLITES: Registry[] = [
     description: "Assisted Reproductive Database — national registry of assisted reproductive technology procedures including IVF, conducted by the Health Promotion Administration.",
     tone: "orange",
     area: "left1",
-    bbox: { top: "20%", left: "1%", width: "12%", height: "13%" },
+    bbox: { top: "22%", left: "1%", width: "14%", height: "16%" },
   },
   {
     id: "birth",
@@ -131,7 +131,7 @@ export const SATELLITES: Registry[] = [
     description: "National birth registration — captures every live birth in Taiwan with maternal / paternal identifiers, anchor record for the Maternal & Child Health linkage.",
     tone: "pink",
     area: "left2",
-    bbox: { top: "43%", left: "1%", width: "12%", height: "15%" },
+    bbox: { top: "44%", left: "1%", width: "14%", height: "18%" },
   },
   {
     id: "niis",
@@ -140,7 +140,7 @@ export const SATELLITES: Registry[] = [
     description: "National Immunization Information System — centralised individual-level vaccination records (childhood, adult, travel, COVID-19).",
     tone: "pink",
     area: "left3",
-    bbox: { top: "65%", left: "1%", width: "12%", height: "13%" },
+    bbox: { top: "67%", left: "1%", width: "14%", height: "13%" },
   },
 
   // ── RIGHT COLUMN ───────────────────────────────────────────
@@ -151,7 +151,7 @@ export const SATELLITES: Registry[] = [
     description: "National cancer surveillance registry maintained by the Health Promotion Administration — captures incident cancer diagnoses with staging, histology, and treatment, nationwide since 2003.",
     tone: "indigo",
     area: "right1",
-    bbox: { top: "25%", left: "80%", width: "16%", height: "17%" },
+    bbox: { top: "24%", left: "82%", width: "17%", height: "22%" },
   },
   {
     id: "death",
@@ -160,7 +160,7 @@ export const SATELLITES: Registry[] = [
     description: "National death registration data with ICD-coded underlying and contributing causes of death — administered by the Ministry of Health and Welfare.",
     tone: "slate",
     area: "right2",
-    bbox: { top: "47%", left: "80%", width: "16%", height: "12%" },
+    bbox: { top: "50%", left: "82%", width: "17%", height: "14%" },
   },
   {
     id: "cir",
@@ -169,7 +169,7 @@ export const SATELLITES: Registry[] = [
     description: "Registry of patients qualifying for catastrophic-illness status under NHI (cancers, autoimmune disease, severe mental illness, end-stage renal disease, etc.) — confers fee waivers and is widely used as an outcome gold-standard.",
     tone: "slate",
     area: "right3",
-    bbox: { top: "63%", left: "80%", width: "16%", height: "17%" },
+    bbox: { top: "68%", left: "82%", width: "17%", height: "22%" },
   },
 
   // ── BOTTOM ROW ─────────────────────────────────────────────
@@ -180,7 +180,7 @@ export const SATELLITES: Registry[] = [
     description: "NHIRD mapped to the OMOP Common Data Model (Observational Health Data Sciences and Informatics) — enables federated analyses across the global OHDSI network.",
     tone: "indigo",
     area: "bot1",
-    bbox: { top: "82%", left: "2%", width: "20%", height: "15%" },
+    bbox: { top: "81%", left: "1%", width: "18%", height: "18%" },
   },
   {
     id: "sentinel",
@@ -189,7 +189,7 @@ export const SATELLITES: Registry[] = [
     description: "NHIRD mapped to the FDA Sentinel Common Data Model — supports drug-safety surveillance studies using protocols harmonised with the US Sentinel System.",
     tone: "indigo",
     area: "bot2",
-    bbox: { top: "82%", left: "26%", width: "22%", height: "15%" },
+    bbox: { top: "81%", left: "22%", width: "22%", height: "18%" },
   },
   {
     id: "cgrd",
@@ -199,7 +199,7 @@ export const SATELLITES: Registry[] = [
     link: "https://www.phdcenter.org.tw/chang-gung-research-database-cgrd/",
     tone: "green",
     area: "bot3",
-    bbox: { top: "82%", left: "62%", width: "27%", height: "15%" },
+    bbox: { top: "81%", left: "60%", width: "38%", height: "18%" },
   },
 ];
 
