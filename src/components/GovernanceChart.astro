@@ -34,7 +34,10 @@ const educationLeads: Member[] = [
     role: "Education Lead",
     inst: "NCKU",
     photo: "Edward.png",
-    pos: "75% 25%",
+    // Edward.png is 1280×1920 (portrait); object-cover crops top/bottom in the
+    // 80×80 round frame. "center 10%" lines his head up with Daniel's
+    // (Daniel.jpeg is 1:1 so no crop, head sits ~12% from top by default).
+    pos: "center 10%",
     orcid: "0000-0002-5852-7652",
     profile: "https://researchoutput.ncku.edu.tw/en/persons/edward-lai/",
   },
@@ -43,6 +46,7 @@ const educationLeads: Member[] = [
     role: "Education Co-Lead",
     inst: "NCKU",
     photo: "Daniel.jpeg",
+    pos: "center top",
     orcid: "0000-0003-2841-0338",
     profile: "https://www.researchgate.net/profile/Daniel-Tsai-8",
   },
