@@ -69,12 +69,9 @@ const orphanPubs = pubs.filter((p) => !(p.tags ?? []).some((t) => allThemeTags.h
           id={t.id}
           class="scroll-mt-24 border border-slate-200 rounded-lg p-5 bg-white hover:shadow-md transition flex flex-col"
         >
-          <!-- Header: title + theme-number chip -->
-          <div class="flex items-start justify-between gap-3 mb-2">
+          <!-- Header: title only -->
+          <div class="mb-2">
             <h3 class="font-semibold text-slate-900 leading-snug text-lg">{t.name}</h3>
-            <span class="shrink-0 text-xs font-medium px-2 py-0.5 rounded-full border bg-brand-50 text-brand-700 border-brand-100 tabular-nums">
-              Theme {t.number}
-            </span>
           </div>
 
           <!-- Stats line (mirrors database "Coverage" treatment) -->

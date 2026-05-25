@@ -45,16 +45,6 @@ content:
         type: string
         list: true
 
-  - name: history
-    label: History timeline
-    type: file
-    path: src/data/history.json
-    list: true
-    fields:
-      - { name: year,  label: Year,  type: string, required: true }
-      - { name: title, label: Title, type: string, required: true }
-      - { name: body,  label: Body,  type: text }
-
   # ────────────────────────────────────────────────────────────────
   # Markdown collections — each entry is one .md file
   # ────────────────────────────────────────────────────────────────
