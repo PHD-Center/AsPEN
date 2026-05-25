@@ -177,8 +177,6 @@ const otherSites = [
       />
     </div>
 
-    <div class="lg:grid lg:grid-cols-[1fr_320px] lg:gap-8 lg:items-start">
-    <div class="space-y-12 min-w-0">
     <div class="space-y-10">
       {asianGroups.map(([country, dbs]) => {
         const meta = countryMeta[country];
@@ -249,7 +247,7 @@ const otherSites = [
     </div>
 
     {externalGroups.length > 0 && (
-      <div class="lg:mt-4">
+      <div class="mt-16">
         <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">International partner sites</h2>
         <p class="text-sm text-slate-600 max-w-3xl mb-6">
           AsPEN collaborators draw on data partners outside East Asia for benchmarking and methodological comparison — including UK, US, European, and Australian sites linked through the NeuroGEN data initiative.
@@ -304,19 +302,28 @@ const otherSites = [
       </div>
     )}
 
-    </div>
-    <aside class="mt-12 lg:mt-0 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+    <!-- Compare tray.
+         Default (mobile / tablet): sits inline below cards, normal flow.
+         lg+: becomes a fixed drawer pinned to the right edge of the viewport,
+         hidden off-screen until opened via the tab handle (rendered below).
+         Single element used in both modes — JS toggles the `data-open`
+         attribute on the lg+ drawer. -->
     <section
       id="compare"
       data-compare-tray
-      class="border border-slate-200 rounded-lg bg-white shadow-sm scroll-mt-24"
+      class="mt-12 border border-slate-200 rounded-lg bg-white shadow-sm scroll-mt-24
+             lg:mt-0 lg:fixed lg:right-0 lg:top-24 lg:bottom-6 lg:w-80 lg:z-30
+             lg:translate-x-full lg:rounded-r-none lg:shadow-2xl lg:transition-transform lg:duration-300 lg:ease-out
+             lg:data-[open]:translate-x-0 lg:flex lg:flex-col lg:overflow-hidden"
     >
-      <header class="flex items-baseline justify-between gap-3 px-4 py-3 border-b border-slate-200">
+      <header class="flex items-baseline justify-between gap-3 px-4 py-3 border-b border-slate-200 lg:shrink-0">
         <div>
           <h2 class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Compare databases</h2>
-          <p class="hidden lg:block text-xs text-slate-500 mt-1 leading-snug">Drag cards here, or click <span class="font-semibold text-brand-700">＋ Add</span> on any card. Up to 4.</p>
-          <p class="lg:hidden text-sm text-slate-600 mt-1">
-            Drag database cards into the tray — or click <span class="font-semibold text-brand-700">＋ Add to compare</span> — to line them up side-by-side. Up to 4 at a time.
+          <p class="text-sm text-slate-600 mt-1 lg:hidden">
+            Click <span class="font-semibold text-brand-700">＋ Add to compare</span> on any card above to line databases up side-by-side. Up to 4 at a time.
+          </p>
+          <p class="hidden lg:block text-xs text-slate-500 mt-1 leading-snug">
+            Drag any card or click <span class="font-semibold text-brand-700">＋ Add</span>. Up to 4.
           </p>
         </div>
         <button
@@ -328,22 +335,28 @@ const otherSites = [
 
       <div
         data-compare-dropzone
-        class="m-3 lg:m-2 min-h-[120px] border-2 border-dashed border-slate-300 rounded-lg p-3 lg:p-2 transition data-[dragover]:border-brand-500 data-[dragover]:bg-brand-50/40"
+        class="m-3 lg:m-3 min-h-[120px] lg:flex-1 lg:overflow-y-auto border-2 border-dashed border-slate-300 rounded-lg p-3 transition data-[dragover]:border-brand-500 data-[dragover]:bg-brand-50/40"
       >
-        <p
-          data-compare-empty
-          class="text-sm text-slate-500 italic text-center py-6 px-2 leading-snug"
-        >
-          Drop cards here<br><span class="text-xs not-italic">or click <span class="font-semibold text-brand-700">＋ Add to compare</span> on any card</span>
+        <p data-compare-empty class="text-sm text-slate-500 italic text-center py-6 px-2 leading-snug">
+          <span class="lg:hidden">Tap <span class="font-semibold text-brand-700 not-italic">＋ Add to compare</span> on any card above.</span>
+          <span class="hidden lg:inline">Drop cards here<br><span class="text-xs not-italic">or click <span class="font-semibold text-brand-700">＋ Add</span> on any card</span></span>
         </p>
-        <div
-          data-compare-grid
-          class="hidden"
-        ></div>
+        <div data-compare-grid class="hidden"></div>
       </div>
     </section>
-    </aside>
-    </div>
+
+    <!-- Tab handle for the lg+ drawer. Always visible at the right edge;
+         click toggles the drawer; drop on it adds + opens. -->
+    <button
+      type="button"
+      data-compare-tab
+      class="hidden lg:flex fixed right-0 top-1/2 -translate-y-1/2 z-30 items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white shadow-lg rounded-l-lg pl-2 pr-1.5 py-3 text-xs font-semibold transition data-[dragover]:bg-emerald-600 data-[dragover]:scale-105 origin-right"
+      aria-label="Open compare panel"
+      aria-expanded="false"
+    >
+      <span class="[writing-mode:vertical-rl] rotate-180 tracking-widest uppercase text-[10px]">Compare</span>
+      <span data-compare-tab-count class="hidden bg-white text-brand-700 rounded-full px-1.5 py-0.5 text-[10px] tabular-nums font-bold">0</span>
+    </button>
 
     <script is:inline define:vars={{ compareData, siteBase }}>
       (() => {
@@ -352,7 +365,24 @@ const otherSites = [
         const emptyEl  = tray?.querySelector("[data-compare-empty]");
         const grid     = tray?.querySelector("[data-compare-grid]");
         const clearBtn = tray?.querySelector("[data-compare-clear]");
+        const tab      = document.querySelector("[data-compare-tab]");
+        const tabCount = tab?.querySelector("[data-compare-tab-count]");
         if (!tray || !dropzone || !grid) return;
+
+        // Drawer open/close (lg+ only — on smaller screens the tray is inline)
+        const isDrawerMode = () => window.matchMedia("(min-width: 1024px)").matches;
+        const openDrawer = () => {
+          tray.setAttribute("data-open", "");
+          if (tab) tab.setAttribute("aria-expanded", "true");
+        };
+        const closeDrawer = () => {
+          tray.removeAttribute("data-open");
+          if (tab) tab.setAttribute("aria-expanded", "false");
+        };
+        const toggleDrawer = () => {
+          if (tray.hasAttribute("data-open")) closeDrawer();
+          else openDrawer();
+        };
 
         const MAX = 4;
         const selected = [];
@@ -504,6 +534,19 @@ const otherSites = [
             if (icon)  icon.textContent  = on ? "✓" : "＋";
             if (label) label.textContent = on ? "Added" : "Add to compare";
           });
+          if (tabCount) {
+            if (selected.length > 0) {
+              tabCount.textContent = String(selected.length);
+              tabCount.classList.remove("hidden");
+            } else {
+              tabCount.classList.add("hidden");
+            }
+          }
+          if (tab) {
+            tab.setAttribute("aria-label", selected.length > 0
+              ? `Compare panel (${selected.length} selected)`
+              : "Open compare panel");
+          }
         };
 
         const add = (name) => {
@@ -549,13 +592,42 @@ const otherSites = [
             btn.addEventListener("click", (e) => {
               e.preventDefault();
               const name = card.dataset.dbName;
-              if (name) toggle(name);
-              // First add scrolls the tray into view so the user sees what happened
-              if (selected.length === 1 && selected[0] === name) {
-                tray.scrollIntoView({ behavior: "smooth", block: "nearest" });
+              if (!name) return;
+              const wasOff = !selected.includes(name);
+              toggle(name);
+              // On lg+ auto-open the drawer when adding; on smaller screens
+              // scroll the inline tray into view so the user sees what happened.
+              if (wasOff && selected.includes(name)) {
+                if (isDrawerMode()) openDrawer();
+                else tray.scrollIntoView({ behavior: "smooth", block: "nearest" });
               }
             });
           }
+        });
+
+        // --- Tab handle (lg+ only)
+        if (tab) {
+          tab.addEventListener("click", () => toggleDrawer());
+          tab.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+            tab.setAttribute("data-dragover", "");
+          });
+          tab.addEventListener("dragleave", () => tab.removeAttribute("data-dragover"));
+          tab.addEventListener("drop", (e) => {
+            e.preventDefault();
+            tab.removeAttribute("data-dragover");
+            const name = e.dataTransfer?.getData("text/plain");
+            if (name) {
+              add(name);
+              openDrawer();
+            }
+          });
+        }
+
+        // Close drawer on Esc
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && tray.hasAttribute("data-open")) closeDrawer();
         });
 
         // --- Drop zone
@@ -572,7 +644,10 @@ const otherSites = [
           e.preventDefault();
           dropzone.removeAttribute("data-dragover");
           const name = e.dataTransfer?.getData("text/plain");
-          if (name) add(name);
+          if (name) {
+            add(name);
+            if (isDrawerMode()) openDrawer();
+          }
         });
 
         // --- Remove buttons (event-delegated since the grid re-renders)
