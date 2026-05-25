@@ -1,0 +1,264 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import publications from "../data/publications.json";
+import affiliations from "../data/affiliations.json";
+
+// Country metadata (ISO-2 -> full name + flag)
+const META: Record<string, { name: string; flag: string }> = {
+  AU: { name: "Australia",       flag: "🇦🇺" },
+  BE: { name: "Belgium",         flag: "🇧🇪" },
+  BR: { name: "Brazil",          flag: "🇧🇷" },
+  CA: { name: "Canada",          flag: "🇨🇦" },
+  CH: { name: "Switzerland",     flag: "🇨🇭" },
+  CN: { name: "China",           flag: "🇨🇳" },
+  DE: { name: "Germany",         flag: "🇩🇪" },
+  DK: { name: "Denmark",         flag: "🇩🇰" },
+  ES: { name: "Spain",           flag: "🇪🇸" },
+  FI: { name: "Finland",         flag: "🇫🇮" },
+  FR: { name: "France",          flag: "🇫🇷" },
+  GB: { name: "United Kingdom",  flag: "🇬🇧" },
+  HK: { name: "Hong Kong",       flag: "🇭🇰" },
+  IE: { name: "Ireland",         flag: "🇮🇪" },
+  IL: { name: "Israel",          flag: "🇮🇱" },
+  IN: { name: "India",           flag: "🇮🇳" },
+  IT: { name: "Italy",           flag: "🇮🇹" },
+  JP: { name: "Japan",           flag: "🇯🇵" },
+  KR: { name: "South Korea",     flag: "🇰🇷" },
+  MY: { name: "Malaysia",        flag: "🇲🇾" },
+  NL: { name: "Netherlands",     flag: "🇳🇱" },
+  NO: { name: "Norway",          flag: "🇳🇴" },
+  NZ: { name: "New Zealand",     flag: "🇳🇿" },
+  SE: { name: "Sweden",          flag: "🇸🇪" },
+  SG: { name: "Singapore",       flag: "🇸🇬" },
+  TH: { name: "Thailand",        flag: "🇹🇭" },
+  TW: { name: "Taiwan",          flag: "🇹🇼" },
+  US: { name: "United States",   flag: "🇺🇸" },
+};
+
+// Build nodes (per country, count = papers that include that country)
+// and links (per country pair, weight = papers that include both countries).
+type Aff = Record<string, { countries: string[] }>;
+const aff = affiliations as Aff;
+
+const nodeCount: Record<string, number> = {};
+const linkCount: Record<string, number> = {};
+for (const info of Object.values(aff)) {
+  const cs = Array.from(new Set(info.countries));
+  for (const c of cs) nodeCount[c] = (nodeCount[c] || 0) + 1;
+  for (let i = 0; i < cs.length; i++) {
+    for (let j = i + 1; j < cs.length; j++) {
+      const [a, b] = [cs[i], cs[j]].sort();
+      const key = `${a}|${b}`;
+      linkCount[key] = (linkCount[key] || 0) + 1;
+    }
+  }
+}
+
+const nodes = Object.entries(nodeCount)
+  .map(([id, papers]) => ({ id, name: META[id]?.name ?? id, flag: META[id]?.flag ?? "🏳️", papers }))
+  .sort((a, b) => b.papers - a.papers);
+
+const links = Object.entries(linkCount).map(([key, weight]) => {
+  const [source, target] = key.split("|");
+  return { source, target, weight };
+});
+
+const totalPapers = publications.length;
+const multiPapers = Object.values(aff).filter((v) => new Set(v.countries).size >= 2).length;
+const totalCountries = nodes.length;
+
+// Top 5 pairs for the legend
+const topPairs = links
+  .slice()
+  .sort((a, b) => b.weight - a.weight)
+  .slice(0, 5)
+  .map((l) => ({
+    a: META[l.source],
+    b: META[l.target],
+    n: l.weight,
+  }));
+---
+
+<BaseLayout
+  title="Collaboration network — AsPEN"
+  description="Interactive force-directed graph of country-level co-authorship across AsPEN publications."
+>
+  <PageHeader
+    eyebrow="Collaboration"
+    title="Collaboration network"
+    description="Country-level co-authorship across all AsPEN publications. Each node is a country; an edge connects two countries that appear together as author affiliations on at least one paper. Drag nodes to explore."
+  />
+
+  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Headline stats -->
+    <div class="grid grid-cols-3 gap-4 mb-6 text-center">
+      <div>
+        <p class="text-3xl font-bold text-brand-700 tabular-nums">{totalCountries}</p>
+        <p class="text-xs text-slate-600 uppercase tracking-wide mt-1">Countries in network</p>
+      </div>
+      <div>
+        <p class="text-3xl font-bold text-brand-700 tabular-nums">{multiPapers}</p>
+        <p class="text-xs text-slate-600 uppercase tracking-wide mt-1">Multi-country papers</p>
+      </div>
+      <div>
+        <p class="text-3xl font-bold text-brand-700 tabular-nums">{links.length}</p>
+        <p class="text-xs text-slate-600 uppercase tracking-wide mt-1">Distinct country pairs</p>
+      </div>
+    </div>
+
+    <!-- Graph -->
+    <div class="border border-slate-200 rounded-lg bg-white overflow-hidden">
+      <div id="net-graph" class="w-full" style="height: 600px;"></div>
+      <div class="px-4 py-3 border-t border-slate-200 bg-slate-50 text-xs text-slate-600 flex flex-wrap items-center gap-x-6 gap-y-2">
+        <span><strong class="text-slate-800">Node size</strong> = number of papers with that country as an author affiliation</span>
+        <span><strong class="text-slate-800">Edge width</strong> = number of papers shared between two countries</span>
+        <span class="ml-auto text-slate-500">Drag · scroll to zoom · click country to highlight</span>
+      </div>
+    </div>
+
+    <!-- Top pairs table -->
+    <div class="mt-10">
+      <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-3">Top co-authorship pairs</h2>
+      <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+        {topPairs.map((p) => (
+          <div class="border border-slate-200 rounded-lg p-3 bg-white text-center">
+            <p class="text-lg leading-none">{p.a?.flag} ↔ {p.b?.flag}</p>
+            <p class="mt-2 text-xs text-slate-700 leading-tight">{p.a?.name} <br/> + {p.b?.name}</p>
+            <p class="mt-2 text-sm font-bold text-brand-700">{p.n} <span class="text-xs font-normal text-slate-500">papers</span></p>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <p class="mt-8 text-xs text-slate-500 italic">
+      Author affiliations were retrieved from PubMed (efetch) for all {totalPapers} AsPEN publications listed on this site. Affiliation strings were parsed heuristically to country codes; a paper contributes to a country's node when at least one of its authors is affiliated with an institution in that country.
+    </p>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js" is:inline></script>
+  <script
+    is:inline
+    define:vars={{ nodes, links }}
+  >
+    (() => {
+      const container = document.getElementById("net-graph");
+      if (!container) return;
+
+      const width = container.clientWidth;
+      const height = 600;
+
+      const svg = d3.select(container)
+        .append("svg")
+        .attr("viewBox", [0, 0, width, height])
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .style("cursor", "grab");
+
+      const root = svg.append("g");
+
+      // Zoom & pan
+      svg.call(
+        d3.zoom()
+          .scaleExtent([0.4, 4])
+          .on("zoom", (e) => root.attr("transform", e.transform))
+      );
+
+      // Scales
+      const maxPapers = d3.max(nodes, (d) => d.papers) || 1;
+      const radius = d3.scaleSqrt().domain([0, maxPapers]).range([8, 38]);
+      const maxWeight = d3.max(links, (d) => d.weight) || 1;
+      const stroke = d3.scaleSqrt().domain([0, maxWeight]).range([0.5, 6]);
+
+      // Force simulation
+      const sim = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id((d) => d.id).distance((l) => 180 / Math.sqrt(l.weight + 1)).strength(0.4))
+        .force("charge", d3.forceManyBody().strength(-380))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collide", d3.forceCollide((d) => radius(d.papers) + 4));
+
+      const link = root.append("g")
+        .attr("stroke", "#94a3b8")
+        .attr("stroke-opacity", 0.35)
+        .selectAll("line")
+        .data(links)
+        .join("line")
+        .attr("stroke-width", (d) => stroke(d.weight));
+
+      const node = root.append("g")
+        .selectAll("g")
+        .data(nodes)
+        .join("g")
+        .style("cursor", "pointer")
+        .call(
+          d3.drag()
+            .on("start", (e, d) => {
+              if (!e.active) sim.alphaTarget(0.3).restart();
+              d.fx = d.x; d.fy = d.y;
+            })
+            .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+            .on("end", (e, d) => {
+              if (!e.active) sim.alphaTarget(0);
+              d.fx = null; d.fy = null;
+            })
+        );
+
+      node.append("circle")
+        .attr("r", (d) => radius(d.papers))
+        .attr("fill", "#3d736a")
+        .attr("fill-opacity", 0.85)
+        .attr("stroke", "#ffffff")
+        .attr("stroke-width", 2);
+
+      node.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dy", "0.35em")
+        .attr("font-size", (d) => Math.max(10, Math.min(18, radius(d.papers) * 0.7)))
+        .attr("font-weight", 700)
+        .attr("fill", "#ffffff")
+        .attr("pointer-events", "none")
+        .text((d) => d.id);
+
+      node.append("title")
+        .text((d) => `${d.flag} ${d.name} — ${d.papers} paper${d.papers === 1 ? "" : "s"}`);
+
+      // Highlight on click: dim everything else
+      let activeId = null;
+      node.on("click", (event, d) => {
+        event.stopPropagation();
+        activeId = activeId === d.id ? null : d.id;
+        const neighbors = new Set([d.id]);
+        if (activeId) {
+          links.forEach((l) => {
+            const sid = typeof l.source === "object" ? l.source.id : l.source;
+            const tid = typeof l.target === "object" ? l.target.id : l.target;
+            if (sid === d.id) neighbors.add(tid);
+            if (tid === d.id) neighbors.add(sid);
+          });
+        }
+        const dim = activeId ? 0.12 : 1;
+        node.style("opacity", (n) => (activeId ? (neighbors.has(n.id) ? 1 : dim) : 1));
+        link.style("opacity", (l) => {
+          if (!activeId) return 1;
+          const sid = typeof l.source === "object" ? l.source.id : l.source;
+          const tid = typeof l.target === "object" ? l.target.id : l.target;
+          return sid === d.id || tid === d.id ? 0.9 : dim;
+        });
+      });
+      svg.on("click", () => {
+        activeId = null;
+        node.style("opacity", 1);
+        link.style("opacity", 1);
+      });
+
+      sim.on("tick", () => {
+        link
+          .attr("x1", (d) => d.source.x)
+          .attr("y1", (d) => d.source.y)
+          .attr("x2", (d) => d.target.x)
+          .attr("y2", (d) => d.target.y);
+        node.attr("transform", (d) => `translate(${d.x},${d.y})`);
+      });
+    })();
+  </script>
+</BaseLayout>
