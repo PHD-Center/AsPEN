@@ -9,3 +9,7 @@ Session 4 of ACPE 2025, titled *"Data Environment in Asia and Multi-National RCT
 The session featured presentations by Francisco Lai (The University of Hong Kong), Hwa Yeon Ko (Sungkyunkwan University, SKKU), Brian Li (National Cheng Kung University, NCKU), and Jenni Ilomaki (Monash University). Speakers highlighted the growing role of Asian real-world data in emulating randomized clinical trials and generating evidence relevant to regional populations. Topics included the implementation of common data models, adaptation of study protocols to local healthcare systems, and methodological considerations for improving the validity and reproducibility of multinational RWE studies.
 
 The symposium also showcased findings from the Asian RCT-DUPLICATE project, demonstrating how rigorous and harmonized approaches across databases can strengthen confidence in observational research, further emphasizing the value of international research networks and cross-country collaboration in advancing pharmacoepidemiology and evidence generation in Asia.
+
+### Featured paper
+
+- Ko HY, Au PCM, et al. Emulating six cardiovascular outcome trials of antidiabetic drugs using real-world databases from Korea and Taiwan. *Clinical Pharmacology & Therapeutics* 2026. [PMID 40820495](https://pubmed.ncbi.nlm.nih.gov/40820495/) — the Asian RCT-DUPLICATE study presented at the session, first-authored by Hwa Yeon Ko (SKKU).
