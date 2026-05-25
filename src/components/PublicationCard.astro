@@ -1,0 +1,72 @@
+---
+// Single publication card — used by /publications/ (chronological) and
+// /publications/themes/[id]/ (per-theme detail). Matches the exact layout
+// expected by the inline JS on /publications/ (data-year + data-search) so
+// the same card markup can participate in that page's year filter.
+
+import type publicationsJson from "../data/publications.json";
+type Pub = (typeof publicationsJson)[number];
+
+interface Props {
+  pub: Pub;
+  /** Show the "Infrastructure" featured badge (default true). */
+  showBadge?: boolean;
+}
+
+const { pub: p, showBadge = true } = Astro.props;
+const featured = (p as { featured?: boolean }).featured;
+const blurb = (p as { blurb?: string }).blurb;
+const pmcid = (p as { pmcid?: string }).pmcid;
+const fulltext = (p as { fulltext?: string }).fulltext;
+---
+
+<li
+  id={p.pmid ? `pub-${p.pmid}` : undefined}
+  class:list={[
+    "scroll-mt-24 p-5 hover:bg-slate-50",
+    featured && "border-l-4 border-l-brand-500 bg-brand-50/30",
+  ]}
+  data-year={String(p.year)}
+  data-search={`${p.title} ${p.authors} ${p.journal}`.toLowerCase()}
+>
+  <div class="flex items-center gap-2 text-xs text-slate-500">
+    {featured && showBadge && (
+      <span class="inline-flex items-center gap-1 bg-gradient-to-r from-brand-600 to-brand-700 text-white font-semibold px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wider">
+        Infrastructure
+      </span>
+    )}
+    <span>{p.year} · {p.journal}</span>
+  </div>
+  <p class="font-semibold text-slate-900 mt-1.5 leading-snug">{p.title}</p>
+  {blurb && (
+    <p class="text-sm text-brand-700 italic mt-1.5 leading-relaxed">{blurb}</p>
+  )}
+  <p class="text-sm text-slate-600 mt-1.5">{p.authors}</p>
+  <div class="mt-2 flex flex-wrap gap-2 text-xs items-center">
+    {p.tags && p.tags.map((t) => (
+      <span class="inline-block bg-brand-50 text-brand-700 px-2 py-0.5 rounded">{t}</span>
+    ))}
+    {pmcid && (
+      <a
+        class="inline-flex items-center gap-1 bg-brand-600 text-white font-semibold hover:bg-brand-700 px-2 py-0.5 rounded transition"
+        href={`https://pmc.ncbi.nlm.nih.gov/articles/${pmcid}/`}
+        target="_blank"
+        rel="noopener"
+      >📄 Full text</a>
+    )}
+    {!pmcid && fulltext && (
+      <a
+        class="inline-flex items-center gap-1 bg-brand-600 text-white font-semibold hover:bg-brand-700 px-2 py-0.5 rounded transition"
+        href={fulltext}
+        target="_blank"
+        rel="noopener"
+      >📄 Full text</a>
+    )}
+    {p.doi && (
+      <a class="text-brand-600 hover:underline" href={`https://doi.org/${p.doi}`} target="_blank" rel="noopener">DOI: {p.doi}</a>
+    )}
+    {p.pmid && (
+      <a class="text-brand-600 hover:underline" href={`https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`} target="_blank" rel="noopener">PMID: {p.pmid}</a>
+    )}
+  </div>
+</li>

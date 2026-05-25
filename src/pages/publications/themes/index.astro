@@ -1,8 +1,9 @@
 ---
-import BaseLayout from "../../layouts/BaseLayout.astro";
-import PageHeader from "../../components/PageHeader.astro";
-import pubsRaw from "../../data/publications.json";
-import affiliations from "../../data/affiliations.json";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PageHeader from "../../../components/PageHeader.astro";
+import pubsRaw from "../../../data/publications.json";
+import affiliations from "../../../data/affiliations.json";
+import { THEMES } from "../../../data/themes";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -11,83 +12,7 @@ const pubs: Pub[] = pubsRaw as Pub[];
 type Aff = Record<string, { countries: string[] }>;
 const aff = affiliations as Aff;
 
-// Each theme is a magazine spread. Restrained editorial palette — no
-// per-theme rainbow hues. A single soft accent and the cover image carry
-// the visual identity.
-interface Theme {
-  id: string;
-  number: string;            // "01" — printed as eyebrow
-  name: string;
-  /** Editorial story — 1–3 sentences. The lede of the spread. */
-  story: string;
-  /** Cover image (place under public/images/themes/). Optional — falls back to a typographic placeholder. */
-  cover?: string;
-  /** Caption for the cover (e.g. "From: Nature Medicine, 2024"). Optional. */
-  coverCaption?: string;
-  tags: string[];
-}
-
-const THEMES: Theme[] = [
-  {
-    id: "neuropsychiatric",
-    number: "01",
-    name: "Neuropsychiatric & cognitive",
-    story: "AsPEN's longest-running thread. The 2013 PSSA on antipsychotics and acute hyperglycaemia established the network's signal-detection model. Today the work spans dementia survival trajectories, post-COVID neuropsychiatric sequelae, and ADHD / methylphenidate utilisation across most AsPEN sites.",
-    // cover: "themes/neuropsychiatric.jpg",
-    tags: ["antipsychotics", "psychotropic", "psychiatry", "mental health", "neurology", "dementia", "ADHD", "methylphenidate", "depression", "anxiety", "antiseizure", "epilepsy", "cholinesterase", "lithium"],
-  },
-  {
-    id: "diabetes-cardiometabolic",
-    number: "02",
-    name: "Diabetes & cardiometabolic",
-    story: "From the second PSSA (thiazolidinediones and cardiovascular risk) through current GLP-1 utilisation studies — characterising how new and old diabetes drugs behave in Asian populations where the underlying epidemiology often differs from Western trial cohorts.",
-    tags: ["diabetes", "antidiabetic", "GLP 1", "thiazolidinediones", "metabolic", "cardiovascular", "heart failure", "myocardial infarction"],
-  },
-  {
-    id: "pregnancy-paediatric",
-    number: "03",
-    name: "Pregnancy & paediatric",
-    story: "Drug safety in populations that are chronically under-represented in trials. The 2024 Nature Medicine study of 3.6 million mother–child pairs across AsPEN sites is the clearest demonstration to date of what multi-country observational data can do for this question.",
-    tags: ["pregnancy", "pediatric"],
-  },
-  {
-    id: "pain-opioids",
-    number: "04",
-    name: "Pain & opioids",
-    story: "Comparative drug utilisation across health systems with very different prescribing cultures — opioids, gabapentinoids, NSAIDs, and the downstream gastrointestinal effects (PPIs, C. difficile) that follow.",
-    tags: ["opioid", "gabapentinoid", "NSAIDs", "PPI", "gastrointestinal", "C. difficile"],
-  },
-  {
-    id: "infection-vaccine",
-    number: "05",
-    name: "Infection & vaccine safety",
-    story: "Pandemic-era work — vaccine-safety surveillance across 19 Asia-Pacific countries (2021) and post-COVID sequelae studies that needed multi-country denominators to be statistically tractable.",
-    tags: ["COVID 19", "vaccine safety", "post acute sequelae"],
-  },
-  {
-    id: "oncology-endocrine",
-    number: "06",
-    name: "Oncology & endocrine",
-    story: "Long-tail safety questions in cancer and endocrine therapy where AsPEN's claims data captures real-world prescribing patterns that single-trial datasets miss — including androgen deprivation, biologics, and bone-targeting agents.",
-    tags: ["oncology", "thyroid cancer", "prostate cancer", "androgen deprivation", "5 alpha reductase", "biologics", "bone targeting"],
-  },
-  {
-    id: "older-adults",
-    number: "07",
-    name: "Older adults & frailty",
-    story: "Polypharmacy, falls, and hip fracture — questions where Asian healthcare systems with universal coverage offer some of the cleanest population-level evidence anywhere.",
-    tags: ["older adults", "polypharmacy", "falls", "hip fracture"],
-  },
-  {
-    id: "methods-infrastructure",
-    number: "08",
-    name: "Methods & infrastructure",
-    story: "The scaffolding that makes the rest of this work possible. PSSA, SCCS, target-trial emulation, common data models, and the NeuroGEN platform that now spans 15 databases on four continents.",
-    tags: ["sequence symmetry", "PSSA", "sccs", "target trial emulation", "CDM", "NeuroGEN", "infrastructure", "databases", "data sources", "distributed network", "methodology", "drug utilization", "drug safety", "overview", "review", "accessibility"],
-  },
-];
-
-// Compute per-theme dataset
+// Compute per-theme dataset (highlight, year span, country count from affiliations.json)
 const buckets = THEMES.map((t) => {
   const tagSet = new Set(t.tags.map((x) => x.toLowerCase()));
   const matched = pubs
@@ -107,16 +32,12 @@ const buckets = THEMES.map((t) => {
   return { ...t, papers: matched, highlight, yearMin, yearMax, countries: countries.size };
 });
 
+const totalPapers = pubs.length;
 const globalMin = Math.min(...pubs.map((p) => p.year));
 const globalMax = Math.max(...pubs.map((p) => p.year));
-const xFor = (year: number) => {
-  if (globalMax === globalMin) return 50;
-  return ((year - globalMin) / (globalMax - globalMin)) * 100;
-};
 
 const allThemeTags = new Set(THEMES.flatMap((t) => t.tags.map((x) => x.toLowerCase())));
 const orphanPubs = pubs.filter((p) => !(p.tags ?? []).some((t) => allThemeTags.has(t.toLowerCase())));
-const totalPapers = pubs.length;
 ---
 
 <BaseLayout
@@ -179,9 +100,9 @@ const totalPapers = pubs.length;
               aria-label={`Theme ${t.number}: ${t.name}`}
             >
               <div class="grid gap-8 md:gap-10 lg:gap-14 md:grid-cols-2 items-start">
-                <!-- LEFT: cover image (or typographic placeholder) -->
+                <!-- LEFT: cover image (or editorial typographic cover) -->
                 <div class="md:sticky md:top-4">
-                  <div class="aspect-[3/4] w-full max-w-md mx-auto md:mx-0 overflow-hidden rounded-lg shadow-md bg-slate-100 border border-slate-200">
+                  <div class="aspect-[3/4] w-full max-w-md mx-auto md:mx-0 overflow-hidden rounded-sm shadow-lg bg-white border border-slate-200 relative">
                     {t.cover ? (
                       <img
                         src={`${base}/images/${t.cover}`}
@@ -190,11 +111,38 @@ const totalPapers = pubs.length;
                         loading="lazy"
                       />
                     ) : (
-                      <!-- Editorial typographic placeholder -->
-                      <div class="w-full h-full flex flex-col justify-between p-6 sm:p-8 bg-gradient-to-br from-slate-100 via-stone-100 to-slate-200">
-                        <p class="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-bold">AsPEN · Theme {t.number}</p>
-                        <p class="text-2xl sm:text-3xl font-bold text-slate-800 leading-tight tracking-tight">{t.name}</p>
-                        <p class="text-[10px] uppercase tracking-[0.25em] text-slate-400 font-semibold">Cover image to follow</p>
+                      <!-- Editorial typographic cover: masthead + headline + theme line + journal credit -->
+                      <div class="w-full h-full flex flex-col p-7 sm:p-9 bg-[#f3eee3]">
+                        <!-- Masthead -->
+                        <div class="flex items-baseline justify-between border-b-2 border-slate-900 pb-3">
+                          <p class="text-2xl sm:text-3xl font-black tracking-tighter text-slate-900">AsPEN</p>
+                          <p class="text-[10px] uppercase tracking-[0.3em] text-slate-700 font-bold tabular-nums">№ {t.number} · {globalMax}</p>
+                        </div>
+
+                        <!-- Headline (pull quote) -->
+                        <div class="flex-1 flex flex-col justify-center py-6">
+                          <p class="text-[34px] sm:text-[40px] leading-[0.95] font-bold text-slate-900 tracking-tight uppercase">
+                            {t.headline}
+                          </p>
+                          {t.highlight && (
+                            <p class="mt-5 text-xs sm:text-sm text-slate-700 leading-relaxed italic">
+                              {t.highlight.title}
+                            </p>
+                          )}
+                        </div>
+
+                        <!-- Bottom credits -->
+                        <div class="border-t border-slate-900 pt-3 flex items-end justify-between gap-3">
+                          <div>
+                            <p class="text-[10px] uppercase tracking-[0.25em] text-slate-700 font-bold">Theme {t.number}</p>
+                            <p class="text-sm font-bold text-slate-900 mt-0.5 leading-tight">{t.name}</p>
+                          </div>
+                          {t.highlight && (
+                            <p class="text-[10px] uppercase tracking-[0.2em] text-slate-600 font-semibold text-right shrink-0">
+                              {t.highlight.journal}<br/>{t.highlight.year}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -250,59 +198,15 @@ const totalPapers = pubs.length;
                     </div>
                   </dl>
 
-                  <!-- Mini timeline -->
-                  {t.papers.length > 0 && (
-                    <div class="mt-5">
-                      <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold mb-2">Publication timeline</p>
-                      <svg viewBox="0 0 100 14" preserveAspectRatio="none" class="w-full h-10">
-                        <line x1="0" y1="9.5" x2="100" y2="9.5" stroke="#cbd5e1" stroke-width="0.15" />
-                        {Array.from({ length: Math.ceil((globalMax - globalMin) / 2) + 1 }, (_, i) => globalMin + i * 2).map((year) => (
-                          <g>
-                            <line x1={xFor(year)} y1="9" x2={xFor(year)} y2="10" stroke="#94a3b8" stroke-width="0.15" />
-                            <text x={xFor(year)} y="13" font-size="1.8" fill="#64748b" text-anchor="middle">{String(year).slice(-2)}</text>
-                          </g>
-                        ))}
-                        {t.papers.map((p) => {
-                          const isFeatured = Boolean((p as { featured?: boolean }).featured);
-                          const hasBlurb = Boolean((p as { blurb?: string }).blurb);
-                          const r = isFeatured ? 1.6 : hasBlurb ? 1.2 : 0.9;
-                          return (
-                            <circle cx={xFor(p.year)} cy="5" r={r} fill={isFeatured ? "#21443e" : "#475569"} opacity={isFeatured ? 1 : 0.6}>
-                              <title>{p.year} · {p.title}</title>
-                            </circle>
-                          );
-                        })}
-                      </svg>
-                    </div>
-                  )}
-
-                  <!-- All papers (in-spread collapsible) -->
+                  <!-- Link to per-theme chronological list -->
                   {t.papers.length > 1 && (
-                    <details class="mt-6 border-t border-slate-200 pt-4">
-                      <summary class="cursor-pointer select-none text-sm font-semibold text-brand-700 hover:underline list-none flex items-center gap-2">
-                        <span class="text-base leading-none">＋</span>
-                        <span>All {t.papers.length} papers in this theme</span>
-                      </summary>
-                      <ul class="divide-y divide-slate-100 mt-3">
-                        {t.papers.map((p) => (
-                          <li class="py-3">
-                            <div class="flex items-baseline gap-2 text-xs text-slate-500">
-                              <span class="tabular-nums font-semibold text-slate-700">{p.year}</span>
-                              <span>·</span>
-                              <span>{p.journal}</span>
-                              {(p as { featured?: boolean }).featured && (
-                                <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 border border-brand-100">Highlight</span>
-                              )}
-                            </div>
-                            <p class="mt-0.5 text-sm font-medium text-slate-900 leading-snug">{p.title}</p>
-                            <div class="mt-1 flex flex-wrap gap-3 text-xs">
-                              {p.pmid && <a href={`${base}/publications/#pub-${p.pmid}`} class="text-brand-700 hover:underline font-medium">See full entry →</a>}
-                              {p.pmid && <a href={`https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`} target="_blank" rel="noopener" class="text-slate-500 hover:text-brand-700 hover:underline">PMID {p.pmid}</a>}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </details>
+                    <a
+                      href={`${base}/publications/themes/${t.id}/`}
+                      class="mt-6 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold transition"
+                    >
+                      All {t.papers.length} papers in this theme
+                      <span aria-hidden="true">→</span>
+                    </a>
                   )}
                 </div>
               </div>
@@ -335,7 +239,7 @@ const totalPapers = pubs.length;
     {orphanPubs.length > 0 && (
       <div class="mt-16 border-t border-slate-200 pt-6">
         <p class="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2">Uncategorised</p>
-        <p class="text-xs text-slate-500 mb-3">{orphanPubs.length} {orphanPubs.length === 1 ? "paper" : "papers"} whose tags don't yet map to any theme. Edit <code class="text-[11px]">src/pages/publications/themes.astro</code> to add them.</p>
+        <p class="text-xs text-slate-500 mb-3">{orphanPubs.length} {orphanPubs.length === 1 ? "paper" : "papers"} whose tags don't yet map to any theme. Edit <code class="text-[11px]">src/data/themes.ts</code> to add them.</p>
         <ul class="text-xs text-slate-600 space-y-1">
           {orphanPubs.map((p) => (
             <li><span class="tabular-nums font-medium">{p.year}</span> · {p.title}</li>
@@ -376,14 +280,12 @@ const totalPapers = pubs.length;
         });
       };
 
-      // Detect current spread from scroll position (handles swipe / scrollbar drag)
       let scrollTimer;
       rail.addEventListener("scroll", () => {
         clearTimeout(scrollTimer);
         scrollTimer = setTimeout(() => {
           const railLeft = rail.scrollLeft;
           const widths = spreads.map((s) => s.offsetLeft - rail.offsetLeft);
-          // pick the spread whose left edge is closest to current scroll position
           let nearest = 0;
           let best = Infinity;
           widths.forEach((w, i) => {
@@ -401,7 +303,6 @@ const totalPapers = pubs.length;
       nextBtn && nextBtn.addEventListener("click", () => goTo(current + 1));
       dots.forEach((d) => d.addEventListener("click", () => goTo(Number(d.dataset.magDot))));
 
-      // Keyboard nav when the rail or page has focus
       const onKey = (e) => {
         if (e.target.matches("input, textarea, select, [contenteditable]")) return;
         if (e.key === "ArrowRight") { e.preventDefault(); goTo(current + 1); }
@@ -409,17 +310,12 @@ const totalPapers = pubs.length;
       };
       document.addEventListener("keydown", onKey);
 
-      // If URL hash points to a theme, start there
       const hash = location.hash.replace("#", "");
       if (hash) {
         const idx = spreads.findIndex((s) => s.id === hash);
-        if (idx >= 0) {
-          // Slight delay so layout is final before we scroll
-          setTimeout(() => goTo(idx), 50);
-        }
+        if (idx >= 0) setTimeout(() => goTo(idx), 50);
       }
 
-      // Jump links update the carousel rather than triggering native anchor scroll
       document.querySelectorAll("[data-mag-link]").forEach((a) => {
         a.addEventListener("click", (e) => {
           e.preventDefault();
