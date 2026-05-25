@@ -36,7 +36,7 @@ const hotspots = [NHIRD, MATERNAL_CHILD, ...SATELLITES];
           type="button"
           data-hotspot-id={r.id}
           aria-label={`${r.name} — ${r.meta}`}
-          class="absolute group rounded transition border-2 border-transparent hover:border-brand-600 hover:bg-brand-600/5 focus:border-brand-700 focus:outline-none focus:bg-brand-600/10"
+          class="absolute cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:rounded"
           style={`top:${r.bbox?.top ?? "0%"}; left:${r.bbox?.left ?? "0%"}; width:${r.bbox?.width ?? "0%"}; height:${r.bbox?.height ?? "0%"};`}
         ></button>
       ))}

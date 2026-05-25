@@ -199,7 +199,7 @@ export const SATELLITES: Registry[] = [
     link: "https://www.phdcenter.org.tw/chang-gung-research-database-cgrd/",
     tone: "green",
     area: "bot3",
-    bbox: { top: "81%", left: "60%", width: "38%", height: "18%" },
+    bbox: { top: "81%", left: "62%", width: "35%", height: "18%" },
   },
 ];
 
