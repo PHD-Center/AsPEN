@@ -25,22 +25,37 @@ export interface Theme {
   cover?: string;
   /** Caption shown under the cover, e.g. "From: Nature Medicine, 2024". */
   coverCaption?: string;
+  /**
+   * Optional manual override of the highlight paper. When set, the magazine
+   * spread shows the publication with this PMID instead of the auto-picked
+   * "featured > blurbed > newest" choice. Used for editorial curation.
+   */
+  highlightPmid?: string;
   /** Tags from publications.json that map into this theme. */
   tags: string[];
 }
 
 export const THEMES: Theme[] = [
   {
-    id: "neuropsychiatric",
+    id: "methods-infrastructure",
     number: "01",
+    name: "Methods & infrastructure",
+    headline: "15 databases · 4 continents",
+    story: "The scaffolding that makes the rest of this work possible. PSSA, SCCS, target-trial emulation, common data models, and the NeuroGEN platform that now spans 15 databases on four continents — the methodological foundation every other AsPEN study sits on.",
+    tags: ["sequence symmetry", "PSSA", "sccs", "target trial emulation", "CDM", "NeuroGEN", "infrastructure", "databases", "data sources", "distributed network", "methodology", "drug utilization", "drug safety", "overview", "review", "accessibility"],
+  },
+  {
+    id: "neuropsychiatric",
+    number: "02",
     name: "Neuropsychiatric & cognitive",
-    headline: "Dementia, mind, metabolism",
-    story: "AsPEN's longest-running thread. The 2013 PSSA on antipsychotics and acute hyperglycaemia established the network's signal-detection model. Today the work spans dementia survival trajectories, post-COVID neuropsychiatric sequelae, and ADHD / methylphenidate utilisation across most AsPEN sites.",
+    headline: "Psychotropics through a pandemic",
+    story: "AsPEN's longest-running thread, anchored by the 2013 PSSA on antipsychotics and acute hyperglycaemia. The 2024 Lancet Psychiatry study of psychotropic prescribing across the COVID-19 pandemic typifies the network's current reach; ongoing work spans dementia survival trajectories, ADHD / methylphenidate utilisation, and post-COVID neuropsychiatric sequelae.",
+    highlightPmid: "39241791",
     tags: ["antipsychotics", "psychotropic", "psychiatry", "mental health", "neurology", "dementia", "ADHD", "methylphenidate", "depression", "anxiety", "antiseizure", "epilepsy", "cholinesterase", "lithium"],
   },
   {
     id: "diabetes-cardiometabolic",
-    number: "02",
+    number: "03",
     name: "Diabetes & cardiometabolic",
     headline: "Diabetes drugs in Asia",
     story: "From the second PSSA (thiazolidinediones and cardiovascular risk) through current GLP-1 utilisation studies — characterising how new and old diabetes drugs behave in Asian populations where the underlying epidemiology often differs from Western trial cohorts.",
@@ -48,7 +63,7 @@ export const THEMES: Theme[] = [
   },
   {
     id: "pregnancy-paediatric",
-    number: "03",
+    number: "04",
     name: "Pregnancy & paediatric",
     headline: "3.6 million mother–child pairs",
     story: "Drug safety in populations that are chronically under-represented in trials. The 2024 Nature Medicine study of 3.6 million mother–child pairs across AsPEN sites is the clearest demonstration to date of what multi-country observational data can do for this question.",
@@ -56,19 +71,11 @@ export const THEMES: Theme[] = [
   },
   {
     id: "pain-opioids",
-    number: "04",
+    number: "05",
     name: "Pain & opioids",
     headline: "Opioids across health systems",
     story: "Comparative drug utilisation across health systems with very different prescribing cultures — opioids, gabapentinoids, NSAIDs, and the downstream gastrointestinal effects (PPIs, C. difficile) that follow.",
     tags: ["opioid", "gabapentinoid", "NSAIDs", "PPI", "gastrointestinal", "C. difficile"],
-  },
-  {
-    id: "infection-vaccine",
-    number: "05",
-    name: "Infection & vaccine safety",
-    headline: "19 countries vs. COVID",
-    story: "Pandemic-era work — vaccine-safety surveillance across 19 Asia-Pacific countries (2021) and post-COVID sequelae studies that needed multi-country denominators to be statistically tractable.",
-    tags: ["COVID 19", "vaccine safety", "post acute sequelae"],
   },
   {
     id: "oncology-endocrine",
@@ -85,14 +92,6 @@ export const THEMES: Theme[] = [
     headline: "Polypharmacy at scale",
     story: "Polypharmacy, falls, and hip fracture — questions where Asian healthcare systems with universal coverage offer some of the cleanest population-level evidence anywhere.",
     tags: ["older adults", "polypharmacy", "falls", "hip fracture"],
-  },
-  {
-    id: "methods-infrastructure",
-    number: "08",
-    name: "Methods & infrastructure",
-    headline: "15 databases · 4 continents",
-    story: "The scaffolding that makes the rest of this work possible. PSSA, SCCS, target-trial emulation, common data models, and the NeuroGEN platform that now spans 15 databases on four continents.",
-    tags: ["sequence symmetry", "PSSA", "sccs", "target trial emulation", "CDM", "NeuroGEN", "infrastructure", "databases", "data sources", "distributed network", "methodology", "drug utilization", "drug safety", "overview", "review", "accessibility"],
   },
 ];
 

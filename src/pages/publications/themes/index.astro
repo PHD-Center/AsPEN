@@ -12,16 +12,23 @@ const pubs: Pub[] = pubsRaw as Pub[];
 type Aff = Record<string, { countries: string[] }>;
 const aff = affiliations as Aff;
 
-// Compute per-theme dataset (highlight, year span, country count from affiliations.json)
+// Compute per-theme dataset. Highlight = explicit `highlightPmid` override
+// when set on the theme, otherwise featured > blurbed > most-recent.
 const buckets = THEMES.map((t) => {
   const tagSet = new Set(t.tags.map((x) => x.toLowerCase()));
   const matched = pubs
     .filter((p) => (p.tags ?? []).some((tag) => tagSet.has(tag.toLowerCase())))
     .sort((a, b) => b.year - a.year);
 
-  const featured = matched.filter((p) => (p as { featured?: boolean }).featured);
-  const blurbed = matched.filter((p) => (p as { blurb?: string }).blurb);
-  const highlight = (featured[0] as Pub | undefined) ?? (blurbed[0] as Pub | undefined) ?? matched[0];
+  let highlight: Pub | undefined;
+  if (t.highlightPmid) {
+    highlight = pubs.find((p) => p.pmid === t.highlightPmid);
+  }
+  if (!highlight) {
+    const featured = matched.filter((p) => (p as { featured?: boolean }).featured);
+    const blurbed = matched.filter((p) => (p as { blurb?: string }).blurb);
+    highlight = (featured[0] as Pub | undefined) ?? (blurbed[0] as Pub | undefined) ?? matched[0];
+  }
 
   const years = matched.map((p) => p.year);
   const yearMin = years.length ? Math.min(...years) : 0;
