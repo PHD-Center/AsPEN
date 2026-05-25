@@ -4,11 +4,8 @@ import PageHeader from "../components/PageHeader.astro";
 import Section from "../components/Section.astro";
 import ChairCard from "../components/ChairCard.astro";
 import GovernanceChart from "../components/GovernanceChart.astro";
-import CiteButton from "../components/CiteButton.astro";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-const siteBase = import.meta.env.BASE_URL.replace(/\/?$/, "/");
-const siteUrl = `https://phd-center.github.io${siteBase}about/`;
 ---
 
 <BaseLayout title="About AsPEN" description="Mission, goals and objectives, governance, how to join, and current chair of the Asian Pharmacoepidemiology Network.">
@@ -132,7 +129,4 @@ const siteUrl = `https://phd-center.github.io${siteBase}about/`;
     </div>
   </Section>
 
-  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pb-10">
-    <CiteButton title="About" url={siteUrl} bibkey="aspen-about" />
-  </section>
 </BaseLayout>

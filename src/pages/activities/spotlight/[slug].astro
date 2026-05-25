@@ -1,7 +1,9 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PageHeader from "../../../components/PageHeader.astro";
+import PublicationCard from "../../../components/PublicationCard.astro";
 import { getCollection } from "astro:content";
+import pubsRaw from "../../../data/publications.json";
 
 export async function getStaticPaths() {
   const items = await getCollection("spotlight");
@@ -16,6 +18,15 @@ const img = entry.data.image ? `${base}/images/${entry.data.image}` : fallback;
 const isFallback = !entry.data.image;
 const d = entry.data.date;
 const dateStr = d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+
+// Resolve referenced PMIDs against publications.json so the citations
+// render identically to /publications/.
+type Pub = (typeof pubsRaw)[number];
+const pubByPmid = new Map<string, Pub>((pubsRaw as Pub[]).filter((p) => p.pmid).map((p) => [p.pmid!, p]));
+const referencedPmids = entry.data.references ?? [];
+const references = referencedPmids
+  .map((pmid) => pubByPmid.get(pmid))
+  .filter((p): p is Pub => Boolean(p));
 ---
 
 <BaseLayout title={`${entry.data.title} — Spotlight`} description={`Spotlight feature: ${entry.data.title}`}>
@@ -38,6 +49,15 @@ const dateStr = d.toLocaleDateString("en-US", { year: "numeric", month: "short",
     <div class="article-prose">
       <Content />
     </div>
+
+    {references.length > 0 && (
+      <section class="mt-12 border-t border-slate-200 pt-6">
+        <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-3">References</h2>
+        <ul class="divide-y divide-slate-100 border border-slate-200 rounded-lg bg-white">
+          {references.map((p) => <PublicationCard pub={p} />)}
+        </ul>
+      </section>
+    )}
 
     <p class="mt-12">
       <a href={`${base}/activities/spotlight/`} class="text-brand-600 hover:underline">← Back to all Spotlight features</a>

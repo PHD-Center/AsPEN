@@ -26,6 +26,10 @@ const spotlight = defineCollection({
     image: z.string().optional(),
     /** Optional 1–2 sentence teaser used on the listing page. If omitted, derived from first paragraph. */
     excerpt: z.string().optional(),
+    /** PMIDs of referenced papers. Each is looked up in publications.json
+        and rendered as a PublicationCard at the foot of the spotlight,
+        so reference formatting always matches /publications/. */
+    references: z.array(z.string()).optional(),
   }),
 });
 
