@@ -52,7 +52,8 @@
       "CDM",
       "databases",
       "infrastructure"
-    ]
+    ],
+    "pmcid": "PMC6067778"
   },
   {
     "year": 2021,
@@ -65,7 +66,8 @@
       "psychotropic",
       "drug utilization",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC9766760"
   },
   {
     "year": 2021,
@@ -108,7 +110,8 @@
       "mental health"
     ],
     "featured": true,
-    "blurb": "Detailed description of NeuroGEN's 15-database data infrastructure spanning Asia, Oceania, Europe and North America."
+    "blurb": "Detailed description of NeuroGEN's 15-database data infrastructure spanning Asia, Oceania, Europe and North America.",
+    "pmcid": "PMC10749544"
   },
   {
     "year": 2023,
@@ -121,7 +124,8 @@
       "gabapentinoid",
       "drug utilization",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC10435503"
   },
   {
     "year": 2023,
@@ -162,7 +166,8 @@
       "pregnancy",
       "diabetes",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC11108779"
   },
   {
     "year": 2024,
@@ -176,7 +181,8 @@
       "pregnancy",
       "drug utilization",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC11650410"
   },
   {
     "year": 2025,
@@ -189,7 +195,8 @@
       "opioid",
       "drug utilization",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC12515243"
   },
   {
     "year": 2025,
@@ -202,7 +209,8 @@
       "dementia",
       "survival",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC12120012"
   },
   {
     "year": 2025,
@@ -215,7 +223,8 @@
       "opioid",
       "pregnancy",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC12061384"
   },
   {
     "year": 2025,
@@ -241,7 +250,8 @@
       "COVID 19",
       "post acute sequelae",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC12237969"
   },
   {
     "year": 2025,
@@ -254,7 +264,8 @@
       "COVID 19",
       "psychiatry",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC11887073"
   },
   {
     "year": 2024,
@@ -283,7 +294,8 @@
       "epilepsy",
       "drug utilization",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC12547185"
   },
   {
     "year": 2025,
@@ -296,7 +308,8 @@
       "GLP 1",
       "thyroid cancer",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC12281980"
   },
   {
     "year": 2026,
@@ -309,7 +322,8 @@
       "antidiabetic",
       "cardiovascular",
       "target trial emulation"
-    ]
+    ],
+    "pmcid": "PMC13083378"
   },
   {
     "year": 2020,
@@ -326,7 +340,8 @@
       "multinational"
     ],
     "featured": true,
-    "blurb": "Narrative introduction to NeuroGEN — how international 'big data' platforms are applied to CNS drug research."
+    "blurb": "Narrative introduction to NeuroGEN — how international 'big data' platforms are applied to CNS drug research.",
+    "pmcid": "PMC7306570"
   },
   {
     "year": 2021,
@@ -384,7 +399,8 @@
       "antidiabetic",
       "drug utilization",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC6291148"
   },
   {
     "year": 2018,
@@ -451,7 +467,8 @@
       "thiazolidinediones",
       "heart failure",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC4561996"
   },
   {
     "year": 2015,
@@ -464,7 +481,8 @@
       "sequence symmetry",
       "methodology",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC4690514"
   },
   {
     "year": 2022,
@@ -477,7 +495,8 @@
       "biologics",
       "accessibility",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC9249810"
   },
   {
     "year": 2022,
@@ -505,7 +524,8 @@
       "sccs",
       "multinational",
       "pediatric"
-    ]
+    ],
+    "pmcid": "PMC8546502"
   },
   {
     "year": 2021,
@@ -534,7 +554,8 @@
       "falls",
       "sccs",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC8427404"
   },
   {
     "year": 2021,
@@ -548,7 +569,8 @@
       "prostate cancer",
       "dementia",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC8345520"
   },
   {
     "year": 2021,
@@ -561,7 +583,8 @@
       "hip fracture",
       "methodology",
       "multinational"
-    ]
+    ],
+    "pmcid": "PMC8319985"
   },
   {
     "year": 2020,
@@ -587,6 +610,7 @@
       "5 alpha reductase",
       "diabetes",
       "drug safety"
-    ]
+    ],
+    "pmcid": "PMC6456811"
   }
 ]

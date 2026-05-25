@@ -36,8 +36,10 @@ content:
       - { name: authors, label: Authors, type: text,   required: true }
       - { name: title,   label: Title,   type: text,   required: true }
       - { name: journal, label: Journal, type: string }
-      - { name: doi,     label: DOI,     type: string }
-      - { name: pmid,    label: PMID,    type: string }
+      - { name: doi,      label: DOI,                                   type: string }
+      - { name: pmid,     label: PMID,                                  type: string }
+      - { name: pmcid,    label: "PMCID (for free PMC full text)",      type: string }
+      - { name: fulltext, label: "Full-text URL (if not on PMC)",       type: string }
       - name: tags
         label: Tags
         type: string

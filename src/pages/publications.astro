@@ -95,8 +95,18 @@ const milestones: { year: number; text: string; pmid?: string }[] = [
               <p class="text-sm text-brand-700 italic mt-1.5 leading-relaxed">{blurb}</p>
             )}
             <p class="text-sm text-slate-600 mt-1.5">{p.authors}</p>
-            <div class="mt-2 flex flex-wrap gap-2 text-xs">
+            <div class="mt-2 flex flex-wrap gap-2 text-xs items-center">
               {p.tags.map((t) => <span class="inline-block bg-brand-50 text-brand-700 px-2 py-0.5 rounded">{t}</span>)}
+              {(p as any).pmcid && (
+                <a class="inline-flex items-center gap-1 bg-brand-600 text-white font-semibold hover:bg-brand-700 px-2 py-0.5 rounded transition" href={`https://pmc.ncbi.nlm.nih.gov/articles/${(p as any).pmcid}/`} target="_blank" rel="noopener">
+                  📄 Full text
+                </a>
+              )}
+              {!(p as any).pmcid && (p as any).fulltext && (
+                <a class="inline-flex items-center gap-1 bg-brand-600 text-white font-semibold hover:bg-brand-700 px-2 py-0.5 rounded transition" href={(p as any).fulltext} target="_blank" rel="noopener">
+                  📄 Full text
+                </a>
+              )}
               {p.doi && <a class="text-brand-600 hover:underline" href={`https://doi.org/${p.doi}`} target="_blank" rel="noopener">DOI: {p.doi}</a>}
               {p.pmid && <a class="text-brand-600 hover:underline" href={`https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`} target="_blank" rel="noopener">PMID: {p.pmid}</a>}
             </div>
