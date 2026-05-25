@@ -49,10 +49,10 @@ export const NHIRD: Registry = {
   name: "NHIRD",
   meta: "Claims · All citizens · ~23 million individuals",
   description: "National Health Insurance Research Database — universal single-payer claims covering essentially the entire Taiwanese population since 1995. 70+ billion records and 3.4 billion medical images as of 2024, now including structured laboratory and imaging data.",
-  link: "https://www.phdcenter.org.tw/database/",
+  link: "https://www.phdcenter.org.tw/national-health-insurance-research-database-nhird/",
   tone: "teal",
   area: "nhird",
-  bbox: { top: "16%", left: "35%", width: "35%", height: "8%" },
+  bbox: { top: "26.5%", left: "30%", width: "40%", height: "6%" },
 };
 
 /** Inner satellites of NHIRD (rendered inside the central card) */
@@ -71,7 +71,7 @@ export const MATERNAL_CHILD: Registry = {
   description: "Multi-generational linkage joining birth certificate data with NHI claims for mother, father, and child — enabling perinatal exposure / paediatric outcome studies.",
   tone: "brown",
   area: "mch",
-  bbox: { top: "30%", left: "18%", width: "32%", height: "42%" },
+  bbox: { top: "32%", left: "20%", width: "27%", height: "45%" },
 };
 
 export const SATELLITES: Registry[] = [
@@ -81,9 +81,10 @@ export const SATELLITES: Registry[] = [
     name: "NHIS",
     meta: "Exercises · Diets · Health behaviors",
     description: "National Health Interview Survey — population-based survey on lifestyle factors (physical activity, diet, smoking, alcohol, sleep) conducted by the Health Promotion Administration.",
+    link: "https://www.phdcenter.org.tw/national-health-interview-survey-nhis/",
     tone: "orange",
     area: "top1",
-    bbox: { top: "4%", left: "19%", width: "13%", height: "13%" },
+    bbox: { top: "3.7%", left: "20.4%", width: "12.0%", height: "14.3%" },
   },
   {
     id: "hex",
@@ -92,16 +93,17 @@ export const SATELLITES: Registry[] = [
     description: "Adult preventive health examination records covered by NHI — biochemistry, haematology, urinalysis, and lifestyle interview data.",
     tone: "amber",
     area: "top2",
-    bbox: { top: "4%", left: "33%", width: "14%", height: "13%" },
+    bbox: { top: "3.7%", left: "35.7%", width: "12.0%", height: "14.3%" },
   },
   {
     id: "covid",
     name: "COVID-19",
     meta: "Vaccine · Confirmed cases",
     description: "Taiwan CDC pandemic data — national COVID-19 vaccination records and confirmed-case surveillance, linkable to NHIRD via national identifier.",
+    link: "https://www.phdcenter.org.tw/registry-for-covid-19-vaccine-and-record-database-covid-19/",
     tone: "green",
     area: "top3",
-    bbox: { top: "4%", left: "48%", width: "13%", height: "13%" },
+    bbox: { top: "3.7%", left: "51.1%", width: "12.0%", height: "14.3%" },
   },
   {
     id: "twb",
@@ -111,7 +113,7 @@ export const SATELLITES: Registry[] = [
     link: "https://www.phdcenter.org.tw/taiwan-biobank-twb/",
     tone: "sky",
     area: "top4",
-    bbox: { top: "4%", left: "62%", width: "18%", height: "13%" },
+    bbox: { top: "3.7%", left: "65.0%", width: "13.5%", height: "14.3%" },
   },
 
   // ── LEFT COLUMN ────────────────────────────────────────────
@@ -120,18 +122,20 @@ export const SATELLITES: Registry[] = [
     name: "ARD",
     meta: "ART · IVF · ~400k records",
     description: "Assisted Reproductive Database — national registry of assisted reproductive technology procedures including IVF, conducted by the Health Promotion Administration.",
+    link: "https://www.phdcenter.org.tw/assisted-reproduction-database-ard/",
     tone: "orange",
     area: "left1",
-    bbox: { top: "22%", left: "1%", width: "14%", height: "16%" },
+    bbox: { top: "26.2%", left: "3.1%", width: "11.8%", height: "13.9%" },
   },
   {
     id: "birth",
     name: "Birth Certificate",
     meta: "~100k records / year",
     description: "National birth registration — captures every live birth in Taiwan with maternal / paternal identifiers, anchor record for the Maternal & Child Health linkage.",
+    link: "https://www.phdcenter.org.tw/birth-certificate-application-database-bca/",
     tone: "pink",
     area: "left2",
-    bbox: { top: "44%", left: "1%", width: "14%", height: "18%" },
+    bbox: { top: "44.5%", left: "2.9%", width: "12.1%", height: "14.4%" },
   },
   {
     id: "niis",
@@ -140,7 +144,7 @@ export const SATELLITES: Registry[] = [
     description: "National Immunization Information System — centralised individual-level vaccination records (childhood, adult, travel, COVID-19).",
     tone: "pink",
     area: "left3",
-    bbox: { top: "67%", left: "1%", width: "14%", height: "13%" },
+    bbox: { top: "62.9%", left: "2.9%", width: "12.1%", height: "14.4%" },
   },
 
   // ── RIGHT COLUMN ───────────────────────────────────────────
@@ -149,27 +153,30 @@ export const SATELLITES: Registry[] = [
     name: "Taiwan Cancer Registry",
     meta: "National cancer surveillance",
     description: "National cancer surveillance registry maintained by the Health Promotion Administration — captures incident cancer diagnoses with staging, histology, and treatment, nationwide since 2003.",
+    link: "https://www.phdcenter.org.tw/taiwan-cancer-registry-database-tcrd/",
     tone: "indigo",
     area: "right1",
-    bbox: { top: "24%", left: "82%", width: "17%", height: "22%" },
+    bbox: { top: "26.4%", left: "84.2%", width: "12.0%", height: "14.4%" },
   },
   {
     id: "death",
     name: "Cause of Death",
     meta: "National death registry",
     description: "National death registration data with ICD-coded underlying and contributing causes of death — administered by the Ministry of Health and Welfare.",
+    link: "https://www.phdcenter.org.tw/death-registry/",
     tone: "slate",
     area: "right2",
-    bbox: { top: "50%", left: "82%", width: "17%", height: "14%" },
+    bbox: { top: "44.5%", left: "84.2%", width: "12.0%", height: "14.4%" },
   },
   {
     id: "cir",
     name: "Catastrophic Illness Registry",
     meta: "Severe / chronic disease status",
     description: "Registry of patients qualifying for catastrophic-illness status under NHI (cancers, autoimmune disease, severe mental illness, end-stage renal disease, etc.) — confers fee waivers and is widely used as an outcome gold-standard.",
+    link: "https://www.phdcenter.org.tw/registry-for-catastrophic-illness-patients-rfcip/",
     tone: "slate",
     area: "right3",
-    bbox: { top: "68%", left: "82%", width: "17%", height: "22%" },
+    bbox: { top: "62.9%", left: "84.2%", width: "12.0%", height: "16.0%" },
   },
 
   // ── BOTTOM ROW ─────────────────────────────────────────────
@@ -178,18 +185,20 @@ export const SATELLITES: Registry[] = [
     name: "OHDSI CDM",
     meta: "OMOP Common Data Model",
     description: "NHIRD mapped to the OMOP Common Data Model (Observational Health Data Sciences and Informatics) — enables federated analyses across the global OHDSI network.",
+    link: "https://www.phdcenter.org.tw/common-data-model-cdm/",
     tone: "indigo",
     area: "bot1",
-    bbox: { top: "81%", left: "1%", width: "18%", height: "18%" },
+    bbox: { top: "85.2%", left: "2.3%", width: "22.1%", height: "14.4%" },
   },
   {
     id: "sentinel",
     name: "Sentinel CDM",
     meta: "FDA Sentinel Common Data Model",
     description: "NHIRD mapped to the FDA Sentinel Common Data Model — supports drug-safety surveillance studies using protocols harmonised with the US Sentinel System.",
+    link: "https://www.phdcenter.org.tw/common-data-model-cdm/",
     tone: "indigo",
     area: "bot2",
-    bbox: { top: "81%", left: "22%", width: "22%", height: "18%" },
+    bbox: { top: "85.1%", left: "27.3%", width: "22.1%", height: "14.4%" },
   },
   {
     id: "cgrd",
@@ -199,7 +208,7 @@ export const SATELLITES: Registry[] = [
     link: "https://www.phdcenter.org.tw/chang-gung-research-database-cgrd/",
     tone: "green",
     area: "bot3",
-    bbox: { top: "81%", left: "62%", width: "35%", height: "18%" },
+    bbox: { top: "85.1%", left: "56.9%", width: "22.1%", height: "14.4%" },
   },
 ];
 
