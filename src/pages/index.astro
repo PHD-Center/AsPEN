@@ -9,18 +9,16 @@ import publications from "../data/publications.json";
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 // Derived stats for the StatsBar. Headline numbers focus on active Asian
-// sites (TW, JP, KR, HK); external partner sites (UK, US, NL, FI, AU)
-// are shown as a "+N" supplementary count.
+// sites only (TW, JP, KR, HK). External partner sites (UK, US, NL, FI, AU)
+// are surfaced elsewhere on the page (Databases section, map, etc.).
 const FOUNDED_YEAR = 2012;
 const ASIAN_CODES = new Set(["TW", "JP", "KR", "HK"]);
 const asianDbs = databases.filter((d) => ASIAN_CODES.has(d.code));
-const partnerDbs = databases.filter((d) => !ASIAN_CODES.has(d.code));
 const asianCountries = new Set(asianDbs.map((d) => d.country)).size;
-const partnerCountries = new Set(partnerDbs.map((d) => d.country)).size;
 
 const stats = [
-  { value: asianCountries, partner: partnerCountries, label: "Countries", sublabel: "in Asia" },
-  { value: asianDbs.length, partner: partnerDbs.length, label: "Databases", sublabel: "in Asia" },
+  { value: asianCountries, label: "Countries", sublabel: "in Asia" },
+  { value: asianDbs.length, label: "Databases", sublabel: "in Asia" },
   { value: publications.length, label: "Publications", sublabel: "since 2012" },
   { value: new Date().getFullYear() - FOUNDED_YEAR, label: "Years", sublabel: "of collaboration" },
 ];
