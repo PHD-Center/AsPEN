@@ -11,92 +11,77 @@ const pubs: Pub[] = pubsRaw as Pub[];
 type Aff = Record<string, { countries: string[] }>;
 const aff = affiliations as Aff;
 
-// Curated themes. Each is a magazine card — icon, accent colour, editorial
-// story, highlight paper, stats strip, mini timeline, then a collapsible
-// full paper list.
+// Each theme is a magazine spread. Restrained editorial palette — no
+// per-theme rainbow hues. A single soft accent and the cover image carry
+// the visual identity.
 interface Theme {
   id: string;
+  number: string;            // "01" — printed as eyebrow
   name: string;
-  icon: string;
-  /** Tailwind gradient stops (from / to) for the card accent strip */
-  gradient: string;
-  /** Background tint for the accent strip text */
-  accent: string;
-  /** Editorial story — 1–3 sentences that tell the visitor *why* this theme matters at AsPEN */
+  /** Editorial story — 1–3 sentences. The lede of the spread. */
   story: string;
+  /** Cover image (place under public/images/themes/). Optional — falls back to a typographic placeholder. */
+  cover?: string;
+  /** Caption for the cover (e.g. "From: Nature Medicine, 2024"). Optional. */
+  coverCaption?: string;
   tags: string[];
 }
 
 const THEMES: Theme[] = [
   {
     id: "neuropsychiatric",
+    number: "01",
     name: "Neuropsychiatric & cognitive",
-    icon: "🧠",
-    gradient: "from-indigo-500 to-indigo-700",
-    accent: "text-indigo-700 bg-indigo-50 border-indigo-100",
     story: "AsPEN's longest-running thread. The 2013 PSSA on antipsychotics and acute hyperglycaemia established the network's signal-detection model. Today the work spans dementia survival trajectories, post-COVID neuropsychiatric sequelae, and ADHD / methylphenidate utilisation across most AsPEN sites.",
+    // cover: "themes/neuropsychiatric.jpg",
     tags: ["antipsychotics", "psychotropic", "psychiatry", "mental health", "neurology", "dementia", "ADHD", "methylphenidate", "depression", "anxiety", "antiseizure", "epilepsy", "cholinesterase", "lithium"],
   },
   {
     id: "diabetes-cardiometabolic",
+    number: "02",
     name: "Diabetes & cardiometabolic",
-    icon: "🫀",
-    gradient: "from-rose-500 to-rose-700",
-    accent: "text-rose-700 bg-rose-50 border-rose-100",
     story: "From the second PSSA (thiazolidinediones and cardiovascular risk) through current GLP-1 utilisation studies — characterising how new and old diabetes drugs behave in Asian populations where the underlying epidemiology often differs from Western trial cohorts.",
     tags: ["diabetes", "antidiabetic", "GLP 1", "thiazolidinediones", "metabolic", "cardiovascular", "heart failure", "myocardial infarction"],
   },
   {
     id: "pregnancy-paediatric",
+    number: "03",
     name: "Pregnancy & paediatric",
-    icon: "👶",
-    gradient: "from-pink-500 to-pink-700",
-    accent: "text-pink-700 bg-pink-50 border-pink-100",
     story: "Drug safety in populations that are chronically under-represented in trials. The 2024 Nature Medicine study of 3.6 million mother–child pairs across AsPEN sites is the clearest demonstration to date of what multi-country observational data can do for this question.",
     tags: ["pregnancy", "pediatric"],
   },
   {
     id: "pain-opioids",
+    number: "04",
     name: "Pain & opioids",
-    icon: "💊",
-    gradient: "from-orange-500 to-orange-700",
-    accent: "text-orange-700 bg-orange-50 border-orange-100",
     story: "Comparative drug utilisation across health systems with very different prescribing cultures — opioids, gabapentinoids, NSAIDs, and the downstream gastrointestinal effects (PPIs, C. difficile) that follow.",
     tags: ["opioid", "gabapentinoid", "NSAIDs", "PPI", "gastrointestinal", "C. difficile"],
   },
   {
     id: "infection-vaccine",
+    number: "05",
     name: "Infection & vaccine safety",
-    icon: "🦠",
-    gradient: "from-amber-500 to-amber-700",
-    accent: "text-amber-700 bg-amber-50 border-amber-100",
     story: "Pandemic-era work — vaccine-safety surveillance across 19 Asia-Pacific countries (2021) and post-COVID sequelae studies that needed multi-country denominators to be statistically tractable.",
     tags: ["COVID 19", "vaccine safety", "post acute sequelae"],
   },
   {
     id: "oncology-endocrine",
+    number: "06",
     name: "Oncology & endocrine",
-    icon: "🎗️",
-    gradient: "from-violet-500 to-violet-700",
-    accent: "text-violet-700 bg-violet-50 border-violet-100",
     story: "Long-tail safety questions in cancer and endocrine therapy where AsPEN's claims data captures real-world prescribing patterns that single-trial datasets miss — including androgen deprivation, biologics, and bone-targeting agents.",
     tags: ["oncology", "thyroid cancer", "prostate cancer", "androgen deprivation", "5 alpha reductase", "biologics", "bone targeting"],
   },
   {
     id: "older-adults",
+    number: "07",
     name: "Older adults & frailty",
-    icon: "👴",
-    gradient: "from-sky-500 to-sky-700",
-    accent: "text-sky-700 bg-sky-50 border-sky-100",
     story: "Polypharmacy, falls, and hip fracture — questions where Asian healthcare systems with universal coverage offer some of the cleanest population-level evidence anywhere.",
     tags: ["older adults", "polypharmacy", "falls", "hip fracture"],
   },
   {
     id: "methods-infrastructure",
+    number: "08",
     name: "Methods & infrastructure",
-    icon: "🧪",
-    gradient: "from-emerald-600 to-emerald-800",
-    accent: "text-emerald-700 bg-emerald-50 border-emerald-100",
     story: "The scaffolding that makes the rest of this work possible. PSSA, SCCS, target-trial emulation, common data models, and the NeuroGEN platform that now spans 15 databases on four continents.",
     tags: ["sequence symmetry", "PSSA", "sccs", "target trial emulation", "CDM", "NeuroGEN", "infrastructure", "databases", "data sources", "distributed network", "methodology", "drug utilization", "drug safety", "overview", "review", "accessibility"],
   },
@@ -109,27 +94,19 @@ const buckets = THEMES.map((t) => {
     .filter((p) => (p.tags ?? []).some((tag) => tagSet.has(tag.toLowerCase())))
     .sort((a, b) => b.year - a.year);
 
-  // Pick highlight: featured paper (newest), else paper with a blurb (newest),
-  // else just the newest. Highlights are what we'd "lead the magazine with".
   const featured = matched.filter((p) => (p as { featured?: boolean }).featured);
   const blurbed = matched.filter((p) => (p as { blurb?: string }).blurb);
-  const highlight =
-    (featured[0] as Pub | undefined) ??
-    (blurbed[0] as Pub | undefined) ??
-    matched[0];
+  const highlight = (featured[0] as Pub | undefined) ?? (blurbed[0] as Pub | undefined) ?? matched[0];
 
   const years = matched.map((p) => p.year);
   const yearMin = years.length ? Math.min(...years) : 0;
   const yearMax = years.length ? Math.max(...years) : 0;
   const countries = new Set<string>();
-  for (const p of matched) {
-    for (const c of aff[p.pmid ?? ""]?.countries ?? []) countries.add(c);
-  }
+  for (const p of matched) for (const c of aff[p.pmid ?? ""]?.countries ?? []) countries.add(c);
 
   return { ...t, papers: matched, highlight, yearMin, yearMax, countries: countries.size };
 });
 
-// Global year scale for the mini timelines so they all line up visually
 const globalMin = Math.min(...pubs.map((p) => p.year));
 const globalMax = Math.max(...pubs.map((p) => p.year));
 const xFor = (year: number) => {
@@ -137,180 +114,228 @@ const xFor = (year: number) => {
   return ((year - globalMin) / (globalMax - globalMin)) * 100;
 };
 
-// Find papers not matched to any theme (so we know which tags to add)
 const allThemeTags = new Set(THEMES.flatMap((t) => t.tags.map((x) => x.toLowerCase())));
 const orphanPubs = pubs.filter((p) => !(p.tags ?? []).some((t) => allThemeTags.has(t.toLowerCase())));
-
-// Overall headline stats
 const totalPapers = pubs.length;
-const totalThemes = THEMES.length;
-const totalSpan = `${globalMin}–${globalMax}`;
 ---
 
 <BaseLayout
   title="Research themes — AsPEN"
-  description="AsPEN publications presented as themed magazine cards — story, highlight paper, mini timeline, full list."
+  description="AsPEN publications as a flip-through magazine — one editorial spread per research theme."
 >
   <PageHeader
     eyebrow="Publications → by theme"
     title="Research themes"
-    description="A magazine-style view of AsPEN's portfolio. Each theme tells its own story, with a highlight paper and a mini timeline of every publication in that area."
+    description="A flip-through magazine of AsPEN's portfolio. Use the arrows, swipe, or the keyboard ← → to turn pages."
   />
 
-  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
-    <div class="mb-6 flex items-center justify-between gap-3 flex-wrap">
-      <a href={`${base}/publications/`} class="text-sm text-brand-700 font-semibold hover:underline">← Back to chronological list</a>
-      <p class="text-xs text-slate-500">{totalPapers} papers · {totalThemes} themes · {totalSpan}</p>
+  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-6 flex items-center justify-between gap-3 flex-wrap text-sm">
+      <a href={`${base}/publications/`} class="text-brand-700 font-semibold hover:underline">← Back to chronological list</a>
+      <p class="text-slate-500 tabular-nums">{totalPapers} papers · {buckets.length} themes · {globalMin}–{globalMax}</p>
     </div>
 
-    <!-- ── THEME OVERVIEW GRID ─────────────────────────────────── -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-12">
-      {buckets.map((t) => (
-        <a
-          href={`#${t.id}`}
-          class={`group rounded-xl bg-gradient-to-br ${t.gradient} text-white p-4 hover:scale-[1.03] hover:shadow-lg transition`}
+    <!-- ── MAGAZINE CAROUSEL ───────────────────────────────────── -->
+    <div class="relative">
+      <!-- Page controls (top bar) -->
+      <div class="flex items-center justify-between mb-3">
+        <button
+          type="button"
+          data-mag-prev
+          class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition"
+          aria-label="Previous spread"
         >
-          <p class="text-3xl">{t.icon}</p>
-          <p class="mt-2 text-sm font-bold leading-tight">{t.name}</p>
-          <p class="mt-1 text-xs opacity-80">{t.papers.length} {t.papers.length === 1 ? "paper" : "papers"}</p>
-        </a>
-      ))}
-    </div>
+          <span aria-hidden="true">←</span> Prev
+        </button>
+        <p class="text-xs font-semibold text-slate-500 tracking-widest uppercase">
+          Spread <span data-mag-current class="text-slate-900 tabular-nums">1</span> of {buckets.length}
+        </p>
+        <button
+          type="button"
+          data-mag-next
+          class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition"
+          aria-label="Next spread"
+        >
+          Next <span aria-hidden="true">→</span>
+        </button>
+      </div>
 
-    <!-- ── PER-THEME MAGAZINE CARDS ────────────────────────────── -->
-    <div class="space-y-14">
-      {buckets.map((t) => (
-        <article id={t.id} class="scroll-mt-24 border border-slate-200 rounded-2xl bg-white overflow-hidden shadow-sm">
-          <!-- Coloured header strip -->
-          <header class={`bg-gradient-to-r ${t.gradient} text-white px-6 py-5 flex items-center gap-4`}>
-            <span class="text-4xl">{t.icon}</span>
-            <div class="flex-1">
-              <h2 class="text-xl sm:text-2xl font-bold leading-tight">{t.name}</h2>
-              <p class="text-xs sm:text-sm opacity-90 mt-0.5 tabular-nums">{t.papers.length} {t.papers.length === 1 ? "paper" : "papers"} · {t.yearMin === t.yearMax ? t.yearMin : `${t.yearMin}–${t.yearMax}`} · {t.countries} countries</p>
-            </div>
-          </header>
-
-          <div class="p-6 grid gap-6 md:grid-cols-3">
-            <!-- Story + stats -->
-            <div class="md:col-span-1">
-              <p class="text-sm text-slate-700 leading-relaxed">{t.story}</p>
-              <dl class="mt-5 space-y-2 text-xs">
-                <div class="flex justify-between border-b border-slate-100 pb-1.5">
-                  <dt class="text-slate-500 uppercase tracking-wide">Papers</dt>
-                  <dd class="font-bold text-slate-800 tabular-nums">{t.papers.length}</dd>
-                </div>
-                <div class="flex justify-between border-b border-slate-100 pb-1.5">
-                  <dt class="text-slate-500 uppercase tracking-wide">Span</dt>
-                  <dd class="font-bold text-slate-800 tabular-nums">{t.yearMin === t.yearMax ? t.yearMin : `${t.yearMin}–${t.yearMax}`}</dd>
-                </div>
-                <div class="flex justify-between border-b border-slate-100 pb-1.5">
-                  <dt class="text-slate-500 uppercase tracking-wide">Countries</dt>
-                  <dd class="font-bold text-slate-800 tabular-nums">{t.countries}</dd>
-                </div>
-              </dl>
-            </div>
-
-            <!-- Highlight paper -->
-            {t.highlight && (
-              <aside class="md:col-span-2 border-l-4 border-slate-200 pl-5">
-                <p class={`inline-block text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded ${t.accent}`}>Highlight</p>
-                <p class="mt-2 text-xs text-slate-500 tabular-nums">{t.highlight.year} · {t.highlight.journal}</p>
-                <p class="mt-1 text-base font-bold text-slate-900 leading-snug">{t.highlight.title}</p>
-                <p class="mt-1 text-xs text-slate-600 line-clamp-2">{t.highlight.authors}</p>
-                {(t.highlight as { blurb?: string }).blurb && (
-                  <p class="mt-3 text-sm italic text-slate-700 leading-relaxed border-l-2 border-slate-300 pl-3">
-                    {(t.highlight as { blurb?: string }).blurb}
-                  </p>
-                )}
-                <div class="mt-3 flex flex-wrap gap-2 text-xs">
-                  {t.highlight.pmid && (
-                    <a href={`${base}/publications/#pub-${t.highlight.pmid}`} class="text-brand-700 hover:underline font-semibold">
-                      See full entry →
-                    </a>
-                  )}
-                  {t.highlight.pmid && (
-                    <a href={`https://pubmed.ncbi.nlm.nih.gov/${t.highlight.pmid}/`} target="_blank" rel="noopener" class="text-slate-500 hover:text-brand-700 hover:underline">
-                      PMID {t.highlight.pmid}
-                    </a>
+      <!-- Scroll-snap rail. Each spread is one viewport-wide page. -->
+      <div
+        data-mag-rail
+        class="overflow-x-auto snap-x snap-mandatory rounded-2xl border border-slate-200 bg-[#fbfaf7] shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+        tabindex="0"
+        aria-roledescription="Magazine carousel"
+        style="scroll-behavior: smooth; scrollbar-width: thin;"
+      >
+        <div class="flex">
+          {buckets.map((t, idx) => (
+            <article
+              id={t.id}
+              data-mag-spread
+              data-mag-idx={idx}
+              class="snap-start shrink-0 w-full px-6 sm:px-10 py-10"
+              style="flex: 0 0 100%;"
+              aria-label={`Theme ${t.number}: ${t.name}`}
+            >
+              <div class="grid gap-8 md:gap-10 lg:gap-14 md:grid-cols-2 items-start">
+                <!-- LEFT: cover image (or typographic placeholder) -->
+                <div class="md:sticky md:top-4">
+                  <div class="aspect-[3/4] w-full max-w-md mx-auto md:mx-0 overflow-hidden rounded-lg shadow-md bg-slate-100 border border-slate-200">
+                    {t.cover ? (
+                      <img
+                        src={`${base}/images/${t.cover}`}
+                        alt={`Cover image for ${t.name}`}
+                        class="block w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <!-- Editorial typographic placeholder -->
+                      <div class="w-full h-full flex flex-col justify-between p-6 sm:p-8 bg-gradient-to-br from-slate-100 via-stone-100 to-slate-200">
+                        <p class="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-bold">AsPEN · Theme {t.number}</p>
+                        <p class="text-2xl sm:text-3xl font-bold text-slate-800 leading-tight tracking-tight">{t.name}</p>
+                        <p class="text-[10px] uppercase tracking-[0.25em] text-slate-400 font-semibold">Cover image to follow</p>
+                      </div>
+                    )}
+                  </div>
+                  {t.coverCaption && (
+                    <p class="mt-2 text-[11px] text-slate-500 italic max-w-md mx-auto md:mx-0">{t.coverCaption}</p>
                   )}
                 </div>
-              </aside>
-            )}
-          </div>
 
-          <!-- Mini timeline (SVG) -->
-          {t.papers.length > 0 && (
-            <div class="px-6 pb-4">
-              <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold mb-2">Publication timeline</p>
-              <div class="relative">
-                <svg viewBox="0 0 100 16" preserveAspectRatio="none" class="w-full h-12">
-                  <!-- baseline -->
-                  <line x1="0" y1="11" x2="100" y2="11" stroke="#cbd5e1" stroke-width="0.2" />
-                  <!-- year ticks every 2 years -->
-                  {Array.from({ length: Math.ceil((globalMax - globalMin) / 2) + 1 }, (_, i) => globalMin + i * 2).map((year) => (
-                    <g>
-                      <line x1={xFor(year)} y1="10.5" x2={xFor(year)} y2="11.5" stroke="#94a3b8" stroke-width="0.2" />
-                      <text x={xFor(year)} y="15" font-size="2" fill="#64748b" text-anchor="middle">{String(year).slice(-2)}</text>
-                    </g>
-                  ))}
-                  <!-- one circle per paper -->
-                  {t.papers.map((p) => {
-                    const isFeatured = Boolean((p as { featured?: boolean }).featured);
-                    const hasBlurb = Boolean((p as { blurb?: string }).blurb);
-                    const r = isFeatured ? 1.7 : hasBlurb ? 1.3 : 1.0;
-                    const cls = isFeatured ? "fill-current opacity-100" : "fill-current opacity-70";
-                    return (
-                      <circle
-                        cx={xFor(p.year)}
-                        cy="6"
-                        r={r}
-                        class={cls + " text-slate-700 hover:opacity-100 cursor-pointer"}
-                      >
-                        <title>{p.year} · {p.title}</title>
-                      </circle>
-                    );
-                  })}
-                </svg>
-              </div>
-            </div>
-          )}
+                <!-- RIGHT: editorial column -->
+                <div>
+                  <p class="text-[11px] uppercase tracking-[0.3em] text-slate-500 font-bold">Theme {t.number}</p>
+                  <h2 class="mt-2 text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 leading-[1.05] tracking-tight">{t.name}</h2>
 
-          <!-- Collapsible full paper list -->
-          {t.papers.length > 1 && (
-            <details class="border-t border-slate-200">
-              <summary class="cursor-pointer select-none px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 flex items-center">
-                <span>All {t.papers.length} papers</span>
-                <span class="ml-2 text-xs text-slate-400">click to expand</span>
-              </summary>
-              <ul class="divide-y divide-slate-100 border-t border-slate-100">
-                {t.papers.map((p) => (
-                  <li class="px-6 py-3 hover:bg-slate-50">
-                    <div class="flex items-baseline gap-2 text-xs text-slate-500">
-                      <span class="tabular-nums font-semibold text-slate-700">{p.year}</span>
-                      <span>·</span>
-                      <span>{p.journal}</span>
-                      {(p as { featured?: boolean }).featured && (
-                        <span class={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${t.accent}`}>Highlight</span>
+                  <!-- Lede -->
+                  <p class="mt-5 text-base sm:text-lg text-slate-700 leading-relaxed first-letter:text-5xl first-letter:font-bold first-letter:text-brand-700 first-letter:float-left first-letter:mr-2 first-letter:mt-1 first-letter:leading-[0.85]">{t.story}</p>
+
+                  <!-- Highlight paper -->
+                  {t.highlight && (
+                    <aside class="mt-8 border-t border-slate-200 pt-5">
+                      <p class="text-[11px] uppercase tracking-[0.25em] text-brand-700 font-bold">Highlight paper</p>
+                      <p class="mt-2 text-xs text-slate-500 tabular-nums">{t.highlight.year} · {t.highlight.journal}</p>
+                      <p class="mt-1 text-lg font-bold text-slate-900 leading-snug">{t.highlight.title}</p>
+                      <p class="mt-1 text-xs text-slate-600 line-clamp-2">{t.highlight.authors}</p>
+                      {(t.highlight as { blurb?: string }).blurb && (
+                        <p class="mt-3 text-sm italic text-slate-700 leading-relaxed border-l-2 border-brand-300 pl-3">
+                          {(t.highlight as { blurb?: string }).blurb}
+                        </p>
                       )}
+                      <div class="mt-3 flex flex-wrap gap-3 text-xs">
+                        {t.highlight.pmid && (
+                          <a href={`${base}/publications/#pub-${t.highlight.pmid}`} class="text-brand-700 hover:underline font-semibold">See full entry →</a>
+                        )}
+                        {t.highlight.pmid && (
+                          <a href={`https://pubmed.ncbi.nlm.nih.gov/${t.highlight.pmid}/`} target="_blank" rel="noopener" class="text-slate-500 hover:text-brand-700 hover:underline">PMID {t.highlight.pmid}</a>
+                        )}
+                      </div>
+                    </aside>
+                  )}
+
+                  <!-- Stats strip -->
+                  <dl class="mt-7 grid grid-cols-3 gap-4 border-y border-slate-200 py-4 text-center">
+                    <div>
+                      <dt class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Papers</dt>
+                      <dd class="text-2xl font-bold text-slate-900 tabular-nums mt-1">{t.papers.length}</dd>
                     </div>
-                    <p class="mt-0.5 text-sm font-medium text-slate-900 leading-snug">{p.title}</p>
-                    <div class="mt-1 flex flex-wrap gap-2 text-xs">
-                      {p.pmid && <a href={`${base}/publications/#pub-${p.pmid}`} class="text-brand-700 hover:underline font-medium">See full entry →</a>}
-                      {p.pmid && <a href={`https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`} target="_blank" rel="noopener" class="text-slate-500 hover:text-brand-700 hover:underline">PMID {p.pmid}</a>}
+                    <div>
+                      <dt class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Span</dt>
+                      <dd class="text-2xl font-bold text-slate-900 tabular-nums mt-1">{t.yearMin === t.yearMax ? t.yearMin : `${String(t.yearMin).slice(-2)}–${String(t.yearMax).slice(-2)}`}</dd>
                     </div>
-                  </li>
-                ))}
-              </ul>
-            </details>
-          )}
-        </article>
-      ))}
+                    <div>
+                      <dt class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Countries</dt>
+                      <dd class="text-2xl font-bold text-slate-900 tabular-nums mt-1">{t.countries}</dd>
+                    </div>
+                  </dl>
+
+                  <!-- Mini timeline -->
+                  {t.papers.length > 0 && (
+                    <div class="mt-5">
+                      <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold mb-2">Publication timeline</p>
+                      <svg viewBox="0 0 100 14" preserveAspectRatio="none" class="w-full h-10">
+                        <line x1="0" y1="9.5" x2="100" y2="9.5" stroke="#cbd5e1" stroke-width="0.15" />
+                        {Array.from({ length: Math.ceil((globalMax - globalMin) / 2) + 1 }, (_, i) => globalMin + i * 2).map((year) => (
+                          <g>
+                            <line x1={xFor(year)} y1="9" x2={xFor(year)} y2="10" stroke="#94a3b8" stroke-width="0.15" />
+                            <text x={xFor(year)} y="13" font-size="1.8" fill="#64748b" text-anchor="middle">{String(year).slice(-2)}</text>
+                          </g>
+                        ))}
+                        {t.papers.map((p) => {
+                          const isFeatured = Boolean((p as { featured?: boolean }).featured);
+                          const hasBlurb = Boolean((p as { blurb?: string }).blurb);
+                          const r = isFeatured ? 1.6 : hasBlurb ? 1.2 : 0.9;
+                          return (
+                            <circle cx={xFor(p.year)} cy="5" r={r} fill={isFeatured ? "#21443e" : "#475569"} opacity={isFeatured ? 1 : 0.6}>
+                              <title>{p.year} · {p.title}</title>
+                            </circle>
+                          );
+                        })}
+                      </svg>
+                    </div>
+                  )}
+
+                  <!-- All papers (in-spread collapsible) -->
+                  {t.papers.length > 1 && (
+                    <details class="mt-6 border-t border-slate-200 pt-4">
+                      <summary class="cursor-pointer select-none text-sm font-semibold text-brand-700 hover:underline list-none flex items-center gap-2">
+                        <span class="text-base leading-none">＋</span>
+                        <span>All {t.papers.length} papers in this theme</span>
+                      </summary>
+                      <ul class="divide-y divide-slate-100 mt-3">
+                        {t.papers.map((p) => (
+                          <li class="py-3">
+                            <div class="flex items-baseline gap-2 text-xs text-slate-500">
+                              <span class="tabular-nums font-semibold text-slate-700">{p.year}</span>
+                              <span>·</span>
+                              <span>{p.journal}</span>
+                              {(p as { featured?: boolean }).featured && (
+                                <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 border border-brand-100">Highlight</span>
+                              )}
+                            </div>
+                            <p class="mt-0.5 text-sm font-medium text-slate-900 leading-snug">{p.title}</p>
+                            <div class="mt-1 flex flex-wrap gap-3 text-xs">
+                              {p.pmid && <a href={`${base}/publications/#pub-${p.pmid}`} class="text-brand-700 hover:underline font-medium">See full entry →</a>}
+                              {p.pmid && <a href={`https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`} target="_blank" rel="noopener" class="text-slate-500 hover:text-brand-700 hover:underline">PMID {p.pmid}</a>}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+
+      <!-- Page dots -->
+      <div class="mt-5 flex justify-center gap-1.5">
+        {buckets.map((t, idx) => (
+          <button
+            type="button"
+            data-mag-dot={idx}
+            class="w-2 h-2 rounded-full bg-slate-300 hover:bg-slate-400 transition aria-current:bg-brand-700 aria-current:w-6"
+            aria-label={`Jump to ${t.name}`}
+            aria-current={idx === 0 ? "true" : undefined}
+          ></button>
+        ))}
+      </div>
+
+      <!-- Theme quick-jump (text labels under dots, for keyboard / a11y) -->
+      <nav class="mt-3 text-center text-xs text-slate-500 flex flex-wrap justify-center gap-x-3 gap-y-1" aria-label="Jump to theme">
+        {buckets.map((t, idx) => (
+          <a href={`#${t.id}`} data-mag-link={idx} class="hover:text-brand-700 hover:underline">{t.number} · {t.name}</a>
+        ))}
+      </nav>
     </div>
 
     {orphanPubs.length > 0 && (
       <div class="mt-16 border-t border-slate-200 pt-6">
         <p class="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2">Uncategorised</p>
-        <p class="text-xs text-slate-500 mb-3">{orphanPubs.length} {orphanPubs.length === 1 ? "paper" : "papers"} whose tags don't yet map to any theme above. Edit <code class="text-[11px]">src/pages/publications/themes.astro</code> to add them to a theme.</p>
+        <p class="text-xs text-slate-500 mb-3">{orphanPubs.length} {orphanPubs.length === 1 ? "paper" : "papers"} whose tags don't yet map to any theme. Edit <code class="text-[11px]">src/pages/publications/themes.astro</code> to add them.</p>
         <ul class="text-xs text-slate-600 space-y-1">
           {orphanPubs.map((p) => (
             <li><span class="tabular-nums font-medium">{p.year}</span> · {p.title}</li>
@@ -319,4 +344,90 @@ const totalSpan = `${globalMin}–${globalMax}`;
       </div>
     )}
   </section>
+
+  <script is:inline>
+    (() => {
+      const rail = document.querySelector("[data-mag-rail]");
+      if (!rail) return;
+      const spreads = Array.from(rail.querySelectorAll("[data-mag-spread]"));
+      const prevBtn = document.querySelector("[data-mag-prev]");
+      const nextBtn = document.querySelector("[data-mag-next]");
+      const currentEl = document.querySelector("[data-mag-current]");
+      const dots = Array.from(document.querySelectorAll("[data-mag-dot]"));
+
+      const total = spreads.length;
+      let current = 0;
+
+      const goTo = (idx) => {
+        current = Math.max(0, Math.min(total - 1, idx));
+        const target = spreads[current];
+        if (!target) return;
+        rail.scrollTo({ left: target.offsetLeft - rail.offsetLeft, behavior: "smooth" });
+        updateUI();
+      };
+
+      const updateUI = () => {
+        if (currentEl) currentEl.textContent = String(current + 1);
+        if (prevBtn) prevBtn.toggleAttribute("disabled", current === 0);
+        if (nextBtn) nextBtn.toggleAttribute("disabled", current === total - 1);
+        dots.forEach((d, i) => {
+          if (i === current) d.setAttribute("aria-current", "true");
+          else d.removeAttribute("aria-current");
+        });
+      };
+
+      // Detect current spread from scroll position (handles swipe / scrollbar drag)
+      let scrollTimer;
+      rail.addEventListener("scroll", () => {
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(() => {
+          const railLeft = rail.scrollLeft;
+          const widths = spreads.map((s) => s.offsetLeft - rail.offsetLeft);
+          // pick the spread whose left edge is closest to current scroll position
+          let nearest = 0;
+          let best = Infinity;
+          widths.forEach((w, i) => {
+            const d = Math.abs(w - railLeft);
+            if (d < best) { best = d; nearest = i; }
+          });
+          if (nearest !== current) {
+            current = nearest;
+            updateUI();
+          }
+        }, 80);
+      });
+
+      prevBtn && prevBtn.addEventListener("click", () => goTo(current - 1));
+      nextBtn && nextBtn.addEventListener("click", () => goTo(current + 1));
+      dots.forEach((d) => d.addEventListener("click", () => goTo(Number(d.dataset.magDot))));
+
+      // Keyboard nav when the rail or page has focus
+      const onKey = (e) => {
+        if (e.target.matches("input, textarea, select, [contenteditable]")) return;
+        if (e.key === "ArrowRight") { e.preventDefault(); goTo(current + 1); }
+        else if (e.key === "ArrowLeft") { e.preventDefault(); goTo(current - 1); }
+      };
+      document.addEventListener("keydown", onKey);
+
+      // If URL hash points to a theme, start there
+      const hash = location.hash.replace("#", "");
+      if (hash) {
+        const idx = spreads.findIndex((s) => s.id === hash);
+        if (idx >= 0) {
+          // Slight delay so layout is final before we scroll
+          setTimeout(() => goTo(idx), 50);
+        }
+      }
+
+      // Jump links update the carousel rather than triggering native anchor scroll
+      document.querySelectorAll("[data-mag-link]").forEach((a) => {
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          goTo(Number(a.dataset.magLink));
+        });
+      });
+
+      updateUI();
+    })();
+  </script>
 </BaseLayout>
