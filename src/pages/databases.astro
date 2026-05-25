@@ -2,7 +2,10 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/PageHeader.astro";
 import WorldMap from "../components/WorldMap.astro";
+import CiteButton from "../components/CiteButton.astro";
 import databases from "../data/databases.json";
+
+const siteUrl = new URL(import.meta.env.BASE_URL + "databases/", "https://phd-center.github.io").toString();
 
 const countryMeta: Record<
   string,
@@ -87,6 +90,49 @@ const typeColor: Record<string, string> = {
   "Primary-care EHR": "bg-violet-50 text-violet-700 border-violet-200",
   Biobank: "bg-amber-50 text-amber-700 border-amber-200",
 };
+
+// Numeric derivations for the comparison table. Keyed by database name.
+// `popM` = approximate covered population in millions (for sorting).
+// `since` = data start year (omit when not confidently known).
+const dbStats: Record<string, { popM: number; since?: number }> = {
+  "National Health Insurance Research Database (NHIRD)": { popM: 23, since: 1995 },
+  "Chang Gung Research Database (CGRD)": { popM: 1.5, since: 2000 },
+  "Taiwan Biobank (TWB)": { popM: 0.2, since: 2012 },
+  "National Database of Health Insurance Claims and Specific Health Checkups (NDB)": { popM: 120, since: 2008 },
+  "JMDC Claims Database": { popM: 13.5 },
+  "DeSC Database": { popM: 9.3, since: 2014 },
+  "Medical Data Vision (MDV) Database": { popM: 48 },
+  "Health Insurance Review and Assessment Service (HIRA)": { popM: 50, since: 2009 },
+  "National Health Insurance Service – National Health Information Database (NHIS-NHID)": { popM: 50 },
+  "Clinical Data Analysis and Reporting System (CDARS)": { popM: 7, since: 1995 },
+  "Clinical Practice Research Datalink (CPRD)": { popM: 60 },
+  "The Health Improvement Network (THIN)": { popM: 17, since: 2003 },
+  "UK Biobank (UKB)": { popM: 0.5, since: 2006 },
+  "Public Health Scotland (ISD)": { popM: 5.4 },
+  "PHARMO Database Network": { popM: 7 },
+  "Finnish healthcare registers (FinReg)": { popM: 5.5 },
+  "Pharmaceutical Benefits Scheme — 10% sample (PBS)": { popM: 2.5 },
+  "Victorian Linked Health Data (VLHD)": { popM: 6.5 },
+  "Medicare (20% sample)": { popM: 13 },
+  "Medicaid": { popM: 70 },
+};
+
+const compareRows = databases.map((d) => {
+  const meta = countryMeta[d.country];
+  const stats = dbStats[d.name] ?? { popM: 0 };
+  return {
+    country: d.country,
+    flag: meta?.flag ?? "🏳️",
+    name: d.name,
+    type: d.type,
+    popM: stats.popM,
+    since: stats.since ?? null,
+    coverage: d.coverage,
+    anchor: `db-${d.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`,
+  };
+});
+
+const compareTypes = Array.from(new Set(compareRows.map((r) => r.type))).sort();
 
 // Other sites listed in the 2015 AsPEN database survey (Lai ECC et al., Epidemiology 2015)
 // that are not part of the current active network. Reference only — not on the map.
@@ -206,6 +252,140 @@ const otherSites = [
       </div>
     )}
 
+    <details class="mt-12 border border-slate-200 rounded-lg bg-white open:shadow-sm">
+      <summary class="cursor-pointer select-none px-5 py-4 flex items-center gap-3 hover:bg-slate-50 rounded-lg">
+        <span class="text-xs font-semibold uppercase tracking-widest text-brand-700">Compare databases</span>
+        <span class="text-sm text-slate-500">— side-by-side sortable table of all {compareRows.length} sites</span>
+        <span class="ml-auto text-xs text-slate-400">click to expand</span>
+      </summary>
+      <div class="border-t border-slate-200 p-5">
+        <div class="grid gap-3 sm:grid-cols-[1fr_220px] mb-4">
+          <label class="block">
+            <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Search</span>
+            <input
+              id="cmp-q"
+              type="search"
+              placeholder="country, name, coverage…"
+              class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm"
+            />
+          </label>
+          <label class="block">
+            <span class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Type</span>
+            <select id="cmp-type" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm">
+              <option value="">All types</option>
+              {compareTypes.map((t) => <option value={t}>{t}</option>)}
+            </select>
+          </label>
+        </div>
+
+        <div class="overflow-x-auto -mx-5 px-5">
+          <table id="cmp-table" class="w-full text-sm border-collapse">
+            <thead>
+              <tr class="text-left border-b-2 border-slate-200">
+                <th class="py-2 pr-3 font-semibold text-slate-700 cursor-pointer select-none whitespace-nowrap" data-sort="country">Country <span class="text-slate-400 text-xs">↕</span></th>
+                <th class="py-2 pr-3 font-semibold text-slate-700 cursor-pointer select-none whitespace-nowrap" data-sort="name">Database <span class="text-slate-400 text-xs">↕</span></th>
+                <th class="py-2 pr-3 font-semibold text-slate-700 cursor-pointer select-none whitespace-nowrap" data-sort="type">Type <span class="text-slate-400 text-xs">↕</span></th>
+                <th class="py-2 pr-3 font-semibold text-slate-700 cursor-pointer select-none whitespace-nowrap text-right" data-sort="popM" data-sort-numeric>Population (M) <span class="text-slate-400 text-xs">↕</span></th>
+                <th class="py-2 pr-3 font-semibold text-slate-700 cursor-pointer select-none whitespace-nowrap text-right" data-sort="since" data-sort-numeric>Since <span class="text-slate-400 text-xs">↕</span></th>
+                <th class="py-2 pr-3 font-semibold text-slate-700">Coverage</th>
+              </tr>
+            </thead>
+            <tbody>
+              {compareRows.map((r) => (
+                <tr
+                  class="border-b border-slate-100 hover:bg-slate-50 align-top"
+                  data-country={r.country}
+                  data-name={r.name}
+                  data-type={r.type}
+                  data-popm={r.popM}
+                  data-since={r.since ?? ""}
+                  data-search={`${r.country} ${r.name} ${r.type} ${r.coverage}`.toLowerCase()}
+                >
+                  <td class="py-2 pr-3 whitespace-nowrap"><span class="mr-1">{r.flag}</span>{r.country}</td>
+                  <td class="py-2 pr-3">
+                    <a href={`#${r.anchor}`} class="text-brand-700 hover:underline font-medium">{r.name}</a>
+                  </td>
+                  <td class="py-2 pr-3 whitespace-nowrap text-slate-700">{r.type}</td>
+                  <td class="py-2 pr-3 text-right tabular-nums text-slate-700">{r.popM > 0 ? r.popM : "—"}</td>
+                  <td class="py-2 pr-3 text-right tabular-nums text-slate-700">{r.since ?? "—"}</td>
+                  <td class="py-2 pr-3 text-slate-600">{r.coverage}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p id="cmp-empty" class="hidden mt-4 text-sm text-slate-500 italic">No databases match your filters.</p>
+        <p class="mt-4 text-xs text-slate-500">Click any database name to jump to its full description above.</p>
+      </div>
+    </details>
+
+    <script is:inline>
+      (() => {
+        const table = document.getElementById("cmp-table");
+        if (!table) return;
+        const tbody = table.querySelector("tbody");
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+        const qEl = document.getElementById("cmp-q");
+        const tEl = document.getElementById("cmp-type");
+        const empty = document.getElementById("cmp-empty");
+
+        let sortKey = null;
+        let sortDir = 1; // 1 asc, -1 desc
+
+        const applyFilter = () => {
+          const q = (qEl.value || "").trim().toLowerCase();
+          const t = tEl.value || "";
+          let shown = 0;
+          rows.forEach((r) => {
+            const matchQ = !q || (r.dataset.search || "").includes(q);
+            const matchT = !t || r.dataset.type === t;
+            const visible = matchQ && matchT;
+            r.style.display = visible ? "" : "none";
+            if (visible) shown++;
+          });
+          empty.classList.toggle("hidden", shown !== 0);
+        };
+
+        const applySort = () => {
+          if (!sortKey) return;
+          const th = table.querySelector(`th[data-sort="${sortKey}"]`);
+          const numeric = th && th.hasAttribute("data-sort-numeric");
+          const get = (row) => {
+            const v = row.dataset[sortKey.toLowerCase()] ?? row.dataset[sortKey] ?? "";
+            if (numeric) {
+              const n = parseFloat(v);
+              return Number.isFinite(n) ? n : sortDir === 1 ? Infinity : -Infinity;
+            }
+            return String(v).toLowerCase();
+          };
+          const sorted = [...rows].sort((a, b) => {
+            const av = get(a);
+            const bv = get(b);
+            if (av < bv) return -1 * sortDir;
+            if (av > bv) return 1 * sortDir;
+            return 0;
+          });
+          sorted.forEach((r) => tbody.appendChild(r));
+        };
+
+        table.querySelectorAll("th[data-sort]").forEach((th) => {
+          th.addEventListener("click", () => {
+            const key = th.dataset.sort;
+            if (sortKey === key) sortDir = -sortDir;
+            else { sortKey = key; sortDir = 1; }
+            // visual indicator
+            table.querySelectorAll("th[data-sort] span").forEach((s) => (s.textContent = "↕"));
+            const ind = th.querySelector("span");
+            if (ind) ind.textContent = sortDir === 1 ? "↑" : "↓";
+            applySort();
+          });
+        });
+
+        qEl.addEventListener("input", applyFilter);
+        tEl.addEventListener("change", applyFilter);
+      })();
+    </script>
+
     <div class="mt-12" id="other-sites">
       <h2 class="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2 scroll-mt-24">Other sites</h2>
       <p class="text-sm text-slate-600 max-w-3xl leading-relaxed">
@@ -216,5 +396,7 @@ const otherSites = [
     <p class="text-xs text-slate-500 italic">
       Database descriptions adapted from the AsPEN paper (Lai ECC et al. <em>Epidemiology.</em> 2015 Nov;26(6):815-20. DOI: <a class="hover:text-brand-700 hover:underline not-italic" href="https://doi.org/10.1097/EDE.0000000000000325" target="_blank" rel="noopener">10.1097/EDE.0000000000000325</a>) and the NeuroGEN data-infrastructure paper (Tsai DHT et al., <em>Clinical Epidemiology</em> 2023; DOI: <a class="hover:text-brand-700 hover:underline not-italic" href="https://doi.org/10.2147/CLEP.S426485" target="_blank" rel="noopener">10.2147/CLEP.S426485</a>). Access policies and coverage may have changed since publication. Please verify with each data custodian before study planning.
     </p>
+
+    <CiteButton title="Databases — AsPEN" url={siteUrl} bibkey="aspen-databases" />
   </section>
 </BaseLayout>

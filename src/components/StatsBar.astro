@@ -1,0 +1,89 @@
+---
+// At-a-glance scale of AsPEN. Numbers are derived in the parent and passed in,
+// so this component just animates them in when scrolled into view.
+interface Stat {
+  value: number;
+  /** Optional suffix shown after the animated number (e.g. "+") */
+  suffix?: string;
+  label: string;
+  sublabel?: string;
+}
+interface Props {
+  stats: Stat[];
+}
+const { stats } = Astro.props;
+---
+
+<section class="bg-white border-y border-slate-200">
+  <div
+    class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-2 md:grid-cols-4 gap-y-8 gap-x-4 text-center"
+    data-stats-bar
+  >
+    {stats.map((s) => (
+      <div>
+        <p
+          class="text-4xl sm:text-5xl font-bold text-brand-700 leading-none tabular-nums"
+          data-stat-value={s.value}
+          data-stat-suffix={s.suffix ?? ""}
+        >
+          0{s.suffix ?? ""}
+        </p>
+        <p class="mt-3 text-sm font-semibold text-slate-800 uppercase tracking-wide">{s.label}</p>
+        {s.sublabel && <p class="mt-1 text-xs text-slate-500">{s.sublabel}</p>}
+      </div>
+    ))}
+  </div>
+</section>
+
+<script is:inline>
+  (() => {
+    const bar = document.querySelector("[data-stats-bar]");
+    if (!bar) return;
+    const numbers = bar.querySelectorAll("[data-stat-value]");
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const setFinal = () => {
+      numbers.forEach((el) => {
+        const target = Number(el.dataset.statValue || "0");
+        el.textContent = target.toString() + (el.dataset.statSuffix || "");
+      });
+    };
+
+    if (reduced) {
+      setFinal();
+      return;
+    }
+
+    const animate = () => {
+      const duration = 1500;
+      const start = performance.now();
+      const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+      const step = (now) => {
+        const t = Math.min(1, (now - start) / duration);
+        const e = easeOut(t);
+        numbers.forEach((el) => {
+          const target = Number(el.dataset.statValue || "0");
+          const v = Math.round(target * e);
+          el.textContent = v.toString() + (el.dataset.statSuffix || "");
+        });
+        if (t < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    };
+
+    let played = false;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && !played) {
+            played = true;
+            animate();
+            io.disconnect();
+          }
+        }
+      },
+      { threshold: 0.35 }
+    );
+    io.observe(bar);
+  })();
+</script>

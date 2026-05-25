@@ -1,7 +1,10 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/PageHeader.astro";
+import CiteButton from "../components/CiteButton.astro";
 import pubsRaw from "../data/publications.json";
+
+const siteUrl = new URL(import.meta.env.BASE_URL + "publications/", "https://phd-center.github.io").toString();
 
 const publications = [...pubsRaw].sort((a, b) => b.year - a.year);
 const years = Array.from(new Set(publications.map((p) => p.year))).sort((a, b) => b - a);
@@ -115,6 +118,8 @@ const milestones: { year: number; text: string; pmid?: string }[] = [
       })}
     </ul>
     <p id="pub-empty" class="hidden mt-6 text-sm text-slate-500 italic">No publications match your filters.</p>
+
+    <CiteButton title="Publications — AsPEN" url={siteUrl} bibkey="aspen-publications" />
   </section>
 
   <style is:global>

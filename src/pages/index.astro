@@ -2,9 +2,20 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
 import ChairCard from "../components/ChairCard.astro";
+import StatsBar from "../components/StatsBar.astro";
 import databases from "../data/databases.json";
+import publications from "../data/publications.json";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+// Derived stats for the StatsBar (single source of truth: databases.json + publications.json)
+const FOUNDED_YEAR = 2012;
+const stats = [
+  { value: new Set(databases.map((d) => d.country)).size, label: "Countries", sublabel: "& regions" },
+  { value: databases.length, label: "Databases", suffix: "+", sublabel: "in the network" },
+  { value: publications.length, label: "Publications", sublabel: "since 2012" },
+  { value: new Date().getFullYear() - FOUNDED_YEAR, label: "Years", sublabel: "of collaboration" },
+];
 
 // One primary database per country (user-curated). Order = display order.
 const primaryNames = [
@@ -31,6 +42,8 @@ const countries = featured.length;
 
 <BaseLayout tint>
   <Hero />
+
+  <StatsBar stats={stats} />
 
   <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16 grid gap-8 md:grid-cols-3">
     <div>

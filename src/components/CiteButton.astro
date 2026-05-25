@@ -1,0 +1,108 @@
+---
+// "Cite this resource" widget. Renders three citation formats (APA, BibTeX, RIS)
+// with a copy-to-clipboard button for each.
+//
+// Props:
+//   title   — the resource title, e.g. "Databases" or "Publications"
+//   url     — canonical URL to cite
+//   bibkey  — short BibTeX/RIS identifier (alphanumeric, no spaces)
+interface Props {
+  title: string;
+  url: string;
+  bibkey: string;
+}
+const { title, url, bibkey } = Astro.props;
+const year = new Date().getFullYear();
+
+const apa = `Asian Pharmacoepidemiology Network. (${year}). ${title}. Retrieved from ${url}`;
+
+const bibtex = `@misc{${bibkey},
+  author = {{Asian Pharmacoepidemiology Network}},
+  title  = {${title}},
+  year   = {${year}},
+  url    = {${url}},
+  note   = {Accessed: ${new Date().toISOString().slice(0, 10)}}
+}`;
+
+const ris = `TY  - GEN
+AU  - Asian Pharmacoepidemiology Network
+TI  - ${title}
+PY  - ${year}
+UR  - ${url}
+ER  - `;
+
+// Stable ID so multiple CiteButton instances on a page don't collide
+const widgetId = `cite-${bibkey}`;
+---
+
+<details class="mt-10 border border-slate-200 rounded-lg bg-white" id={widgetId}>
+  <summary class="cursor-pointer select-none px-5 py-3 flex items-center gap-2 hover:bg-slate-50 rounded-lg">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-brand-700">
+      <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path>
+      <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path>
+    </svg>
+    <span class="text-sm font-semibold text-slate-800">Cite this resource</span>
+    <span class="ml-auto text-xs text-slate-400">APA · BibTeX · RIS</span>
+  </summary>
+  <div class="border-t border-slate-200 p-5">
+    <div class="flex gap-1 mb-3" role="tablist">
+      <button type="button" data-cite-tab="apa" class="cite-tab px-3 py-1.5 text-xs font-semibold rounded border border-slate-300 hover:bg-slate-50 aria-selected:bg-brand-700 aria-selected:text-white aria-selected:border-brand-700" aria-selected="true">APA</button>
+      <button type="button" data-cite-tab="bibtex" class="cite-tab px-3 py-1.5 text-xs font-semibold rounded border border-slate-300 hover:bg-slate-50 aria-selected:bg-brand-700 aria-selected:text-white aria-selected:border-brand-700">BibTeX</button>
+      <button type="button" data-cite-tab="ris" class="cite-tab px-3 py-1.5 text-xs font-semibold rounded border border-slate-300 hover:bg-slate-50 aria-selected:bg-brand-700 aria-selected:text-white aria-selected:border-brand-700">RIS</button>
+    </div>
+
+    <div class="relative">
+      <pre data-cite-pane="apa" class="cite-pane block bg-slate-50 border border-slate-200 rounded p-4 text-xs text-slate-700 whitespace-pre-wrap font-mono">{apa}</pre>
+      <pre data-cite-pane="bibtex" class="cite-pane hidden bg-slate-50 border border-slate-200 rounded p-4 text-xs text-slate-700 whitespace-pre-wrap font-mono">{bibtex}</pre>
+      <pre data-cite-pane="ris" class="cite-pane hidden bg-slate-50 border border-slate-200 rounded p-4 text-xs text-slate-700 whitespace-pre-wrap font-mono">{ris}</pre>
+      <button
+        type="button"
+        data-cite-copy
+        class="absolute top-2 right-2 bg-white border border-slate-300 hover:bg-brand-50 hover:border-brand-300 text-xs font-semibold text-slate-700 px-2.5 py-1 rounded shadow-sm transition"
+      >Copy</button>
+    </div>
+  </div>
+</details>
+
+<script is:inline define:vars={{ widgetId }}>
+  (() => {
+    const root = document.getElementById(widgetId);
+    if (!root) return;
+    const tabs = root.querySelectorAll("[data-cite-tab]");
+    const panes = root.querySelectorAll("[data-cite-pane]");
+    const copyBtn = root.querySelector("[data-cite-copy]");
+
+    let active = "apa";
+
+    const show = (key) => {
+      active = key;
+      tabs.forEach((t) => t.setAttribute("aria-selected", t.dataset.citeTab === key ? "true" : "false"));
+      panes.forEach((p) => p.classList.toggle("hidden", p.dataset.citePane !== key));
+    };
+
+    tabs.forEach((t) => t.addEventListener("click", () => show(t.dataset.citeTab)));
+
+    copyBtn.addEventListener("click", async () => {
+      const pane = root.querySelector(`[data-cite-pane="${active}"]`);
+      const text = pane ? pane.textContent || "" : "";
+      try {
+        await navigator.clipboard.writeText(text);
+        const orig = copyBtn.textContent;
+        copyBtn.textContent = "Copied ✓";
+        copyBtn.classList.add("text-brand-700", "border-brand-400");
+        setTimeout(() => {
+          copyBtn.textContent = orig;
+          copyBtn.classList.remove("text-brand-700", "border-brand-400");
+        }, 1400);
+      } catch {
+        // Fallback for browsers blocking clipboard API
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand("copy"); } catch {}
+        document.body.removeChild(ta);
+      }
+    });
+  })();
+</script>
