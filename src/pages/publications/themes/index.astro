@@ -12,12 +12,13 @@ const pubs: Pub[] = pubsRaw as Pub[];
 type Aff = Record<string, { countries: string[] }>;
 const aff = affiliations as Aff;
 
-// Compute per-theme dataset. Highlight = explicit `highlightPmid` override
-// when set on the theme, otherwise featured > blurbed > most-recent.
+// Compute per-theme dataset. Mutually exclusive — each publication has
+// exactly one primary theme (the `theme` field on publications.json).
+// Highlight = explicit `highlightPmid` override when set on the theme,
+// otherwise featured > blurbed > most-recent.
 const buckets = THEMES.map((t) => {
-  const tagSet = new Set(t.tags.map((x) => x.toLowerCase()));
   const matched = pubs
-    .filter((p) => (p.tags ?? []).some((tag) => tagSet.has(tag.toLowerCase())))
+    .filter((p) => (p as { theme?: string }).theme === t.id)
     .sort((a, b) => b.year - a.year);
 
   let highlight: Pub | undefined;
@@ -43,8 +44,8 @@ const totalPapers = pubs.length;
 const globalMin = Math.min(...pubs.map((p) => p.year));
 const globalMax = Math.max(...pubs.map((p) => p.year));
 
-const allThemeTags = new Set(THEMES.flatMap((t) => t.tags.map((x) => x.toLowerCase())));
-const orphanPubs = pubs.filter((p) => !(p.tags ?? []).some((t) => allThemeTags.has(t.toLowerCase())));
+const themeIds = new Set(THEMES.map((t) => t.id));
+const orphanPubs = pubs.filter((p) => !themeIds.has((p as { theme?: string }).theme ?? ""));
 ---
 
 <BaseLayout

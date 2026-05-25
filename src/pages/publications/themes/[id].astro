@@ -14,9 +14,8 @@ const { theme } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 type Pub = (typeof pubsRaw)[number];
-const tagSet = new Set(theme.tags.map((x) => x.toLowerCase()));
 const matched: Pub[] = (pubsRaw as Pub[])
-  .filter((p) => (p.tags ?? []).some((tag) => tagSet.has(tag.toLowerCase())))
+  .filter((p) => (p as { theme?: string }).theme === theme.id)
   .sort((a, b) => b.year - a.year);
 
 const yearMin = matched.length ? Math.min(...matched.map((p) => p.year)) : 0;

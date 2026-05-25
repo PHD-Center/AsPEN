@@ -9,6 +9,7 @@
     "tags": [
       "overview"
     ],
+    "theme": "methods-infrastructure",
     "featured": true,
     "blurb": "Founding methodology paper of AsPEN — describes the multi-national network and its rapid adverse drug event assessment approach."
   },
@@ -23,6 +24,7 @@
       "PSSA",
       "antipsychotics"
     ],
+    "theme": "methods-infrastructure",
     "featured": true,
     "blurb": "First multi-country application of AsPEN's PSSA framework — proof-of-concept for the network's rapid adverse drug event assessment methodology."
   },
@@ -38,6 +40,7 @@
       "infrastructure",
       "distributed network"
     ],
+    "theme": "methods-infrastructure",
     "featured": true,
     "blurb": "Foundational survey of population-level databases across the Asia-Pacific region; primary reference for this site's Databases page."
   },
@@ -53,6 +56,7 @@
       "databases",
       "infrastructure"
     ],
+    "theme": "methods-infrastructure",
     "pmcid": "PMC6067778"
   },
   {
@@ -67,6 +71,7 @@
       "drug utilization",
       "multinational"
     ],
+    "theme": "utilisation",
     "pmcid": "PMC9766760"
   },
   {
@@ -80,7 +85,8 @@
       "dementia",
       "drug utilization",
       "multinational"
-    ]
+    ],
+    "theme": "utilisation"
   },
   {
     "year": 2022,
@@ -93,7 +99,8 @@
       "opioid",
       "drug utilization",
       "multinational"
-    ]
+    ],
+    "theme": "utilisation"
   },
   {
     "year": 2023,
@@ -109,6 +116,7 @@
       "neurology",
       "mental health"
     ],
+    "theme": "methods-infrastructure",
     "featured": true,
     "blurb": "Detailed description of NeuroGEN's 15-database data infrastructure spanning Asia, Oceania, Europe and North America.",
     "pmcid": "PMC10749544"
@@ -125,6 +133,7 @@
       "drug utilization",
       "multinational"
     ],
+    "theme": "utilisation",
     "pmcid": "PMC10435503"
   },
   {
@@ -138,7 +147,8 @@
       "polypharmacy",
       "older adults",
       "multinational"
-    ]
+    ],
+    "theme": "older-adults"
   },
   {
     "year": 2023,
@@ -151,7 +161,8 @@
       "hip fracture",
       "epidemiology",
       "multinational"
-    ]
+    ],
+    "theme": "older-adults"
   },
   {
     "year": 2024,
@@ -167,6 +178,7 @@
       "diabetes",
       "multinational"
     ],
+    "theme": "pregnancy-paediatric",
     "pmcid": "PMC11108779"
   },
   {
@@ -182,6 +194,7 @@
       "drug utilization",
       "multinational"
     ],
+    "theme": "pregnancy-paediatric",
     "pmcid": "PMC11650410"
   },
   {
@@ -196,6 +209,7 @@
       "drug utilization",
       "multinational"
     ],
+    "theme": "utilisation",
     "pmcid": "PMC12515243"
   },
   {
@@ -210,6 +224,7 @@
       "survival",
       "multinational"
     ],
+    "theme": "neuropsychiatric",
     "pmcid": "PMC12120012"
   },
   {
@@ -224,6 +239,7 @@
       "pregnancy",
       "multinational"
     ],
+    "theme": "pregnancy-paediatric",
     "pmcid": "PMC12061384"
   },
   {
@@ -237,7 +253,8 @@
       "GLP 1",
       "thyroid cancer",
       "multinational"
-    ]
+    ],
+    "theme": "diabetes-cardiometabolic"
   },
   {
     "year": 2025,
@@ -251,6 +268,7 @@
       "post acute sequelae",
       "multinational"
     ],
+    "theme": "infection",
     "pmcid": "PMC12237969"
   },
   {
@@ -265,6 +283,7 @@
       "psychiatry",
       "multinational"
     ],
+    "theme": "infection",
     "pmcid": "PMC11887073"
   },
   {
@@ -280,7 +299,8 @@
       "depression",
       "anxiety",
       "multinational"
-    ]
+    ],
+    "theme": "utilisation"
   },
   {
     "year": 2025,
@@ -295,6 +315,7 @@
       "drug utilization",
       "multinational"
     ],
+    "theme": "utilisation",
     "pmcid": "PMC12547185"
   },
   {
@@ -309,6 +330,7 @@
       "thyroid cancer",
       "multinational"
     ],
+    "theme": "diabetes-cardiometabolic",
     "pmcid": "PMC12281980"
   },
   {
@@ -323,6 +345,7 @@
       "cardiovascular",
       "target trial emulation"
     ],
+    "theme": "diabetes-cardiometabolic",
     "pmcid": "PMC13083378"
   },
   {
@@ -339,6 +362,7 @@
       "mental health",
       "multinational"
     ],
+    "theme": "methods-infrastructure",
     "featured": true,
     "blurb": "Narrative introduction to NeuroGEN — how international 'big data' platforms are applied to CNS drug research.",
     "pmcid": "PMC7306570"
@@ -356,6 +380,7 @@
       "infrastructure",
       "multinational"
     ],
+    "theme": "infection",
     "featured": true,
     "blurb": "Suitability assessment of databases across 19 Asia-Pacific countries for collaborative vaccine-safety monitoring — foundational reference for distributed vaccine surveillance in the region."
   },
@@ -372,7 +397,8 @@
       "sequence symmetry",
       "multinational",
       "pediatric"
-    ]
+    ],
+    "theme": "neuropsychiatric"
   },
   {
     "year": 2020,
@@ -386,7 +412,8 @@
       "drug utilization",
       "CDM",
       "multinational"
-    ]
+    ],
+    "theme": "neuropsychiatric"
   },
   {
     "year": 2018,
@@ -400,6 +427,7 @@
       "drug utilization",
       "multinational"
     ],
+    "theme": "diabetes-cardiometabolic",
     "pmcid": "PMC6291148"
   },
   {
@@ -414,7 +442,8 @@
       "gastrointestinal",
       "drug safety",
       "multinational"
-    ]
+    ],
+    "theme": "pain-opioids"
   },
   {
     "year": 2018,
@@ -427,7 +456,8 @@
       "ADHD",
       "drug utilization",
       "multinational"
-    ]
+    ],
+    "theme": "neuropsychiatric"
   },
   {
     "year": 2017,
@@ -440,7 +470,8 @@
       "sequence symmetry",
       "methodology",
       "review"
-    ]
+    ],
+    "theme": "methods-infrastructure"
   },
   {
     "year": 2016,
@@ -454,7 +485,8 @@
       "C. difficile",
       "sequence symmetry",
       "multinational"
-    ]
+    ],
+    "theme": "pain-opioids"
   },
   {
     "year": 2015,
@@ -468,6 +500,7 @@
       "heart failure",
       "multinational"
     ],
+    "theme": "cardiovascular",
     "pmcid": "PMC4561996"
   },
   {
@@ -482,6 +515,7 @@
       "methodology",
       "multinational"
     ],
+    "theme": "methods-infrastructure",
     "pmcid": "PMC4690514"
   },
   {
@@ -496,6 +530,7 @@
       "accessibility",
       "multinational"
     ],
+    "theme": "oncology-endocrine",
     "pmcid": "PMC9249810"
   },
   {
@@ -509,7 +544,8 @@
       "bone targeting",
       "oncology",
       "multinational"
-    ]
+    ],
+    "theme": "oncology-endocrine"
   },
   {
     "year": 2021,
@@ -525,6 +561,7 @@
       "multinational",
       "pediatric"
     ],
+    "theme": "cardiovascular",
     "pmcid": "PMC8546502"
   },
   {
@@ -539,7 +576,8 @@
       "myocardial infarction",
       "sccs",
       "multinational"
-    ]
+    ],
+    "theme": "neuropsychiatric"
   },
   {
     "year": 2021,
@@ -555,6 +593,7 @@
       "sccs",
       "multinational"
     ],
+    "theme": "neuropsychiatric",
     "pmcid": "PMC8427404"
   },
   {
@@ -570,6 +609,7 @@
       "dementia",
       "multinational"
     ],
+    "theme": "oncology-endocrine",
     "pmcid": "PMC8345520"
   },
   {
@@ -584,6 +624,7 @@
       "methodology",
       "multinational"
     ],
+    "theme": "older-adults",
     "pmcid": "PMC8319985"
   },
   {
@@ -597,7 +638,8 @@
       "dementia",
       "data sources",
       "methodology"
-    ]
+    ],
+    "theme": "methods-infrastructure"
   },
   {
     "year": 2019,
@@ -611,6 +653,7 @@
       "diabetes",
       "drug safety"
     ],
+    "theme": "diabetes-cardiometabolic",
     "pmcid": "PMC6456811"
   }
 ]

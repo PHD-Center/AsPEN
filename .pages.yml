@@ -44,6 +44,21 @@ content:
         label: Tags
         type: string
         list: true
+      - name: theme
+        label: "Theme (primary — mutually exclusive)"
+        type: select
+        options:
+          values:
+            - { value: methods-infrastructure, label: "Infrastructure" }
+            - { value: neuropsychiatric,       label: "Neuropsychiatry" }
+            - { value: diabetes-cardiometabolic, label: "Diabetes" }
+            - { value: pregnancy-paediatric,   label: "Pregnancy & Paediatrics" }
+            - { value: pain-opioids,           label: "Pain & Opioids" }
+            - { value: oncology-endocrine,     label: "Oncology" }
+            - { value: older-adults,           label: "Older adults" }
+            - { value: cardiovascular,         label: "Cardiovascular diseases" }
+            - { value: infection,              label: "Infection & Vaccine" }
+            - { value: utilisation,            label: "Policy & Utilisation" }
 
   # ────────────────────────────────────────────────────────────────
   # Markdown collections — each entry is one .md file
