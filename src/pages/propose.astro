@@ -1,0 +1,172 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+
+<BaseLayout
+  title="Propose a study — AsPEN"
+  description="How to bring a multi-country pharmacoepidemiology study idea to AsPEN — what fits, the process, and what you and the network each provide."
+>
+  <PageHeader
+    eyebrow="Propose"
+    title="Propose a study to AsPEN"
+    description="Have a multi-country pharmacoepidemiology question? Here's how a study idea moves from a research question into a coordinated AsPEN study."
+  />
+
+  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 space-y-16">
+
+    <!-- ── WHY PROPOSE ─────────────────────────────────────────── -->
+    <div>
+      <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-4">Why propose through AsPEN</h2>
+      <div class="grid gap-5 md:grid-cols-3">
+        <div class="border border-slate-200 rounded-lg p-5 bg-white">
+          <p class="text-2xl">🌏</p>
+          <p class="mt-2 font-semibold text-slate-900">Multi-country reach</p>
+          <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+            Access to 20+ population-level databases across Asia-Pacific, plus NeuroGEN partner sites in the UK, US, and Europe — a single coordinated channel rather than 20 individual conversations.
+          </p>
+        </div>
+        <div class="border border-slate-200 rounded-lg p-5 bg-white">
+          <p class="text-2xl">🧭</p>
+          <p class="mt-2 font-semibold text-slate-900">Methodological harmonisation</p>
+          <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+            A common protocol is applied locally at each site; site-level estimates are then meta-analysed. AsPEN has standing expertise in PSSA, SCCS, common data models, and target-trial emulation.
+          </p>
+        </div>
+        <div class="border border-slate-200 rounded-lg p-5 bg-white">
+          <p class="text-2xl">🤝</p>
+          <p class="mt-2 font-semibold text-slate-900">Mentorship & network</p>
+          <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+            Early-career researchers can co-lead studies under senior-PI mentorship across sites, with a built-in path to ISPE / ICPE presentation and peer-reviewed publication.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FIT / NO-FIT ────────────────────────────────────────── -->
+    <div class="grid gap-6 md:grid-cols-2">
+      <div>
+        <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-3">What fits well</h2>
+        <ul class="space-y-2 text-sm text-slate-700">
+          <li class="flex gap-2"><span class="text-brand-600 font-bold">✓</span><span>Multi-country drug-safety signal assessment (PSSA, SCCS, target-trial emulation)</span></li>
+          <li class="flex gap-2"><span class="text-brand-600 font-bold">✓</span><span>Drug-utilisation comparisons across health systems</span></li>
+          <li class="flex gap-2"><span class="text-brand-600 font-bold">✓</span><span>Pregnancy / paediatric / older-adult safety where Asian databases are under-represented</span></li>
+          <li class="flex gap-2"><span class="text-brand-600 font-bold">✓</span><span>Methods work — distributed analysis, CDM extensions, federated learning</span></li>
+          <li class="flex gap-2"><span class="text-brand-600 font-bold">✓</span><span>Regulatory / policy questions where cross-jurisdiction evidence strengthens conclusions</span></li>
+        </ul>
+      </div>
+      <div>
+        <h2 class="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-3">Less suitable</h2>
+        <ul class="space-y-2 text-sm text-slate-600">
+          <li class="flex gap-2"><span class="text-slate-400 font-bold">✗</span><span>Single-site studies that don't benefit from multi-country data</span></li>
+          <li class="flex gap-2"><span class="text-slate-400 font-bold">✗</span><span>Interventional trials — AsPEN is observational / database-based</span></li>
+          <li class="flex gap-2"><span class="text-slate-400 font-bold">✗</span><span>Research questions where no AsPEN site has relevant exposure / outcome data</span></li>
+          <li class="flex gap-2"><span class="text-slate-400 font-bold">✗</span><span>Pre-commercial industry-sponsored work without an academic co-lead</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── PROCESS / TIMELINE ──────────────────────────────────── -->
+    <div>
+      <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-4">The proposal process</h2>
+      <ol class="space-y-4">
+        {[
+          { n: 1, t: "Pre-discussion",       d: "Reach out via Contact with a 2–3 sentence question. The Chair and relevant national leads will sound out whether the idea fits and which sites might have appetite. Informal — no concept note yet.", w: "1–3 weeks" },
+          { n: 2, t: "Concept note",         d: "If the topic fits, write a 1–2 page concept (research question, target population, exposure, outcome, candidate sites, lead author). Submit by email — no formal template required at this stage.",           w: "2–4 weeks" },
+          { n: 3, t: "Network review",       d: "The concept is circulated at the next SIG teleconference or ISPE Asian / ICPE in-person meeting. Sites with relevant data and interest signal willingness to participate.",                            w: "1–3 months (depends on meeting cadence)" },
+          { n: 4, t: "Protocol drafting",    d: "Interested sites collaborate on a full protocol — common data definitions, statistical analysis plan, site-specific feasibility checks.",                                                              w: "3–6 months" },
+          { n: 5, t: "Local IRB + analysis", d: "Each site obtains its own IRB approval, executes the analysis locally against its own database, and returns site-level estimates.",                                                                  w: "6–12 months" },
+          { n: 6, t: "Meta-analysis & publication", d: "Site-level results are pooled centrally; manuscript drafted with multi-site authorship under AsPEN co-authorship conventions.",                                                                w: "3–6 months" },
+        ].map((s) => (
+          <li class="flex gap-4 border border-slate-200 rounded-lg p-5 bg-white">
+            <div class="shrink-0 w-9 h-9 rounded-full bg-brand-100 text-brand-700 font-bold grid place-items-center">{s.n}</div>
+            <div class="flex-1">
+              <div class="flex items-baseline justify-between gap-3 flex-wrap">
+                <p class="font-semibold text-slate-900">{s.t}</p>
+                <p class="text-xs text-slate-500 italic">{s.w}</p>
+              </div>
+              <p class="text-sm text-slate-600 mt-1 leading-relaxed">{s.d}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+      <p class="text-xs text-slate-500 mt-4 italic">
+        Concept-to-publication typically runs 18–30 months end-to-end. The biggest variability is in site recruitment and IRB approval — both ease considerably when the proposer already has a relationship with one or two AsPEN sites.
+      </p>
+    </div>
+
+    <!-- ── WHAT YOU BRING / WHAT WE PROVIDE ────────────────────── -->
+    <div class="grid gap-6 md:grid-cols-2">
+      <div class="border border-slate-200 rounded-lg p-6 bg-white">
+        <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-3">What you bring</p>
+        <ul class="space-y-2 text-sm text-slate-700">
+          <li>• A clearly-scoped research question and rationale</li>
+          <li>• A draft analysis plan — exposure, comparator, outcome, study design</li>
+          <li>• Willingness to lead protocol drafting and meta-analysis</li>
+          <li>• Database access at your home institution (helpful but not strictly required)</li>
+          <li>• ISPE membership if you intend to formally join the SIG</li>
+        </ul>
+      </div>
+      <div class="border border-slate-200 rounded-lg p-6 bg-white">
+        <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-3">What AsPEN provides</p>
+        <ul class="space-y-2 text-sm text-slate-700">
+          <li>• Site recruitment across the network — one channel, many databases</li>
+          <li>• Methodological consultation (PSSA / SCCS / CDM / target-trial)</li>
+          <li>• Forum for protocol review at SIG meetings and ICPE</li>
+          <li>• Multi-site authorship and publication coordination</li>
+          <li>• Mentorship for early-career investigators</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ── FAQ ─────────────────────────────────────────────────── -->
+    <div>
+      <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-4">FAQ</h2>
+      <div class="space-y-3">
+        {[
+          { q: "Do I need to be an ISPE member to propose?", a: "No — informal pre-discussion is open. To formally join the SIG and present proposals at SIG meetings, ISPE membership (including student rates) is required." },
+          { q: "Do I need my own database access?", a: "Helpful but not required. Many AsPEN studies are initiated by methodologists or policy researchers who bring the question; site PIs with database access handle local execution." },
+          { q: "Is there any cost?", a: "AsPEN itself does not charge. Each participating site bears its own analysis costs; data-access fees vary by database (e.g. NHIRD / NDB) and are arranged at the site level." },
+          { q: "How is authorship handled?", a: "Multi-site co-authorship with the proposing investigator typically as first author (or as agreed during protocol drafting). Each contributing site usually nominates one analyst-author plus a senior PI." },
+          { q: "What if my study is industry-funded?", a: "Industry-funded studies are accepted when there is a clear academic co-lead and study design / publication decisions remain investigator-led. Pre-discussion with the Chair is essential." },
+          { q: "Can I propose a methods-only study (no clinical question)?", a: "Yes. Methodological work — federated analysis, common data models, target-trial emulation extensions — is a long-standing AsPEN strand." },
+        ].map((item) => (
+          <details class="border border-slate-200 rounded-lg bg-white group">
+            <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-800 hover:bg-slate-50 rounded-lg flex items-start gap-3">
+              <span class="text-brand-700 text-xl leading-none group-open:rotate-45 transition">+</span>
+              <span>{item.q}</span>
+            </summary>
+            <p class="px-5 pb-5 text-sm text-slate-600 leading-relaxed pl-12">{item.a}</p>
+          </details>
+        ))}
+      </div>
+    </div>
+
+    <!-- ── CTA ─────────────────────────────────────────────────── -->
+    <div class="border-2 border-brand-200 rounded-2xl p-8 bg-gradient-to-br from-brand-50 to-white text-center">
+      <h2 class="text-2xl font-bold text-slate-900">Ready to start a conversation?</h2>
+      <p class="mt-3 text-slate-600 max-w-2xl mx-auto">
+        Send a 2–3 sentence pitch — your research question, why it benefits from multi-country data, and any sites you already have relationships with. We'll respond with which national leads to bring into the discussion.
+      </p>
+      <div class="mt-6 flex gap-3 justify-center flex-wrap">
+        <a
+          href={`${base}/contact/`}
+          class="inline-flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-3 rounded-lg transition"
+        >
+          Get in touch via Contact →
+        </a>
+        <a
+          href="https://www.pharmacoepi.org/communities/sigs/aspen/"
+          target="_blank"
+          rel="noopener"
+          class="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-brand-700 font-semibold px-5 py-3 rounded-lg border border-brand-300 transition"
+        >
+          Join the SIG on ISPE Community ↗
+        </a>
+      </div>
+    </div>
+
+  </section>
+</BaseLayout>
