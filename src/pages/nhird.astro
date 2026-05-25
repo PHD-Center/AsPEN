@@ -1,0 +1,203 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+import { NHIRD, MATERNAL_CHILD, SATELLITES } from "../data/nhird-ecosystem";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const hotspots = [NHIRD, MATERNAL_CHILD, ...SATELLITES];
+---
+
+<BaseLayout
+  title="NHIRD ecosystem — AsPEN"
+  description="Taiwan's National Health Insurance Research Database and its linked registries — hover or tap each box to see what each data source is."
+>
+  <PageHeader
+    eyebrow="Databases → NHIRD"
+    title="NHIRD ecosystem"
+    description="Taiwan's National Health Insurance Research Database sits at the centre of a tightly linked set of national registries and survey datasets. Hover (or tap) any box on the diagram to see what it contains."
+  />
+
+  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Diagram container — image + hotspots overlay -->
+    <div
+      data-nhird-diagram
+      class="relative w-full border border-slate-200 rounded-lg overflow-hidden shadow-sm bg-white"
+    >
+      <img
+        src={`${base}/images/nhird-ecosystem.png`}
+        alt="NHIRD ecosystem diagram — NHIRD at the centre, linked to Taiwan registries and common data models"
+        class="block w-full h-auto select-none"
+        draggable="false"
+      />
+
+      <!-- Hotspots: positioned as % of the image so they scale with it -->
+      {hotspots.map((r) => (
+        <button
+          type="button"
+          data-hotspot-id={r.id}
+          aria-label={`${r.name} — ${r.meta}`}
+          class="absolute group rounded transition border-2 border-transparent hover:border-brand-600 hover:bg-brand-600/5 focus:border-brand-700 focus:outline-none focus:bg-brand-600/10"
+          style={`top:${r.bbox.top}; left:${r.bbox.left}; width:${r.bbox.width}; height:${r.bbox.height};`}
+        ></button>
+      ))}
+
+      <!-- Tooltip — repositioned via JS to whichever hotspot is active -->
+      <div
+        data-nhird-tooltip
+        class="absolute hidden pointer-events-none z-20 max-w-xs sm:max-w-sm bg-white border border-slate-300 rounded-lg shadow-xl p-3 sm:p-4"
+        role="tooltip"
+      >
+        <p class="text-sm sm:text-base font-bold text-slate-900" data-tt-name></p>
+        <p class="text-[11px] sm:text-xs font-semibold text-brand-700 mt-0.5" data-tt-meta></p>
+        <p class="mt-2 text-xs sm:text-sm text-slate-700 leading-relaxed" data-tt-desc></p>
+        <a
+          data-tt-link
+          target="_blank"
+          rel="noopener"
+          class="hidden mt-2 inline-block text-xs font-semibold text-brand-700 hover:underline"
+        >Read more on PHDc ↗</a>
+      </div>
+    </div>
+
+    <p class="mt-3 text-xs text-slate-500 italic">
+      Diagram adapted from the Population Health Data Center (PHDc), National Cheng Kung University. Hover any box (desktop) or tap it (mobile) to reveal the dataset description; tap outside to dismiss.
+    </p>
+
+    <!-- Full list below for reference / accessibility / SEO -->
+    <div class="mt-12 border-t border-slate-200 pt-8">
+      <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-4">All datasets in this ecosystem</h2>
+      <div class="grid gap-4 md:grid-cols-2">
+        {hotspots.map((r) => (
+          <article id={`registry-${r.id}`} class="border border-slate-200 rounded-lg p-5 bg-white scroll-mt-24">
+            <p class="font-semibold text-slate-900 leading-snug">{r.name}</p>
+            <p class="text-xs font-semibold text-brand-700 mt-0.5">{r.meta}</p>
+            <p class="mt-2 text-sm text-slate-700 leading-relaxed">{r.description}</p>
+            {r.link && (
+              <a href={r.link} target="_blank" rel="noopener" class="mt-2 inline-block text-xs font-semibold text-brand-700 hover:underline">
+                Read more on PHDc ↗
+              </a>
+            )}
+          </article>
+        ))}
+      </div>
+    </div>
+
+    <p class="mt-10 text-xs text-slate-500 italic">
+      Source: <a href="https://www.phdcenter.org.tw/database/" target="_blank" rel="noopener" class="text-brand-700 hover:underline">Population Health Data Center (PHDc), NCKU</a>. Dataset descriptions are paraphrased; please consult PHDc or the respective Taiwan government agency for canonical, up-to-date information.
+    </p>
+  </section>
+
+  <script is:inline define:vars={{ hotspots }}>
+    (() => {
+      const diagram = document.querySelector("[data-nhird-diagram]");
+      if (!diagram) return;
+      const tooltip = diagram.querySelector("[data-nhird-tooltip]");
+      const buttons = Array.from(diagram.querySelectorAll("[data-hotspot-id]"));
+      const byId = Object.fromEntries(hotspots.map((r) => [r.id, r]));
+
+      const ttName = tooltip.querySelector("[data-tt-name]");
+      const ttMeta = tooltip.querySelector("[data-tt-meta]");
+      const ttDesc = tooltip.querySelector("[data-tt-desc]");
+      const ttLink = tooltip.querySelector("[data-tt-link]");
+
+      let activeBtn = null;
+      let sticky = false; // tap → pinned until next outside tap
+
+      const show = (btn) => {
+        const id = btn.dataset.hotspotId;
+        const r = byId[id];
+        if (!r) return;
+        ttName.textContent = r.name;
+        ttMeta.textContent = r.meta;
+        ttDesc.textContent = r.description;
+        if (r.link) {
+          ttLink.href = r.link;
+          ttLink.classList.remove("hidden");
+        } else {
+          ttLink.classList.add("hidden");
+        }
+        tooltip.classList.remove("hidden");
+        positionTooltip(btn);
+        activeBtn = btn;
+      };
+
+      const hide = () => {
+        tooltip.classList.add("hidden");
+        activeBtn = null;
+        sticky = false;
+      };
+
+      // Place tooltip just below + right of the hotspot, flipping at edges
+      const positionTooltip = (btn) => {
+        const dRect = diagram.getBoundingClientRect();
+        const bRect = btn.getBoundingClientRect();
+        // Reset, then measure
+        tooltip.style.top = "0px";
+        tooltip.style.left = "0px";
+        const tRect = tooltip.getBoundingClientRect();
+        // Default: below + right-aligned with hotspot
+        let top = (bRect.bottom - dRect.top) + 8;
+        let left = (bRect.left - dRect.left);
+        // Flip horizontally if it'd overflow right edge
+        if (left + tRect.width > dRect.width - 8) {
+          left = Math.max(8, dRect.width - tRect.width - 8);
+        }
+        // Flip vertically (above hotspot) if it'd overflow bottom
+        if (top + tRect.height > dRect.height - 8) {
+          top = (bRect.top - dRect.top) - tRect.height - 8;
+        }
+        tooltip.style.top = `${Math.max(8, top)}px`;
+        tooltip.style.left = `${Math.max(8, left)}px`;
+      };
+
+      // Touch / pointer: use click → sticky toggle. Mouse-only: also use mouseenter/leave.
+      // detect coarse pointer (touch) once at load
+      const isTouch = window.matchMedia("(pointer: coarse)").matches;
+
+      buttons.forEach((btn) => {
+        if (!isTouch) {
+          btn.addEventListener("mouseenter", () => {
+            if (sticky) return;
+            show(btn);
+          });
+          btn.addEventListener("mouseleave", () => {
+            if (sticky) return;
+            hide();
+          });
+        }
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          if (activeBtn === btn && sticky) {
+            hide();
+          } else {
+            sticky = true;
+            show(btn);
+          }
+        });
+        btn.addEventListener("focus", () => {
+          if (sticky) return;
+          show(btn);
+        });
+        btn.addEventListener("blur", () => {
+          if (sticky) return;
+          hide();
+        });
+      });
+
+      // Tap / click outside the diagram → hide sticky tooltip
+      document.addEventListener("click", (e) => {
+        if (!diagram.contains(e.target)) hide();
+      });
+
+      // Escape closes
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") hide();
+      });
+
+      // Re-position on resize so tooltip tracks the hotspot
+      window.addEventListener("resize", () => {
+        if (activeBtn) positionTooltip(activeBtn);
+      });
+    })();
+  </script>
+</BaseLayout>
