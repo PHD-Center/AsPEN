@@ -110,7 +110,7 @@ export const THEMES: Theme[] = [
   {
     id: "cardiovascular",
     number: "08",
-    name: "Cardiovascular",
+    name: "Cardiovascular diseases",
     headline: "Drugs and the heart",
     story: "Cardiovascular safety as a downstream outcome — heart failure, myocardial infarction, and broader cardiometabolic risk associated with psychotropics, ADHD medications, and antidiabetic drugs studied across AsPEN sites.",
     coverVisual: "wave",
@@ -128,7 +128,7 @@ export const THEMES: Theme[] = [
   {
     id: "utilisation",
     number: "10",
-    name: "Utilisation",
+    name: "Policy & Utilisation",
     headline: "Prescribing across borders",
     story: "International prescribing-trend comparisons — opioids, gabapentinoids, antipsychotics, dementia medications, antiseizure drugs, antidiabetics and ADHD medications across 60+ countries and regions, often co-led with the WHO Collaborating Centre framework.",
     coverVisual: "bars",
