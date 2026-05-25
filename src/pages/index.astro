@@ -19,8 +19,8 @@ const asianCountries = new Set(asianDbs.map((d) => d.country)).size;
 const partnerCountries = new Set(partnerDbs.map((d) => d.country)).size;
 
 const stats = [
-  { value: asianCountries, partner: partnerCountries, label: "Countries", sublabel: "active in Asia · plus partner sites" },
-  { value: asianDbs.length, partner: partnerDbs.length, label: "Databases", sublabel: "active in Asia · plus partner sites" },
+  { value: asianCountries, partner: partnerCountries, label: "Countries", sublabel: "in Asia" },
+  { value: asianDbs.length, partner: partnerDbs.length, label: "Databases", sublabel: "in Asia" },
   { value: publications.length, label: "Publications", sublabel: "since 2012" },
   { value: new Date().getFullYear() - FOUNDED_YEAR, label: "Years", sublabel: "of collaboration" },
 ];

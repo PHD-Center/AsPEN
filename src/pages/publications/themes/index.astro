@@ -164,7 +164,7 @@ const orphanPubs = pubs.filter((p) => !(p.tags ?? []).some((t) => allThemeTags.h
                   <h2 class="mt-2 text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 leading-[1.05] tracking-tight">{t.name}</h2>
 
                   <!-- Lede -->
-                  <p class="mt-5 text-base sm:text-lg text-slate-700 leading-relaxed first-letter:text-5xl first-letter:font-bold first-letter:text-brand-700 first-letter:float-left first-letter:mr-2 first-letter:mt-1 first-letter:leading-[0.85]">{t.story}</p>
+                  <p class="mt-5 text-base sm:text-lg text-slate-700 leading-relaxed">{t.story}</p>
 
                   <!-- Highlight paper -->
                   {t.highlight && (
