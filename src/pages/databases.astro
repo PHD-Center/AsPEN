@@ -92,39 +92,12 @@ const typeColor: Record<string, string> = {
   Biobank: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
-// Numeric derivations for the comparison table. Keyed by database name.
-// `popM` = approximate covered population in millions (for sorting).
-// `since` = data start year (earliest year of available research data).
-// Most values taken from Figure 1 of the NeuroGEN paper
-// (Tsai DHT et al., Clin Epidemiol 2023; PMID 38146486).
-// Notes:
-//   · NHIRD: NHI program started 1995; research data available from 2000.
-//   · CGRD: hospital network established 2000; research data from 2011.
-const dbStats: Record<string, { popM: number; since?: number }> = {
-  "National Health Insurance Research Database (NHIRD)": { popM: 23, since: 2000 },
-  "Chang Gung Research Database (CGRD)": { popM: 1.5, since: 2011 },
-  "Taiwan Biobank (TWB)": { popM: 0.2, since: 2012 },
-  "National Database of Health Insurance Claims and Specific Health Checkups (NDB)": { popM: 120, since: 2008 },
-  "JMDC Claims Database": { popM: 13.5 },
-  "DeSC Database": { popM: 9.3, since: 2014 },
-  "Medical Data Vision (MDV) Database": { popM: 48 },
-  "Health Insurance Review and Assessment Service (HIRA)": { popM: 50, since: 2009 },
-  "National Health Insurance Service – National Health Information Database (NHIS-NHID)": { popM: 50, since: 2002 },
-  "Clinical Data Analysis and Reporting System (CDARS)": { popM: 7, since: 1995 },
-  "Clinical Practice Research Datalink (CPRD)": { popM: 60, since: 1987 },
-  "The Health Improvement Network (THIN)": { popM: 17, since: 1986 },
-  "UK Biobank (UKB)": { popM: 0.5, since: 2005 },
-  "Public Health Scotland (ISD)": { popM: 5.4, since: 1950 },
-  "PHARMO Database Network": { popM: 7, since: 1999 },
-  "Finnish healthcare registers (FinReg)": { popM: 5.5, since: 1972 },
-  "Pharmaceutical Benefits Scheme — 10% sample (PBS)": { popM: 2.5, since: 2005 },
-  "Victorian Linked Health Data (VLHD)": { popM: 6.5, since: 2006 },
-  "Medicare (20% sample)": { popM: 13, since: 2007 },
-  "Medicaid": { popM: 70, since: 2001 },
-};
-
-// Comparison data — keyed by database name. Used by the drag-and-drop
-// comparison tray and serialised via define:vars to the inline script.
+// Comparison data — keyed by database name. Used by the comparison drawer
+// and serialised via define:vars to the inline script.
+// `since` / `popM` / `lagMonths` come straight from databases.json (editable
+// via PagesCMS). Most values are sourced from Figure 1 of the NeuroGEN paper
+// (Tsai DHT et al., Clin Epidemiol 2023; PMID 38146486); the 5 not in that
+// figure (NDB / JMDC / DeSC / MDV / HIRA) use commonly-cited public estimates.
 const compareData: Record<string, {
   country: string;
   flag: string;
@@ -132,20 +105,22 @@ const compareData: Record<string, {
   type: string;
   popM: number;
   since: number | null;
+  lagMonths: number | null;
   coverage: string;
   notes: string;
   anchor: string;
 }> = {};
 for (const d of databases) {
   const meta = countryMeta[d.country];
-  const stats = dbStats[d.name] ?? { popM: 0 };
+  const dd = d as typeof d & { since?: number; popM?: number; lagMonths?: number };
   compareData[d.name] = {
     country: d.country,
     flag: meta?.flag ?? "🏳️",
     name: d.name,
     type: d.type,
-    popM: stats.popM,
-    since: stats.since ?? null,
+    popM: dd.popM ?? 0,
+    since: typeof dd.since === "number" ? dd.since : null,
+    lagMonths: typeof dd.lagMonths === "number" ? dd.lagMonths : null,
     coverage: d.coverage,
     notes: d.notes,
     anchor: `db-${d.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`,
@@ -431,51 +406,94 @@ const otherSites = [
         const colorOf = (t) => TYPE_COLOR[t] ?? "bg-slate-500";
         const textColorOf = (t) => TYPE_TEXT[t] ?? "text-slate-700 bg-slate-50 border-slate-200";
 
-        const render = () => {
-          const has = selected.length > 0;
-          emptyEl.classList.toggle("hidden", has);
-          grid.classList.toggle("hidden", !has);
-          clearBtn.classList.toggle("hidden", !has);
+        // Which chart is currently selected (sticky across re-renders + add/remove)
+        let activeChart = "timeline"; // "timeline" | "population" | "lag"
 
-          const items = selected.map((n) => compareData[n]).filter(Boolean);
-          if (items.length === 0) { grid.innerHTML = ""; reflect(); return; }
+        // Format lag months into a human-friendly label.
+        // Returns { label, unitsForBar } — unitsForBar is the raw months used for bar width.
+        const formatLag = (months) => {
+          if (months == null) return { label: "unknown", value: null };
+          if (months === 0)   return { label: "~1 day",  value: 0.03 };
+          if (months < 1)     return { label: "<1 mo",   value: months };
+          if (months < 24)    return { label: Math.round(months) + " mo", value: months };
+          const years = months / 12;
+          return { label: (Number.isInteger(years) ? years : years.toFixed(1)) + " yr", value: months };
+        };
 
-          // Sort chronologically (oldest start year first) so the chart reads top-down
+        // Render helpers shared by all 3 charts
+        const buildChipsHtml = (items) => `
+          <div class="flex flex-wrap gap-1 mb-3 px-1">
+            ${items.map((d) => `
+              <span class="inline-flex items-center gap-0.5 text-[10px] bg-brand-100 text-brand-800 rounded-full pl-2 pr-1 py-0.5 font-semibold">
+                <span aria-hidden="true">${esc(d.flag)}</span>
+                <span>${esc(shortName(d.name))}</span>
+                <button type="button" data-compare-remove="${esc(d.name)}" class="ml-0.5 w-4 h-4 inline-flex items-center justify-center rounded-full hover:bg-white hover:text-rose-600" aria-label="Remove ${esc(d.name)}">×</button>
+              </span>
+            `).join("")}
+          </div>
+        `;
+
+        const buildTabsHtml = () => `
+          <div role="tablist" aria-label="Comparison chart" class="flex gap-0.5 mb-3 p-0.5 bg-slate-100 rounded-lg text-[11px] font-semibold">
+            ${[
+              { id: "timeline",   label: "Timeline" },
+              { id: "population", label: "Population" },
+              { id: "lag",        label: "Data lag" },
+            ].map((t) => `
+              <button type="button" role="tab" data-chart-tab="${t.id}" aria-selected="${activeChart === t.id}"
+                class="flex-1 px-2 py-1.5 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
+                ${t.label}
+              </button>
+            `).join("")}
+          </div>
+        `;
+
+        const buildLegendHtml = (items) => {
+          const typesPresent = Array.from(new Set(items.map((d) => d.type)));
+          return `
+            <div class="flex flex-wrap gap-1.5 mt-3 px-1">
+              ${typesPresent.map((t) => `
+                <span class="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded border ${textColorOf(t)}">
+                  <span class="w-2 h-2 rounded-sm ${colorOf(t)}"></span>${esc(t)}
+                </span>
+              `).join("")}
+            </div>
+          `;
+        };
+
+        // Compact details panel below the chart (Coverage only — Notes removed)
+        const buildDetailsHtml = (items) => `
+          <section class="px-1 pt-3 mt-3 border-t border-brand-100">
+            <h3 class="text-[10px] uppercase tracking-widest text-brand-600 font-bold mb-1">Details</h3>
+            ${items.map((d) => `
+              <div class="py-2 border-t border-slate-100 first:border-t-0">
+                <div class="flex items-baseline gap-1.5">
+                  <span class="text-sm leading-none" aria-hidden="true">${esc(d.flag)}</span>
+                  <span class="font-semibold text-slate-800 text-xs">${esc(shortName(d.name))}</span>
+                  <span class="text-[10px] text-slate-500 ml-auto tabular-nums">${typeof d.since === "number" ? d.since + "–" : "—"} · ${d.popM > 0 ? d.popM + "M" : "—"}</span>
+                </div>
+                <p class="text-[11px] text-slate-700 leading-snug mt-1">${esc(d.coverage || "—")}</p>
+              </div>
+            `).join("")}
+          </section>
+        `;
+
+        // ── Chart 1: Coverage timeline (Gantt — start year → today, height = pop, color = type)
+        const buildTimelineChart = (items) => {
           const sorted = [...items].sort((a, b) => {
             const ay = typeof a.since === "number" ? a.since : CURRENT_YEAR + 1;
             const by = typeof b.since === "number" ? b.since : CURRENT_YEAR + 1;
             return ay - by;
           });
-
-          // Chart scales
           const knownYears = sorted.map((d) => d.since).filter((y) => typeof y === "number");
           const minYear = knownYears.length ? Math.min(...knownYears) : CURRENT_YEAR - 5;
           const yearSpan = Math.max(1, CURRENT_YEAR - minYear);
           const maxPop = Math.max(1, ...sorted.map((d) => d.popM || 0));
-
-          // Decade tick marks across the chart background
           const tickStart = Math.ceil(minYear / 10) * 10;
           const ticks = [];
           for (let y = tickStart; y < CURRENT_YEAR; y += 10) ticks.push(y);
 
-          // Header chips (with × to remove)
-          const chipsHtml = `
-            <div class="flex flex-wrap gap-1 mb-3 px-1">
-              ${items.map((d) => `
-                <span class="inline-flex items-center gap-0.5 text-[10px] bg-brand-100 text-brand-800 rounded-full pl-2 pr-1 py-0.5 font-semibold">
-                  <span aria-hidden="true">${esc(d.flag)}</span>
-                  <span>${esc(shortName(d.name))}</span>
-                  <button type="button" data-compare-remove="${esc(d.name)}" class="ml-0.5 w-4 h-4 inline-flex items-center justify-center rounded-full hover:bg-white hover:text-rose-600" aria-label="Remove ${esc(d.name)}">×</button>
-                </span>
-              `).join("")}
-            </div>
-          `;
-
-          // Integrated coverage-timeline chart.
-          // Each row: year label · flag · timeline bar (left = since, right = current year)
-          // The bar is colour-coded by DB type and its THICKNESS scales with population
-          // — so a single visual shows timespan + population + type + country at once.
-          const chartRows = sorted.map((d) => {
+          const rows = sorted.map((d) => {
             const hasYear = typeof d.since === "number";
             const offset = hasYear ? ((d.since - minYear) / yearSpan) * 100 : 0;
             const width  = hasYear ? Math.max(2, 100 - offset) : 100;
@@ -488,13 +506,11 @@ const otherSites = [
               <div class="grid grid-cols-[28px_minmax(0,1fr)_84px] items-center gap-2 py-1.5 hover:bg-brand-50/40 rounded transition">
                 <span class="tabular-nums text-[10px] text-slate-500 text-right">${sinceLabel}</span>
                 <div class="relative h-5 flex items-center">
-                  <!-- background lane + decade gridlines -->
                   <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-slate-200"></div>
                   ${ticks.map((y) => {
                     const tickPct = ((y - minYear) / yearSpan) * 100;
                     return `<div class="absolute top-0 bottom-0 w-px bg-slate-100" style="left:${tickPct.toFixed(1)}%"></div>`;
                   }).join("")}
-                  <!-- the bar itself -->
                   <div class="absolute rounded-sm ${colorOf(d.type)} flex items-center justify-start opacity-90 hover:opacity-100"
                        style="left:${offset.toFixed(1)}%; width:${width.toFixed(1)}%; height:${thickness}px;">
                     ${hasYear ? `<span class="text-[11px] leading-none -ml-1 select-none" aria-hidden="true">${esc(d.flag)}</span>` : ""}
@@ -508,8 +524,7 @@ const otherSites = [
             `;
           }).join("");
 
-          // X-axis labels under the chart
-          const axisHtml = `
+          const axis = `
             <div class="grid grid-cols-[28px_minmax(0,1fr)_84px] gap-2 pt-1 mt-1 border-t border-slate-100">
               <span></span>
               <div class="relative h-3 text-[9px] text-slate-400 tabular-nums">
@@ -524,43 +539,104 @@ const otherSites = [
             </div>
           `;
 
-          // Type legend — only show types actually present in the comparison
-          const typesPresent = Array.from(new Set(sorted.map((d) => d.type)));
-          const legendHtml = `
-            <div class="flex flex-wrap gap-1.5 mt-3 px-1">
-              ${typesPresent.map((t) => `
-                <span class="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded border ${textColorOf(t)}">
-                  <span class="w-2 h-2 rounded-sm ${colorOf(t)}"></span>${esc(t)}
-                </span>
-              `).join("")}
-            </div>
+          return `
+            <h3 class="text-[10px] uppercase tracking-widest text-brand-600 font-bold mb-2">Coverage timeline · ${items.length} ${items.length === 1 ? "database" : "databases"}</h3>
+            <div>${rows}</div>
+            ${axis}
+            ${buildLegendHtml(items)}
           `;
+        };
 
-          // Compact coverage + notes panel underneath the chart for textual context
-          const detailRows = sorted.map((d) => `
-            <div class="py-2 border-t border-slate-100 first:border-t-0">
-              <div class="flex items-baseline gap-1.5">
-                <span class="text-sm leading-none" aria-hidden="true">${esc(d.flag)}</span>
-                <span class="font-semibold text-slate-800 text-xs">${esc(shortName(d.name))}</span>
-                <span class="text-[10px] text-slate-500 ml-auto tabular-nums">${typeof d.since === "number" ? d.since + "–" : "—"} · ${d.popM > 0 ? d.popM + "M" : "—"}</span>
+        // ── Chart 2: Population (horizontal bars sorted by size, descending)
+        const buildPopulationChart = (items) => {
+          const sorted = [...items].sort((a, b) => (b.popM || 0) - (a.popM || 0));
+          const maxPop = Math.max(1, ...sorted.map((d) => d.popM || 0));
+
+          const rows = sorted.map((d) => {
+            const w = d.popM > 0 ? Math.max(2, (d.popM / maxPop) * 100) : 0;
+            const label = d.popM > 0 ? d.popM.toLocaleString() + " M" : "—";
+            return `
+              <div class="grid grid-cols-[minmax(0,90px)_minmax(0,1fr)_64px] items-center gap-2 py-1.5 hover:bg-brand-50/40 rounded transition">
+                <a href="#${esc(d.anchor)}" class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-800 hover:text-brand-700 hover:underline truncate" title="${esc(d.name)}">
+                  <span class="text-sm leading-none shrink-0" aria-hidden="true">${esc(d.flag)}</span>
+                  <span class="truncate">${esc(shortName(d.name))}</span>
+                </a>
+                <div class="h-4 bg-slate-100 rounded-sm overflow-hidden">
+                  ${w > 0 ? `<div class="h-full ${colorOf(d.type)} opacity-90" style="width:${w.toFixed(1)}%"></div>` : ""}
+                </div>
+                <span class="text-[11px] tabular-nums text-slate-700 text-right">${label}</span>
               </div>
-              <p class="text-[11px] text-slate-700 leading-snug mt-1"><span class="text-slate-500 font-semibold">Coverage</span> · ${esc(d.coverage || "—")}</p>
-              ${d.notes ? `<p class="text-[11px] text-slate-600 leading-snug mt-1 italic">${esc(d.notes)}</p>` : ""}
-            </div>
-          `).join("");
+            `;
+          }).join("");
+
+          return `
+            <h3 class="text-[10px] uppercase tracking-widest text-brand-600 font-bold mb-2">Population covered · sorted largest first</h3>
+            <div>${rows}</div>
+            ${buildLegendHtml(items)}
+          `;
+        };
+
+        // ── Chart 3: Data lag (horizontal bars sorted by lag, ascending = freshest first)
+        const buildLagChart = (items) => {
+          // Sort by lag ascending; unknowns last
+          const sorted = [...items].sort((a, b) => {
+            const aL = typeof a.lagMonths === "number" ? a.lagMonths : Infinity;
+            const bL = typeof b.lagMonths === "number" ? b.lagMonths : Infinity;
+            return aL - bL;
+          });
+          const knownLags = sorted.map((d) => d.lagMonths).filter((l) => typeof l === "number");
+          const maxLag = knownLags.length ? Math.max(1, ...knownLags) : 1;
+
+          const rows = sorted.map((d) => {
+            const f = formatLag(d.lagMonths);
+            const known = f.value !== null;
+            const w = known ? Math.max(2, (f.value / maxLag) * 100) : 0;
+            return `
+              <div class="grid grid-cols-[minmax(0,90px)_minmax(0,1fr)_64px] items-center gap-2 py-1.5 hover:bg-brand-50/40 rounded transition">
+                <a href="#${esc(d.anchor)}" class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-800 hover:text-brand-700 hover:underline truncate" title="${esc(d.name)}">
+                  <span class="text-sm leading-none shrink-0" aria-hidden="true">${esc(d.flag)}</span>
+                  <span class="truncate">${esc(shortName(d.name))}</span>
+                </a>
+                <div class="h-4 bg-slate-100 rounded-sm overflow-hidden">
+                  ${known ? `<div class="h-full ${colorOf(d.type)} opacity-90" style="width:${w.toFixed(1)}%"></div>` : ""}
+                </div>
+                <span class="text-[11px] tabular-nums text-slate-700 text-right ${known ? "" : "italic text-slate-400"}">${esc(f.label)}</span>
+              </div>
+            `;
+          }).join("");
+
+          return `
+            <h3 class="text-[10px] uppercase tracking-widest text-brand-600 font-bold mb-2">Data lag · fastest first</h3>
+            <p class="text-[10px] text-slate-500 mb-2 leading-snug">Typical delay between a clinical event and the data becoming available to researchers.</p>
+            <div>${rows}</div>
+            ${buildLegendHtml(items)}
+          `;
+        };
+
+        const CHART_BUILDERS = {
+          timeline: buildTimelineChart,
+          population: buildPopulationChart,
+          lag: buildLagChart,
+        };
+
+        const render = () => {
+          const has = selected.length > 0;
+          emptyEl.classList.toggle("hidden", has);
+          grid.classList.toggle("hidden", !has);
+          clearBtn.classList.toggle("hidden", !has);
+
+          const items = selected.map((n) => compareData[n]).filter(Boolean);
+          if (items.length === 0) { grid.innerHTML = ""; reflect(); return; }
+
+          const chartBuilder = CHART_BUILDERS[activeChart] ?? buildTimelineChart;
 
           grid.innerHTML = `
-            ${chipsHtml}
+            ${buildChipsHtml(items)}
+            ${buildTabsHtml()}
             <section class="px-1 pt-2 border-t border-brand-100">
-              <h3 class="text-[10px] uppercase tracking-widest text-brand-600 font-bold mb-2">Coverage timeline · ${sorted.length} ${sorted.length === 1 ? "database" : "databases"}</h3>
-              <div>${chartRows}</div>
-              ${axisHtml}
-              ${legendHtml}
+              ${chartBuilder(items)}
             </section>
-            <section class="px-1 pt-3 mt-3 border-t border-brand-100">
-              <h3 class="text-[10px] uppercase tracking-widest text-brand-600 font-bold mb-1">Details</h3>
-              ${detailRows}
-            </section>
+            ${buildDetailsHtml(items)}
           `;
 
           reflect();
@@ -700,11 +776,18 @@ const otherSites = [
           }
         });
 
-        // --- Remove buttons (event-delegated since the grid re-renders)
+        // --- Remove buttons + chart-tab switch (event-delegated since the grid re-renders)
         grid.addEventListener("click", (e) => {
           const t = e.target;
-          if (t instanceof HTMLElement && t.dataset.compareRemove) {
+          if (!(t instanceof HTMLElement)) return;
+          if (t.dataset.compareRemove) {
             remove(t.dataset.compareRemove);
+            return;
+          }
+          const tabBtn = t.closest("[data-chart-tab]");
+          if (tabBtn instanceof HTMLElement && tabBtn.dataset.chartTab && tabBtn.dataset.chartTab !== activeChart) {
+            activeChart = tabBtn.dataset.chartTab;
+            render();
           }
         });
 

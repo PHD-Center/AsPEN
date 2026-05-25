@@ -9,7 +9,10 @@
     "type": "Claims",
     "coverage": ">23 million (>99% of population, since 1995)",
     "notes": "Universal single-payer claims; 70+ billion records and 3.4 billion medical images as of 2024, now including structured laboratory and imaging data.",
-    "url": "https://www.phdcenter.org.tw/database/"
+    "url": "https://www.phdcenter.org.tw/database/",
+    "since": 2000,
+    "popM": 23,
+    "lagMonths": 24
   },
   {
     "country": "Taiwan",
@@ -21,7 +24,10 @@
     "type": "Multi-institutional EHR",
     "coverage": "~1.3M outpatients + ~200K inpatients per year (~6–10% of national population)",
     "notes": "Standardized electronic medical records from seven Chang Gung Memorial Hospitals; research data available since 2011 with ~1-month latency.",
-    "url": "https://www.phdcenter.org.tw/chang-gung-research-database-cgrd/"
+    "url": "https://www.phdcenter.org.tw/chang-gung-research-database-cgrd/",
+    "since": 2011,
+    "popM": 1.5,
+    "lagMonths": 1
   },
   {
     "country": "Taiwan",
@@ -33,7 +39,10 @@
     "type": "Biobank",
     "coverage": "~200,000 community participants (target 1 million)",
     "notes": "Population-based biomedical biobank linking genomic, lifestyle, and clinical data.",
-    "url": "https://www.phdcenter.org.tw/taiwan-biobank-twb/"
+    "url": "https://www.phdcenter.org.tw/taiwan-biobank-twb/",
+    "since": 2012,
+    "popM": 0.2,
+    "lagMonths": 5
   },
   {
     "country": "Japan",
@@ -44,7 +53,10 @@
     "name": "National Database of Health Insurance Claims and Specific Health Checkups (NDB)",
     "type": "Claims",
     "coverage": "≈120 million — effectively the entire Japanese population (since 2008)",
-    "notes": "Operated by the Ministry of Health, Labour and Welfare; nationwide insurance claims and specific health checkup records used for medical-cost optimization research."
+    "notes": "Operated by the Ministry of Health, Labour and Welfare; nationwide insurance claims and specific health checkup records used for medical-cost optimization research.",
+    "since": 2008,
+    "popM": 120,
+    "lagMonths": 24
   },
   {
     "country": "Japan",
@@ -55,7 +67,10 @@
     "name": "JMDC Claims Database",
     "type": "Claims",
     "coverage": "~13.5 million members (≈9.4% of national population, working-age skew)",
-    "notes": "Operated by JMDC Inc.; receipts, health-checkup results, and enrolment records pooled from ~179 health insurance societies. Excellent longitudinal traceability (up to 17 years)."
+    "notes": "Operated by JMDC Inc.; receipts, health-checkup results, and enrolment records pooled from ~179 health insurance societies. Excellent longitudinal traceability (up to 17 years).",
+    "since": 2005,
+    "popM": 13.5,
+    "lagMonths": 5
   },
   {
     "country": "Japan",
@@ -66,7 +81,10 @@
     "name": "DeSC Database",
     "type": "Claims",
     "coverage": "~9.3 million members (≈8% of population) across employer / national / late-stage elderly insurers (since 2014)",
-    "notes": "Operated by DeSC Healthcare, Inc.; first commercial Japanese DB to span Employee Health Insurance, National Health Insurance, and Late-Stage Elderly Healthcare in a single dataset."
+    "notes": "Operated by DeSC Healthcare, Inc.; first commercial Japanese DB to span Employee Health Insurance, National Health Insurance, and Late-Stage Elderly Healthcare in a single dataset.",
+    "since": 2014,
+    "popM": 9.3,
+    "lagMonths": 5
   },
   {
     "country": "Japan",
@@ -77,7 +95,10 @@
     "name": "Medical Data Vision (MDV) Database",
     "type": "Hospital-based EHR + DPC claims",
     "coverage": "≈48 million patients across 519 acute-care DPC hospitals (≈29% of acute-hospital admissions in Japan)",
-    "notes": "Operated by Medical Data Vision Co., Ltd.; inpatient and outpatient DPC claims plus laboratory results — strong for in-hospital exposure, severity, and outcomes research."
+    "notes": "Operated by Medical Data Vision Co., Ltd.; inpatient and outpatient DPC claims plus laboratory results — strong for in-hospital exposure, severity, and outcomes research.",
+    "since": 2008,
+    "popM": 48,
+    "lagMonths": 6
   },
   {
     "country": "South Korea",
@@ -88,7 +109,10 @@
     "name": "Health Insurance Review and Assessment Service (HIRA)",
     "type": "Claims",
     "coverage": "~50 million (essentially the entire Korean population under universal NHI)",
-    "notes": "Independent agency that reviews claims for reimbursement appropriateness; provides researchers a separate access pathway to Korean NHI claims since 2009 (open data initiative 2013)."
+    "notes": "Independent agency that reviews claims for reimbursement appropriateness; provides researchers a separate access pathway to Korean NHI claims since 2009 (open data initiative 2013).",
+    "since": 2009,
+    "popM": 50,
+    "lagMonths": 12
   },
   {
     "country": "South Korea",
@@ -99,7 +123,10 @@
     "name": "National Health Insurance Service – National Health Information Database (NHIS-NHID)",
     "type": "Claims",
     "coverage": "~50 million (compulsory NHI, nationwide)",
-    "notes": "Population-level claims with periodic national health screening linkage; complementary to HIRA, with stronger linkage to enrolment and health-check data."
+    "notes": "Population-level claims with periodic national health screening linkage; complementary to HIRA, with stronger linkage to enrolment and health-check data.",
+    "since": 2002,
+    "popM": 50,
+    "lagMonths": 7
   },
   {
     "country": "Hong Kong",
@@ -110,7 +137,10 @@
     "name": "Clinical Data Analysis and Reporting System (CDARS)",
     "type": "National EHR",
     "coverage": ">7 million (Hospital Authority territory-wide, since 1995)",
-    "notes": "Public-sector electronic medical records covering the great majority of Hong Kong residents."
+    "notes": "Public-sector electronic medical records covering the great majority of Hong Kong residents.",
+    "since": 1995,
+    "popM": 7,
+    "lagMonths": 0
   },
   {
     "country": "United Kingdom",
@@ -121,7 +151,10 @@
     "name": "Clinical Practice Research Datalink (CPRD)",
     "type": "Primary-care EHR",
     "coverage": "~60 million patients (~20% currently active)",
-    "notes": "MHRA-administered UK primary-care EHR with linkage to Hospital Episode Statistics, ONS mortality, and other national datasets."
+    "notes": "MHRA-administered UK primary-care EHR with linkage to Hospital Episode Statistics, ONS mortality, and other national datasets.",
+    "since": 1987,
+    "popM": 60,
+    "lagMonths": 1
   },
   {
     "country": "United Kingdom",
@@ -132,7 +165,10 @@
     "name": "The Health Improvement Network (THIN)",
     "type": "Primary-care EHR",
     "coverage": "~17 million patients (~6% of UK population, since 2003)",
-    "notes": "UK primary-care EHR drawn from contributing general practices; complementary to CPRD, mapped to international coding systems. Listed as a NeuroGEN partner database."
+    "notes": "UK primary-care EHR drawn from contributing general practices; complementary to CPRD, mapped to international coding systems. Listed as a NeuroGEN partner database.",
+    "since": 1986,
+    "popM": 17,
+    "lagMonths": 4
   },
   {
     "country": "United Kingdom",
@@ -143,7 +179,10 @@
     "name": "UK Biobank (UKB)",
     "type": "Biobank",
     "coverage": "~500,000 community participants aged 40–69 at recruitment (2006–2010)",
-    "notes": "Population-based biomedical biobank linking genomic, lifestyle, imaging, and electronic medical record data. NeuroGEN partner biomedical database."
+    "notes": "Population-based biomedical biobank linking genomic, lifestyle, imaging, and electronic medical record data. NeuroGEN partner biomedical database.",
+    "since": 2005,
+    "popM": 0.5,
+    "lagMonths": 18
   },
   {
     "country": "United Kingdom",
@@ -155,7 +194,10 @@
     "type": "National EHR",
     "coverage": "~5.4 million (entire Scottish population)",
     "notes": "National prescribing, hospital admissions, and death-records system covering all NHS Scotland — a NeuroGEN partner data source.",
-    "mapAs": "Scotland"
+    "mapAs": "Scotland",
+    "since": 1950,
+    "popM": 5.4,
+    "lagMonths": 3
   },
   {
     "country": "Netherlands",
@@ -166,7 +208,10 @@
     "name": "PHARMO Database Network",
     "type": "Multi-source EHR",
     "coverage": "~7 million patients (~40% of the Dutch population)",
-    "notes": "Linked pharmacy, primary care, and hospital records across multiple regions of the Netherlands; NeuroGEN partner data source."
+    "notes": "Linked pharmacy, primary care, and hospital records across multiple regions of the Netherlands; NeuroGEN partner data source.",
+    "since": 1999,
+    "popM": 7,
+    "lagMonths": 5
   },
   {
     "country": "Finland",
@@ -177,7 +222,10 @@
     "name": "Finnish healthcare registers (FinReg)",
     "type": "Claims + registries",
     "coverage": "~5.5 million (entire Finnish population)",
-    "notes": "Nationwide population registries linking prescriptions, hospital discharges, special-reimbursement, and cause-of-death data — used in NeuroGEN."
+    "notes": "Nationwide population registries linking prescriptions, hospital discharges, special-reimbursement, and cause-of-death data — used in NeuroGEN.",
+    "since": 1972,
+    "popM": 5.5,
+    "lagMonths": 12
   },
   {
     "country": "Australia",
@@ -188,7 +236,10 @@
     "name": "Pharmaceutical Benefits Scheme — 10% sample (PBS)",
     "type": "Claims",
     "coverage": "~2.5 million (10% random sample of national PBS beneficiaries)",
-    "notes": "Federal subsidised prescription medicine claims for Australia's national PBS — a NeuroGEN partner data source."
+    "notes": "Federal subsidised prescription medicine claims for Australia's national PBS — a NeuroGEN partner data source.",
+    "since": 2005,
+    "popM": 2.5,
+    "lagMonths": 3
   },
   {
     "country": "Australia",
@@ -199,7 +250,10 @@
     "name": "Victorian Linked Health Data (VLHD)",
     "type": "Claims + EHR linkages",
     "coverage": "~6.5 million (entire Victorian population)",
-    "notes": "State-level Victorian admissions, deaths, and dispensing data linked into a single research dataset."
+    "notes": "State-level Victorian admissions, deaths, and dispensing data linked into a single research dataset.",
+    "since": 2006,
+    "popM": 6.5,
+    "lagMonths": 12
   },
   {
     "country": "United States",
@@ -210,7 +264,10 @@
     "name": "Medicare (20% sample)",
     "type": "Claims",
     "coverage": "~13 million beneficiaries (20% random sample of ~65M Medicare population aged 65+)",
-    "notes": "US federal insurance for those aged 65+ and selected disability groups; widely used in NeuroGEN multi-database studies."
+    "notes": "US federal insurance for those aged 65+ and selected disability groups; widely used in NeuroGEN multi-database studies.",
+    "since": 2007,
+    "popM": 13,
+    "lagMonths": 24
   },
   {
     "country": "United States",
@@ -221,6 +278,9 @@
     "name": "Medicaid",
     "type": "Claims",
     "coverage": "~70 million beneficiaries (US public insurance for low-income / disability)",
-    "notes": "Federal–state public insurance programme used as a partner data source in NeuroGEN multi-database collaborations."
+    "notes": "Federal–state public insurance programme used as a partner data source in NeuroGEN multi-database collaborations.",
+    "since": 2001,
+    "popM": 70,
+    "lagMonths": 24
   }
 ]

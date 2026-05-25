@@ -25,6 +25,9 @@ content:
       - { name: type,     label: "Type (Claims / EHR / Biobank / …)", type: string }
       - { name: coverage, label: Coverage,                type: string }
       - { name: notes,    label: Notes,                   type: text }
+      - { name: since,    label: "Data start year",       type: number, options: { step: 1 } }
+      - { name: popM,     label: "Population covered (millions)", type: number, options: { step: 0.1 } }
+      - { name: lagMonths, label: "Data lag (months)",    type: number, options: { step: 0.5 } }
 
   - name: publications
     label: Publications
