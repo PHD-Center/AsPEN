@@ -1,37 +1,50 @@
 ---
-// "Cite this resource" widget. Renders three citation formats (APA, BibTeX, RIS)
-// with a copy-to-clipboard button for each.
+// "Cite this resource" widget. Three formats — Lancet (Vancouver-style),
+// BibTeX, RIS — each with copy-to-clipboard and download-as-file buttons.
+//
+// Attribution model: AsPEN is the corporate author; maintainers credited in
+// a "Maintained by" note. This mirrors the on-screen byline the user requested.
 //
 // Props:
 //   title   — the resource title, e.g. "Databases" or "Publications"
 //   url     — canonical URL to cite
-//   bibkey  — short BibTeX/RIS identifier (alphanumeric, no spaces)
+//   bibkey  — short BibTeX/RIS identifier and download filename stem
 interface Props {
   title: string;
   url: string;
   bibkey: string;
 }
 const { title, url, bibkey } = Astro.props;
-const year = new Date().getFullYear();
 
-const apa = `Asian Pharmacoepidemiology Network. (${year}). ${title}. Retrieved from ${url}`;
+const today = new Date();
+const year = today.getFullYear();
+const isoDate = today.toISOString().slice(0, 10);
+const longDate = today.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+// Lancet (Vancouver-style) — corporate author, title, maintainers in note,
+// publisher; year. URL (accessed Month Day, Year).
+const lancet = `Asian Pharmacoepidemiology Network (AsPEN). ${title}. Maintained by PHDc, NCKU; Tsai DH-T, Lai EC-C. ${year}. ${url} (accessed ${longDate}).`;
 
 const bibtex = `@misc{${bibkey},
-  author = {{Asian Pharmacoepidemiology Network}},
-  title  = {${title}},
-  year   = {${year}},
-  url    = {${url}},
-  note   = {Accessed: ${new Date().toISOString().slice(0, 10)}}
+  author       = {{Asian Pharmacoepidemiology Network (AsPEN)}},
+  title        = {${title}},
+  year         = {${year}},
+  howpublished = {\\url{${url}}},
+  note         = {Maintained by PHDc, NCKU; Tsai DH-T, Lai EC-C. Accessed: ${isoDate}}
 }`;
 
-const ris = `TY  - GEN
-AU  - Asian Pharmacoepidemiology Network
+const ris = `TY  - ELEC
+AU  - Asian Pharmacoepidemiology Network (AsPEN)
 TI  - ${title}
 PY  - ${year}
+PB  - PHDc, NCKU
+ED  - Tsai DH-T
+ED  - Lai EC-C
+N1  - Maintained by PHDc, NCKU; Tsai DH-T, Lai EC-C
 UR  - ${url}
+Y2  - ${isoDate.replace(/-/g, "/")}
 ER  - `;
 
-// Stable ID so multiple CiteButton instances on a page don't collide
 const widgetId = `cite-${bibkey}`;
 ---
 
@@ -42,67 +55,112 @@ const widgetId = `cite-${bibkey}`;
       <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path>
     </svg>
     <span class="text-sm font-semibold text-slate-800">Cite this resource</span>
-    <span class="ml-auto text-xs text-slate-400">APA · BibTeX · RIS</span>
+    <span class="ml-auto text-xs text-slate-400">Lancet · BibTeX · RIS · download</span>
   </summary>
   <div class="border-t border-slate-200 p-5">
     <div class="flex gap-1 mb-3" role="tablist">
-      <button type="button" data-cite-tab="apa" class="cite-tab px-3 py-1.5 text-xs font-semibold rounded border border-slate-300 hover:bg-slate-50 aria-selected:bg-brand-700 aria-selected:text-white aria-selected:border-brand-700" aria-selected="true">APA</button>
+      <button type="button" data-cite-tab="lancet" class="cite-tab px-3 py-1.5 text-xs font-semibold rounded border border-slate-300 hover:bg-slate-50 aria-selected:bg-brand-700 aria-selected:text-white aria-selected:border-brand-700" aria-selected="true">Lancet</button>
       <button type="button" data-cite-tab="bibtex" class="cite-tab px-3 py-1.5 text-xs font-semibold rounded border border-slate-300 hover:bg-slate-50 aria-selected:bg-brand-700 aria-selected:text-white aria-selected:border-brand-700">BibTeX</button>
       <button type="button" data-cite-tab="ris" class="cite-tab px-3 py-1.5 text-xs font-semibold rounded border border-slate-300 hover:bg-slate-50 aria-selected:bg-brand-700 aria-selected:text-white aria-selected:border-brand-700">RIS</button>
     </div>
 
     <div class="relative">
-      <pre data-cite-pane="apa" class="cite-pane block bg-slate-50 border border-slate-200 rounded p-4 text-xs text-slate-700 whitespace-pre-wrap font-mono">{apa}</pre>
-      <pre data-cite-pane="bibtex" class="cite-pane hidden bg-slate-50 border border-slate-200 rounded p-4 text-xs text-slate-700 whitespace-pre-wrap font-mono">{bibtex}</pre>
-      <pre data-cite-pane="ris" class="cite-pane hidden bg-slate-50 border border-slate-200 rounded p-4 text-xs text-slate-700 whitespace-pre-wrap font-mono">{ris}</pre>
-      <button
-        type="button"
-        data-cite-copy
-        class="absolute top-2 right-2 bg-white border border-slate-300 hover:bg-brand-50 hover:border-brand-300 text-xs font-semibold text-slate-700 px-2.5 py-1 rounded shadow-sm transition"
-      >Copy</button>
+      <pre data-cite-pane="lancet" class="cite-pane block bg-slate-50 border border-slate-200 rounded p-4 pr-28 text-xs text-slate-700 whitespace-pre-wrap font-mono">{lancet}</pre>
+      <pre data-cite-pane="bibtex" class="cite-pane hidden bg-slate-50 border border-slate-200 rounded p-4 pr-28 text-xs text-slate-700 whitespace-pre-wrap font-mono">{bibtex}</pre>
+      <pre data-cite-pane="ris" class="cite-pane hidden bg-slate-50 border border-slate-200 rounded p-4 pr-28 text-xs text-slate-700 whitespace-pre-wrap font-mono">{ris}</pre>
+      <div class="absolute top-2 right-2 flex gap-1">
+        <button
+          type="button"
+          data-cite-copy
+          class="bg-white border border-slate-300 hover:bg-brand-50 hover:border-brand-300 text-xs font-semibold text-slate-700 px-2.5 py-1 rounded shadow-sm transition"
+        >Copy</button>
+        <button
+          type="button"
+          data-cite-download
+          class="bg-white border border-slate-300 hover:bg-brand-50 hover:border-brand-300 text-xs font-semibold text-slate-700 px-2.5 py-1 rounded shadow-sm transition inline-flex items-center gap-1"
+          aria-label="Download citation"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </button>
+      </div>
     </div>
   </div>
 </details>
 
-<script is:inline define:vars={{ widgetId }}>
+<script is:inline define:vars={{ widgetId, bibkey }}>
   (() => {
     const root = document.getElementById(widgetId);
     if (!root) return;
     const tabs = root.querySelectorAll("[data-cite-tab]");
     const panes = root.querySelectorAll("[data-cite-pane]");
     const copyBtn = root.querySelector("[data-cite-copy]");
+    const dlBtn = root.querySelector("[data-cite-download]");
 
-    let active = "apa";
+    let active = "lancet";
 
     const show = (key) => {
       active = key;
       tabs.forEach((t) => t.setAttribute("aria-selected", t.dataset.citeTab === key ? "true" : "false"));
       panes.forEach((p) => p.classList.toggle("hidden", p.dataset.citePane !== key));
     };
-
     tabs.forEach((t) => t.addEventListener("click", () => show(t.dataset.citeTab)));
 
-    copyBtn.addEventListener("click", async () => {
+    const activeText = () => {
       const pane = root.querySelector(`[data-cite-pane="${active}"]`);
-      const text = pane ? pane.textContent || "" : "";
+      return pane ? pane.textContent || "" : "";
+    };
+
+    const flash = (btn, msg) => {
+      const orig = btn.textContent;
+      btn.textContent = msg;
+      btn.classList.add("text-brand-700", "border-brand-400");
+      setTimeout(() => {
+        btn.textContent = orig;
+        btn.classList.remove("text-brand-700", "border-brand-400");
+      }, 1400);
+    };
+
+    copyBtn.addEventListener("click", async () => {
+      const text = activeText();
       try {
         await navigator.clipboard.writeText(text);
-        const orig = copyBtn.textContent;
-        copyBtn.textContent = "Copied ✓";
-        copyBtn.classList.add("text-brand-700", "border-brand-400");
-        setTimeout(() => {
-          copyBtn.textContent = orig;
-          copyBtn.classList.remove("text-brand-700", "border-brand-400");
-        }, 1400);
+        flash(copyBtn, "Copied ✓");
       } catch {
-        // Fallback for browsers blocking clipboard API
         const ta = document.createElement("textarea");
         ta.value = text;
         document.body.appendChild(ta);
         ta.select();
-        try { document.execCommand("copy"); } catch {}
+        try { document.execCommand("copy"); flash(copyBtn, "Copied ✓"); } catch {}
         document.body.removeChild(ta);
       }
+    });
+
+    dlBtn.addEventListener("click", () => {
+      const ext = active === "bibtex" ? "bib" : active === "ris" ? "ris" : "txt";
+      const mime = active === "bibtex"
+        ? "application/x-bibtex"
+        : active === "ris"
+        ? "application/x-research-info-systems"
+        : "text/plain";
+      const text = activeText();
+      const blob = new Blob([text], { type: `${mime};charset=utf-8` });
+      const href = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = href;
+      a.download = `${bibkey}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(href), 1000);
+      // Rebuild label with download icon
+      const orig = dlBtn.innerHTML;
+      dlBtn.textContent = "Downloaded ✓";
+      dlBtn.classList.add("text-brand-700", "border-brand-400");
+      setTimeout(() => {
+        dlBtn.innerHTML = orig;
+        dlBtn.classList.remove("text-brand-700", "border-brand-400");
+      }, 1400);
     });
   })();
 </script>

@@ -5,7 +5,8 @@ import WorldMap from "../components/WorldMap.astro";
 import CiteButton from "../components/CiteButton.astro";
 import databases from "../data/databases.json";
 
-const siteUrl = new URL(import.meta.env.BASE_URL + "databases/", "https://phd-center.github.io").toString();
+const siteBase = import.meta.env.BASE_URL.replace(/\/?$/, "/"); // ensure trailing slash
+const siteUrl = `https://phd-center.github.io${siteBase}databases/`;
 
 const countryMeta: Record<
   string,
@@ -397,6 +398,6 @@ const otherSites = [
       Database descriptions adapted from the AsPEN paper (Lai ECC et al. <em>Epidemiology.</em> 2015 Nov;26(6):815-20. DOI: <a class="hover:text-brand-700 hover:underline not-italic" href="https://doi.org/10.1097/EDE.0000000000000325" target="_blank" rel="noopener">10.1097/EDE.0000000000000325</a>) and the NeuroGEN data-infrastructure paper (Tsai DHT et al., <em>Clinical Epidemiology</em> 2023; DOI: <a class="hover:text-brand-700 hover:underline not-italic" href="https://doi.org/10.2147/CLEP.S426485" target="_blank" rel="noopener">10.2147/CLEP.S426485</a>). Access policies and coverage may have changed since publication. Please verify with each data custodian before study planning.
     </p>
 
-    <CiteButton title="Databases — AsPEN" url={siteUrl} bibkey="aspen-databases" />
+    <CiteButton title="Databases" url={siteUrl} bibkey="aspen-databases" />
   </section>
 </BaseLayout>
