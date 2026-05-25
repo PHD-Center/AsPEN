@@ -205,7 +205,7 @@ export const SATELLITES: Registry[] = [
     id: "cgrd",
     name: "CGRD",
     meta: "EHR · ~1 million individuals",
-    description: "Chang Gung Research Database — standardised multi-institutional electronic medical records from seven Chang Gung Memorial Hospitals, available since 2000 with ~1-month data latency.",
+    description: "Chang Gung Research Database — standardised multi-institutional electronic medical records from seven Chang Gung Memorial Hospitals, research data available since 2011 with ~1-month latency.",
     link: "https://www.phdcenter.org.tw/chang-gung-research-database-cgrd/",
     tone: "green",
     area: "bot3",

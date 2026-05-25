@@ -94,28 +94,33 @@ const typeColor: Record<string, string> = {
 
 // Numeric derivations for the comparison table. Keyed by database name.
 // `popM` = approximate covered population in millions (for sorting).
-// `since` = data start year (omit when not confidently known).
+// `since` = data start year (earliest year of available research data).
+// Most values taken from Figure 1 of the NeuroGEN paper
+// (Tsai DHT et al., Clin Epidemiol 2023; PMID 38146486).
+// Notes:
+//   · NHIRD: NHI program started 1995; research data available from 2000.
+//   · CGRD: hospital network established 2000; research data from 2011.
 const dbStats: Record<string, { popM: number; since?: number }> = {
-  "National Health Insurance Research Database (NHIRD)": { popM: 23, since: 1995 },
-  "Chang Gung Research Database (CGRD)": { popM: 1.5, since: 2000 },
+  "National Health Insurance Research Database (NHIRD)": { popM: 23, since: 2000 },
+  "Chang Gung Research Database (CGRD)": { popM: 1.5, since: 2011 },
   "Taiwan Biobank (TWB)": { popM: 0.2, since: 2012 },
   "National Database of Health Insurance Claims and Specific Health Checkups (NDB)": { popM: 120, since: 2008 },
   "JMDC Claims Database": { popM: 13.5 },
   "DeSC Database": { popM: 9.3, since: 2014 },
   "Medical Data Vision (MDV) Database": { popM: 48 },
   "Health Insurance Review and Assessment Service (HIRA)": { popM: 50, since: 2009 },
-  "National Health Insurance Service – National Health Information Database (NHIS-NHID)": { popM: 50 },
+  "National Health Insurance Service – National Health Information Database (NHIS-NHID)": { popM: 50, since: 2002 },
   "Clinical Data Analysis and Reporting System (CDARS)": { popM: 7, since: 1995 },
-  "Clinical Practice Research Datalink (CPRD)": { popM: 60 },
-  "The Health Improvement Network (THIN)": { popM: 17, since: 2003 },
-  "UK Biobank (UKB)": { popM: 0.5, since: 2006 },
-  "Public Health Scotland (ISD)": { popM: 5.4 },
-  "PHARMO Database Network": { popM: 7 },
-  "Finnish healthcare registers (FinReg)": { popM: 5.5 },
-  "Pharmaceutical Benefits Scheme — 10% sample (PBS)": { popM: 2.5 },
-  "Victorian Linked Health Data (VLHD)": { popM: 6.5 },
-  "Medicare (20% sample)": { popM: 13 },
-  "Medicaid": { popM: 70 },
+  "Clinical Practice Research Datalink (CPRD)": { popM: 60, since: 1987 },
+  "The Health Improvement Network (THIN)": { popM: 17, since: 1986 },
+  "UK Biobank (UKB)": { popM: 0.5, since: 2005 },
+  "Public Health Scotland (ISD)": { popM: 5.4, since: 1950 },
+  "PHARMO Database Network": { popM: 7, since: 1999 },
+  "Finnish healthcare registers (FinReg)": { popM: 5.5, since: 1972 },
+  "Pharmaceutical Benefits Scheme — 10% sample (PBS)": { popM: 2.5, since: 2005 },
+  "Victorian Linked Health Data (VLHD)": { popM: 6.5, since: 2006 },
+  "Medicare (20% sample)": { popM: 13, since: 2007 },
+  "Medicaid": { popM: 70, since: 2001 },
 };
 
 // Comparison data — keyed by database name. Used by the drag-and-drop

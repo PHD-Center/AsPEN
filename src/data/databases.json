@@ -20,7 +20,7 @@
     "name": "Chang Gung Research Database (CGRD)",
     "type": "Multi-institutional EHR",
     "coverage": "~1.3M outpatients + ~200K inpatients per year (~6–10% of national population)",
-    "notes": "Standardized electronic medical records from seven Chang Gung Memorial Hospitals; available since 2000 with ~1-month data latency.",
+    "notes": "Standardized electronic medical records from seven Chang Gung Memorial Hospitals; research data available since 2011 with ~1-month latency.",
     "url": "https://www.phdcenter.org.tw/chang-gung-research-database-cgrd/"
   },
   {
