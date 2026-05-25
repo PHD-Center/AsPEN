@@ -16,9 +16,15 @@ const ASIAN_CODES = new Set(["TW", "JP", "KR", "HK"]);
 const asianDbs = databases.filter((d) => ASIAN_CODES.has(d.code));
 const asianCountries = new Set(asianDbs.map((d) => d.country)).size;
 
+// Population covered, summed across the largest national database in each of
+// the four core East-Asia countries. Approximate ~200M people:
+//   TW NHIRD ~23M · JP NDB ~120M · KR HIRA/NHIS ~50M · HK CDARS ~7M
+const POPULATION_M = 200;
+
 const stats = [
   { value: asianCountries, label: "Countries", sublabel: "in Asia" },
   { value: asianDbs.length, label: "Databases", sublabel: "in Asia" },
+  { value: POPULATION_M, suffix: "M", label: "Population", sublabel: "covered in Asia" },
   { value: publications.length, label: "Publications", sublabel: "since 2012" },
   { value: new Date().getFullYear() - FOUNDED_YEAR, label: "Years", sublabel: "of collaboration" },
 ];

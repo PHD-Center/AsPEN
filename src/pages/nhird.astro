@@ -41,7 +41,9 @@ const hotspots = [NHIRD, MATERNAL_CHILD, ...SATELLITES];
         ></button>
       ))}
 
-      <!-- Tooltip — repositioned via JS to whichever hotspot is active -->
+      <!-- Tooltip — repositioned via JS to whichever hotspot is active.
+           Tooltip body is pointer-events-none to avoid flicker on hover-mouseleave,
+           but the "Read more on PHDc" link inside opts back in via pointer-events-auto. -->
       <div
         data-nhird-tooltip
         class="absolute hidden pointer-events-none z-20 max-w-xs sm:max-w-sm bg-white border border-slate-300 rounded-lg shadow-xl p-3 sm:p-4"
@@ -54,7 +56,7 @@ const hotspots = [NHIRD, MATERNAL_CHILD, ...SATELLITES];
           data-tt-link
           target="_blank"
           rel="noopener"
-          class="hidden mt-2 inline-block text-xs font-semibold text-brand-700 hover:underline"
+          class="hidden pointer-events-auto mt-2 inline-block text-xs font-semibold text-brand-700 hover:underline"
         >Read more on PHDc ↗</a>
       </div>
     </div>

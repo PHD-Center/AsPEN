@@ -69,6 +69,7 @@ export const MATERNAL_CHILD: Registry = {
   name: "Maternal & Child Health Database",
   meta: "Linked Mother · Father · Child records",
   description: "Multi-generational linkage joining birth certificate data with NHI claims for mother, father, and child — enabling perinatal exposure / paediatric outcome studies.",
+  link: "https://www.phdcenter.org.tw/birth-certificate-application-database-bca/",
   tone: "brown",
   area: "mch",
   bbox: { top: "32%", left: "20%", width: "27%", height: "45%" },
