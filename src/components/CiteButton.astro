@@ -1,9 +1,10 @@
 ---
-// "Cite this resource" widget. Three formats — Lancet (Vancouver-style),
-// BibTeX, RIS — each with copy-to-clipboard and download-as-file buttons.
+// "Cite this resource" widget. Five formats — Lancet (Vancouver-style),
+// JAMA (AMA 11th ed.), NEJM (modified Vancouver), BibTeX, RIS — each with
+// copy-to-clipboard and download-as-file buttons.
 //
-// Attribution model: AsPEN is the corporate author; maintainers credited in
-// a "Maintained by" note. This mirrors the on-screen byline the user requested.
+// Attribution model: AsPEN is the corporate author; maintainers credited
+// in a "Maintained by" note. Mirrors the on-screen byline.
 //
 // Props:
 //   title   — the resource title, e.g. "Databases" or "Publications"
@@ -22,8 +23,15 @@ const isoDate = today.toISOString().slice(0, 10);
 const longDate = today.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
 // Lancet (Vancouver-style) — corporate author, title, maintainers in note,
-// publisher; year. URL (accessed Month Day, Year).
+// year. URL (accessed Month Day, Year).
 const lancet = `Asian Pharmacoepidemiology Network (AsPEN). ${title}. Maintained by PHDc, NCKU; Tsai DH-T, Lai EC-C. ${year}. ${url} (accessed ${longDate}).`;
+
+// JAMA (AMA 11th edition) — separate "Published" and "Accessed" sentences;
+// URL at the very end, no trailing punctuation.
+const jama = `Asian Pharmacoepidemiology Network (AsPEN). ${title}. PHDc, NCKU. Maintained by Tsai DH-T, Lai EC-C. Published ${year}. Accessed ${longDate}. ${url}`;
+
+// NEJM — modified Vancouver. URL embedded as a sentence, then "Accessed".
+const nejm = `Asian Pharmacoepidemiology Network. ${title}. Maintained by PHDc, NCKU; Tsai DH-T, Lai EC-C. ${url}. Accessed ${longDate}.`;
 
 const bibtex = `@misc{${bibkey},
   author       = {{Asian Pharmacoepidemiology Network (AsPEN)}},
@@ -55,17 +63,21 @@ const widgetId = `cite-${bibkey}`;
       <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path>
     </svg>
     <span class="text-sm font-semibold text-slate-800">Cite this resource</span>
-    <span class="ml-auto text-xs text-slate-400">Lancet · BibTeX · RIS · download</span>
+    <span class="ml-auto text-xs text-slate-400">Lancet · JAMA · NEJM · BibTeX · RIS</span>
   </summary>
   <div class="border-t border-slate-200 p-5">
-    <div class="flex gap-1 mb-3" role="tablist">
+    <div class="flex flex-wrap gap-1 mb-3" role="tablist">
       <button type="button" data-cite-tab="lancet" class="cite-tab px-3 py-1.5 text-xs font-semibold rounded border border-slate-300 hover:bg-slate-50 aria-selected:bg-brand-700 aria-selected:text-white aria-selected:border-brand-700" aria-selected="true">Lancet</button>
+      <button type="button" data-cite-tab="jama" class="cite-tab px-3 py-1.5 text-xs font-semibold rounded border border-slate-300 hover:bg-slate-50 aria-selected:bg-brand-700 aria-selected:text-white aria-selected:border-brand-700">JAMA</button>
+      <button type="button" data-cite-tab="nejm" class="cite-tab px-3 py-1.5 text-xs font-semibold rounded border border-slate-300 hover:bg-slate-50 aria-selected:bg-brand-700 aria-selected:text-white aria-selected:border-brand-700">NEJM</button>
       <button type="button" data-cite-tab="bibtex" class="cite-tab px-3 py-1.5 text-xs font-semibold rounded border border-slate-300 hover:bg-slate-50 aria-selected:bg-brand-700 aria-selected:text-white aria-selected:border-brand-700">BibTeX</button>
       <button type="button" data-cite-tab="ris" class="cite-tab px-3 py-1.5 text-xs font-semibold rounded border border-slate-300 hover:bg-slate-50 aria-selected:bg-brand-700 aria-selected:text-white aria-selected:border-brand-700">RIS</button>
     </div>
 
     <div class="relative">
       <pre data-cite-pane="lancet" class="cite-pane block bg-slate-50 border border-slate-200 rounded p-4 pr-28 text-xs text-slate-700 whitespace-pre-wrap font-mono">{lancet}</pre>
+      <pre data-cite-pane="jama" class="cite-pane hidden bg-slate-50 border border-slate-200 rounded p-4 pr-28 text-xs text-slate-700 whitespace-pre-wrap font-mono">{jama}</pre>
+      <pre data-cite-pane="nejm" class="cite-pane hidden bg-slate-50 border border-slate-200 rounded p-4 pr-28 text-xs text-slate-700 whitespace-pre-wrap font-mono">{nejm}</pre>
       <pre data-cite-pane="bibtex" class="cite-pane hidden bg-slate-50 border border-slate-200 rounded p-4 pr-28 text-xs text-slate-700 whitespace-pre-wrap font-mono">{bibtex}</pre>
       <pre data-cite-pane="ris" class="cite-pane hidden bg-slate-50 border border-slate-200 rounded p-4 pr-28 text-xs text-slate-700 whitespace-pre-wrap font-mono">{ris}</pre>
       <div class="absolute top-2 right-2 flex gap-1">
@@ -143,12 +155,15 @@ const widgetId = `cite-${bibkey}`;
         : active === "ris"
         ? "application/x-research-info-systems"
         : "text/plain";
+      // For the plain-text formats include the format name so downloads don't
+      // collide: aspen-databases-lancet.txt vs -jama.txt vs -nejm.txt.
+      const filename = ext === "txt" ? `${bibkey}-${active}.${ext}` : `${bibkey}.${ext}`;
       const text = activeText();
       const blob = new Blob([text], { type: `${mime};charset=utf-8` });
       const href = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = href;
-      a.download = `${bibkey}.${ext}`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

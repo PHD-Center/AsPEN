@@ -119,40 +119,32 @@ const orphanPubs = pubs.filter((p) => !(p.tags ?? []).some((t) => allThemeTags.h
                         loading="lazy"
                       />
                     ) : (
-                      <!-- Editorial cover: masthead → hero visual → headline → credits -->
+                      <!-- Lancet-style cover: bold coloured masthead band + full-bleed visual.
+                           Article copy (headline, paper title, credits) lives in the right column
+                           of the spread, not on the cover itself — matching The Lancet's
+                           "brutally simple" two-zone composition. -->
                       <div class="w-full h-full flex flex-col bg-[#f3eee3]">
-                        <!-- Masthead -->
-                        <div class="px-6 sm:px-8 pt-5 pb-3 flex items-baseline justify-between border-b border-slate-900">
-                          <p class="text-xl sm:text-2xl font-black tracking-tighter text-slate-900">AsPEN</p>
-                          <p class="text-[10px] uppercase tracking-[0.3em] text-slate-700 font-bold tabular-nums">№ {t.number} · {globalMax}</p>
+                        <!-- Solid coloured banner (Lancet uses red; we use brand green) -->
+                        <div class="bg-brand-700 text-white px-6 pt-4 pb-3">
+                          <p class="font-serif italic text-[44px] sm:text-[52px] leading-[0.9] font-bold tracking-tight">
+                            <span class="text-[54px] sm:text-[64px]">A</span>sPEN
+                          </p>
+                          <div class="mt-2 flex items-baseline justify-between text-[9px] uppercase tracking-[0.22em] font-semibold text-white/85 border-t border-white/30 pt-2">
+                            <span>www.aspensig.asia</span>
+                            <span class="tabular-nums">Vol 1 · № {t.number} · {globalMax}</span>
+                          </div>
                         </div>
 
-                        <!-- Hero visual — geometric SVG per theme -->
-                        <div class="flex-1 flex items-center justify-center px-6 sm:px-8 py-4 min-h-0">
-                          <ThemeCoverVisual variant={t.coverVisual ?? "rings"} class="max-h-[55%] max-w-full" />
+                        <!-- Full-bleed hero visual area (no internal border, edge-to-edge) -->
+                        <div class="flex-1 flex items-center justify-center px-6 py-8 min-h-0 relative">
+                          <ThemeCoverVisual variant={t.coverVisual ?? "rings"} class="max-h-full max-w-full" />
                         </div>
 
-                        <!-- Headline (pull quote) + credits -->
-                        <div class="px-6 sm:px-8 pb-6 pt-3 border-t border-slate-900">
-                          <p class="text-[24px] sm:text-[28px] leading-[1.0] font-bold text-slate-900 tracking-tight uppercase">
+                        <!-- Optional bottom caption (Lancet often has a tiny italic serif caption) -->
+                        <div class="px-6 pb-4">
+                          <p class="text-[10px] sm:text-[11px] italic font-serif text-slate-700 leading-snug">
                             {t.headline}
                           </p>
-                          {t.highlight && (
-                            <p class="mt-3 text-[11px] sm:text-xs text-slate-700 leading-snug italic line-clamp-2">
-                              {t.highlight.title}
-                            </p>
-                          )}
-                          <div class="mt-4 flex items-end justify-between gap-3">
-                            <div>
-                              <p class="text-[10px] uppercase tracking-[0.25em] text-slate-500 font-bold">Theme {t.number}</p>
-                              <p class="text-sm font-bold text-slate-900 mt-0.5 leading-tight">{t.name}</p>
-                            </div>
-                            {t.highlight && (
-                              <p class="text-[10px] uppercase tracking-[0.2em] text-slate-600 font-semibold text-right shrink-0">
-                                {t.highlight.journal}<br/>{t.highlight.year}
-                              </p>
-                            )}
-                          </div>
                         </div>
                       </div>
                     )}
