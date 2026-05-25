@@ -8,13 +8,13 @@ const hotspots = [NHIRD, MATERNAL_CHILD, ...SATELLITES];
 ---
 
 <BaseLayout
-  title="NHIRD ecosystem — AsPEN"
-  description="Taiwan's National Health Insurance Research Database and its linked registries — hover or tap each box to see what each data source is."
+  title="Taiwan's Data Infrastructure — AsPEN"
+  description="Taiwan's National Health Insurance Research Database and the linked national registries that orbit it — hover or tap each box to see what each data source is."
 >
   <PageHeader
-    eyebrow="Databases → NHIRD"
-    title="NHIRD ecosystem"
-    description="Taiwan's National Health Insurance Research Database sits at the centre of a tightly linked set of national registries and survey datasets. Hover (or tap) any box on the diagram to see what it contains."
+    eyebrow="Databases → Taiwan"
+    title="Taiwan's Data Infrastructure"
+    description="The National Health Insurance Research Database (NHIRD, research data since 2000) sits at the centre of a tightly linked set of national registries and survey datasets. Hover (or tap) any box on the diagram to see what it contains."
   />
 
   <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
@@ -25,7 +25,7 @@ const hotspots = [NHIRD, MATERNAL_CHILD, ...SATELLITES];
     >
       <img
         src={`${base}/images/nhird-ecosystem.png`}
-        alt="NHIRD ecosystem diagram — NHIRD at the centre, linked to Taiwan registries and common data models"
+        alt="Taiwan's data infrastructure — NHIRD at the centre, linked to national registries and common data models"
         class="block w-full h-auto select-none"
         draggable="false"
       />
@@ -67,18 +67,24 @@ const hotspots = [NHIRD, MATERNAL_CHILD, ...SATELLITES];
 
     <!-- Full list below for reference / accessibility / SEO -->
     <div class="mt-12 border-t border-slate-200 pt-8">
-      <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-4">All datasets in this ecosystem</h2>
+      <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-4">All datasets in this infrastructure</h2>
       <div class="grid gap-4 md:grid-cols-2">
         {hotspots.map((r) => (
           <article id={`registry-${r.id}`} class="border border-slate-200 rounded-lg p-5 bg-white scroll-mt-24">
-            <p class="font-semibold text-slate-900 leading-snug">{r.name}</p>
+            <p class="font-semibold leading-snug">
+              {r.link ? (
+                <a
+                  href={r.link}
+                  target="_blank"
+                  rel="noopener"
+                  class="text-slate-900 hover:text-brand-700 hover:underline decoration-brand-400 underline-offset-2"
+                >{r.name} <span class="text-brand-700 text-xs align-middle">↗</span></a>
+              ) : (
+                <span class="text-slate-900">{r.name}</span>
+              )}
+            </p>
             <p class="text-xs font-semibold text-brand-700 mt-0.5">{r.meta}</p>
             <p class="mt-2 text-sm text-slate-700 leading-relaxed">{r.description}</p>
-            {r.link && (
-              <a href={r.link} target="_blank" rel="noopener" class="mt-2 inline-block text-xs font-semibold text-brand-700 hover:underline">
-                Read more on PHDc ↗
-              </a>
-            )}
           </article>
         ))}
       </div>
