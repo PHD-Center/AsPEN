@@ -1,0 +1,150 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+// Resource sections. Each item is either a real link (href set) or a placeholder
+// that displays a "Wanted — contribute via Contact" note. Add items here as
+// they become available; don't fabricate links you don't have.
+interface Item {
+  title: string;
+  description: string;
+  href?: string;
+  meta?: string; // e.g. "PDF · 1.2 MB" or "R · MIT"
+}
+interface Section {
+  id: string;
+  name: string;
+  description: string;
+  items: Item[];
+  wanted: string; // one-liner explaining what we'd love contributed
+}
+
+const sections: Section[] = [
+  {
+    id: "protocols",
+    name: "Study protocols",
+    description: "Canonical protocols for AsPEN's signature study designs — adaptable for new multi-country analyses.",
+    items: [
+      // Add items here as they become public, e.g.:
+      // { title: "PSSA protocol template (v2)", description: "...", href: "https://...", meta: "PDF · 1.4 MB" }
+    ],
+    wanted: "PSSA / SCCS / cohort-style protocol templates that can be reused at a new site.",
+  },
+  {
+    id: "cdm",
+    name: "Common Data Model definitions",
+    description: "Data dictionaries and schema definitions that AsPEN sites map their local databases against.",
+    items: [],
+    wanted: "Variable-level mapping tables and reference value sets used in NeuroGEN and other distributed-network analyses.",
+  },
+  {
+    id: "code",
+    name: "Analysis code & macros",
+    description: "Sample SAS / R / Stata code implementing the methods AsPEN sites run locally.",
+    items: [],
+    wanted: "Reference implementations for sequence-symmetry analysis, target-trial emulation, and standard cohort-builder macros.",
+  },
+  {
+    id: "reading",
+    name: "Reading list",
+    description: "Curated entry-points for researchers new to the network and its methods.",
+    items: [
+      {
+        title: "AsPEN founding paper (Andersen et al., 2013)",
+        description: "Origin and rationale of the network; the canonical introduction to AsPEN's multi-country signal-assessment approach.",
+        href: `${base}/publications/#pub-23653370`,
+        meta: "Pharmacoepidemiol Drug Saf · PMID 23653370",
+      },
+      {
+        title: "Asia-Pacific database survey (Lai et al., 2015)",
+        description: "Foundational survey of population-level databases across 11 Asian sites — the reference for AsPEN's Databases page.",
+        href: `${base}/publications/#pub-26133022`,
+        meta: "Epidemiology · PMID 26133022",
+      },
+      {
+        title: "NeuroGEN introduction (Ilomäki et al., 2020)",
+        description: "How AsPEN's international 'big data' platform is applied to CNS drug research.",
+        href: `${base}/publications/#pub-32572794`,
+        meta: "Br J Clin Pharmacol · PMID 32572794",
+      },
+      {
+        title: "NeuroGEN data infrastructure (Tsai et al., 2023)",
+        description: "Full description of NeuroGEN's 15-database infrastructure across Asia, Oceania, Europe, and North America.",
+        href: `${base}/publications/#pub-38146486`,
+        meta: "Clin Epidemiol · PMID 38146486",
+      },
+    ],
+    wanted: "Suggestions for additional must-read references for newcomers — methodological or substantive.",
+  },
+];
+---
+
+<BaseLayout
+  title="Resources — AsPEN"
+  description="Protocols, common data models, code, and reading for AsPEN collaborators."
+>
+  <PageHeader
+    eyebrow="Resources"
+    title="Resources"
+    description="Materials we share so a new collaborator — at an existing AsPEN site or a new one — can plug in faster. Many sections are deliberately stubs: contribute through Contact and we'll add them."
+  />
+
+  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Jump nav -->
+    <nav class="mb-10 flex flex-wrap gap-2">
+      {sections.map((s) => (
+        <a
+          href={`#${s.id}`}
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 text-brand-700 border border-brand-100 hover:bg-brand-100 text-xs font-semibold transition"
+        >
+          {s.name}
+          <span class="text-brand-600 font-normal tabular-nums">· {s.items.length}</span>
+        </a>
+      ))}
+    </nav>
+
+    <div class="space-y-14">
+      {sections.map((s) => (
+        <article id={s.id} class="scroll-mt-24">
+          <header class="mb-3 border-b border-slate-200 pb-2">
+            <h2 class="text-2xl font-bold text-slate-900">{s.name}</h2>
+          </header>
+          <p class="text-sm text-slate-600 leading-relaxed mb-5 max-w-3xl">{s.description}</p>
+
+          {s.items.length > 0 ? (
+            <ul class="grid gap-4 sm:grid-cols-2">
+              {s.items.map((it) => (
+                <li class="border border-slate-200 rounded-lg p-5 bg-white hover:shadow-md transition">
+                  {it.href ? (
+                    <a href={it.href} target={it.href.startsWith("http") ? "_blank" : undefined} rel={it.href.startsWith("http") ? "noopener" : undefined} class="font-semibold text-slate-900 hover:text-brand-700 hover:underline leading-snug">
+                      {it.title}
+                    </a>
+                  ) : (
+                    <p class="font-semibold text-slate-900 leading-snug">{it.title}</p>
+                  )}
+                  {it.meta && <p class="text-xs text-slate-500 mt-1">{it.meta}</p>}
+                  <p class="text-sm text-slate-600 mt-2 leading-relaxed">{it.description}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div class="border-2 border-dashed border-slate-300 rounded-lg p-6 bg-slate-50/50">
+              <p class="text-sm text-slate-700"><strong class="text-slate-900">Wanted:</strong> {s.wanted}</p>
+              <p class="text-xs text-slate-500 mt-2">
+                Have something to share? <a href={`${base}/contact/`} class="text-brand-700 font-semibold hover:underline">Get in touch via Contact →</a>
+              </p>
+            </div>
+          )}
+        </article>
+      ))}
+    </div>
+
+    <div class="mt-16 border-t border-slate-200 pt-8">
+      <p class="text-xs text-slate-500 leading-relaxed max-w-3xl">
+        This page is intentionally a stub for sections we don't yet have public materials for. We'd rather show empty shelves with a clear call-to-contribute than fake links. If you maintain a protocol, code repository, or data-model definition that AsPEN collaborators could reuse, please reach out.
+      </p>
+    </div>
+  </section>
+</BaseLayout>

@@ -6,6 +6,14 @@ const activities = defineCollection({
     title: z.string(),
     year: z.number().optional(),
     order: z.number().optional(),
+    /** Method names used by the study (free text), shown as chips. */
+    methods: z.array(z.string()).optional(),
+    /** ISO country codes of participating sites (e.g. ["TW","JP","KR","HK","AU"]). */
+    sites: z.array(z.string()).optional(),
+    /** PMIDs of publications belonging to this study; cross-linked to /publications/. */
+    publications: z.array(z.string()).optional(),
+    /** One-line summary used in cards and as page subtitle. */
+    summary: z.string().optional(),
   }),
 });
 

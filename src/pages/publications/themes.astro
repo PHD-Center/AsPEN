@@ -1,0 +1,176 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import pubsRaw from "../../data/publications.json";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+// Map publication tags into curated clinical / methodological themes.
+// A publication can belong to multiple themes (whichever of its tags hit).
+// Themes are ordered roughly by paper count, with Methods last.
+const THEMES: { id: string; name: string; description: string; tags: string[] }[] = [
+  {
+    id: "neuropsychiatric",
+    name: "Neuropsychiatric & cognitive",
+    description: "Antipsychotics, dementia, ADHD, depression, anxiety, lithium, antiseizure drugs — much of AsPEN's PSSA and NeuroGEN work sits here.",
+    tags: [
+      "antipsychotics", "psychotropic", "psychiatry", "mental health", "neurology",
+      "dementia", "ADHD", "methylphenidate", "depression", "anxiety",
+      "antiseizure", "epilepsy", "cholinesterase", "lithium",
+    ],
+  },
+  {
+    id: "diabetes-cardiometabolic",
+    name: "Diabetes & cardiometabolic",
+    description: "Antidiabetics (incl. GLP-1, TZDs), cardiovascular risk, heart failure, MI, and downstream metabolic outcomes.",
+    tags: [
+      "diabetes", "antidiabetic", "GLP 1", "thiazolidinediones", "metabolic",
+      "cardiovascular", "heart failure", "myocardial infarction",
+    ],
+  },
+  {
+    id: "pregnancy-paediatric",
+    name: "Pregnancy & paediatric",
+    description: "Drug safety in pregnancy and in children — including the 3.6M mother–child pairs Nature Medicine study.",
+    tags: ["pregnancy", "pediatric"],
+  },
+  {
+    id: "pain-opioids",
+    name: "Pain & opioids",
+    description: "Opioid utilisation, gabapentinoids, NSAIDs and downstream GI/CV effects.",
+    tags: ["opioid", "gabapentinoid", "NSAIDs", "PPI", "gastrointestinal", "C. difficile"],
+  },
+  {
+    id: "infection-vaccine",
+    name: "Infection & vaccine safety",
+    description: "COVID-19 outcomes, vaccine safety surveillance, and post-acute sequelae.",
+    tags: ["COVID 19", "vaccine safety", "post acute sequelae"],
+  },
+  {
+    id: "oncology-endocrine",
+    name: "Oncology & endocrine",
+    description: "Cancer (thyroid, prostate), androgen-deprivation, biologics, bone-targeting agents.",
+    tags: [
+      "oncology", "thyroid cancer", "prostate cancer", "androgen deprivation",
+      "5 alpha reductase", "biologics", "bone targeting",
+    ],
+  },
+  {
+    id: "older-adults",
+    name: "Older adults & frailty",
+    description: "Polypharmacy, falls, hip fracture, drug interactions in geriatric populations.",
+    tags: ["older adults", "polypharmacy", "falls", "hip fracture"],
+  },
+  {
+    id: "methods-infrastructure",
+    name: "Methods & infrastructure",
+    description: "AsPEN's signature methods — Prescription Sequence Symmetry Analysis (PSSA), Self-Controlled Case Series (SCCS), Common Data Models, and the NeuroGEN data infrastructure that underpins the network.",
+    tags: [
+      "sequence symmetry", "PSSA", "sccs", "target trial emulation", "CDM",
+      "NeuroGEN", "infrastructure", "databases", "data sources", "distributed network",
+      "methodology", "drug utilization", "drug safety", "overview", "review", "accessibility",
+    ],
+  },
+];
+
+type Pub = (typeof pubsRaw)[number];
+const pubs: Pub[] = pubsRaw as Pub[];
+
+// Build theme -> matching publications (sorted newest first)
+const themeBuckets = THEMES.map((t) => {
+  const tagSet = new Set(t.tags.map((x) => x.toLowerCase()));
+  const matched = pubs
+    .filter((p) => (p.tags ?? []).some((tag) => tagSet.has(tag.toLowerCase())))
+    .sort((a, b) => b.year - a.year);
+  return { ...t, papers: matched };
+});
+
+// Detect orphans — papers whose tags didn't land in any theme (so we know if curation is missing something)
+const taggedThemeKeys = new Set(THEMES.flatMap((t) => t.tags.map((x) => x.toLowerCase())));
+const orphanPubs = pubs.filter((p) => !(p.tags ?? []).some((t) => taggedThemeKeys.has(t.toLowerCase())));
+---
+
+<BaseLayout
+  title="Research themes — AsPEN"
+  description="AsPEN publications grouped by clinical and methodological theme."
+>
+  <PageHeader
+    eyebrow="Publications → by theme"
+    title="Research themes"
+    description="A grouped view of AsPEN's publications by clinical area and methods. Each paper can appear in more than one theme."
+  />
+
+  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
+    <div class="mb-6 flex items-center justify-between gap-3 flex-wrap">
+      <a href={`${base}/publications/`} class="text-sm text-brand-700 font-semibold hover:underline">← Back to chronological list</a>
+      <p class="text-xs text-slate-500">{pubs.length} papers · {themeBuckets.length} themes</p>
+    </div>
+
+    <!-- Jump nav -->
+    <nav class="mb-10 flex flex-wrap gap-2">
+      {themeBuckets.map((t) => (
+        <a
+          href={`#${t.id}`}
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-50 text-brand-700 border border-brand-100 hover:bg-brand-100 text-xs font-semibold transition"
+        >
+          {t.name}
+          <span class="text-brand-600 font-normal tabular-nums">· {t.papers.length}</span>
+        </a>
+      ))}
+    </nav>
+
+    <div class="space-y-12">
+      {themeBuckets.map((t) => (
+        <article id={t.id} class="scroll-mt-24">
+          <header class="flex items-baseline gap-3 mb-2 border-b border-slate-200 pb-2">
+            <h2 class="text-2xl font-bold text-slate-900">{t.name}</h2>
+            <span class="text-sm text-slate-500 tabular-nums">{t.papers.length} {t.papers.length === 1 ? "paper" : "papers"}</span>
+          </header>
+          <p class="text-sm text-slate-600 leading-relaxed mb-4 max-w-3xl">{t.description}</p>
+
+          {t.papers.length === 0 ? (
+            <p class="text-sm italic text-slate-500">No publications matched this theme yet.</p>
+          ) : (
+            <ul class="divide-y divide-slate-100 border border-slate-200 rounded-lg overflow-hidden bg-white">
+              {t.papers.map((p) => (
+                <li class="p-4 hover:bg-slate-50">
+                  <div class="flex items-baseline gap-2 text-xs text-slate-500">
+                    <span class="tabular-nums font-semibold text-slate-700">{p.year}</span>
+                    <span>·</span>
+                    <span>{p.journal}</span>
+                  </div>
+                  <p class="mt-1 text-sm font-semibold text-slate-900 leading-snug">{p.title}</p>
+                  <p class="mt-1 text-xs text-slate-600 line-clamp-2">{p.authors}</p>
+                  <div class="mt-2 flex flex-wrap gap-2 text-xs">
+                    {p.pmid && (
+                      <a href={`${base}/publications/#pub-${p.pmid}`} class="text-brand-700 hover:underline font-medium">
+                        See full entry →
+                      </a>
+                    )}
+                    {p.pmid && (
+                      <a href={`https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`} target="_blank" rel="noopener" class="text-slate-500 hover:text-brand-700 hover:underline">
+                        PMID {p.pmid}
+                      </a>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </article>
+      ))}
+    </div>
+
+    {orphanPubs.length > 0 && (
+      <div class="mt-16 border-t border-slate-200 pt-6">
+        <p class="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2">Uncategorised</p>
+        <p class="text-xs text-slate-500 mb-3">{orphanPubs.length} {orphanPubs.length === 1 ? "paper" : "papers"} whose tags don't yet map to any theme above. Edit <code class="text-[11px]">src/pages/publications/themes.astro</code> to add them to a theme.</p>
+        <ul class="text-xs text-slate-600 space-y-1">
+          {orphanPubs.map((p) => (
+            <li><span class="tabular-nums font-medium">{p.year}</span> · {p.title}</li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </section>
+</BaseLayout>

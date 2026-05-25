@@ -1,0 +1,98 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PageHeader from "../../../components/PageHeader.astro";
+import { getCollection, type CollectionEntry } from "astro:content";
+import publications from "../../../data/publications.json";
+
+export async function getStaticPaths() {
+  const studies = await getCollection("activities");
+  return studies.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+interface Props { entry: CollectionEntry<"activities"> }
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+// Cross-link: resolve PMIDs declared in frontmatter to full publication entries
+const linkedPubs = (entry.data.publications ?? [])
+  .map((pmid) => publications.find((p) => p.pmid === pmid))
+  .filter((p): p is (typeof publications)[number] => Boolean(p));
+
+const FLAGS: Record<string, string> = {
+  JP: "🇯🇵", KR: "🇰🇷", TW: "🇹🇼", HK: "🇭🇰",
+  AU: "🇦🇺", NZ: "🇳🇿", SG: "🇸🇬", TH: "🇹🇭", CN: "🇨🇳",
+  GB: "🇬🇧", US: "🇺🇸", NL: "🇳🇱", FI: "🇫🇮", SE: "🇸🇪",
+  DK: "🇩🇰", NO: "🇳🇴", CA: "🇨🇦", DE: "🇩🇪", IE: "🇮🇪",
+};
+const COUNTRY_NAMES: Record<string, string> = {
+  JP: "Japan", KR: "South Korea", TW: "Taiwan", HK: "Hong Kong",
+  AU: "Australia", NZ: "New Zealand", SG: "Singapore", TH: "Thailand", CN: "China",
+  GB: "United Kingdom", US: "United States", NL: "Netherlands", FI: "Finland", SE: "Sweden",
+  DK: "Denmark", NO: "Norway", CA: "Canada", DE: "Germany", IE: "Ireland",
+};
+---
+
+<BaseLayout title={`${entry.data.title} — AsPEN`} description={entry.data.summary ?? entry.data.title}>
+  <PageHeader
+    eyebrow={`Activities → AsPEN studies${entry.data.year ? " · " + entry.data.year : ""}`}
+    title={entry.data.title}
+    description={entry.data.summary}
+  />
+
+  <section class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
+    <a href={`${base}/activities/aspen-studies/`} class="inline-block mb-6 text-sm text-brand-700 font-semibold hover:underline">← All AsPEN studies</a>
+
+    <div class="grid gap-6 md:grid-cols-3 mb-10">
+      {entry.data.methods && entry.data.methods.length > 0 && (
+        <div class="md:col-span-2 border border-slate-200 rounded-lg p-4 bg-white">
+          <p class="text-xs uppercase tracking-wide text-brand-600 font-semibold mb-2">Methods</p>
+          <div class="flex flex-wrap gap-2">
+            {entry.data.methods.map((m) => (
+              <span class="text-xs px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 border border-brand-100 font-medium">{m}</span>
+            ))}
+          </div>
+        </div>
+      )}
+      {entry.data.sites && entry.data.sites.length > 0 && (
+        <div class="border border-slate-200 rounded-lg p-4 bg-white">
+          <p class="text-xs uppercase tracking-wide text-brand-600 font-semibold mb-2">Participating sites</p>
+          <ul class="space-y-1 text-sm text-slate-700">
+            {entry.data.sites.map((c) => (
+              <li class="flex items-center gap-2">
+                <span class="text-base leading-none">{FLAGS[c] ?? "🏳️"}</span>
+                <span>{COUNTRY_NAMES[c] ?? c}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+
+    <article class="article-prose">
+      <Content />
+    </article>
+
+    {linkedPubs.length > 0 && (
+      <div class="mt-12 border-t border-slate-200 pt-8">
+        <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-4">Publications from this study</h2>
+        <ul class="space-y-3">
+          {linkedPubs.map((p) => (
+            <li class="border border-slate-200 rounded-lg p-4 bg-white">
+              <div class="text-xs text-slate-500">{p.year} · {p.journal}</div>
+              <p class="mt-1 text-sm font-semibold text-slate-900 leading-snug">{p.title}</p>
+              <p class="mt-1 text-xs text-slate-600">{p.authors}</p>
+              <div class="mt-2 flex flex-wrap gap-2 text-xs">
+                <a href={`${base}/publications/#pub-${p.pmid}`} class="text-brand-700 hover:underline font-medium">See full entry →</a>
+                {p.pmid && <a href={`https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`} target="_blank" rel="noopener" class="text-slate-500 hover:text-brand-700 hover:underline">PMID {p.pmid}</a>}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </section>
+</BaseLayout>
