@@ -2,8 +2,14 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PageHeader from "../components/PageHeader.astro";
 
-const contactName = "Daniel Tsai, NCKU";
-const contactEmail = "danielhttsai@gmail.com";
+// Primary inbox routes to the Academic & Education office (Daniel Tsai, NCKU)
+// with the AsPEN Chair / co-lead CC'd. The email addresses are kept off the
+// rendered page (mailto: only) so they're not scraped from the HTML source.
+const danielEmail = "danielhttsai@gmail.com";
+const edEmail = ""; // TODO: add Edward Lai's preferred address; until then, only Daniel is CC'd
+const mailtoHref = edEmail
+  ? `mailto:${danielEmail}?cc=${encodeURIComponent(edEmail)}`
+  : `mailto:${danielEmail}`;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const linkedinGroups = [
@@ -54,15 +60,14 @@ const linkedinGroups = [
       <div class="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
         <div>
           <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold">Chair · Academic & Education office</p>
-          <h2 class="mt-2 text-2xl sm:text-3xl font-bold text-slate-900">{contactName}</h2>
-          <p class="mt-1 text-slate-700">Inquiries are routed to the AsPEN Chair (Ju-Young Shin, SKKU · SNU) and the Academic & Education office (Daniel Tsai, NCKU). Please include your name, affiliation, and a 2–3 sentence summary — research question, why it benefits from multi-country data, any AsPEN sites you already work with.</p>
+          <p class="mt-2 text-slate-700">Inquiries are routed to the AsPEN Chair (Ju-Young Shin, SKKU · SNU) and the Academic & Education office (Daniel Tsai, NCKU; Edward Lai, NCKU). Please include your name, affiliation, and a 2–3 sentence summary — research question, why it benefits from multi-country data, any AsPEN sites you already work with.</p>
         </div>
         <a
-          href={`mailto:${contactEmail}`}
+          href={mailtoHref}
           class="inline-flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-3 rounded-lg transition shrink-0 self-start md:self-auto"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          {contactEmail}
+          Email AsPEN
         </a>
       </div>
     </div>
