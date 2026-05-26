@@ -2,6 +2,7 @@
 import "../styles/globals.css";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import { WORKER_URL } from "../data/site-config";
 
 interface Props {
   title?: string;
@@ -32,6 +33,11 @@ const base = import.meta.env.BASE_URL;
     <meta property="og:description" content={description} />
     <meta property="og:image" content={`${base}images/AsPenLogo.png`} />
     <meta property="og:type" content="website" />
+    <script is:inline define:vars={{ WORKER_URL }}>
+      // Expose the auth worker URL globally so the Header (and any other
+      // page-level script) can call /api/me to detect a member session.
+      window.__ASPEN_WORKER_URL__ = WORKER_URL || "";
+    </script>
   </head>
   <body class:list={["text-slate-800 antialiased", tint ? "home-tint" : "bg-white"]}>
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-brand-600 text-white px-3 py-2 rounded">Skip to content</a>

@@ -9,6 +9,8 @@ const nav = [
   { href: `${base}/contact/`, label: "Contact" },
 ];
 const path = Astro.url.pathname.replace(/\/$/, "");
+const membersHref = `${base}/members/`;
+const isOnMembers = path.startsWith(`${base}/members`.replace(/\/$/, ""));
 ---
 
 <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
@@ -32,6 +34,19 @@ const path = Astro.url.pathname.replace(/\/$/, "");
           </a>
         );
       })}
+      <!-- ── Sign in / Members CTA (always-visible, right-aligned) ── -->
+      <a
+        href={membersHref}
+        data-members-cta
+        class:list={[
+          "ml-2 px-3 py-1.5 text-sm rounded-lg border transition-colors font-semibold",
+          isOnMembers
+            ? "border-brand-700 bg-brand-700 text-white"
+            : "border-brand-600 text-brand-700 hover:bg-brand-50",
+        ]}
+      >
+        <span data-cta-label>Sign in</span>
+      </a>
     </nav>
     <details class="md:hidden relative">
       <summary class="list-none cursor-pointer p-2 rounded hover:bg-slate-100" aria-label="Open menu">
@@ -41,7 +56,33 @@ const path = Astro.url.pathname.replace(/\/$/, "");
         {nav.map((item) => (
           <a href={item.href} class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100">{item.label}</a>
         ))}
+        <a href={membersHref} data-members-cta class="block px-4 py-2 text-sm font-semibold text-brand-700 border-t border-slate-200 mt-1 pt-2 hover:bg-brand-50">
+          <span data-cta-label>Sign in</span>
+        </a>
       </div>
     </details>
   </div>
 </header>
+
+<!-- Swap "Sign in" → "Members" once the session cookie is present. -->
+<script is:inline>
+  (() => {
+    // Use the WORKER_URL from site-config — fetch it client-side via a tiny
+    // module-style import via window.__WORKER_URL set by a global script? No.
+    // Simpler: read it from a meta tag injected by BaseLayout, OR just hardcode
+    // the check pattern. For now, do a fetch to /api/me — if the worker URL
+    // hasn't been wired the call quietly fails and we stay on "Sign in".
+    const url = (window.__ASPEN_WORKER_URL__ || "").replace(/\/$/, "");
+    if (!url) return;
+    fetch(url + "/api/me", { credentials: "include" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data && data.ok && data.member) {
+          document.querySelectorAll("[data-cta-label]").forEach((el) => {
+            el.textContent = "Members";
+          });
+        }
+      })
+      .catch(() => { /* offline / cors / no session — ignore */ });
+  })();
+</script>

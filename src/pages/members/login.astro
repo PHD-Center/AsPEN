@@ -9,83 +9,153 @@ const workerConfigured = WORKER_URL.length > 0;
 
 <BaseLayout
   title="Members sign-in — AsPEN"
-  description="Sign in to the AsPEN members area with an email magic-link."
+  description="Sign in to the AsPEN members area with a password or a one-time email link."
 >
   <PageHeader
     eyebrow="Members"
     title="Sign in"
-    description="Members enter their email; a one-time link arrives in their inbox within a minute."
+    description="Use your password, or have a one-time sign-in link emailed to you."
   />
 
   <section class="mx-auto max-w-xl px-4 sm:px-6 lg:px-8 py-12">
     {!workerConfigured && (
       <div class="mb-6 p-4 border border-amber-300 bg-amber-50 rounded-lg text-sm text-amber-900">
-        <strong>Login is not yet configured.</strong> The auth worker
-        URL hasn't been added to <code>src/data/site-config.ts</code>.
-        Once it's set, this form will be live.
+        <strong>Login is not yet configured.</strong> The auth worker URL
+        hasn't been added to <code>src/data/site-config.ts</code>.
       </div>
     )}
 
-    <form
-      data-login-form
-      class="border border-slate-200 rounded-2xl bg-white p-6 shadow-sm space-y-4"
-    >
-      <label class="block">
-        <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Email</span>
-        <input
-          type="email"
-          name="email"
-          required
-          autocomplete="email"
-          placeholder="you@institution.edu"
-          class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-        />
-      </label>
-      <button
-        type="submit"
-        class="w-full inline-flex items-center justify-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-3 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed"
-      >
-        Send me a sign-in link
-      </button>
-      <p
-        data-status
-        class="hidden text-sm leading-relaxed text-slate-700 bg-slate-50 border border-slate-200 rounded p-3"
-        role="status"
-        aria-live="polite"
-      ></p>
-    </form>
+    <div class="border border-slate-200 rounded-2xl bg-white shadow-sm overflow-hidden">
+      <!-- Tab bar -->
+      <div role="tablist" aria-label="Sign-in method" class="grid grid-cols-2 border-b border-slate-200">
+        <button type="button" role="tab" data-tab="password" aria-selected="true"
+                class="py-3 px-4 text-sm font-semibold text-slate-600 hover:text-slate-900 aria-selected:bg-brand-50 aria-selected:text-brand-700 aria-selected:border-b-2 aria-selected:border-brand-600 transition">
+          Password
+        </button>
+        <button type="button" role="tab" data-tab="magic" aria-selected="false"
+                class="py-3 px-4 text-sm font-semibold text-slate-600 hover:text-slate-900 aria-selected:bg-brand-50 aria-selected:text-brand-700 aria-selected:border-b-2 aria-selected:border-brand-600 transition">
+          Email link
+        </button>
+      </div>
+
+      <!-- Password tab -->
+      <form data-pane="password" class="p-6 space-y-4">
+        <label class="block">
+          <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Email</span>
+          <input type="email" name="email" required autocomplete="email"
+                 placeholder="you@institution.edu"
+                 class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+        </label>
+        <label class="block">
+          <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Password</span>
+          <input type="password" name="password" required autocomplete="current-password" minlength="8"
+                 placeholder="At least 8 characters"
+                 class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+        </label>
+        <button type="submit"
+                class="w-full inline-flex items-center justify-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-3 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed">
+          Sign in
+        </button>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Don't have a password yet, or forgot it? Use the <strong>Email link</strong>
+          tab to sign in via magic-link, then set a password from Account settings.
+        </p>
+        <p data-pwd-status class="hidden text-sm leading-relaxed text-slate-700 bg-slate-50 border border-slate-200 rounded p-3" role="status" aria-live="polite"></p>
+      </form>
+
+      <!-- Magic-link tab -->
+      <form data-pane="magic" class="p-6 space-y-4 hidden">
+        <label class="block">
+          <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Email</span>
+          <input type="email" name="email" required autocomplete="email"
+                 placeholder="you@institution.edu"
+                 class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+        </label>
+        <button type="submit"
+                class="w-full inline-flex items-center justify-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-3 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed">
+          Send me a sign-in link
+        </button>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          A one-time link will arrive in your inbox within a minute, valid for
+          15 minutes. No password required.
+        </p>
+        <p data-magic-status class="hidden text-sm leading-relaxed text-slate-700 bg-slate-50 border border-slate-200 rounded p-3" role="status" aria-live="polite"></p>
+      </form>
+    </div>
 
     <p class="mt-6 text-sm text-slate-600">
       Not a member yet? <a class="text-brand-700 hover:underline font-semibold" href={`${base}/membership/`}>Apply for membership</a>.
     </p>
   </section>
 
-  <script is:inline define:vars={{ WORKER_URL, workerConfigured }}>
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, workerConfigured }}>
     (() => {
-      const form = document.querySelector("[data-login-form]");
-      const status = form?.querySelector("[data-status]");
-      const button = form?.querySelector("button[type='submit']");
-      if (!form || !status || !button) return;
+      // Tab switching
+      const tabs = Array.from(document.querySelectorAll("[data-tab]"));
+      const panes = Array.from(document.querySelectorAll("[data-pane]"));
+      const showTab = (name) => {
+        tabs.forEach((t) => t.setAttribute("aria-selected", t.dataset.tab === name ? "true" : "false"));
+        panes.forEach((p) => p.classList.toggle("hidden", p.dataset.pane !== name));
+      };
+      tabs.forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
 
-      const show = (msg, isError = false) => {
-        status.textContent = msg;
-        status.classList.remove("hidden");
-        status.classList.toggle("text-rose-700", isError);
-        status.classList.toggle("border-rose-200", isError);
-        status.classList.toggle("bg-rose-50", isError);
+      const setStatus = (el, msg, isError = false) => {
+        el.textContent = msg;
+        el.classList.remove("hidden");
+        el.classList.toggle("text-rose-700", isError);
+        el.classList.toggle("border-rose-200", isError);
+        el.classList.toggle("bg-rose-50", isError);
       };
 
-      form.addEventListener("submit", async (e) => {
+      // Password sign-in
+      const pwdForm = document.querySelector("[data-pane='password']");
+      const pwdStatus = pwdForm.querySelector("[data-pwd-status]");
+      const pwdBtn = pwdForm.querySelector("button[type='submit']");
+      pwdForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        if (!workerConfigured) {
-          show("Login isn't enabled yet — the worker URL hasn't been set.", true);
-          return;
+        if (!workerConfigured) return setStatus(pwdStatus, "Login isn't enabled yet.", true);
+        const data = new FormData(pwdForm);
+        const email = String(data.get("email") || "").trim();
+        const password = String(data.get("password") || "");
+        if (!email || !password) return;
+        pwdBtn.disabled = true;
+        setStatus(pwdStatus, "Signing in…");
+        try {
+          const r = await fetch(`${WORKER_URL}/api/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+            credentials: "include",
+          });
+          if (r.ok) {
+            setStatus(pwdStatus, "Signed in. Redirecting…");
+            location.href = `${BASE}/members/`;
+            return;
+          }
+          if (r.status === 401) {
+            setStatus(pwdStatus, "Email or password didn't match. (If you've never set a password, use the Email link tab first.)", true);
+          } else {
+            setStatus(pwdStatus, "Sign-in failed — please try again in a moment.", true);
+          }
+        } catch {
+          setStatus(pwdStatus, "Couldn't reach the sign-in service — please try again in a moment.", true);
+        } finally {
+          pwdBtn.disabled = false;
         }
-        const data = new FormData(form);
+      });
+
+      // Magic-link sign-in
+      const magicForm = document.querySelector("[data-pane='magic']");
+      const magicStatus = magicForm.querySelector("[data-magic-status]");
+      const magicBtn = magicForm.querySelector("button[type='submit']");
+      magicForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!workerConfigured) return setStatus(magicStatus, "Login isn't enabled yet.", true);
+        const data = new FormData(magicForm);
         const email = String(data.get("email") || "").trim();
         if (!email) return;
-        button.disabled = true;
-        show("Sending…");
+        magicBtn.disabled = true;
+        setStatus(magicStatus, "Sending…");
         try {
           const r = await fetch(`${WORKER_URL}/api/request-login`, {
             method: "POST",
@@ -94,14 +164,12 @@ const workerConfigured = WORKER_URL.length > 0;
             credentials: "include",
           });
           if (!r.ok) throw new Error(String(r.status));
-          show(
-            "If that email is on the member list, a sign-in link is on its way — check your inbox in the next minute. The link is valid for 15 minutes.",
-          );
-          form.reset();
-        } catch (err) {
-          show("Couldn't reach the sign-in service — please try again in a moment.", true);
+          setStatus(magicStatus, "If that email is on the member list, a sign-in link is on its way — check your inbox in the next minute. The link is valid for 15 minutes.");
+          magicForm.reset();
+        } catch {
+          setStatus(magicStatus, "Couldn't reach the sign-in service — please try again in a moment.", true);
         } finally {
-          button.disabled = false;
+          magicBtn.disabled = false;
         }
       });
     })();

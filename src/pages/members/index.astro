@@ -8,7 +8,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 <BaseLayout
   title="Members — AsPEN"
-  description="AsPEN members area — full-text library, materials, member directory."
+  description="AsPEN members area — full-text library, materials, account settings."
 >
   <PageHeader
     eyebrow="Members"
@@ -17,14 +17,13 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   />
 
   <section class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-    <!-- gate state — JS swaps these based on /api/me response -->
     <div data-state="loading" class="text-sm text-slate-600 italic">
       Checking your session…
     </div>
 
     <div data-state="signed-out" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
       <p class="text-sm text-slate-700">
-        You're not signed in. <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Sign in with a magic-link</a>.
+        You're not signed in. <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Sign in →</a>
       </p>
     </div>
 
@@ -34,11 +33,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Signed in as</p>
         <p class="mt-1 text-xl font-bold text-slate-900" data-member-name>—</p>
         <p class="mt-0.5 text-sm text-slate-600" data-member-detail>—</p>
-        <button
-          type="button"
-          data-logout
-          class="mt-4 text-xs font-semibold text-slate-500 hover:text-rose-600 hover:underline"
-        >Sign out</button>
+        <button type="button" data-logout class="mt-4 text-xs font-semibold text-slate-500 hover:text-rose-600 hover:underline">
+          Sign out
+        </button>
       </div>
 
       <!-- ── What's in here ────────────────────────────────── -->
@@ -55,9 +52,38 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         </a>
       </div>
 
-      <p class="text-xs text-slate-500 italic">
-        New here? The library starts small and grows as authors send in copies of their work. If you'd like to contribute an AAM, write to <a class="text-brand-700 hover:underline" href={`${base}/contact/`}>the AsPEN office</a>.
-      </p>
+      <!-- ── Account settings ──────────────────────────────── -->
+      <details class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+        <summary class="cursor-pointer select-none px-6 py-4 font-semibold text-slate-800 hover:bg-slate-50 rounded-2xl">
+          Account settings
+          <span data-pwd-status-pill class="hidden ml-2 text-xs font-normal text-slate-500"></span>
+        </summary>
+        <div class="px-6 pb-6 space-y-4 border-t border-slate-100 pt-4">
+          <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold" data-pwd-form-title>Set a password</p>
+          <p class="text-xs text-slate-500 leading-relaxed" data-pwd-form-help>
+            You're signed in via a magic-link. Set a password so you can use the
+            Password tab next time (faster than waiting for an email).
+          </p>
+          <form data-password-form class="space-y-3">
+            <label class="block" data-current-pwd-wrap hidden>
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Current password</span>
+              <input type="password" name="currentPassword" autocomplete="current-password"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">New password</span>
+              <input type="password" name="newPassword" required minlength="8" autocomplete="new-password"
+                     placeholder="At least 8 characters"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <button type="submit"
+                    class="inline-flex items-center justify-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-2.5 rounded-lg transition disabled:opacity-60 disabled:cursor-not-allowed text-sm">
+              Save password
+            </button>
+            <p data-pwd-msg class="hidden text-sm leading-relaxed bg-slate-50 border border-slate-200 rounded p-3" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+      </details>
     </div>
   </section>
 
@@ -82,6 +108,40 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         return parts.join(" · ") || "—";
       };
 
+      const setPwdMsg = (msg, isError = false) => {
+        const el = document.querySelector("[data-pwd-msg]");
+        el.textContent = msg;
+        el.classList.remove("hidden");
+        el.classList.toggle("text-rose-700", isError);
+        el.classList.toggle("border-rose-200", isError);
+        el.classList.toggle("bg-rose-50", isError);
+        el.classList.toggle("text-brand-700", !isError);
+        el.classList.toggle("border-brand-200", !isError);
+        el.classList.toggle("bg-brand-50", !isError);
+      };
+
+      const wireForm = (hasPassword) => {
+        const title = document.querySelector("[data-pwd-form-title]");
+        const help  = document.querySelector("[data-pwd-form-help]");
+        const wrap  = document.querySelector("[data-current-pwd-wrap]");
+        const pill  = document.querySelector("[data-pwd-status-pill]");
+        if (hasPassword) {
+          title.textContent = "Change password";
+          help.textContent = "Enter your current password and a new one.";
+          wrap.removeAttribute("hidden");
+          wrap.querySelector("input").required = true;
+          pill.textContent = "· password set";
+          pill.classList.remove("hidden");
+        } else {
+          title.textContent = "Set a password";
+          help.textContent = "You haven't set a password yet. Choose one so you can use the Password tab on the sign-in page next time.";
+          wrap.setAttribute("hidden", "");
+          wrap.querySelector("input").required = false;
+          pill.textContent = "· no password yet";
+          pill.classList.remove("hidden");
+        }
+      };
+
       const refresh = async () => {
         try {
           const r = await fetch(`${WORKER_URL}/api/me`, { credentials: "include" });
@@ -90,6 +150,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
             if (data && data.ok && data.member) {
               document.querySelector("[data-member-name]").textContent = data.member.name || data.member.email;
               document.querySelector("[data-member-detail]").textContent = fmtDetail(data.member);
+              wireForm(Boolean(data.member.hasPassword));
               setState("signed-in");
               return;
             }
@@ -100,9 +161,47 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         }
       };
 
+      // Sign out
       document.querySelector("[data-logout]")?.addEventListener("click", async () => {
         await fetch(`${WORKER_URL}/api/logout`, { method: "POST", credentials: "include" });
         location.href = `${BASE}/members/login`;
+      });
+
+      // Save password
+      const form = document.querySelector("[data-password-form]");
+      form?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = new FormData(form);
+        const currentPassword = String(data.get("currentPassword") || "");
+        const newPassword = String(data.get("newPassword") || "");
+        if (!newPassword || newPassword.length < 8) {
+          setPwdMsg("New password must be at least 8 characters.", true);
+          return;
+        }
+        const btn = form.querySelector("button[type='submit']");
+        btn.disabled = true;
+        setPwdMsg("Saving…");
+        try {
+          const r = await fetch(`${WORKER_URL}/api/set-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ currentPassword, newPassword }),
+            credentials: "include",
+          });
+          const data = await r.json().catch(() => ({}));
+          if (r.ok && data.ok) {
+            setPwdMsg("Password saved. You can now sign in with email + password next time.");
+            form.reset();
+            // Refresh the form state so the "Current password" field shows up next time
+            wireForm(true);
+          } else {
+            setPwdMsg(data.error || "Couldn't save password.", true);
+          }
+        } catch {
+          setPwdMsg("Couldn't reach the sign-in service — try again in a moment.", true);
+        } finally {
+          btn.disabled = false;
+        }
       });
 
       refresh();

@@ -1,35 +1,27 @@
 /**
  * AsPEN member-auth Worker.
  *
- * Three endpoints, called by the static AsPEN site under /members/*:
+ * Authentication mechanisms
+ *   · Magic-link email (passwordless) — POST /api/request-login → GET /api/verify
+ *   · Password login                  — POST /api/login
+ *   · Set / change password           — POST /api/set-password (session required)
  *
- *   POST /api/request-login   body: { email }
- *     · Looks up email in PHD-Center/aspen-members → members.json
- *     · If active or invited, signs a short-lived JWT and emails a magic
- *       link via Resend. Always returns 200 OK (no enumeration).
+ * All sign-in routes eventually set the same `aspen_session` HttpOnly
+ * cookie (SameSite=None; Secure; 30d) used by every other route.
  *
- *   GET  /api/verify?t=<jwt>
- *     · Validates the JWT signature + expiry + purpose=magic
- *     · Issues a long-lived session JWT in an HttpOnly cookie
- *     · 302 to SITE_BASE_URL/members/
+ * Content
+ *   · GET /api/me                         — current member's own record
+ *   · GET /api/content/{path}             — proxy file from private repo
+ *   · POST /api/logout                    — expire session cookie
  *
- *   GET  /api/content/<path>
- *     · Validates the session cookie
- *     · Fetches the file from MEMBERS_REPO at <path> via GitHub Contents API
- *     · Streams the bytes back to the client
- *
- *   GET  /api/me
- *     · Returns the current member's record (without leaking other members)
- *     · 401 if no valid session
+ * Backend: PHD-Center/aspen-members private GitHub repo holds
+ * members.json (read+write) and papers/, materials/ (read-only proxy).
  *
  * Secrets (set with `wrangler secret put <NAME>`):
- *   GITHUB_PAT       Fine-grained PAT, scoped to MEMBERS_REPO, Contents:Read
- *   JWT_SECRET       Random 32+ bytes used to sign JWTs
- *   RESEND_API_KEY   Resend API key for sending magic-link emails
- *
- * Env vars (set in wrangler.toml [vars]):
- *   MEMBERS_REPO, MEMBERS_BRANCH, SITE_BASE_URL, ALLOWED_ORIGINS,
- *   SENDER_EMAIL, SENDER_NAME, SESSION_DAYS, MAGIC_LINK_MINUTES
+ *   GITHUB_PAT       Fine-grained PAT, scoped to MEMBERS_REPO.
+ *                    Needs Contents: Read AND Write for password updates.
+ *   JWT_SECRET       Random 32+ bytes used to sign JWTs.
+ *   RESEND_API_KEY   Resend API key for sending magic-link emails.
  */
 
 export interface Env {
@@ -54,6 +46,7 @@ interface Member {
   role?: string;
   status: "active" | "invited" | "removed";
   joinedDate?: string;
+  passwordHash?: string;
 }
 
 interface JwtPayload {
@@ -65,6 +58,13 @@ interface JwtPayload {
 
 const SESSION_COOKIE = "aspen_session";
 
+// PBKDF2 cost — 100K SHA-256 iterations. Web Crypto is hardware-accelerated
+// so this completes well under the Workers free-tier CPU budget (~10 ms).
+const PBKDF2_ITERATIONS = 100_000;
+const PBKDF2_KEYLEN = 32;
+const PBKDF2_SALT_BYTES = 16;
+const MIN_PASSWORD_LENGTH = 8;
+
 // ─── Main fetch handler ─────────────────────────────────────────────────
 
 export default {
@@ -73,7 +73,6 @@ export default {
     const origin = req.headers.get("Origin") ?? "";
     const cors = corsHeaders(origin, env);
 
-    // CORS preflight
     if (req.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: cors });
     }
@@ -82,10 +81,14 @@ export default {
       let resp: Response;
       if (url.pathname === "/api/request-login" && req.method === "POST") {
         resp = await handleRequestLogin(req, env);
+      } else if (url.pathname === "/api/login" && req.method === "POST") {
+        resp = await handleLogin(req, env);
       } else if (url.pathname === "/api/verify" && req.method === "GET") {
         resp = await handleVerify(req, env);
       } else if (url.pathname === "/api/me" && req.method === "GET") {
         resp = await handleMe(req, env);
+      } else if (url.pathname === "/api/set-password" && req.method === "POST") {
+        resp = await handleSetPassword(req, env);
       } else if (url.pathname === "/api/logout" && req.method === "POST") {
         resp = handleLogout();
       } else if (url.pathname.startsWith("/api/content/") && req.method === "GET") {
@@ -96,7 +99,6 @@ export default {
         resp = new Response("Not Found", { status: 404 });
       }
 
-      // Attach CORS to every response
       for (const [k, v] of Object.entries(cors)) resp.headers.set(k, v);
       return resp;
     } catch (err) {
@@ -106,20 +108,16 @@ export default {
   },
 };
 
-// ─── Routes ────────────────────────────────────────────────────────────
+// ─── Auth routes ───────────────────────────────────────────────────────
 
 async function handleRequestLogin(req: Request, env: Env): Promise<Response> {
   const body = await safeJson<{ email?: string }>(req);
   const email = (body?.email ?? "").trim().toLowerCase();
-  if (!isLikelyEmail(email)) {
-    return jsonResponse({ ok: true }); // don't leak invalid format
-  }
+  if (!isLikelyEmail(email)) return jsonResponse({ ok: true });
 
-  const members = await fetchMembers(env);
+  const { members } = await fetchMembersJson(env);
   const member = members.find((m) => m.email.toLowerCase() === email);
 
-  // Always 200 OK — never reveal whether the email is a member.
-  // Only send the email if the member is active or invited.
   if (member && (member.status === "active" || member.status === "invited")) {
     const minutes = parseInt(env.MAGIC_LINK_MINUTES, 10) || 15;
     const token = await signJwt(
@@ -134,6 +132,25 @@ async function handleRequestLogin(req: Request, env: Env): Promise<Response> {
   return jsonResponse({ ok: true });
 }
 
+async function handleLogin(req: Request, env: Env): Promise<Response> {
+  const body = await safeJson<{ email?: string; password?: string }>(req);
+  const email = (body?.email ?? "").trim().toLowerCase();
+  const password = body?.password ?? "";
+  // Generic failure response — never enumerate which check failed.
+  const fail = () => jsonResponse({ ok: false, error: "Invalid email or password." }, 401);
+
+  if (!isLikelyEmail(email) || !password) return fail();
+
+  const { members } = await fetchMembersJson(env);
+  const member = members.find((m) => m.email.toLowerCase() === email);
+  if (!member || member.status !== "active" || !member.passwordHash) return fail();
+
+  const ok = await verifyPassword(password, member.passwordHash);
+  if (!ok) return fail();
+
+  return issueSessionResponse(email, env);
+}
+
 async function handleVerify(req: Request, env: Env): Promise<Response> {
   const url = new URL(req.url);
   const token = url.searchParams.get("t");
@@ -144,7 +161,6 @@ async function handleVerify(req: Request, env: Env): Promise<Response> {
     return new Response("Invalid or expired magic link", { status: 401 });
   }
 
-  // Issue session token
   const days = parseInt(env.SESSION_DAYS, 10) || 30;
   const session = await signJwt(
     { sub: payload.sub, purpose: "session" },
@@ -162,12 +178,10 @@ async function handleMe(req: Request, env: Env): Promise<Response> {
   const email = await sessionEmail(req, env);
   if (!email) return jsonResponse({ ok: false }, 401);
 
-  const members = await fetchMembers(env);
+  const { members } = await fetchMembersJson(env);
   const member = members.find((m) => m.email.toLowerCase() === email);
-  if (!member || member.status !== "active") {
-    return jsonResponse({ ok: false }, 401);
-  }
-  // Only return this member's own record (not the whole list).
+  if (!member || member.status !== "active") return jsonResponse({ ok: false }, 401);
+
   return jsonResponse({
     ok: true,
     member: {
@@ -177,13 +191,48 @@ async function handleMe(req: Request, env: Env): Promise<Response> {
       country: member.country,
       role: member.role,
       joinedDate: member.joinedDate,
+      hasPassword: Boolean(member.passwordHash),
     },
   });
 }
 
+async function handleSetPassword(req: Request, env: Env): Promise<Response> {
+  const email = await sessionEmail(req, env);
+  if (!email) return jsonResponse({ ok: false, error: "Not signed in." }, 401);
+
+  const body = await safeJson<{ currentPassword?: string; newPassword?: string }>(req);
+  const newPassword = body?.newPassword ?? "";
+  const currentPassword = body?.currentPassword ?? "";
+
+  if (newPassword.length < MIN_PASSWORD_LENGTH) {
+    return jsonResponse({ ok: false, error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.` }, 400);
+  }
+
+  const { members, sha } = await fetchMembersJson(env);
+  const member = members.find((m) => m.email.toLowerCase() === email);
+  if (!member || member.status !== "active") {
+    return jsonResponse({ ok: false, error: "Not signed in." }, 401);
+  }
+
+  // If a password is already set, require the current one to change it.
+  // (First-time set — no current password — is allowed without it; the
+  // session itself is the proof of identity, established via magic-link.)
+  if (member.passwordHash) {
+    if (!currentPassword) {
+      return jsonResponse({ ok: false, error: "Enter your current password." }, 400);
+    }
+    const ok = await verifyPassword(currentPassword, member.passwordHash);
+    if (!ok) return jsonResponse({ ok: false, error: "Current password is incorrect." }, 400);
+  }
+
+  member.passwordHash = await hashPassword(newPassword);
+  await putMembersJson(env, members, sha, `${email}: update passwordHash`);
+
+  return jsonResponse({ ok: true });
+}
+
 function handleLogout(): Response {
   const headers = new Headers();
-  // Expire the cookie immediately — same attributes as buildSessionCookie
   headers.set(
     "Set-Cookie",
     `${SESSION_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=None`,
@@ -195,49 +244,88 @@ async function handleContent(req: Request, env: Env, path: string): Promise<Resp
   const email = await sessionEmail(req, env);
   if (!email) return new Response("Unauthorized", { status: 401 });
 
-  // Guard against path traversal
-  if (path.includes("..") || path.startsWith("/")) {
-    return new Response("Bad request", { status: 400 });
-  }
-
-  // Only allow paths under papers/ or materials/ (defence in depth)
+  if (path.includes("..") || path.startsWith("/")) return new Response("Bad request", { status: 400 });
   if (!path.startsWith("papers/") && !path.startsWith("materials/")) {
     return new Response("Forbidden", { status: 403 });
   }
 
-  // Refetch members to verify status is still active (cheap; cached headers
-  // could be added later)
-  const members = await fetchMembers(env);
+  const { members } = await fetchMembersJson(env);
   const member = members.find((m) => m.email.toLowerCase() === email);
-  if (!member || member.status !== "active") {
-    return new Response("Unauthorized", { status: 401 });
-  }
+  if (!member || member.status !== "active") return new Response("Unauthorized", { status: 401 });
 
   return fetchMemberFile(env, path);
 }
 
+// Shared: issue a session cookie response for a logged-in email.
+async function issueSessionResponse(email: string, env: Env): Promise<Response> {
+  const days = parseInt(env.SESSION_DAYS, 10) || 30;
+  const session = await signJwt(
+    { sub: email, purpose: "session" },
+    env.JWT_SECRET,
+    days * 24 * 60 * 60,
+  );
+  const headers = new Headers();
+  headers.set("Set-Cookie", buildSessionCookie(session, days));
+  return jsonResponse({ ok: true }, 200, headers);
+}
+
 // ─── GitHub API ────────────────────────────────────────────────────────
 
-async function fetchMembers(env: Env): Promise<Member[]> {
-  const text = await fetchMemberFileText(env, "members.json");
-  if (!text) return [];
-  try {
-    const data = JSON.parse(text);
-    return Array.isArray(data) ? (data as Member[]) : [];
-  } catch {
-    return [];
+interface MembersFile {
+  members: Member[];
+  /** Blob SHA, needed for atomic PUT to avoid clobbering concurrent edits. */
+  sha: string;
+}
+
+async function fetchMembersJson(env: Env): Promise<MembersFile> {
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/contents/members.json?ref=${env.MEMBERS_BRANCH}`;
+  const r = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+    },
+  });
+  if (!r.ok) {
+    console.error("fetchMembersJson failed", r.status);
+    if (r.status === 404) return { members: [], sha: "" };
+    throw new Error(`fetchMembersJson ${r.status}`);
+  }
+  const data = await r.json() as { content: string; sha: string };
+  const text = utf8FromBase64(data.content.replace(/\s+/g, ""));
+  let members: Member[] = [];
+  try { members = JSON.parse(text); } catch { members = []; }
+  if (!Array.isArray(members)) members = [];
+  return { members, sha: data.sha };
+}
+
+async function putMembersJson(env: Env, members: Member[], sha: string, message: string): Promise<void> {
+  const content = JSON.stringify(members, null, 2) + "\n";
+  const contentB64 = base64FromUtf8(content);
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/contents/members.json`;
+  const r = await fetch(url, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      message,
+      content: contentB64,
+      sha,
+      branch: env.MEMBERS_BRANCH,
+    }),
+  });
+  if (!r.ok) {
+    const body = await r.text().catch(() => "");
+    console.error("putMembersJson failed", r.status, body);
+    throw new Error(`putMembersJson ${r.status}`);
   }
 }
 
-async function fetchMemberFileText(env: Env, path: string): Promise<string | null> {
-  const r = await fetchMemberFile(env, path);
-  if (!r.ok) return null;
-  return await r.text();
-}
-
 async function fetchMemberFile(env: Env, path: string): Promise<Response> {
-  // Use the raw download endpoint so we don't have to base64-decode.
-  // application/vnd.github.raw streams the file body directly.
   const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/contents/${path}?ref=${env.MEMBERS_BRANCH}`;
   const r = await fetch(url, {
     headers: {
@@ -246,15 +334,11 @@ async function fetchMemberFile(env: Env, path: string): Promise<Response> {
       Accept: "application/vnd.github.raw",
     },
   });
-  if (!r.ok) {
-    return new Response(`Not found: ${path}`, { status: r.status === 404 ? 404 : 502 });
-  }
-  // Pass through with reasonable content-type heuristic
-  const ct = guessContentType(path);
+  if (!r.ok) return new Response(`Not found: ${path}`, { status: r.status === 404 ? 404 : 502 });
   return new Response(r.body, {
     status: 200,
     headers: {
-      "Content-Type": ct,
+      "Content-Type": guessContentType(path),
       "Cache-Control": "private, max-age=60",
     },
   });
@@ -343,14 +427,48 @@ async function sendMagicLinkEmail(
   }
 }
 
+// ─── Password hashing (PBKDF2-SHA256 via Web Crypto) ──────────────────
+
+async function hashPassword(password: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(PBKDF2_SALT_BYTES));
+  const bits = await pbkdf2(password, salt, PBKDF2_ITERATIONS);
+  return `pbkdf2$${PBKDF2_ITERATIONS}$${b64urlBytes(salt)}$${b64urlBytes(new Uint8Array(bits))}`;
+}
+
+async function verifyPassword(password: string, stored: string): Promise<boolean> {
+  const parts = stored.split("$");
+  if (parts.length !== 4 || parts[0] !== "pbkdf2") return false;
+  const iters = parseInt(parts[1], 10);
+  if (!iters || iters < 1000 || iters > 1_000_000) return false;
+  const salt = b64urlDecodeBytes(parts[2]);
+  const expected = parts[3];
+  const bits = await pbkdf2(password, salt, iters);
+  const actual = b64urlBytes(new Uint8Array(bits));
+  return timingSafeEqual(actual, expected);
+}
+
+async function pbkdf2(password: string, salt: Uint8Array, iterations: number): Promise<ArrayBuffer> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"],
+  );
+  return crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
+    key,
+    PBKDF2_KEYLEN * 8,
+  );
+}
+
 // ─── Session cookie + JWT ──────────────────────────────────────────────
 
 function buildSessionCookie(jwt: string, days: number): string {
   const maxAge = days * 24 * 60 * 60;
-  // SameSite=None is required because the AsPEN site (phd-center.github.io)
-  // and this worker (aspen-auth.workers.dev) are different registrable
-  // domains, so XHR/fetch calls from the site to /api/me are cross-origin
-  // and Lax cookies would not be sent. Must be paired with Secure.
+  // SameSite=None is required because the AsPEN site and the worker are
+  // different registrable domains; cross-origin fetch needs cookies to be
+  // SameSite=None+Secure to be sent.
   return [
     `${SESSION_COOKIE}=${jwt}`,
     "Path=/",
@@ -370,7 +488,6 @@ async function sessionEmail(req: Request, env: Env): Promise<string | null> {
   return payload.sub;
 }
 
-// HS256 JWT — Web Crypto, no library
 async function signJwt(
   payload: Omit<JwtPayload, "iat" | "exp">,
   secret: string,
@@ -434,6 +551,28 @@ function b64urlDecode(s: string): string {
   const padded = s.replace(/-/g, "+").replace(/_/g, "/")
     + "=".repeat((4 - (s.length % 4)) % 4);
   return atob(padded);
+}
+
+function b64urlDecodeBytes(s: string): Uint8Array {
+  const bin = b64urlDecode(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+// UTF-8 safe base64 helpers (btoa/atob alone choke on multi-byte chars).
+function base64FromUtf8(s: string): string {
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+
+function utf8FromBase64(b64: string): string {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
 }
 
 function corsHeaders(origin: string, env: Env): Record<string, string> {
