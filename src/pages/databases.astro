@@ -548,41 +548,78 @@ const otherSites = [
           `;
         };
 
-        // ── Chart 2: Population — proportional bubbles (area ∝ population).
-        // Bubbles are sized by sqrt(popM) so very large vs very small populations
-        // both stay visually legible without one dwarfing the rest entirely.
+        // ── Chart 2: Population — ranked horizontal bars (length ∝ population).
+        // Bars are far easier to compare at a glance than circle areas.
+        // Sorted largest first; the longest bar fills the row width and others
+        // scale linearly off it. Value sits inside long bars or to the right
+        // of short ones so it's always readable.
         const buildPopulationChart = (items) => {
           const sorted = [...items].sort((a, b) => (b.popM || 0) - (a.popM || 0));
           const maxPop = Math.max(1, ...sorted.map((d) => d.popM || 0));
-          const MAX_R = 44; // px
-          const MIN_R = 8;  // px
 
-          const bubbles = sorted.map((d) => {
-            const r = d.popM > 0
-              ? Math.max(MIN_R, Math.sqrt(d.popM / maxPop) * MAX_R)
-              : MIN_R;
-            const diameter = r * 2;
-            const valueLabel = d.popM > 0
-              ? (d.popM >= 1 ? d.popM.toLocaleString() : d.popM.toFixed(2)) + " M"
-              : "—";
+          // Choose round tick values relative to max (e.g. 0, 50M, 100M, 150M)
+          const niceStep = (max) => {
+            const candidates = [0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 25, 50, 100];
+            for (const s of candidates) if (max / s <= 5) return s;
+            return Math.ceil(max / 5);
+          };
+          const step = niceStep(maxPop);
+          const axisMax = Math.ceil(maxPop / step) * step;
+          const ticks = [];
+          for (let v = 0; v <= axisMax + 1e-9; v += step) ticks.push(v);
+
+          const fmt = (v) => v >= 1 ? v.toLocaleString() : v.toFixed(2);
+
+          const rows = sorted.map((d) => {
+            const pop = d.popM || 0;
+            const w = pop > 0 ? Math.max(1.5, (pop / axisMax) * 100) : 0;
+            const inside = w > 22; // wide enough to fit the label inside the bar
+            const label = pop > 0 ? `${fmt(pop)} M` : "—";
             return `
-              <a href="#${esc(d.anchor)}" class="group flex flex-col items-center gap-1 px-1 py-1 rounded hover:bg-brand-50/60 transition" title="${esc(d.name)} — ${esc(valueLabel)}">
-                <div class="flex items-center justify-center" style="width:${(MAX_R * 2).toFixed(0)}px; height:${(MAX_R * 2).toFixed(0)}px;">
-                  <div class="rounded-full ${colorOf(d.type)} opacity-80 group-hover:opacity-100 flex items-center justify-center shadow-sm"
-                       style="width:${diameter.toFixed(0)}px; height:${diameter.toFixed(0)}px;">
-                    <span class="text-[11px] leading-none" aria-hidden="true">${esc(d.flag)}</span>
+              <div class="grid grid-cols-[minmax(0,108px)_minmax(0,1fr)] items-center gap-2 py-1 hover:bg-brand-50/40 rounded transition">
+                <a href="#${esc(d.anchor)}" class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-800 hover:text-brand-700 hover:underline truncate" title="${esc(d.name)}">
+                  <span class="text-sm leading-none shrink-0" aria-hidden="true">${esc(d.flag)}</span>
+                  <span class="truncate">${esc(shortName(d.name))}</span>
+                </a>
+                <div class="relative h-6">
+                  <!-- background gridlines at each axis tick -->
+                  ${ticks.map((v) => {
+                    if (v === 0) return "";
+                    const pct = (v / axisMax) * 100;
+                    return `<div class="absolute top-0 bottom-0 w-px bg-slate-100" style="left:${pct.toFixed(2)}%"></div>`;
+                  }).join("")}
+                  <!-- the bar itself -->
+                  <div class="absolute top-1/2 -translate-y-1/2 h-5 ${colorOf(d.type)} rounded-sm flex items-center px-1.5 opacity-90"
+                       style="width:${w.toFixed(2)}%; min-width:${pop > 0 ? "8px" : "0"};">
+                    ${inside ? `<span class="text-[10px] font-bold text-white tabular-nums leading-none">${esc(label)}</span>` : ""}
                   </div>
+                  ${!inside ? `<span class="absolute top-1/2 -translate-y-1/2 text-[10px] font-semibold text-slate-700 tabular-nums leading-none" style="left:calc(${w.toFixed(2)}% + 4px)">${esc(label)}</span>` : ""}
                 </div>
-                <span class="text-[10px] font-semibold text-slate-800 group-hover:text-brand-700 leading-none">${esc(shortName(d.name))}</span>
-                <span class="text-[10px] tabular-nums text-slate-500 leading-none">${esc(valueLabel)}</span>
-              </a>
+              </div>
             `;
           }).join("");
 
+          // Bottom axis with tick labels (0, 50M, 100M, ...)
+          const axis = `
+            <div class="grid grid-cols-[minmax(0,108px)_minmax(0,1fr)] gap-2 pt-1 mt-1 border-t border-slate-100">
+              <span></span>
+              <div class="relative h-3 text-[9px] text-slate-400 tabular-nums">
+                ${ticks.map((v) => {
+                  const pct = (v / axisMax) * 100;
+                  const label = v === 0 ? "0" : (v >= 1 ? v.toLocaleString() : v.toFixed(2)) + " M";
+                  const align = v === 0 ? "" : (Math.abs(pct - 100) < 0.5 ? "right-0 translate-x-1/2" : "-translate-x-1/2");
+                  const left = v === 0 ? "left:0" : `left:${pct.toFixed(2)}%`;
+                  return `<span class="absolute ${align}" style="${left}">${label}</span>`;
+                }).join("")}
+              </div>
+            </div>
+          `;
+
           return `
-            <h3 class="text-[10px] uppercase tracking-widest text-brand-600 font-bold mb-1">Population covered</h3>
-            <p class="text-[10px] text-slate-500 mb-3 leading-snug">Each bubble's area is proportional to the covered population (millions). Square-root scaled so smaller databases remain legible.</p>
-            <div class="flex flex-wrap items-end justify-center gap-1">${bubbles}</div>
+            <h3 class="text-[10px] uppercase tracking-widest text-brand-600 font-bold mb-1">Population covered · sorted largest first</h3>
+            <p class="text-[10px] text-slate-500 mb-3 leading-snug">Bar length is the covered population (millions), on a linear scale. Colour by database type.</p>
+            <div>${rows}</div>
+            ${axis}
             ${buildLegendHtml(items)}
           `;
         };
