@@ -12,4 +12,4 @@
 // Set to empty string while undeployed — the /members/* pages will
 // render an "auth not yet configured" notice instead of attempting
 // network calls.
-export const WORKER_URL: string = "";
+export const WORKER_URL: string = "https://aspen-auth.danielhttsai.workers.dev";
