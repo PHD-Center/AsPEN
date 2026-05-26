@@ -86,7 +86,8 @@
       "drug utilization",
       "multinational"
     ],
-    "theme": "utilisation"
+    "theme": "utilisation",
+    "fulltext": "https://discovery.ucl.ac.uk/10132435/1/Wei_MIDAS%20Antidementia%20Manuscript%20EJN_revision_clean.pdf"
   },
   {
     "year": 2022,
@@ -100,7 +101,8 @@
       "drug utilization",
       "multinational"
     ],
-    "theme": "utilisation"
+    "theme": "utilisation",
+    "fulltext": "https://www.thelancet.com/journals/lanpub/article/PIIS2468-2667(22)00013-5/fulltext"
   },
   {
     "year": 2023,
@@ -148,7 +150,8 @@
       "older adults",
       "multinational"
     ],
-    "theme": "older-adults"
+    "theme": "older-adults",
+    "fulltext": "https://academic.oup.com/ageing/article/52/2/afad014/7028557"
   },
   {
     "year": 2023,
@@ -162,7 +165,8 @@
       "epidemiology",
       "multinational"
     ],
-    "theme": "older-adults"
+    "theme": "older-adults",
+    "fulltext": "https://asbmr.onlinelibrary.wiley.com/doi/10.1002/jbmr.4821"
   },
   {
     "year": 2024,
@@ -254,7 +258,8 @@
       "thyroid cancer",
       "multinational"
     ],
-    "theme": "diabetes-cardiometabolic"
+    "theme": "diabetes-cardiometabolic",
+    "fulltext": "https://www.liebertpub.com/doi/10.1089/thy.2024.0387"
   },
   {
     "year": 2025,
@@ -300,7 +305,8 @@
       "anxiety",
       "multinational"
     ],
-    "theme": "utilisation"
+    "theme": "utilisation",
+    "fulltext": "https://research.rug.nl/en/publications/3deb202b-e761-4b8b-8036-6239838a95e9"
   },
   {
     "year": 2025,
@@ -382,7 +388,8 @@
     ],
     "theme": "infection",
     "featured": true,
-    "blurb": "Suitability assessment of databases across 19 Asia-Pacific countries for collaborative vaccine-safety monitoring — foundational reference for distributed vaccine surveillance in the region."
+    "blurb": "Suitability assessment of databases across 19 Asia-Pacific countries for collaborative vaccine-safety monitoring — foundational reference for distributed vaccine surveillance in the region.",
+    "fulltext": "https://onlinelibrary.wiley.com/doi/10.1002/pds.5214"
   },
   {
     "year": 2022,
@@ -398,7 +405,8 @@
       "multinational",
       "pediatric"
     ],
-    "theme": "neuropsychiatric"
+    "theme": "neuropsychiatric",
+    "fulltext": "https://portal.findresearcher.sdu.dk/da/publications/1a35e737-432e-4804-92d5-6b60aca59eaa"
   },
   {
     "year": 2020,
@@ -413,7 +421,8 @@
       "CDM",
       "multinational"
     ],
-    "theme": "neuropsychiatric"
+    "theme": "neuropsychiatric",
+    "fulltext": "https://discovery.ucl.ac.uk/10109145/7/Man_1-s2.0-S0022395620309377-main.pdf"
   },
   {
     "year": 2018,
@@ -457,7 +466,8 @@
       "drug utilization",
       "multinational"
     ],
-    "theme": "neuropsychiatric"
+    "theme": "neuropsychiatric",
+    "fulltext": "https://findresearcher.sdu.dk/ws/files/151946935/Trends_in_attention_deficit_hyperactivity_disorder_medication_use.pdf"
   },
   {
     "year": 2017,
