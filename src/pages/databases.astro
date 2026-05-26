@@ -104,13 +104,14 @@ const compareData: Record<string, {
   popM: number;
   since: number | null;
   lagMonths: number | null;
+  features: string[];
   coverage: string;
   notes: string;
   anchor: string;
 }> = {};
 for (const d of databases) {
   const meta = countryMeta[d.country];
-  const dd = d as typeof d & { since?: number; popM?: number; lagMonths?: number };
+  const dd = d as typeof d & { since?: number; popM?: number; lagMonths?: number; features?: string[] };
   compareData[d.name] = {
     country: d.country,
     flag: meta?.flag ?? "🏳️",
@@ -119,6 +120,7 @@ for (const d of databases) {
     popM: dd.popM ?? 0,
     since: typeof dd.since === "number" ? dd.since : null,
     lagMonths: typeof dd.lagMonths === "number" ? dd.lagMonths : null,
+    features: Array.isArray(dd.features) ? dd.features : [],
     coverage: d.coverage,
     notes: d.notes,
     anchor: `db-${d.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`,
@@ -405,18 +407,21 @@ const otherSites = [
         const textColorOf = (t) => TYPE_TEXT[t] ?? "text-slate-700 bg-slate-50 border-slate-200";
 
         // Which chart is currently selected (sticky across re-renders + add/remove)
-        let activeChart = "timeline"; // "timeline" | "population" | "lag"
+        let activeChart = "timeline"; // "timeline" | "population" | "scope"
 
-        // Format lag months into a human-friendly label.
-        // Returns { label, unitsForBar } — unitsForBar is the raw months used for bar width.
-        const formatLag = (months) => {
-          if (months == null) return { label: "unknown", value: null };
-          if (months === 0)   return { label: "~1 day",  value: 0.03 };
-          if (months < 1)     return { label: "<1 mo",   value: months };
-          if (months < 24)    return { label: Math.round(months) + " mo", value: months };
-          const years = months / 12;
-          return { label: (Number.isInteger(years) ? years : years.toFixed(1)) + " yr", value: months };
-        };
+        // Fixed feature set for the Data Scope matrix. `id` matches the
+        // databases.json `features` enum; `short` is the column header
+        // glyph, `label` shows on hover.
+        const FEATURES = [
+          { id: "rx",        short: "Rx",   label: "Prescriptions" },
+          { id: "dx",        short: "Dx",   label: "Diagnoses" },
+          { id: "labs",      short: "Lab",  label: "Lab results" },
+          { id: "imaging",   short: "Img",  label: "Imaging" },
+          { id: "mortality", short: "Mor",  label: "Mortality linkage" },
+          { id: "cancer",    short: "Can",  label: "Cancer-registry linkage" },
+          { id: "pregnancy", short: "Preg", label: "Birth / pregnancy linkage" },
+          { id: "genomics",  short: "Gen",  label: "Genomics / biobank linkage" },
+        ];
 
         // Render helpers shared by all 3 charts
         const buildChipsHtml = (items) => `
@@ -436,7 +441,7 @@ const otherSites = [
             ${[
               { id: "timeline",   label: "Timeline" },
               { id: "population", label: "Population" },
-              { id: "lag",        label: "Data lag" },
+              { id: "scope",      label: "Data scope" },
             ].map((t) => `
               <button type="button" role="tab" data-chart-tab="${t.id}" aria-selected="${activeChart === t.id}"
                 class="flex-1 px-2 py-1.5 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
@@ -584,100 +589,58 @@ const otherSites = [
           `;
         };
 
-        // ── Chart 3: Data lag — "How fresh is each database TODAY?"
-        // Plots each db as a dot on a single horizontal date axis. Right edge
-        // = today; left edge = the oldest "latest data" point in the comparison.
-        // A dot near the right means data is essentially up-to-the-day; a dot
-        // far to the left means the freshest available record is years old.
-        const buildLagChart = (items) => {
-          const now = new Date();
-          const todayMonths = now.getFullYear() * 12 + now.getMonth();
+        // ── Chart 3: Data scope — what kinds of data each DB actually carries.
+        // Matrix: rows = selected DBs (sorted by feature richness, most-loaded
+        // on top), columns = the 8 FEATURES (Rx / Dx / Lab / Img / Mor / Can /
+        // Preg / Gen). Each cell is a filled (●) or empty (○) circle indicating
+        // whether that DB has that feature. Column headers carry full tooltips
+        // for the short codes.
+        const buildScopeChart = (items) => {
+          const sorted = [...items].sort((a, b) => (b.features?.length ?? 0) - (a.features?.length ?? 0));
 
-          // Compute "latest data date" per item as today − lagMonths
-          const annotated = items.map((d) => {
-            if (typeof d.lagMonths !== "number") return { d, latestMonths: null, latestDate: null };
-            const latestMonths = todayMonths - d.lagMonths;
-            const yr = Math.floor(latestMonths / 12);
-            const mo = ((latestMonths % 12) + 12) % 12;
-            return { d, latestMonths, latestDate: new Date(yr, mo, 1) };
-          });
+          const headerCells = FEATURES.map((f) => `
+            <div class="text-center" title="${esc(f.label)}">
+              <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider cursor-help">${esc(f.short)}</span>
+            </div>
+          `).join("");
 
-          const knownLatest = annotated.map((a) => a.latestMonths).filter((m) => m !== null);
-          const minLatest = knownLatest.length ? Math.min(...knownLatest) : todayMonths - 24;
-          // Add a little headroom on the left
-          const axisLeftMonths = minLatest - 1;
-          const axisSpan = Math.max(1, todayMonths - axisLeftMonths);
-
-          // Sort: freshest (highest latestMonths) first; unknowns last
-          const sorted = [...annotated].sort((a, b) => {
-            const aL = a.latestMonths ?? -Infinity;
-            const bL = b.latestMonths ?? -Infinity;
-            return bL - aL;
-          });
-
-          // Year tick marks
-          const minYear = Math.floor(axisLeftMonths / 12);
-          const maxYear = Math.floor(todayMonths / 12);
-          const tickYears = [];
-          for (let y = minYear; y <= maxYear; y++) tickYears.push(y);
-
-          const fmtDate = (dt) => dt
-            ? dt.toLocaleDateString("en-US", { year: "numeric", month: "short" })
-            : "—";
-
-          const rows = sorted.map(({ d, latestMonths, latestDate }) => {
-            const f = formatLag(d.lagMonths);
-            const known = latestMonths !== null;
-            const leftPct = known ? ((latestMonths - axisLeftMonths) / axisSpan) * 100 : 0;
-            const ageLabel = known ? fmtDate(latestDate) : "unknown";
+          const rows = sorted.map((d) => {
+            const set = new Set(d.features ?? []);
+            const cells = FEATURES.map((f) => {
+              const has = set.has(f.id);
+              return `
+                <div class="flex items-center justify-center" title="${esc(f.label)}: ${has ? "yes" : "no"}">
+                  ${has
+                    ? `<span class="block w-3 h-3 rounded-full ${colorOf(d.type)} shadow-sm" aria-hidden="true"></span><span class="sr-only">${esc(f.label)}: yes</span>`
+                    : `<span class="block w-3 h-3 rounded-full border border-slate-300 bg-white" aria-hidden="true"></span><span class="sr-only">${esc(f.label)}: no</span>`}
+                </div>
+              `;
+            }).join("");
             return `
-              <div class="grid grid-cols-[minmax(0,90px)_minmax(0,1fr)_64px] items-center gap-2 py-1 hover:bg-brand-50/40 rounded transition">
+              <div class="grid grid-cols-[minmax(0,110px)_repeat(8,minmax(0,1fr))_28px] items-center gap-1 py-1.5 hover:bg-brand-50/40 rounded transition">
                 <a href="#${esc(d.anchor)}" class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-800 hover:text-brand-700 hover:underline truncate" title="${esc(d.name)}">
                   <span class="text-sm leading-none shrink-0" aria-hidden="true">${esc(d.flag)}</span>
                   <span class="truncate">${esc(shortName(d.name))}</span>
                 </a>
-                <div class="relative h-5">
-                  <!-- axis line + today marker -->
-                  <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-slate-200"></div>
-                  <div class="absolute top-0 bottom-0 right-0 w-px bg-brand-400"></div>
-                  ${known ? `
-                    <!-- track from event to today (the "wait") -->
-                    <div class="absolute top-1/2 -translate-y-1/2 h-0.5 ${colorOf(d.type)} opacity-40 rounded-full"
-                         style="left:${leftPct.toFixed(2)}%; right:0;"></div>
-                    <!-- dot at the "latest data" position -->
-                    <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 ${colorOf(d.type)} rounded-full shadow ring-2 ring-white"
-                         style="left:${leftPct.toFixed(2)}%;" title="Latest data: ${esc(ageLabel)} (lag ${esc(f.label)})"></div>
-                  ` : ""}
-                </div>
-                <span class="text-[10px] tabular-nums text-right leading-tight ${known ? "text-slate-700" : "italic text-slate-400"}">
-                  ${known ? `${esc(ageLabel)}<br><span class="text-[9px] text-slate-500">${esc(f.label)} ago</span>` : esc(f.label)}
-                </span>
+                ${cells}
+                <span class="text-[10px] tabular-nums text-slate-500 text-right">${set.size}/${FEATURES.length}</span>
               </div>
             `;
           }).join("");
 
-          // Year axis at the bottom
-          const axis = `
-            <div class="grid grid-cols-[minmax(0,90px)_minmax(0,1fr)_64px] gap-2 pt-1 mt-1 border-t border-slate-100">
+          // Header row (matches the grid columns of the data rows)
+          const headerRow = `
+            <div class="grid grid-cols-[minmax(0,110px)_repeat(8,minmax(0,1fr))_28px] items-center gap-1 pb-1 mb-1 border-b border-slate-100">
               <span></span>
-              <div class="relative h-3 text-[9px] text-slate-400 tabular-nums">
-                ${tickYears.map((y) => {
-                  const yMonths = y * 12; // Jan of year y
-                  if (yMonths < axisLeftMonths) return "";
-                  const pct = ((yMonths - axisLeftMonths) / axisSpan) * 100;
-                  return `<span class="absolute -translate-x-1/2" style="left:${pct.toFixed(1)}%">${y}</span>`;
-                }).join("")}
-                <span class="absolute right-0 translate-x-1/2 font-semibold text-brand-700">today</span>
-              </div>
-              <span></span>
+              ${headerCells}
+              <span class="text-[9px] font-bold text-slate-400 text-right">∑</span>
             </div>
           `;
 
           return `
-            <h3 class="text-[10px] uppercase tracking-widest text-brand-600 font-bold mb-1">Data freshness — latest available record</h3>
-            <p class="text-[10px] text-slate-500 mb-3 leading-snug">Each dot marks the most recent date for which research data exists in each database. Closer to <span class="text-brand-700 font-semibold">today</span> means fresher.</p>
-            <div>${rows}</div>
-            ${axis}
+            <h3 class="text-[10px] uppercase tracking-widest text-brand-600 font-bold mb-1">Data scope</h3>
+            <p class="text-[10px] text-slate-500 mb-3 leading-snug">Which clinical data types and registry linkages each database carries — the practical answer to "can I study X here?"</p>
+            <div>${headerRow}${rows}</div>
             ${buildLegendHtml(items)}
           `;
         };
@@ -685,7 +648,7 @@ const otherSites = [
         const CHART_BUILDERS = {
           timeline: buildTimelineChart,
           population: buildPopulationChart,
-          lag: buildLagChart,
+          scope: buildScopeChart,
         };
 
         const render = () => {

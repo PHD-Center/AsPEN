@@ -28,6 +28,20 @@ content:
       - { name: since,    label: "Data start year",       type: number, options: { step: 1 } }
       - { name: popM,     label: "Population covered (millions)", type: number, options: { step: 0.1 } }
       - { name: lagMonths, label: "Data lag (months)",    type: number, options: { step: 0.5 } }
+      - name: features
+        label: "Data scope (multi-select)"
+        type: select
+        options:
+          multiple: true
+          values:
+            - { value: rx,        label: "Prescriptions" }
+            - { value: dx,        label: "Diagnoses" }
+            - { value: labs,      label: "Lab results" }
+            - { value: imaging,   label: "Imaging" }
+            - { value: mortality, label: "Mortality linkage" }
+            - { value: cancer,    label: "Cancer-registry linkage" }
+            - { value: pregnancy, label: "Birth / pregnancy linkage" }
+            - { value: genomics,  label: "Genomics / biobank linkage" }
 
   - name: publications
     label: Publications

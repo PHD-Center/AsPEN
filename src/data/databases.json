@@ -12,7 +12,8 @@
     "url": "https://www.phdcenter.org.tw/database/",
     "since": 2000,
     "popM": 23,
-    "lagMonths": 24
+    "lagMonths": 24,
+    "features": ["rx", "dx", "labs", "imaging", "mortality", "cancer", "pregnancy"]
   },
   {
     "country": "Taiwan",
@@ -27,7 +28,8 @@
     "url": "https://www.phdcenter.org.tw/chang-gung-research-database-cgrd/",
     "since": 2011,
     "popM": 1.5,
-    "lagMonths": 1
+    "lagMonths": 1,
+    "features": ["rx", "dx", "labs", "imaging"]
   },
   {
     "country": "Taiwan",
@@ -42,7 +44,8 @@
     "url": "https://www.phdcenter.org.tw/taiwan-biobank-twb/",
     "since": 2012,
     "popM": 0.2,
-    "lagMonths": 5
+    "lagMonths": 5,
+    "features": ["labs", "genomics"]
   },
   {
     "country": "Japan",
@@ -56,7 +59,8 @@
     "notes": "Operated by the Ministry of Health, Labour and Welfare; nationwide insurance claims and specific health checkup records used for medical-cost optimization research.",
     "since": 2008,
     "popM": 120,
-    "lagMonths": 24
+    "lagMonths": 24,
+    "features": ["rx", "dx"]
   },
   {
     "country": "Japan",
@@ -70,7 +74,8 @@
     "notes": "Operated by JMDC Inc.; receipts, health-checkup results, and enrolment records pooled from ~179 health insurance societies. Excellent longitudinal traceability (up to 17 years).",
     "since": 2005,
     "popM": 13.5,
-    "lagMonths": 5
+    "lagMonths": 5,
+    "features": ["rx", "dx", "labs"]
   },
   {
     "country": "Japan",
@@ -84,7 +89,8 @@
     "notes": "Operated by DeSC Healthcare, Inc.; first commercial Japanese DB to span Employee Health Insurance, National Health Insurance, and Late-Stage Elderly Healthcare in a single dataset.",
     "since": 2014,
     "popM": 9.3,
-    "lagMonths": 5
+    "lagMonths": 5,
+    "features": ["rx", "dx", "labs"]
   },
   {
     "country": "Japan",
@@ -98,7 +104,8 @@
     "notes": "Operated by Medical Data Vision Co., Ltd.; inpatient and outpatient DPC claims plus laboratory results — strong for in-hospital exposure, severity, and outcomes research.",
     "since": 2008,
     "popM": 48,
-    "lagMonths": 6
+    "lagMonths": 6,
+    "features": ["rx", "dx", "labs"]
   },
   {
     "country": "South Korea",
@@ -112,7 +119,8 @@
     "notes": "Independent agency that reviews claims for reimbursement appropriateness; provides researchers a separate access pathway to Korean NHI claims since 2009 (open data initiative 2013).",
     "since": 2009,
     "popM": 50,
-    "lagMonths": 12
+    "lagMonths": 12,
+    "features": ["rx", "dx"]
   },
   {
     "country": "South Korea",
@@ -126,7 +134,8 @@
     "notes": "Population-level claims with periodic national health screening linkage; complementary to HIRA, with stronger linkage to enrolment and health-check data.",
     "since": 2002,
     "popM": 50,
-    "lagMonths": 7
+    "lagMonths": 7,
+    "features": ["rx", "dx", "labs", "mortality", "cancer"]
   },
   {
     "country": "Hong Kong",
@@ -140,7 +149,8 @@
     "notes": "Public-sector electronic medical records covering the great majority of Hong Kong residents.",
     "since": 1995,
     "popM": 7,
-    "lagMonths": 0
+    "lagMonths": 0,
+    "features": ["rx", "dx", "labs", "imaging", "mortality", "cancer"]
   },
   {
     "country": "United Kingdom",
@@ -154,7 +164,8 @@
     "notes": "MHRA-administered UK primary-care EHR with linkage to Hospital Episode Statistics, ONS mortality, and other national datasets.",
     "since": 1987,
     "popM": 60,
-    "lagMonths": 1
+    "lagMonths": 1,
+    "features": ["rx", "dx", "mortality", "cancer", "pregnancy"]
   },
   {
     "country": "United Kingdom",
@@ -168,7 +179,8 @@
     "notes": "UK primary-care EHR drawn from contributing general practices; complementary to CPRD, mapped to international coding systems. Listed as a NeuroGEN partner database.",
     "since": 1986,
     "popM": 17,
-    "lagMonths": 4
+    "lagMonths": 4,
+    "features": ["rx", "dx"]
   },
   {
     "country": "United Kingdom",
@@ -182,7 +194,8 @@
     "notes": "Population-based biomedical biobank linking genomic, lifestyle, imaging, and electronic medical record data. NeuroGEN partner biomedical database.",
     "since": 2005,
     "popM": 0.5,
-    "lagMonths": 18
+    "lagMonths": 18,
+    "features": ["labs", "imaging", "mortality", "cancer", "genomics"]
   },
   {
     "country": "United Kingdom",
@@ -197,7 +210,8 @@
     "mapAs": "Scotland",
     "since": 1950,
     "popM": 5.4,
-    "lagMonths": 3
+    "lagMonths": 3,
+    "features": ["rx", "dx", "labs", "mortality", "cancer", "pregnancy"]
   },
   {
     "country": "Netherlands",
@@ -211,7 +225,8 @@
     "notes": "Linked pharmacy, primary care, and hospital records across multiple regions of the Netherlands; NeuroGEN partner data source.",
     "since": 1999,
     "popM": 7,
-    "lagMonths": 5
+    "lagMonths": 5,
+    "features": ["rx", "dx", "labs", "mortality", "cancer"]
   },
   {
     "country": "Finland",
@@ -225,7 +240,8 @@
     "notes": "Nationwide population registries linking prescriptions, hospital discharges, special-reimbursement, and cause-of-death data — used in NeuroGEN.",
     "since": 1972,
     "popM": 5.5,
-    "lagMonths": 12
+    "lagMonths": 12,
+    "features": ["rx", "dx", "mortality", "cancer", "pregnancy"]
   },
   {
     "country": "Australia",
@@ -239,7 +255,8 @@
     "notes": "Federal subsidised prescription medicine claims for Australia's national PBS — a NeuroGEN partner data source.",
     "since": 2005,
     "popM": 2.5,
-    "lagMonths": 3
+    "lagMonths": 3,
+    "features": ["rx"]
   },
   {
     "country": "Australia",
@@ -253,7 +270,8 @@
     "notes": "State-level Victorian admissions, deaths, and dispensing data linked into a single research dataset.",
     "since": 2006,
     "popM": 6.5,
-    "lagMonths": 12
+    "lagMonths": 12,
+    "features": ["rx", "dx", "mortality"]
   },
   {
     "country": "United States",
@@ -267,7 +285,8 @@
     "notes": "US federal insurance for those aged 65+ and selected disability groups; widely used in NeuroGEN multi-database studies.",
     "since": 2007,
     "popM": 13,
-    "lagMonths": 24
+    "lagMonths": 24,
+    "features": ["rx", "dx", "mortality", "cancer"]
   },
   {
     "country": "United States",
@@ -281,6 +300,7 @@
     "notes": "Federal–state public insurance programme used as a partner data source in NeuroGEN multi-database collaborations.",
     "since": 2001,
     "popM": 70,
-    "lagMonths": 24
+    "lagMonths": 24,
+    "features": ["rx", "dx", "mortality"]
   }
 ]
