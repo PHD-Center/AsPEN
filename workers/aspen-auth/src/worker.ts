@@ -183,10 +183,10 @@ async function handleMe(req: Request, env: Env): Promise<Response> {
 
 function handleLogout(): Response {
   const headers = new Headers();
-  // Expire the cookie immediately
+  // Expire the cookie immediately — same attributes as buildSessionCookie
   headers.set(
     "Set-Cookie",
-    `${SESSION_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax`,
+    `${SESSION_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=None`,
   );
   return jsonResponse({ ok: true }, 200, headers);
 }
@@ -347,13 +347,17 @@ async function sendMagicLinkEmail(
 
 function buildSessionCookie(jwt: string, days: number): string {
   const maxAge = days * 24 * 60 * 60;
+  // SameSite=None is required because the AsPEN site (phd-center.github.io)
+  // and this worker (aspen-auth.workers.dev) are different registrable
+  // domains, so XHR/fetch calls from the site to /api/me are cross-origin
+  // and Lax cookies would not be sent. Must be paired with Secure.
   return [
     `${SESSION_COOKIE}=${jwt}`,
     "Path=/",
     `Max-Age=${maxAge}`,
     "HttpOnly",
     "Secure",
-    "SameSite=Lax",
+    "SameSite=None",
   ].join("; ");
 }
 
