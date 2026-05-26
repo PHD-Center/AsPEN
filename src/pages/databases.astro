@@ -481,7 +481,9 @@ const otherSites = [
           </section>
         `;
 
-        // ── Chart 1: Coverage timeline (Gantt — start year → today, height = pop, color = type)
+        // ── Chart 1: Coverage timeline (Gantt — start year → today; uniform bar
+        // height so the rows don't get visually noisy. Population already has
+        // its own tab and a numeric label on the right; type is the bar colour.)
         const buildTimelineChart = (items) => {
           const sorted = [...items].sort((a, b) => {
             const ay = typeof a.since === "number" ? a.since : CURRENT_YEAR + 1;
@@ -491,18 +493,16 @@ const otherSites = [
           const knownYears = sorted.map((d) => d.since).filter((y) => typeof y === "number");
           const minYear = knownYears.length ? Math.min(...knownYears) : CURRENT_YEAR - 5;
           const yearSpan = Math.max(1, CURRENT_YEAR - minYear);
-          const maxPop = Math.max(1, ...sorted.map((d) => d.popM || 0));
           const tickStart = Math.ceil(minYear / 10) * 10;
           const ticks = [];
           for (let y = tickStart; y < CURRENT_YEAR; y += 10) ticks.push(y);
+
+          const BAR_HEIGHT = 8; // px, uniform across rows
 
           const rows = sorted.map((d) => {
             const hasYear = typeof d.since === "number";
             const offset = hasYear ? ((d.since - minYear) / yearSpan) * 100 : 0;
             const width  = hasYear ? Math.max(2, 100 - offset) : 100;
-            const thickness = d.popM > 0
-              ? Math.max(5, Math.min(16, Math.round(Math.sqrt(d.popM / maxPop) * 16)))
-              : 4;
             const popLabel = d.popM > 0 ? d.popM + "M" : "—";
             const sinceLabel = hasYear ? d.since : "—";
             return `
@@ -515,7 +515,7 @@ const otherSites = [
                     return `<div class="absolute top-0 bottom-0 w-px bg-slate-100" style="left:${tickPct.toFixed(1)}%"></div>`;
                   }).join("")}
                   <div class="absolute rounded-sm ${colorOf(d.type)} flex items-center justify-start opacity-90 hover:opacity-100"
-                       style="left:${offset.toFixed(1)}%; width:${width.toFixed(1)}%; height:${thickness}px;">
+                       style="left:${offset.toFixed(1)}%; width:${width.toFixed(1)}%; height:${BAR_HEIGHT}px;">
                     ${hasYear ? `<span class="text-[11px] leading-none -ml-1 select-none" aria-hidden="true">${esc(d.flag)}</span>` : ""}
                   </div>
                 </div>
