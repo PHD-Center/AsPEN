@@ -4,25 +4,11 @@ const siteBase = import.meta.env.BASE_URL.replace(/\/?$/, "/");
 const siteUrl = `https://phd-center.github.io${siteBase}`;
 const year = new Date().getFullYear();
 
-// ── Citation strings — generated server-side, then handed to the inline
-// script as data attributes for one-click copy/download. Same formats as
-// the old CiteButton (Lancet / JAMA / NEJM / BibTeX / RIS).
+// ── Citation — RIS only (one click → .ris download in any reference manager).
 const title = "Asian Pharmacoepidemiology Network (AsPEN) website";
 const bibkey = "aspen-website";
-const today = new Date();
-const isoDate = today.toISOString().slice(0, 10);
-const longDate = today.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+const isoDate = new Date().toISOString().slice(0, 10);
 
-const lancet = `Asian Pharmacoepidemiology Network (AsPEN). ${title}. Maintained by PHDc, NCKU; Tsai DH-T, Lai EC-C. ${year}. ${siteUrl} (accessed ${longDate}).`;
-const jama   = `Asian Pharmacoepidemiology Network (AsPEN). ${title}. PHDc, NCKU. Maintained by Tsai DH-T, Lai EC-C. Published ${year}. Accessed ${longDate}. ${siteUrl}`;
-const nejm   = `Asian Pharmacoepidemiology Network. ${title}. Maintained by PHDc, NCKU; Tsai DH-T, Lai EC-C. ${siteUrl}. Accessed ${longDate}.`;
-const bibtex = `@misc{${bibkey},
-  author       = {{Asian Pharmacoepidemiology Network (AsPEN)}},
-  title        = {${title}},
-  year         = {${year}},
-  howpublished = {\\url{${siteUrl}}},
-  note         = {Maintained by PHDc, NCKU; Tsai DH-T, Lai EC-C. Accessed: ${isoDate}}
-}`;
 const ris = `TY  - ELEC
 AU  - Asian Pharmacoepidemiology Network (AsPEN)
 TI  - ${title}
@@ -36,11 +22,7 @@ Y2  - ${isoDate.replace(/-/g, "/")}
 ER  - `;
 
 const formats = [
-  { id: "lancet", label: "Lancet", ext: "txt", mime: "text/plain",                       text: lancet },
-  { id: "jama",   label: "JAMA",   ext: "txt", mime: "text/plain",                       text: jama   },
-  { id: "nejm",   label: "NEJM",   ext: "txt", mime: "text/plain",                       text: nejm   },
-  { id: "bibtex", label: "BibTeX", ext: "bib", mime: "application/x-bibtex",             text: bibtex },
-  { id: "ris",    label: "RIS",    ext: "ris", mime: "application/x-research-info-systems", text: ris },
+  { id: "ris", label: "RIS", ext: "ris", mime: "application/x-research-info-systems", text: ris },
 ];
 ---
 
