@@ -97,34 +97,16 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   </Section>
 
   <Section id="how-to-join" eyebrow="04" title="How to join">
-    <p>AsPEN participation is open to researchers, healthcare professionals, regulators, and graduate students with an interest in pharmacoepidemiology in Asia/Pacific. There are two ways in:</p>
-
-    <div class="not-prose mt-6 grid gap-4 md:grid-cols-2">
-      <!-- ── Primary: AsPEN direct membership ─────────────────── -->
+    <div class="not-prose mt-2">
       <a
         href={`${base}/membership/`}
-        class="group block border-2 border-brand-500 rounded-2xl p-6 bg-gradient-to-br from-brand-50 to-white hover:shadow-md hover:border-brand-700 transition"
+        class="group block border-2 border-brand-500 rounded-2xl p-6 bg-gradient-to-br from-brand-50 to-white hover:shadow-md hover:border-brand-700 transition max-w-2xl"
       >
         <p class="text-xs uppercase tracking-widest text-brand-700 font-bold">Recommended</p>
         <h3 class="mt-2 text-xl font-bold text-slate-900 group-hover:text-brand-700 transition">Become an AsPEN member</h3>
         <p class="mt-2 text-sm text-slate-700 leading-relaxed">Apply directly to the AsPEN Chair and the Academic &amp; Education office. Self-signup, vetted before approval.</p>
         <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-brand-700">
           Apply <span aria-hidden="true" class="transition-transform group-hover:translate-x-1">→</span>
-        </span>
-      </a>
-
-      <!-- ── Secondary: join via ISPE SIG ─────────────────────── -->
-      <a
-        href="https://www.pharmacoepi.org/communities/sigs/aspen/"
-        target="_blank"
-        rel="noopener"
-        class="group block border border-slate-200 rounded-2xl p-6 bg-white hover:shadow-md hover:border-slate-400 transition"
-      >
-        <p class="text-xs uppercase tracking-widest text-slate-500 font-semibold">For ISPE members</p>
-        <h3 class="mt-2 text-xl font-bold text-slate-900 group-hover:text-slate-700 transition">Join the ISPE SIG</h3>
-        <p class="mt-2 text-sm text-slate-700 leading-relaxed">Already an <a class="underline decoration-slate-400 hover:decoration-slate-700" href="https://www.pharmacoepi.org/" target="_blank" rel="noopener">ISPE</a> member? Add AsPEN through the ISPE Community page — student rates available.</p>
-        <span class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-slate-700">
-          ISPE Community ↗
         </span>
       </a>
     </div>
