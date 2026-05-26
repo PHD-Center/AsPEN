@@ -1,23 +1,44 @@
 ---
+interface Props {
+  /** Forwarded from BaseLayout. Used to build a page-specific citation. */
+  pageTitle?: string;
+}
+const { pageTitle = "Asian Pharmacoepidemiology Network (AsPEN) website" } = Astro.props;
+
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-const siteBase = import.meta.env.BASE_URL.replace(/\/?$/, "/");
-const siteUrl = `https://phd-center.github.io${siteBase}`;
 const year = new Date().getFullYear();
 
-// ── Citation — RIS only (one click → .ris download in any reference manager).
-const title = "Asian Pharmacoepidemiology Network (AsPEN) website";
-const bibkey = "aspen-website";
+// ── Page-aware citation. Generates a RIS pointing at THIS page.
 const isoDate = new Date().toISOString().slice(0, 10);
+
+// Strip the " — AsPEN" / " - AsPEN" suffix many page titles carry, since
+// the citation TI shouldn't be redundant with the corporate author.
+const cleanTitle = pageTitle.replace(/\s*[—\-]\s*AsPEN\s*$/, "").trim() || "AsPEN website";
+
+// Current page URL — Astro.url.pathname already includes the BASE_URL prefix
+// (e.g. "/AsPEN/databases/") for static builds. Ensure a trailing slash so
+// the root path comes out as "/AsPEN/" rather than "/AsPEN".
+const path = (Astro.url.pathname || "/").replace(/\/?$/, "/");
+const pageUrl = `https://phd-center.github.io${path}`;
+
+// Bibkey is a slug derived from the page path (e.g. /AsPEN/databases/ →
+// "aspen-databases"). Falls back to "aspen-home" for the root.
+const slug = path
+  .replace(/^\/AsPEN\/?/, "")
+  .replace(/\/$/, "")
+  .replace(/[^a-z0-9]+/gi, "-")
+  .toLowerCase() || "home";
+const bibkey = `aspen-${slug}`;
 
 const ris = `TY  - ELEC
 AU  - Asian Pharmacoepidemiology Network (AsPEN)
-TI  - ${title}
+TI  - ${cleanTitle}
 PY  - ${year}
 PB  - PHDc, NCKU
 ED  - Tsai DH-T
 ED  - Lai EC-C
 N1  - Maintained by PHDc, NCKU; Tsai DH-T, Lai EC-C
-UR  - ${siteUrl}
+UR  - ${pageUrl}
 Y2  - ${isoDate.replace(/-/g, "/")}
 ER  - `;
 
