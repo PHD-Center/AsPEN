@@ -93,6 +93,8 @@ export default {
         resp = handleLogout();
       } else if (url.pathname.startsWith("/api/content/") && req.method === "GET") {
         resp = await handleContent(req, env, url.pathname.slice("/api/content/".length));
+      } else if (url.pathname.startsWith("/api/list/") && req.method === "GET") {
+        resp = await handleList(req, env, url.pathname.slice("/api/list/".length));
       } else if (url.pathname === "/" || url.pathname === "") {
         resp = new Response("aspen-auth worker — ok", { status: 200 });
       } else {
@@ -238,6 +240,44 @@ function handleLogout(): Response {
     `${SESSION_COOKIE}=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=None`,
   );
   return jsonResponse({ ok: true }, 200, headers);
+}
+
+async function handleList(req: Request, env: Env, prefix: string): Promise<Response> {
+  const email = await sessionEmail(req, env);
+  if (!email) return jsonResponse({ ok: false }, 401);
+
+  const clean = prefix.replace(/\/+$/, "");
+  if (clean.includes("..") || clean.startsWith("/")) {
+    return jsonResponse({ ok: false }, 400);
+  }
+  if (clean !== "papers" && clean !== "materials") {
+    return jsonResponse({ ok: false }, 403);
+  }
+
+  const { members } = await fetchMembersJson(env);
+  const member = members.find((m) => m.email.toLowerCase() === email);
+  if (!member || member.status !== "active") return jsonResponse({ ok: false }, 401);
+
+  // Use the recursive git tree endpoint — single call gets every file under the prefix.
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/git/trees/${env.MEMBERS_BRANCH}?recursive=1`;
+  const r = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+    },
+  });
+  if (!r.ok) {
+    if (r.status === 404) return jsonResponse({ ok: true, files: [] });
+    console.error("git/trees failed", r.status);
+    return jsonResponse({ ok: false }, 502);
+  }
+  const data = await r.json() as { tree: Array<{ path: string; type: string; size?: number }> };
+  const files = data.tree
+    .filter((it) => it.type === "blob" && it.path.startsWith(clean + "/"))
+    .map((it) => ({ path: it.path, size: it.size ?? 0 }));
+
+  return jsonResponse({ ok: true, files });
 }
 
 async function handleContent(req: Request, env: Env, path: string): Promise<Response> {
