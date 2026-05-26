@@ -1,0 +1,90 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PageHeader from "../components/PageHeader.astro";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+// Same routing as /contact/ — to the Chair + Academic & Education office.
+// Email address stays in mailto only (not rendered as text).
+const danielEmail = "danielhttsai@gmail.com";
+const edEmail = "";
+const subject = "AsPEN membership application";
+const body = `Hello AsPEN Chair / Academic & Education office,
+
+I'd like to apply for AsPEN membership.
+
+  · Name:
+  · Affiliation:
+  · Country / region:
+  · Role (academic / regulator / industry / student):
+  · ISPE member? (yes / no — ISPE membership is encouraged but not required for a first conversation)
+  · Brief background and research interests:
+  · How you found AsPEN:
+
+Thanks,`;
+const mailtoHref = `mailto:${danielEmail}${edEmail ? `?cc=${encodeURIComponent(edEmail)}&` : "?"}subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+---
+
+<BaseLayout
+  title="Membership — AsPEN"
+  description="How to join AsPEN as a member — application, vetting, and what membership unlocks."
+>
+  <PageHeader
+    eyebrow="Get involved"
+    title="AsPEN membership"
+    description="AsPEN runs as an ISPE Special Interest Group, but the working network is broader — and we're opening it up to vetted self-signup."
+  />
+
+  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+    <!-- ── WHO CAN JOIN ─────────────────────────────────────── -->
+    <div class="grid md:grid-cols-[2fr_1fr] gap-8 items-start">
+      <div class="prose prose-slate max-w-none">
+        <h2 class="text-xl font-semibold text-slate-900">Who can join</h2>
+        <p>Academic investigators, regulators, industry researchers, clinicians, and graduate students working — or interested — in pharmacoepidemiology in the Asia-Pacific region. ISPE membership is encouraged but not required for a first conversation.</p>
+
+        <h2 class="text-xl font-semibold text-slate-900 mt-8">What membership unlocks</h2>
+        <p class="text-sm text-slate-600 italic mb-3">Phase 1 — available today, on the public site:</p>
+        <ul class="text-sm">
+          <li>Full publication list with PMC full-text links for open-access papers (24 of 43).</li>
+          <li>For papers without a PMC mirror, a <strong>Request from authors</strong> button on each card that opens a drafted email to the AsPEN Chair / Academic &amp; Education office, who can forward to the corresponding author.</li>
+          <li>The full <a href={`${base}/databases/`}>Databases</a>, <a href={`${base}/activities/`}>Activities</a>, and <a href={`${base}/publications/themes/`}>thematic publications</a> sections.</li>
+        </ul>
+
+        <p class="text-sm text-slate-600 italic mt-6 mb-3">Phase 2 — coming when AsPEN moves to its new server:</p>
+        <ul class="text-sm">
+          <li>A dedicated <code>/members/</code> area gated by a member login (email magic-link).</li>
+          <li>Author-Accepted Manuscript (AAM) library — author-supplied copies of papers AsPEN has the right to host.</li>
+          <li>Study protocols, analysis code, slide decks, and other internal materials.</li>
+          <li>Member directory with research interests + national contact persons.</li>
+        </ul>
+        <p class="text-xs text-slate-500 mt-3">
+          We do not and will not host publisher PDFs of paywalled papers — that breaches copyright even behind a login. The Phase 2 library will only include materials AsPEN holds explicit author or publisher permission to share.
+        </p>
+
+        <h2 class="text-xl font-semibold text-slate-900 mt-8">How vetting works</h2>
+        <ol class="text-sm">
+          <li>You send the application email below.</li>
+          <li>The Chair / Academic &amp; Education office reviews — typically within two weeks.</li>
+          <li>Once approved, your name appears in the member list (Phase 2) and you receive the welcome email with onboarding details.</li>
+        </ol>
+      </div>
+
+      <!-- ── CTA CARD ───────────────────────────────────────── -->
+      <aside class="border border-slate-200 rounded-2xl p-6 bg-white shadow-sm md:sticky md:top-24">
+        <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold">Apply</p>
+        <h2 class="mt-2 text-2xl font-bold text-slate-900">Send an application</h2>
+        <p class="mt-2 text-sm text-slate-700 leading-relaxed">The button below opens a draft addressed to the Chair and the Academic &amp; Education office with a short template pre-filled. Edit it freely.</p>
+        <a
+          href={mailtoHref}
+          class="mt-4 inline-flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-3 rounded-lg transition"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Apply to join AsPEN
+        </a>
+        <p class="mt-4 text-xs text-slate-500">
+          ISPE members can also join the SIG directly via the <a class="text-brand-700 hover:underline" href="https://www.pharmacoepi.org/communities/sigs/aspen/" target="_blank" rel="noopener">ISPE community page</a>.
+        </p>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>
