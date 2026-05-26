@@ -52,6 +52,15 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         </a>
       </div>
 
+      <!-- ── Admin-only card (hidden unless isAdmin) ────────── -->
+      <a data-admin-card href={`${base}/members/admin`} class="hidden group block border-2 border-brand-500 rounded-lg p-5 bg-gradient-to-br from-brand-50 to-white hover:shadow-md hover:border-brand-700 transition">
+        <p class="text-xs uppercase tracking-widest text-brand-700 font-bold">Admin</p>
+        <h3 class="mt-2 font-bold text-slate-900 group-hover:text-brand-700 transition">
+          Review queue <span data-pending-badge class="hidden ml-1 inline-block bg-brand-700 text-white text-[10px] font-bold px-2 py-0.5 rounded-full tabular-nums align-middle"></span>
+        </h3>
+        <p class="mt-1 text-sm text-slate-600">Member-submitted uploads waiting for approval.</p>
+      </a>
+
       <!-- ── Account settings ──────────────────────────────── -->
       <details class="border border-slate-200 rounded-2xl bg-white shadow-sm">
         <summary class="cursor-pointer select-none px-6 py-4 font-semibold text-slate-800 hover:bg-slate-50 rounded-2xl">
@@ -152,6 +161,22 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
               document.querySelector("[data-member-detail]").textContent = fmtDetail(data.member);
               wireForm(Boolean(data.member.hasPassword));
               setState("signed-in");
+
+              // Admin-only card + pending count
+              if (data.member.isAdmin) {
+                document.querySelector("[data-admin-card]")?.classList.remove("hidden");
+                try {
+                  const pr = await fetch(`${WORKER_URL}/api/pending`, { credentials: "include" });
+                  if (pr.ok) {
+                    const pj = await pr.json();
+                    const count = (pj?.items || []).length;
+                    if (count > 0) {
+                      const badge = document.querySelector("[data-pending-badge]");
+                      if (badge) { badge.textContent = String(count); badge.classList.remove("hidden"); }
+                    }
+                  }
+                } catch {}
+              }
               return;
             }
           }

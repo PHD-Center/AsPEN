@@ -47,6 +47,8 @@ interface Member {
   status: "active" | "invited" | "removed";
   joinedDate?: string;
   passwordHash?: string;
+  /** If true, this member can review pending uploads and approve/reject. */
+  admin?: boolean;
 }
 
 interface JwtPayload {
@@ -95,6 +97,12 @@ export default {
         resp = await handleContent(req, env, url.pathname.slice("/api/content/".length));
       } else if (url.pathname.startsWith("/api/list/") && req.method === "GET") {
         resp = await handleList(req, env, url.pathname.slice("/api/list/".length));
+      } else if (url.pathname === "/api/upload" && req.method === "POST") {
+        resp = await handleUpload(req, env);
+      } else if (url.pathname === "/api/pending" && req.method === "GET") {
+        resp = await handlePending(req, env);
+      } else if (url.pathname === "/api/review" && req.method === "POST") {
+        resp = await handleReview(req, env);
       } else if (url.pathname === "/" || url.pathname === "") {
         resp = new Response("aspen-auth worker — ok", { status: 200 });
       } else {
@@ -194,6 +202,7 @@ async function handleMe(req: Request, env: Env): Promise<Response> {
       role: member.role,
       joinedDate: member.joinedDate,
       hasPassword: Boolean(member.passwordHash),
+      isAdmin: Boolean(member.admin),
     },
   });
 }
@@ -278,6 +287,358 @@ async function handleList(req: Request, env: Env, prefix: string): Promise<Respo
     .map((it) => ({ path: it.path, size: it.size ?? 0 }));
 
   return jsonResponse({ ok: true, files });
+}
+
+// Soft cap on uploaded file size — keeps us comfortably under the GitHub
+// Contents API recommended limit (~50 MB) and Worker memory.
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MB
+
+interface PendingMeta {
+  uploader: string;
+  uploaderName: string;
+  uploadedAt: string;
+  originalName: string;
+  description?: string;
+  /** "papers" or "materials" */
+  category: "papers" | "materials";
+  /** Subfolder under materials/ (protocols, slides, code, ...) — materials only */
+  subfolder?: string;
+}
+
+async function handleUpload(req: Request, env: Env): Promise<Response> {
+  const email = await sessionEmail(req, env);
+  if (!email) return jsonResponse({ ok: false, error: "Not signed in." }, 401);
+
+  const { members } = await fetchMembersJson(env);
+  const member = members.find((m) => m.email.toLowerCase() === email);
+  if (!member || member.status !== "active") {
+    return jsonResponse({ ok: false, error: "Not signed in." }, 401);
+  }
+
+  let form: FormData;
+  try { form = await req.formData(); }
+  catch { return jsonResponse({ ok: false, error: "Bad form data." }, 400); }
+
+  const fileEntry = form.get("file");
+  if (!(fileEntry instanceof File)) {
+    return jsonResponse({ ok: false, error: "No file." }, 400);
+  }
+  if (fileEntry.size === 0) {
+    return jsonResponse({ ok: false, error: "File is empty." }, 400);
+  }
+  if (fileEntry.size > MAX_UPLOAD_BYTES) {
+    return jsonResponse({
+      ok: false,
+      error: `File too large (max ${(MAX_UPLOAD_BYTES / 1024 / 1024).toFixed(0)} MB).`,
+    }, 413);
+  }
+
+  const category = String(form.get("category") || "");
+  if (category !== "papers" && category !== "materials") {
+    return jsonResponse({ ok: false, error: "Invalid category." }, 400);
+  }
+  const subfolder = String(form.get("subfolder") || "").trim().toLowerCase();
+  if (category === "materials" && subfolder && !/^[a-z0-9-]+$/.test(subfolder)) {
+    return jsonResponse({ ok: false, error: "Invalid subfolder name." }, 400);
+  }
+  const description = String(form.get("description") || "").trim().slice(0, 2000);
+
+  // Sanitise filename — keep extension, strip path, allow letters/digits/dots/dashes/spaces
+  const originalName = sanitiseFilename(fileEntry.name || "upload.bin");
+  if (!originalName) return jsonResponse({ ok: false, error: "Invalid filename." }, 400);
+
+  // Build unique pending dir: pending/<category>/<iso>-<rand>/
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-").replace(/Z$/, "Z");
+  const rand = randSlug(6);
+  const dirPath = `pending/${category}/${stamp}-${rand}`;
+
+  // Upload the file
+  const bytes = new Uint8Array(await fileEntry.arrayBuffer());
+  const fileB64 = base64FromBytes(bytes);
+  await putBinaryFile(env, `${dirPath}/${originalName}`, fileB64,
+    `Upload pending: ${category}/${originalName} by ${email}`);
+
+  // Upload the meta sidecar
+  const meta: PendingMeta = {
+    uploader: email,
+    uploaderName: member.name,
+    uploadedAt: new Date().toISOString(),
+    originalName,
+    description: description || undefined,
+    category,
+    subfolder: category === "materials" ? (subfolder || undefined) : undefined,
+  };
+  const metaB64 = base64FromUtf8(JSON.stringify(meta, null, 2) + "\n");
+  await putBinaryFile(env, `${dirPath}/meta.json`, metaB64,
+    `Upload pending: meta for ${originalName}`);
+
+  return jsonResponse({ ok: true, pendingId: dirPath });
+}
+
+async function handlePending(req: Request, env: Env): Promise<Response> {
+  const member = await sessionMember(req, env);
+  if (!member) return jsonResponse({ ok: false }, 401);
+  if (!member.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+
+  // Walk pending/ tree
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/git/trees/${env.MEMBERS_BRANCH}?recursive=1`;
+  const r = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+    },
+  });
+  if (!r.ok) {
+    if (r.status === 404) return jsonResponse({ ok: true, items: [] });
+    return jsonResponse({ ok: false }, 502);
+  }
+  const data = await r.json() as { tree: Array<{ path: string; type: string; size?: number }> };
+
+  // Group blobs by their immediate parent dir under pending/<category>/<id>/
+  // Each dir has: meta.json + 1 uploaded file
+  const groups: Record<string, { files: { path: string; size: number }[]; metaPath?: string }> = {};
+  for (const it of data.tree) {
+    if (it.type !== "blob") continue;
+    if (!it.path.startsWith("pending/")) continue;
+    const m = it.path.match(/^(pending\/(?:papers|materials)\/[^/]+)\/(.+)$/);
+    if (!m) continue;
+    const dir = m[1];
+    const name = m[2];
+    (groups[dir] ??= { files: [] });
+    if (name === "meta.json") {
+      groups[dir].metaPath = it.path;
+    } else {
+      groups[dir].files.push({ path: it.path, size: it.size ?? 0 });
+    }
+  }
+
+  // Fetch each meta.json in parallel
+  const ids = Object.keys(groups);
+  const items = await Promise.all(ids.map(async (id) => {
+    let meta: PendingMeta | null = null;
+    if (groups[id].metaPath) {
+      meta = await fetchJsonFile<PendingMeta>(env, groups[id].metaPath!);
+    }
+    return {
+      id,                            // pending/<category>/<stamp-rand>
+      meta,
+      files: groups[id].files,
+    };
+  }));
+
+  // Sort newest first based on the directory name (it starts with an ISO timestamp)
+  items.sort((a, b) => (a.id < b.id ? 1 : -1));
+
+  return jsonResponse({ ok: true, items });
+}
+
+async function handleReview(req: Request, env: Env): Promise<Response> {
+  const member = await sessionMember(req, env);
+  if (!member) return jsonResponse({ ok: false }, 401);
+  if (!member.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+
+  const body = await safeJson<{ id?: string; action?: string; rename?: string }>(req);
+  const id = String(body?.id || "");
+  const action = body?.action;
+  const rename = (body?.rename || "").trim();
+
+  if (!id.match(/^pending\/(papers|materials)\/[^/]+$/)) {
+    return jsonResponse({ ok: false, error: "Invalid id." }, 400);
+  }
+  if (action !== "approve" && action !== "reject") {
+    return jsonResponse({ ok: false, error: "Invalid action." }, 400);
+  }
+
+  // List the files in the pending dir via git tree (we already know structure)
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/git/trees/${env.MEMBERS_BRANCH}?recursive=1`;
+  const r = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+    },
+  });
+  if (!r.ok) return jsonResponse({ ok: false, error: "Tree fetch failed." }, 502);
+  const tree = (await r.json() as { tree: Array<{ path: string; type: string }> }).tree;
+
+  const pendingPaths = tree.filter((it) => it.type === "blob" && it.path.startsWith(id + "/")).map((it) => it.path);
+  if (pendingPaths.length === 0) {
+    return jsonResponse({ ok: false, error: "Pending item not found." }, 404);
+  }
+
+  // Get meta.json contents to know destination
+  const metaPath = pendingPaths.find((p) => p.endsWith("/meta.json"));
+  if (!metaPath) return jsonResponse({ ok: false, error: "Missing meta.json." }, 500);
+  const meta = await fetchJsonFile<PendingMeta>(env, metaPath);
+  if (!meta) return jsonResponse({ ok: false, error: "Meta unreadable." }, 500);
+
+  if (action === "reject") {
+    // Delete every file in the pending dir
+    for (const p of pendingPaths) {
+      const file = await fetchFileWithSha(env, p);
+      if (file) await deleteFile(env, p, file.sha, `Reject pending: ${p}`);
+    }
+    return jsonResponse({ ok: true, action: "rejected" });
+  }
+
+  // Approve: copy non-meta files to destination(s), then delete pending
+  const filesToCopy = pendingPaths.filter((p) => !p.endsWith("/meta.json"));
+  if (filesToCopy.length === 0) {
+    return jsonResponse({ ok: false, error: "No files to approve." }, 400);
+  }
+
+  const destBase = meta.category === "materials"
+    ? (meta.subfolder ? `materials/${meta.subfolder}` : "materials")
+    : "papers";
+
+  // Determine destination filename: prefer admin's rename if provided, else originalName
+  // (rename only applies when there's a single file in the pending; for multi-file
+  // uploads we keep their basenames as-is.)
+  const destinations: Array<{ src: string; dst: string }> = [];
+  for (const src of filesToCopy) {
+    const srcBasename = src.split("/").pop()!;
+    let dstName = srcBasename;
+    if (filesToCopy.length === 1 && rename) {
+      dstName = sanitiseFilename(rename) || srcBasename;
+    }
+    destinations.push({ src, dst: `${destBase}/${dstName}` });
+  }
+
+  // Refuse if any destination already exists
+  for (const { dst } of destinations) {
+    const exists = await fetchFileWithSha(env, dst);
+    if (exists) {
+      return jsonResponse({
+        ok: false,
+        error: `Destination already exists: ${dst}. Reject this submission, or add a rename to overwrite is not supported yet.`,
+      }, 409);
+    }
+  }
+
+  // Copy each file: GET content from src, PUT to dst
+  for (const { src, dst } of destinations) {
+    const f = await fetchFileWithSha(env, src);
+    if (!f) return jsonResponse({ ok: false, error: `Source missing: ${src}` }, 500);
+    await putBinaryFile(env, dst, f.contentB64.replace(/\n/g, ""),
+      `Approve: ${dst} (from ${meta.uploader})`);
+  }
+
+  // Delete all pending files (file + meta)
+  for (const p of pendingPaths) {
+    const f = await fetchFileWithSha(env, p);
+    if (f) await deleteFile(env, p, f.sha, `Cleanup pending: ${p}`);
+  }
+
+  return jsonResponse({ ok: true, action: "approved", destinations: destinations.map((d) => d.dst) });
+}
+
+// ── Helpers used by the new routes ─────────────────────────────────────
+
+async function sessionMember(req: Request, env: Env): Promise<Member | null> {
+  const email = await sessionEmail(req, env);
+  if (!email) return null;
+  const { members } = await fetchMembersJson(env);
+  const m = members.find((m) => m.email.toLowerCase() === email);
+  return m && m.status === "active" ? m : null;
+}
+
+async function fetchJsonFile<T>(env: Env, path: string): Promise<T | null> {
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/contents/${path}?ref=${env.MEMBERS_BRANCH}`;
+  const r = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github.raw",
+    },
+  });
+  if (!r.ok) return null;
+  try { return await r.json() as T; } catch { return null; }
+}
+
+interface BlobWithSha {
+  sha: string;
+  contentB64: string;
+}
+
+async function fetchFileWithSha(env: Env, path: string): Promise<BlobWithSha | null> {
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/contents/${path}?ref=${env.MEMBERS_BRANCH}`;
+  const r = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+    },
+  });
+  if (!r.ok) return null;
+  const data = await r.json() as { sha: string; content: string; encoding?: string };
+  return { sha: data.sha, contentB64: data.content };
+}
+
+async function putBinaryFile(env: Env, path: string, contentB64: string, message: string): Promise<void> {
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/contents/${path}`;
+  const r = await fetch(url, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message, content: contentB64, branch: env.MEMBERS_BRANCH }),
+  });
+  if (!r.ok) {
+    const body = await r.text().catch(() => "");
+    console.error("putBinaryFile failed", r.status, body);
+    throw new Error(`putBinaryFile ${r.status}`);
+  }
+}
+
+async function deleteFile(env: Env, path: string, sha: string, message: string): Promise<void> {
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/contents/${path}`;
+  const r = await fetch(url, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message, sha, branch: env.MEMBERS_BRANCH }),
+  });
+  if (!r.ok) {
+    console.error("deleteFile failed", r.status);
+    throw new Error(`deleteFile ${r.status}`);
+  }
+}
+
+function base64FromBytes(bytes: Uint8Array): string {
+  // Chunked to avoid blowing the JS call-stack on large files.
+  const CHUNK = 0x8000;
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    bin += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + CHUNK)));
+  }
+  return btoa(bin);
+}
+
+function sanitiseFilename(name: string): string {
+  const base = name.split(/[\\/]/).pop() || "";
+  // Keep alphanumerics, dot, dash, underscore, space — replace rest with underscore.
+  // Collapse repeats. Trim leading dots.
+  return base
+    .replace(/[^a-zA-Z0-9._\- ]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^\.+/, "")
+    .trim()
+    .slice(0, 200);
+}
+
+function randSlug(n: number): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(n));
+  let out = "";
+  for (let i = 0; i < bytes.length; i++) out += "abcdefghijklmnopqrstuvwxyz0123456789"[bytes[i] % 36];
+  return out;
 }
 
 async function handleContent(req: Request, env: Env, path: string): Promise<Response> {

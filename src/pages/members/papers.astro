@@ -41,11 +41,39 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       <p class="text-sm text-rose-800" data-error-msg></p>
     </div>
 
-    <div data-state="ready" class="hidden">
-      <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-3">
-        <span data-file-count>0</span> files
-      </p>
-      <ul class="divide-y divide-slate-200 border border-slate-200 rounded-lg bg-white" data-file-list></ul>
+    <div data-state="ready" class="hidden space-y-6">
+      <!-- ── Upload (members can submit; admin must approve) ── -->
+      <details data-upload-wrap class="hidden border border-slate-200 rounded-lg bg-white">
+        <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-50/40 rounded-lg">
+          ＋ Contribute a paper
+        </summary>
+        <form data-upload-form class="p-4 space-y-3 border-t border-slate-100">
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Upload an Author-Accepted Manuscript or similar copy of an AsPEN paper you have permission to share. Submissions go to a review queue — the AsPEN office adds it to the library after a quick check.
+          </p>
+          <label class="block">
+            <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">File</span>
+            <input type="file" name="file" required class="mt-1 block w-full text-sm text-slate-700 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-brand-100 file:text-brand-700 hover:file:bg-brand-200" />
+          </label>
+          <label class="block">
+            <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Description (optional)</span>
+            <textarea name="description" rows="2" placeholder="e.g. AAM of Tsai et al. 2023 — author copy, NeuroGEN paper"
+                      class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+          </label>
+          <button type="submit" class="inline-flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2 rounded text-sm transition disabled:opacity-60">
+            Submit for review
+          </button>
+          <p data-upload-msg class="hidden text-sm bg-slate-50 border border-slate-200 rounded p-3" role="status" aria-live="polite"></p>
+        </form>
+      </details>
+
+      <!-- ── File listing ── -->
+      <div>
+        <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-3">
+          <span data-file-count>0</span> files
+        </p>
+        <ul class="divide-y divide-slate-200 border border-slate-200 rounded-lg bg-white" data-file-list></ul>
+      </div>
     </div>
   </section>
 
@@ -105,13 +133,22 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
           const meR = await fetch(`${WORKER_URL}/api/me`, { credentials: "include" });
           if (!meR.ok) return setState("signed-out");
 
+          // Show the upload form for logged-in members
+          document.querySelector("[data-upload-wrap]")?.classList.remove("hidden");
+
           const listR = await fetch(`${WORKER_URL}/api/list/papers`, { credentials: "include" });
           if (listR.status === 401) return setState("signed-out");
           if (!listR.ok) return setError("Couldn't load the library (" + listR.status + ").");
 
           const data = await listR.json();
           const files = (data && data.files) || [];
-          if (files.length === 0) return setState("empty");
+          if (files.length === 0) {
+            // Still show ready state so the upload form is reachable when empty
+            document.querySelector("[data-file-count]").textContent = "0";
+            document.querySelector("[data-file-list]").innerHTML =
+              '<li class="px-4 py-6 text-sm text-slate-500 italic text-center">No files yet. Be the first to contribute one above.</li>';
+            return setState("ready");
+          }
 
           // Sort: filename ascending
           files.sort((a, b) => a.path.localeCompare(b.path));
@@ -144,6 +181,44 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
           setError("Couldn't reach the auth service.");
         }
       };
+
+      // Upload form
+      const uploadForm = document.querySelector("[data-upload-form]");
+      const uploadMsg  = uploadForm?.querySelector("[data-upload-msg]");
+      const setUploadMsg = (msg, isError = false) => {
+        if (!uploadMsg) return;
+        uploadMsg.textContent = msg;
+        uploadMsg.classList.remove("hidden");
+        uploadMsg.classList.toggle("text-rose-700", isError);
+        uploadMsg.classList.toggle("border-rose-200", isError);
+        uploadMsg.classList.toggle("bg-rose-50", isError);
+      };
+      uploadForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = new FormData(uploadForm);
+        data.set("category", "papers");
+        const btn = uploadForm.querySelector("button[type='submit']");
+        btn.disabled = true;
+        setUploadMsg("Uploading…");
+        try {
+          const r = await fetch(`${WORKER_URL}/api/upload`, {
+            method: "POST",
+            body: data,
+            credentials: "include",
+          });
+          const j = await r.json().catch(() => ({}));
+          if (r.ok && j.ok) {
+            setUploadMsg("Submitted. The AsPEN office will review and add it to the library shortly.");
+            uploadForm.reset();
+          } else {
+            setUploadMsg(j.error || "Upload failed.", true);
+          }
+        } catch {
+          setUploadMsg("Couldn't reach the auth service.", true);
+        } finally {
+          btn.disabled = false;
+        }
+      });
 
       refresh();
     })();

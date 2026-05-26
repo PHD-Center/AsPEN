@@ -1,0 +1,200 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import { WORKER_URL } from "../../data/site-config";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+
+<BaseLayout
+  title="Admin · review queue — AsPEN members"
+  description="Pending uploads awaiting AsPEN office approval."
+>
+  <PageHeader
+    eyebrow="Members → Admin"
+    title="Review queue"
+    description="Member-submitted uploads waiting for approval."
+  />
+
+  <section class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+    <p class="text-sm">
+      <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/`}>← Members area</a>
+    </p>
+
+    <div data-state="loading" class="text-sm text-slate-600 italic">
+      Loading queue…
+    </div>
+
+    <div data-state="signed-out" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm text-slate-700">
+        You're not signed in. <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Sign in →</a>
+      </p>
+    </div>
+
+    <div data-state="forbidden" class="hidden border border-rose-300 bg-rose-50 rounded-lg p-6">
+      <p class="text-sm text-rose-800">
+        This page is for AsPEN admins. If you should have admin access, contact <a class="underline" href={`${base}/contact/`}>the office</a>.
+      </p>
+    </div>
+
+    <div data-state="empty" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm text-slate-700">
+        The review queue is empty — nothing to approve right now.
+      </p>
+    </div>
+
+    <div data-state="error" class="hidden border border-rose-300 bg-rose-50 rounded-lg p-6">
+      <p class="text-sm text-rose-800" data-error-msg></p>
+    </div>
+
+    <div data-state="ready" class="hidden space-y-4" data-queue></div>
+  </section>
+
+  <script is:inline define:vars={{ WORKER_URL, BASE: base }}>
+    (() => {
+      const setState = (name) => {
+        document.querySelectorAll("[data-state]").forEach((el) => {
+          el.classList.toggle("hidden", el.dataset.state !== name);
+        });
+      };
+      const setError = (msg) => {
+        document.querySelector("[data-error-msg]").textContent = msg;
+        setState("error");
+      };
+
+      if (!WORKER_URL) {
+        setError("Members area isn't enabled yet.");
+        return;
+      }
+
+      const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[c]));
+
+      const fmtSize = (n) => {
+        if (!n) return "";
+        if (n < 1024) return n + " B";
+        if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+        return (n / (1024 * 1024)).toFixed(1) + " MB";
+      };
+
+      const fmtDate = (iso) => {
+        try {
+          const d = new Date(iso);
+          return d.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+        } catch { return iso || "—"; }
+      };
+
+      const renderQueue = (items) => {
+        const root = document.querySelector("[data-queue]");
+        root.innerHTML = items.map((it) => {
+          const meta = it.meta || {};
+          const files = it.files || [];
+          const subfolderLabel = meta.subfolder ? ` / ${esc(meta.subfolder)}` : "";
+          return `
+            <article class="border border-slate-200 rounded-2xl bg-white shadow-sm p-5 space-y-3">
+              <header class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-[10px] uppercase tracking-widest text-brand-700 font-bold">
+                    ${esc(meta.category || "?")}${subfolderLabel}
+                  </p>
+                  <p class="mt-1 text-sm font-semibold text-slate-900">${esc(meta.uploaderName || meta.uploader || "Unknown uploader")}</p>
+                  <p class="text-xs text-slate-500">${esc(meta.uploader || "")} · ${esc(fmtDate(meta.uploadedAt))}</p>
+                </div>
+              </header>
+
+              ${meta.description ? `<p class="text-sm text-slate-700 leading-relaxed bg-slate-50 border border-slate-200 rounded p-3">${esc(meta.description)}</p>` : ""}
+
+              <div class="text-xs space-y-1">
+                ${files.map((f) => `
+                  <div class="flex items-center justify-between gap-2">
+                    <a href="${esc(WORKER_URL)}/api/content/${esc(f.path)}" target="_blank" rel="noopener" class="text-brand-700 hover:underline truncate">${esc(f.path.split("/").pop())}</a>
+                    <span class="text-slate-500 tabular-nums">${esc(fmtSize(f.size))}</span>
+                  </div>
+                `).join("")}
+              </div>
+
+              <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+                <input type="text" data-rename placeholder="Optional rename on approve (single-file only)"
+                       class="flex-1 border border-slate-300 rounded px-3 py-1.5 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+                <button type="button" data-action="approve" data-id="${esc(it.id)}"
+                        class="bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold px-3 py-1.5 rounded transition">
+                  Approve
+                </button>
+                <button type="button" data-action="reject" data-id="${esc(it.id)}"
+                        class="bg-white hover:bg-rose-50 border border-rose-300 text-rose-700 text-xs font-semibold px-3 py-1.5 rounded transition">
+                  Reject
+                </button>
+              </div>
+              <p data-row-msg class="hidden text-xs"></p>
+            </article>
+          `;
+        }).join("");
+      };
+
+      const submitReview = async (id, action, rename) => {
+        const r = await fetch(`${WORKER_URL}/api/review`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, action, rename: rename || undefined }),
+          credentials: "include",
+        });
+        return { ok: r.ok, data: await r.json().catch(() => ({})) };
+      };
+
+      const refresh = async () => {
+        try {
+          const meR = await fetch(`${WORKER_URL}/api/me`, { credentials: "include" });
+          if (!meR.ok) return setState("signed-out");
+          const me = await meR.json();
+          if (!me?.member?.isAdmin) return setState("forbidden");
+
+          const r = await fetch(`${WORKER_URL}/api/pending`, { credentials: "include" });
+          if (r.status === 401) return setState("signed-out");
+          if (r.status === 403) return setState("forbidden");
+          if (!r.ok) return setError("Couldn't load the queue (" + r.status + ").");
+
+          const data = await r.json();
+          const items = (data && data.items) || [];
+          if (items.length === 0) return setState("empty");
+          renderQueue(items);
+          setState("ready");
+        } catch {
+          setError("Couldn't reach the auth service.");
+        }
+      };
+
+      document.addEventListener("click", async (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLElement) || !t.dataset.action) return;
+        const action = t.dataset.action;
+        const id = t.dataset.id;
+        if (!id) return;
+        const card = t.closest("article");
+        const renameInput = card?.querySelector("[data-rename]");
+        const rename = renameInput instanceof HTMLInputElement ? renameInput.value.trim() : "";
+        const msgEl = card?.querySelector("[data-row-msg]");
+        if (action === "reject" && !confirm("Reject and permanently delete this submission?")) return;
+        if (msgEl) { msgEl.textContent = action === "approve" ? "Approving…" : "Rejecting…"; msgEl.classList.remove("hidden"); }
+        const { ok, data } = await submitReview(id, action, rename);
+        if (ok && data.ok) {
+          if (msgEl) {
+            msgEl.textContent = action === "approve"
+              ? "Approved → " + (data.destinations || []).join(", ")
+              : "Rejected.";
+            msgEl.classList.remove("text-rose-700");
+            msgEl.classList.add("text-brand-700");
+          }
+          // Refresh the queue after a moment
+          setTimeout(refresh, 1200);
+        } else if (msgEl) {
+          msgEl.textContent = data.error || "Failed.";
+          msgEl.classList.remove("hidden");
+          msgEl.classList.add("text-rose-700");
+        }
+      });
+
+      refresh();
+    })();
+  </script>
+</BaseLayout>
