@@ -1,0 +1,35 @@
+# Cloudflare Worker config — AsPEN member-auth gateway.
+# Deploy: `cd workers/aspen-auth && wrangler deploy`
+# Secrets:  `wrangler secret put GITHUB_PAT` (and JWT_SECRET, RESEND_API_KEY)
+name = "aspen-auth"
+main = "src/worker.ts"
+compatibility_date = "2025-05-01"
+
+# Public env vars (NOT secrets — these end up in the deployed worker config
+# and can be edited from the Cloudflare dashboard without redeploying).
+[vars]
+# The private GitHub repo holding members.json + papers/ + materials/.
+MEMBERS_REPO = "PHD-Center/aspen-members"
+
+# The branch in that repo to read from.
+MEMBERS_BRANCH = "main"
+
+# The base URL of the AsPEN site. Used to build the magic-link URL that
+# goes in the email body and as the post-verify redirect target.
+# Change this when AsPEN switches domain (e.g. to "https://aspensig.asia").
+SITE_BASE_URL = "https://phd-center.github.io/AsPEN"
+
+# Which origins are allowed to call the worker (CORS). Comma-separated list.
+# Update when the AsPEN site domain changes.
+ALLOWED_ORIGINS = "https://phd-center.github.io,http://localhost:4321"
+
+# Magic-link sender. Use the Resend sandbox until DNS for aspensig.asia is
+# verified, then switch to "noreply@aspensig.asia".
+SENDER_EMAIL = "onboarding@resend.dev"
+SENDER_NAME  = "AsPEN"
+
+# Session lifetime (days). Cookie max-age.
+SESSION_DAYS = "30"
+
+# Magic-link validity (minutes).
+MAGIC_LINK_MINUTES = "15"

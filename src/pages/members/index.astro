@@ -1,0 +1,111 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import { WORKER_URL } from "../../data/site-config";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+
+<BaseLayout
+  title="Members — AsPEN"
+  description="AsPEN members area — full-text library, materials, member directory."
+>
+  <PageHeader
+    eyebrow="Members"
+    title="Members area"
+    description="Welcome back."
+  />
+
+  <section class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <!-- gate state — JS swaps these based on /api/me response -->
+    <div data-state="loading" class="text-sm text-slate-600 italic">
+      Checking your session…
+    </div>
+
+    <div data-state="signed-out" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm text-slate-700">
+        You're not signed in. <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Sign in with a magic-link</a>.
+      </p>
+    </div>
+
+    <div data-state="signed-in" class="hidden space-y-8">
+      <!-- ── Greeting ──────────────────────────────────────── -->
+      <div class="border border-slate-200 rounded-2xl p-6 bg-white shadow-sm">
+        <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Signed in as</p>
+        <p class="mt-1 text-xl font-bold text-slate-900" data-member-name>—</p>
+        <p class="mt-0.5 text-sm text-slate-600" data-member-detail>—</p>
+        <button
+          type="button"
+          data-logout
+          class="mt-4 text-xs font-semibold text-slate-500 hover:text-rose-600 hover:underline"
+        >Sign out</button>
+      </div>
+
+      <!-- ── What's in here ────────────────────────────────── -->
+      <div class="grid gap-4 sm:grid-cols-2">
+        <a href={`${base}/members/papers`} class="group block border border-slate-200 rounded-lg p-5 bg-white hover:shadow-md hover:border-brand-400 transition">
+          <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold">Library</p>
+          <h3 class="mt-2 font-bold text-slate-900 group-hover:text-brand-700 transition">Papers</h3>
+          <p class="mt-1 text-sm text-slate-600">Author-shared AAMs of AsPEN papers we have permission to host.</p>
+        </a>
+        <a href={`${base}/members/materials`} class="group block border border-slate-200 rounded-lg p-5 bg-white hover:shadow-md hover:border-brand-400 transition">
+          <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold">Working materials</p>
+          <h3 class="mt-2 font-bold text-slate-900 group-hover:text-brand-700 transition">Protocols, slides, code</h3>
+          <p class="mt-1 text-sm text-slate-600">Study protocols, presentation decks, analysis code shared by AsPEN study leads.</p>
+        </a>
+      </div>
+
+      <p class="text-xs text-slate-500 italic">
+        New here? The library starts small and grows as authors send in copies of their work. If you'd like to contribute an AAM, write to <a class="text-brand-700 hover:underline" href={`${base}/contact/`}>the AsPEN office</a>.
+      </p>
+    </div>
+  </section>
+
+  <script is:inline define:vars={{ WORKER_URL, BASE: base }}>
+    (() => {
+      const setState = (name) => {
+        document.querySelectorAll("[data-state]").forEach((el) => {
+          el.classList.toggle("hidden", el.dataset.state !== name);
+        });
+      };
+
+      if (!WORKER_URL) {
+        document.querySelector("[data-state='loading']").textContent =
+          "Members area isn't enabled yet — the auth worker URL hasn't been set.";
+        return;
+      }
+
+      const fmtDetail = (m) => {
+        const parts = [];
+        if (m.affiliation) parts.push(m.affiliation);
+        if (m.country) parts.push(m.country);
+        return parts.join(" · ") || "—";
+      };
+
+      const refresh = async () => {
+        try {
+          const r = await fetch(`${WORKER_URL}/api/me`, { credentials: "include" });
+          if (r.ok) {
+            const data = await r.json();
+            if (data && data.ok && data.member) {
+              document.querySelector("[data-member-name]").textContent = data.member.name || data.member.email;
+              document.querySelector("[data-member-detail]").textContent = fmtDetail(data.member);
+              setState("signed-in");
+              return;
+            }
+          }
+          setState("signed-out");
+        } catch {
+          setState("signed-out");
+        }
+      };
+
+      document.querySelector("[data-logout]")?.addEventListener("click", async () => {
+        await fetch(`${WORKER_URL}/api/logout`, { method: "POST", credentials: "include" });
+        location.href = `${BASE}/members/login`;
+      });
+
+      refresh();
+    })();
+  </script>
+</BaseLayout>

@@ -1,0 +1,50 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import { WORKER_URL } from "../../data/site-config";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+
+<BaseLayout
+  title="Verifying sign-in — AsPEN"
+  description="Verifying your AsPEN magic-link…"
+>
+  <PageHeader
+    eyebrow="Members"
+    title="Verifying…"
+    description="Confirming your sign-in link with the AsPEN auth service."
+  />
+
+  <section class="mx-auto max-w-xl px-4 sm:px-6 lg:px-8 py-12">
+    <p data-status class="text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded p-4" role="status" aria-live="polite">
+      Verifying your link…
+    </p>
+    <p class="mt-6 text-sm text-slate-600">
+      Stuck? <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Request a new link</a>.
+    </p>
+  </section>
+
+  <script is:inline define:vars={{ WORKER_URL, BASE: base }}>
+    (() => {
+      const status = document.querySelector("[data-status]");
+      if (!status) return;
+      const params = new URLSearchParams(location.search);
+      const token = params.get("t");
+      if (!token) {
+        status.textContent = "No sign-in token in the URL.";
+        return;
+      }
+      if (!WORKER_URL) {
+        status.textContent = "Login isn't enabled yet — the worker URL hasn't been set.";
+        return;
+      }
+      // The worker handles /api/verify with a 302 redirect to /members/.
+      // The browser will follow it automatically because we navigate
+      // there directly (the response sets the session cookie via
+      // Set-Cookie on the worker domain — and we read /api/me from
+      // /members/ which uses the same cookie via credentials: include).
+      location.replace(`${WORKER_URL}/api/verify?t=${encodeURIComponent(token)}`);
+    })();
+  </script>
+</BaseLayout>
