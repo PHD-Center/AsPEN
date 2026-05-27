@@ -386,16 +386,23 @@ async function handleUpload(req: Request, env: Env): Promise<Response> {
   if (category === "materials" && subfolder && !/^[a-z0-9-]+$/.test(subfolder)) {
     return jsonResponse({ ok: false, error: "Invalid subfolder name." }, 400);
   }
-  // Reading-attached paper uploads must reference an existing pick by pmid.
+  // Reading-attached paper uploads must reference a known pmid — either an
+  // existing pick OR an open suggestion (so members can attach the PDF when
+  // they suggest the paper, before the chair has promoted it).
   let pmid: string | undefined;
   if (category === "reading") {
     pmid = String(form.get("pmid") || "").trim();
     if (!/^\d{6,9}$/.test(pmid)) {
       return jsonResponse({ ok: false, error: "PMID required for reading upload." }, 400);
     }
-    const { list } = await fetchReading(env);
-    if (!list.some((p) => p.pmid === pmid)) {
-      return jsonResponse({ ok: false, error: "Pick not found for that PMID." }, 404);
+    const { list: picks } = await fetchReading(env);
+    const isPick = picks.some((p) => p.pmid === pmid);
+    if (!isPick) {
+      const { list: suggs } = await fetchSuggestions(env);
+      const isSuggested = suggs.some((s) => s.pmid === pmid && s.status === "open");
+      if (!isSuggested) {
+        return jsonResponse({ ok: false, error: "No pick or open suggestion for that PMID." }, 404);
+      }
     }
   }
   const description = String(form.get("description") || "").trim().slice(0, 2000);

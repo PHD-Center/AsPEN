@@ -78,6 +78,12 @@ const EMOJIS = ["👍", "🤔", "📌", "⭐"];
                       placeholder="One paragraph: what it's about and why it matters for AsPEN members."
                       class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
           </label>
+          <label class="block">
+            <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">PDF (optional)</span>
+            <input type="file" name="file" accept=".pdf"
+                   class="mt-1 block w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100" />
+            <span class="block mt-1 text-[11px] text-slate-500">Attach the author-accepted manuscript or open-access PDF. Goes through the chair's review queue; if the paper becomes a pick, the file is downloadable from its card.</span>
+          </label>
           <button type="submit" class="inline-flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2 rounded text-sm transition disabled:opacity-60">
             Send suggestion
           </button>
@@ -525,27 +531,54 @@ const EMOJIS = ["👍", "🤔", "📌", "⭐"];
       suggestForm?.addEventListener("submit", async (e) => {
         e.preventDefault();
         const data = new FormData(suggestForm);
-        const body = {
-          pmid: String(data.get("pmid") || ""),
-          reason: String(data.get("reason") || ""),
-        };
+        const pmid = String(data.get("pmid") || "").trim();
+        const reason = String(data.get("reason") || "").trim();
+        const file = data.get("file");
+        const hasFile = file instanceof File && file.name && file.size > 0;
+
         const btn = suggestForm.querySelector("button[type='submit']");
         btn.disabled = true;
         setSuggestMsg("Sending…");
+
+        // 1) Post the suggestion (JSON)
         const r = await fetch(`${WORKER_URL}/api/reading/suggest`, {
           method: "POST", credentials: "include",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
+          body: JSON.stringify({ pmid, reason }),
         });
         const d = await r.json().catch(() => ({}));
-        if (r.ok && d.ok) {
+        if (!(r.ok && d.ok)) {
+          setSuggestMsg(d.error || "Couldn't send.", true);
+          btn.disabled = false;
+          return;
+        }
+
+        // 2) If a PDF was attached, also send it to the upload queue tagged with the pmid.
+        if (hasFile) {
+          setSuggestMsg("Suggestion sent. Uploading PDF…");
+          const up = new FormData();
+          up.append("file", file);
+          up.append("category", "reading");
+          up.append("pmid", pmid);
+          if (reason) up.append("description", reason.slice(0, 500));
+          const u = await fetch(`${WORKER_URL}/api/upload`, {
+            method: "POST", credentials: "include", body: up,
+          });
+          const ud = await u.json().catch(() => ({}));
+          if (!(u.ok && ud.ok)) {
+            setSuggestMsg("Suggestion sent, but PDF upload failed: " + (ud.error || u.status), true);
+            btn.disabled = false;
+            return;
+          }
+          setSuggestMsg(d.deduped
+            ? "You've already suggested this — PDF added to the queue."
+            : "Suggestion + PDF sent. Both go to the chair's review queue.");
+        } else {
           setSuggestMsg(d.deduped
             ? "You've already suggested this — it's already in the queue."
             : "Sent. Thanks — the chair will see this in the admin queue.");
-          suggestForm.reset();
-        } else {
-          setSuggestMsg(d.error || "Couldn't send.", true);
         }
+        suggestForm.reset();
         btn.disabled = false;
       });
 
