@@ -113,6 +113,25 @@ Worker 的 GitHub PAT 也可以從 API 讀到這份檔案。
 | Resend 帳號密碼 / 2FA | Daniel | 擁有寄信網域 | 失去寄信 / 變更寄信者的能力。 |
 | GitHub 帳號 | Daniel (PHD-Center org admin) | Push 兩個 repo | 失去 commit 權限。 |
 
+### 目前的維運分工
+
+兩位主要維護者皆有完整寫入權,推 main 即可自動部署網站、可獨立部署
+Worker:
+
+| 維護者 | GitHub | Cloudflare | Resend |
+|---|---|---|---|
+| 蔡相德 Daniel Tsai | PHD-Center org admin · 兩個 repo 寫入 | 帳號擁有者 · 可看/改 secrets | 帳號擁有者 |
+| 邱宏嘉 Hong-Chia Chiu | `yumemi2020` · 兩個 repo Maintain | Account member · 可部署 worker(secrets 不需要知道,deploy 自動帶) | — |
+
+意涵:
+- **網站更新** — 任一人 push 到 `PHD-Center/AsPEN` main → GitHub Actions
+  自動 build + 部署 GitHub Pages。
+- **會員資料 / 讀書會內容** — 站內 admin UI 是日常方式(透過 Worker
+  寫回 aspen-members repo);也可任一人直接編 `PHD-Center/aspen-members`
+  的 JSON 後 push。
+- **Worker 更新** — 任一人在本機 `cd workers/aspen-auth && npx wrangler deploy`
+  即可,secrets 已存在 Cloudflare 不必重設。
+
 ---
 
 ## 3 · 給 IT 的三種「擁有」這套系統的方法
