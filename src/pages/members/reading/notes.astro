@@ -1,0 +1,221 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PageHeader from "../../../components/PageHeader.astro";
+import { WORKER_URL } from "../../../data/site-config";
+import pubsRaw from "../../../data/publications.json";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+type Pub = (typeof pubsRaw)[number];
+const pubsByPmid: Record<string, {
+  title: string;
+  authors: string;
+  journal: string;
+  year: number;
+  doi?: string;
+  pmcid?: string;
+}> = {};
+for (const p of pubsRaw as Pub[]) {
+  if (!p.pmid) continue;
+  pubsByPmid[p.pmid] = {
+    title: p.title,
+    authors: p.authors,
+    journal: p.journal,
+    year: p.year,
+    doi: p.doi,
+    pmcid: (p as { pmcid?: string }).pmcid,
+  };
+}
+---
+
+<BaseLayout
+  title="My reading notes — AsPEN members"
+  description="Your personal reading notes — takes and reactions across all reading-group picks."
+>
+  <PageHeader
+    eyebrow="Members → Reading group"
+    title="My reading notes"
+    description="Your own takes and reactions across every reading-group pick. Private to you. Export as Markdown anytime."
+  />
+
+  <section class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+    <div class="flex items-center justify-between gap-3 flex-wrap text-sm">
+      <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/reading`}>← Reading group</a>
+      <button type="button" data-export class="hidden text-xs font-semibold bg-brand-700 hover:bg-brand-800 text-white px-3 py-1.5 rounded transition">
+        ⬇ Export as Markdown
+      </button>
+    </div>
+
+    <div data-state="loading" class="text-sm text-slate-600 italic">Loading…</div>
+    <div data-state="signed-out" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm text-slate-700">You're not signed in. <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Sign in →</a></p>
+    </div>
+    <div data-state="empty" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm text-slate-700">
+        Your reading notes are empty. Go to <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/reading`}>the reading group</a> and react / write a take on any pick — it'll show up here.
+      </p>
+    </div>
+    <div data-state="error" class="hidden border border-rose-300 bg-rose-50 rounded-lg p-6">
+      <p class="text-sm text-rose-800" data-error-msg></p>
+    </div>
+
+    <div data-state="ready" class="hidden space-y-4">
+      <p class="text-xs text-slate-500 leading-relaxed">
+        Sorted newest first. Click "Edit on the pick" to change a take from the original pick page.
+      </p>
+      <div data-notes class="space-y-4"></div>
+    </div>
+  </section>
+
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, pubsByPmid }}>
+    (() => {
+      const setState = (name) => {
+        document.querySelectorAll("[data-state]").forEach((el) => {
+          el.classList.toggle("hidden", el.dataset.state !== name);
+        });
+      };
+      const setError = (msg) => {
+        document.querySelector("[data-error-msg]").textContent = msg;
+        setState("error");
+      };
+      if (!WORKER_URL) return setError("Members area isn't enabled yet.");
+
+      const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[c]));
+      const fmtDate = (iso) => { try { return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }); } catch { return iso; } };
+
+      let myNotes = []; // [{ pick, take, myReactions, paper }]
+      let myEmail = "";
+
+      const buildNotes = (picks) => {
+        const out = [];
+        for (const pick of picks) {
+          const take = (pick.takes || {})[myEmail];
+          const myReactions = ((pick.reactions || {})[myEmail]) || [];
+          if (!take && myReactions.length === 0) continue;
+          out.push({ pick, take, myReactions, paper: pubsByPmid[pick.pmid] });
+        }
+        // Sort by most-recent activity: take.updatedAt if any, else pick.pickedAt
+        out.sort((a, b) => {
+          const ta = a.take?.updatedAt || a.pick.pickedAt;
+          const tb = b.take?.updatedAt || b.pick.pickedAt;
+          return tb.localeCompare(ta);
+        });
+        return out;
+      };
+
+      const renderNotes = () => {
+        const root = document.querySelector("[data-notes]");
+        root.innerHTML = myNotes.map((n) => `
+          <article class="border border-slate-200 rounded-2xl bg-white p-5 space-y-3">
+            <div>
+              <p class="text-[10px] uppercase tracking-widest text-brand-600 font-semibold">${esc(fmtDate(n.pick.pickedAt))}</p>
+              <p class="mt-1 text-sm font-semibold text-slate-900 leading-snug">${esc(n.pick.headline)}</p>
+              ${n.paper ? `
+                <p class="text-xs text-slate-600 mt-1 truncate" title="${esc(n.paper.title)}">${esc(n.paper.title)}</p>
+                <p class="text-[10px] text-slate-500 mt-0.5">${esc(n.paper.journal)} · ${n.paper.year}</p>
+              ` : `<p class="text-xs text-slate-500 mt-1">PMID ${esc(n.pick.pmid)}</p>`}
+            </div>
+
+            ${n.myReactions.length > 0 ? `
+              <div>
+                <p class="text-[10px] uppercase tracking-widest text-brand-600 font-semibold mb-1">My reactions</p>
+                <div class="flex gap-1.5">${n.myReactions.map((e) => `<span class="text-sm">${esc(e)}</span>`).join("")}</div>
+              </div>
+            ` : ""}
+
+            ${n.take && n.take.text ? `
+              <div>
+                <p class="text-[10px] uppercase tracking-widest text-brand-600 font-semibold mb-1">My take ${n.take.share ? '<span class="text-[9px] text-emerald-700 ml-1 font-normal">· shared</span>' : '<span class="text-[9px] text-slate-500 ml-1 font-normal">· private</span>'}</p>
+                <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-line bg-brand-50/40 border border-brand-100 rounded p-3">${esc(n.take.text)}</p>
+                <p class="text-[10px] text-slate-500 mt-1">Last updated ${esc(fmtDate(n.take.updatedAt))}</p>
+              </div>
+            ` : ""}
+
+            <div class="pt-2 border-t border-slate-100 text-xs">
+              <a href="${esc(BASE)}/members/reading#" class="text-brand-700 hover:underline font-semibold">Edit on the pick →</a>
+            </div>
+          </article>
+        `).join("");
+      };
+
+      const toMarkdown = () => {
+        const dateStamp = new Date().toISOString().slice(0, 10);
+        const lines = [
+          `# My AsPEN reading notes`,
+          ``,
+          `_Exported ${dateStamp} for ${myEmail}_`,
+          ``,
+          `---`,
+          ``,
+        ];
+        for (const n of myNotes) {
+          lines.push(`## ${n.pick.headline}`);
+          lines.push("");
+          if (n.paper) {
+            lines.push(`_${n.paper.authors}. **${n.paper.title}**. ${n.paper.journal} ${n.paper.year}._`);
+            const refs = [];
+            if (n.paper.pmcid) refs.push(`[PMC](https://pmc.ncbi.nlm.nih.gov/articles/${n.paper.pmcid}/)`);
+            if (n.paper.doi) refs.push(`[DOI](https://doi.org/${n.paper.doi})`);
+            refs.push(`[PMID ${n.pick.pmid}](https://pubmed.ncbi.nlm.nih.gov/${n.pick.pmid}/)`);
+            lines.push(refs.join(" · "));
+            lines.push("");
+          }
+          lines.push(`_Picked ${fmtDate(n.pick.pickedAt)}_`);
+          lines.push("");
+          if (n.myReactions.length > 0) {
+            lines.push(`**My reactions:** ${n.myReactions.join(" ")}`);
+            lines.push("");
+          }
+          if (n.take && n.take.text) {
+            lines.push(`**My take** (${n.take.share ? "shared" : "private"}, last updated ${fmtDate(n.take.updatedAt)}):`);
+            lines.push("");
+            lines.push("> " + n.take.text.split("\n").join("\n> "));
+            lines.push("");
+          }
+          lines.push("---");
+          lines.push("");
+        }
+        return lines.join("\n");
+      };
+
+      document.querySelector("[data-export]")?.addEventListener("click", () => {
+        const md = toMarkdown();
+        const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+        const href = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = href;
+        a.download = `aspen-reading-notes-${new Date().toISOString().slice(0,10)}.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(href), 1000);
+      });
+
+      const refresh = async () => {
+        try {
+          const meR = await fetch(`${WORKER_URL}/api/me`, { credentials: "include" });
+          if (!meR.ok) return setState("signed-out");
+          const meData = await meR.json();
+          myEmail = (meData?.member?.email || "").toLowerCase();
+
+          const r = await fetch(`${WORKER_URL}/api/reading`, { credentials: "include" });
+          if (r.status === 401) return setState("signed-out");
+          if (!r.ok) return setError("Couldn't load reading data (" + r.status + ").");
+          const data = await r.json();
+          const picks = (data && data.picks) || [];
+          myNotes = buildNotes(picks);
+          if (myNotes.length === 0) return setState("empty");
+          renderNotes();
+          document.querySelector("[data-export]")?.classList.remove("hidden");
+          setState("ready");
+        } catch {
+          setError("Couldn't reach the auth service.");
+        }
+      };
+
+      refresh();
+    })();
+  </script>
+</BaseLayout>

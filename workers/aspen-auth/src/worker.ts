@@ -119,6 +119,18 @@ export default {
         resp = await handleReadingList(req, env);
       } else if (url.pathname === "/api/admin/reading" && req.method === "POST") {
         resp = await handleAdminReading(req, env);
+      } else if (url.pathname === "/api/reading/react" && req.method === "POST") {
+        resp = await handleReadingReact(req, env);
+      } else if (url.pathname === "/api/reading/take" && req.method === "POST") {
+        resp = await handleReadingTake(req, env);
+      } else if (url.pathname === "/api/reading/comment" && req.method === "POST") {
+        resp = await handleReadingComment(req, env);
+      } else if (url.pathname === "/api/reading/suggest" && req.method === "POST") {
+        resp = await handleReadingSuggest(req, env);
+      } else if (url.pathname === "/api/reading/suggestions" && req.method === "GET") {
+        resp = await handleReadingSuggestions(req, env);
+      } else if (url.pathname === "/api/admin/reading/promote-suggestion" && req.method === "POST") {
+        resp = await handleAdminPromoteSuggestion(req, env);
       } else if (url.pathname === "/api/admin/members" && req.method === "GET") {
         resp = await handleAdminMembersList(req, env);
       } else if (url.pathname === "/api/admin/members" && req.method === "POST") {
@@ -558,20 +570,53 @@ async function handleReview(req: Request, env: Env): Promise<Response> {
 
 // ── Reading group ──────────────────────────────────────────────────────
 
+interface ReadingComment {
+  author: string;     // email (lowercased)
+  name: string;       // display name at time of posting
+  body: string;
+  postedAt: string;
+}
+
+interface ReadingTake {
+  text: string;
+  share: boolean;     // false = private to that member
+  updatedAt: string;
+}
+
 interface ReadingPick {
   pmid: string;
   pickedAt: string;
   pickedBy: string;
   headline: string;
   commentary: string;
+  /** email → list of emojis the member has reacted with */
+  reactions?: Record<string, string[]>;
+  /** email → that member's "My take" */
+  takes?: Record<string, ReadingTake>;
+  /** chronological list of public comments */
+  comments?: ReadingComment[];
 }
+
+const ALLOWED_EMOJIS = ["👍", "🤔", "📌", "⭐"] as const;
 
 async function handleReadingList(req: Request, env: Env): Promise<Response> {
   // Any signed-in active member can read the reading list.
   const m = await sessionMember(req, env);
   if (!m) return jsonResponse({ ok: false }, 401);
-  const picks = await fetchReading(env);
-  return jsonResponse({ ok: true, picks: picks.list });
+  const { list } = await fetchReading(env);
+  const me = m.email.toLowerCase();
+
+  // For each pick: strip other members' private takes (keep only mine + shared).
+  // Reactions and comments are public.
+  const filtered = list.map((p) => {
+    const takes: Record<string, ReadingTake> = {};
+    for (const [email, t] of Object.entries(p.takes ?? {})) {
+      if (t.share || email.toLowerCase() === me) takes[email] = t;
+    }
+    return { ...p, takes };
+  });
+
+  return jsonResponse({ ok: true, picks: filtered });
 }
 
 async function handleAdminReading(req: Request, env: Env): Promise<Response> {
@@ -611,6 +656,183 @@ async function handleAdminReading(req: Request, env: Env): Promise<Response> {
   await putJsonFile(env, "reading.json", JSON.stringify(next, null, 2) + "\n", sha,
     `Reading: ${action} ${pmid} by ${m.email}`);
 
+  return jsonResponse({ ok: true });
+}
+
+// ── Per-pick engagement: react / take / comment ────────────────────────
+
+async function withReadingPick<T>(
+  env: Env,
+  pmid: string,
+  fn: (pick: ReadingPick) => void,
+  commitMsg: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const { list, sha } = await fetchReading(env);
+  const pick = list.find((p) => p.pmid === pmid);
+  if (!pick) return { ok: false, error: "Pick not found." };
+  fn(pick);
+  await putJsonFile(env, "reading.json",
+    JSON.stringify(list, null, 2) + "\n", sha, commitMsg);
+  return { ok: true };
+}
+
+async function handleReadingReact(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  const body = await safeJson<{ pmid?: string; emoji?: string }>(req);
+  const pmid = String(body?.pmid || "");
+  const emoji = String(body?.emoji || "");
+  if (!pmid || !ALLOWED_EMOJIS.includes(emoji as (typeof ALLOWED_EMOJIS)[number])) {
+    return jsonResponse({ ok: false, error: "Invalid request." }, 400);
+  }
+  const email = m.email.toLowerCase();
+  const r = await withReadingPick(env, pmid, (pick) => {
+    pick.reactions ??= {};
+    const list = new Set(pick.reactions[email] ?? []);
+    if (list.has(emoji)) list.delete(emoji);
+    else list.add(emoji);
+    if (list.size === 0) delete pick.reactions[email];
+    else pick.reactions[email] = Array.from(list);
+  }, `Reading react ${pmid} ${emoji} by ${email}`);
+  if (!r.ok) return jsonResponse(r, 400);
+  return jsonResponse({ ok: true });
+}
+
+async function handleReadingTake(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  const body = await safeJson<{ pmid?: string; text?: string; share?: boolean }>(req);
+  const pmid = String(body?.pmid || "");
+  const text = String(body?.text || "").trim().slice(0, 2000);
+  const share = Boolean(body?.share);
+  if (!pmid) return jsonResponse({ ok: false, error: "Missing pmid." }, 400);
+
+  const email = m.email.toLowerCase();
+  const r = await withReadingPick(env, pmid, (pick) => {
+    pick.takes ??= {};
+    if (!text) {
+      delete pick.takes[email];     // empty text → remove the take entirely
+    } else {
+      pick.takes[email] = { text, share, updatedAt: new Date().toISOString() };
+    }
+  }, `Reading take ${pmid} by ${email}`);
+  if (!r.ok) return jsonResponse(r, 400);
+  return jsonResponse({ ok: true });
+}
+
+async function handleReadingComment(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  const body = await safeJson<{ pmid?: string; body?: string }>(req);
+  const pmid = String(body?.pmid || "");
+  const text = String(body?.body || "").trim().slice(0, 3000);
+  if (!pmid || !text) return jsonResponse({ ok: false, error: "Missing fields." }, 400);
+
+  const email = m.email.toLowerCase();
+  const r = await withReadingPick(env, pmid, (pick) => {
+    pick.comments ??= [];
+    pick.comments.push({
+      author: email,
+      name: m.name,
+      body: text,
+      postedAt: new Date().toISOString(),
+    });
+  }, `Reading comment ${pmid} by ${email}`);
+  if (!r.ok) return jsonResponse(r, 400);
+  return jsonResponse({ ok: true });
+}
+
+// ── Suggestions ────────────────────────────────────────────────────────
+
+interface ReadingSuggestion {
+  pmid: string;
+  reason: string;
+  suggestedBy: string;
+  suggestedByName: string;
+  suggestedAt: string;
+  status: "open" | "promoted" | "dismissed";
+}
+
+async function fetchSuggestions(env: Env): Promise<{ list: ReadingSuggestion[]; sha: string }> {
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/contents/suggestions.json?ref=${env.MEMBERS_BRANCH}`;
+  const r = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+    },
+  });
+  if (!r.ok) {
+    if (r.status === 404) return { list: [], sha: "" };
+    throw new Error(`fetchSuggestions ${r.status}`);
+  }
+  const data = await r.json() as { content: string; sha: string };
+  const text = utf8FromBase64(data.content.replace(/\s+/g, ""));
+  let list: ReadingSuggestion[] = [];
+  try { list = JSON.parse(text); } catch { list = []; }
+  if (!Array.isArray(list)) list = [];
+  return { list, sha: data.sha };
+}
+
+async function handleReadingSuggest(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  const body = await safeJson<{ pmid?: string; reason?: string }>(req);
+  const pmid = String(body?.pmid || "").trim();
+  const reason = String(body?.reason || "").trim().slice(0, 1500);
+  if (!/^\d{6,9}$/.test(pmid)) {
+    return jsonResponse({ ok: false, error: "PMID should be 6–9 digits." }, 400);
+  }
+  if (!reason) return jsonResponse({ ok: false, error: "Tell us why." }, 400);
+
+  const { list, sha } = await fetchSuggestions(env);
+  // Dedupe: same email + pmid + open → ignore
+  const already = list.find((s) =>
+    s.pmid === pmid &&
+    s.suggestedBy.toLowerCase() === m.email.toLowerCase() &&
+    s.status === "open"
+  );
+  if (already) return jsonResponse({ ok: true, deduped: true });
+
+  list.unshift({
+    pmid,
+    reason,
+    suggestedBy: m.email.toLowerCase(),
+    suggestedByName: m.name,
+    suggestedAt: new Date().toISOString(),
+    status: "open",
+  });
+  await putJsonFile(env, "suggestions.json",
+    JSON.stringify(list, null, 2) + "\n", sha,
+    `Suggestion: ${pmid} by ${m.email}`);
+  return jsonResponse({ ok: true });
+}
+
+async function handleReadingSuggestions(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+  const { list } = await fetchSuggestions(env);
+  return jsonResponse({ ok: true, suggestions: list });
+}
+
+async function handleAdminPromoteSuggestion(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+  const body = await safeJson<{ pmid?: string; action?: "promote" | "dismiss" }>(req);
+  const pmid = String(body?.pmid || "");
+  const action = body?.action;
+  if (!pmid || (action !== "promote" && action !== "dismiss")) {
+    return jsonResponse({ ok: false, error: "Invalid request." }, 400);
+  }
+  const { list, sha } = await fetchSuggestions(env);
+  const target = list.find((s) => s.pmid === pmid && s.status === "open");
+  if (!target) return jsonResponse({ ok: false, error: "Suggestion not found." }, 404);
+  target.status = action === "promote" ? "promoted" : "dismissed";
+  await putJsonFile(env, "suggestions.json",
+    JSON.stringify(list, null, 2) + "\n", sha,
+    `Suggestion ${pmid}: ${action} by ${m.email}`);
   return jsonResponse({ ok: true });
 }
 

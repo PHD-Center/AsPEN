@@ -64,7 +64,15 @@ const pubsForPicker = (pubsRaw as Pub[])
 
       <!-- ── Pane: Reading group ─────────────────────────────── -->
       <div data-pane="reading" class="hidden space-y-6">
-        <details class="border border-slate-200 rounded-lg bg-white">
+        <!-- Member-suggested papers -->
+        <div data-suggestions-wrap class="hidden">
+          <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">
+            Member suggestions · <span data-suggestions-count>0</span>
+          </p>
+          <div data-suggestions class="space-y-2"></div>
+        </div>
+
+        <details data-pick-details class="border border-slate-200 rounded-lg bg-white">
           <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-50/40 rounded-lg">
             ＋ Add a reading-group pick
           </summary>
@@ -310,6 +318,70 @@ const pubsForPicker = (pubsRaw as Pub[])
         if (r.ok) loadReading();
       });
 
+      // Suggestions sub-section
+      const suggestionsWrap = document.querySelector("[data-suggestions-wrap]");
+      const suggestionsRoot = document.querySelector("[data-suggestions]");
+      const suggestionsCount = document.querySelector("[data-suggestions-count]");
+
+      const renderSuggestions = (items) => {
+        const open = items.filter((s) => s.status === "open");
+        suggestionsCount.textContent = open.length;
+        if (open.length === 0) {
+          suggestionsWrap.classList.add("hidden");
+          return;
+        }
+        suggestionsWrap.classList.remove("hidden");
+        suggestionsRoot.innerHTML = open.map((s) => `
+          <article class="border border-slate-200 rounded-lg p-3 bg-white">
+            <p class="text-xs text-slate-500"><a href="https://pubmed.ncbi.nlm.nih.gov/${esc(s.pmid)}/" target="_blank" rel="noopener" class="text-brand-700 hover:underline font-semibold">PMID ${esc(s.pmid)}</a> · suggested by ${esc(s.suggestedByName || s.suggestedBy)} · ${esc(fmtDate(s.suggestedAt))}</p>
+            <p class="text-sm text-slate-700 leading-relaxed mt-1 whitespace-pre-line">${esc(s.reason)}</p>
+            <div class="mt-2 flex gap-2">
+              <button type="button" data-promote-pmid="${esc(s.pmid)}" data-reason="${esc(s.reason)}" class="text-xs font-semibold bg-brand-700 hover:bg-brand-800 text-white px-3 py-1.5 rounded transition">Use as a pick →</button>
+              <button type="button" data-dismiss-pmid="${esc(s.pmid)}" class="text-xs font-semibold text-slate-500 hover:text-rose-600 hover:underline">Dismiss</button>
+            </div>
+          </article>
+        `).join("");
+      };
+
+      const loadSuggestions = async () => {
+        try {
+          const r = await fetch(`${WORKER_URL}/api/reading/suggestions`, { credentials: "include" });
+          if (!r.ok) return;
+          const data = await r.json();
+          renderSuggestions(data.suggestions || []);
+        } catch {}
+      };
+
+      suggestionsRoot?.addEventListener("click", async (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLElement)) return;
+        if (t.dataset.dismissPmid) {
+          if (!confirm("Dismiss this suggestion?")) return;
+          await fetch(`${WORKER_URL}/api/admin/reading/promote-suggestion`, {
+            method: "POST", credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pmid: t.dataset.dismissPmid, action: "dismiss" }),
+          });
+          loadSuggestions();
+        } else if (t.dataset.promotePmid) {
+          // Pre-fill the pick form, scroll to it, open it
+          const form = document.querySelector("[data-pick-form]");
+          const details = document.querySelector("[data-pick-details]");
+          if (form) {
+            const pmidSelect = form.querySelector('select[name="pmid"]');
+            const headlineInput = form.querySelector('input[name="headline"]');
+            const commentaryArea = form.querySelector('textarea[name="commentary"]');
+            if (pmidSelect) pmidSelect.value = t.dataset.promotePmid;
+            if (commentaryArea && t.dataset.reason) commentaryArea.value = t.dataset.reason;
+            if (headlineInput) headlineInput.focus();
+            // Mark for follow-up dismiss after a successful pick
+            form.dataset.promotingPmid = t.dataset.promotePmid;
+          }
+          if (details) details.open = true;
+          details?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+
       const pickForm = document.querySelector("[data-pick-form]");
       const pickMsg = pickForm?.querySelector("[data-pick-msg]");
       const setPickMsg = (msg, isError = false) => {
@@ -338,6 +410,17 @@ const pubsForPicker = (pubsRaw as Pub[])
         const d = await r.json().catch(() => ({}));
         if (r.ok && d.ok) {
           setPickMsg("Added.");
+          // If this pick was promoted from a suggestion, mark the suggestion as promoted.
+          const promotedPmid = pickForm.dataset.promotingPmid;
+          if (promotedPmid && promotedPmid === body.pmid) {
+            await fetch(`${WORKER_URL}/api/admin/reading/promote-suggestion`, {
+              method: "POST", credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ pmid: promotedPmid, action: "promote" }),
+            });
+            delete pickForm.dataset.promotingPmid;
+            loadSuggestions();
+          }
           pickForm.reset();
           loadReading();
         } else {
@@ -464,6 +547,7 @@ const pubsForPicker = (pubsRaw as Pub[])
           setState("ready");
           loadUploads();
           loadReading();
+          loadSuggestions();
           loadMembers();
         } catch { setState("signed-out"); }
       })();

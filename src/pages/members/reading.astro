@@ -6,8 +6,6 @@ import pubsRaw from "../../data/publications.json";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-// Compact lookup table — pmid → minimal paper info — embedded in the page
-// so the client doesn't need a second fetch to render bibliographic detail.
 type Pub = (typeof pubsRaw)[number];
 const pubsByPmid: Record<string, {
   title: string;
@@ -30,47 +28,72 @@ for (const p of pubsRaw as Pub[]) {
     fulltext: (p as { fulltext?: string }).fulltext,
   };
 }
+
+const EMOJIS = ["👍", "🤔", "📌", "⭐"];
 ---
 
 <BaseLayout
   title="Reading group — AsPEN members"
-  description="AsPEN paper-of-the-month picks with chair commentary."
+  description="AsPEN paper-of-the-month picks: react, take notes, discuss."
 >
   <PageHeader
     eyebrow="Members → Reading group"
     title="AsPEN reading group"
-    description="Featured papers picked by the AsPEN office, with a short take on why each one matters."
+    description="Featured papers with chair commentary. React, jot down your own take, or join the discussion."
   />
 
   <section class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-    <p class="text-sm">
+    <div class="flex items-center justify-between gap-3 flex-wrap text-sm">
       <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/`}>← Members area</a>
-    </p>
-
-    <div data-state="loading" class="text-sm text-slate-600 italic">
-      Loading…
+      <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/reading/notes`}>My reading notes →</a>
     </div>
 
+    <div data-state="loading" class="text-sm text-slate-600 italic">Loading…</div>
     <div data-state="signed-out" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
-      <p class="text-sm text-slate-700">
-        You're not signed in. <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Sign in →</a>
-      </p>
+      <p class="text-sm text-slate-700">You're not signed in. <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Sign in →</a></p>
     </div>
-
-    <div data-state="empty" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
-      <p class="text-sm text-slate-700">
-        No reading-group picks yet. The AsPEN office adds new picks here. Check back soon.
-      </p>
-    </div>
-
     <div data-state="error" class="hidden border border-rose-300 bg-rose-50 rounded-lg p-6">
       <p class="text-sm text-rose-800" data-error-msg></p>
     </div>
 
-    <div data-state="ready" class="hidden space-y-6" data-picks></div>
+    <div data-state="ready" class="hidden space-y-8">
+      <!-- ── Suggest a paper (open to all members) ───────────── -->
+      <details class="border border-slate-200 rounded-lg bg-white">
+        <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-50/40 rounded-lg">
+          💡 Suggest a paper for the reading group
+        </summary>
+        <form data-suggest-form class="p-4 space-y-3 border-t border-slate-100">
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Recommend an AsPEN-relevant paper for the AsPEN office to consider as a future pick. Goes to the chair's queue — no obligation to publish.
+          </p>
+          <label class="block">
+            <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">PMID</span>
+            <input type="text" name="pmid" required pattern="\d{6,9}" inputmode="numeric"
+                   placeholder="e.g. 23653370"
+                   class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+          </label>
+          <label class="block">
+            <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Why this paper?</span>
+            <textarea name="reason" required rows="3" maxlength="1500"
+                      placeholder="One paragraph: what it's about and why it matters for AsPEN members."
+                      class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+          </label>
+          <button type="submit" class="inline-flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2 rounded text-sm transition disabled:opacity-60">
+            Send suggestion
+          </button>
+          <p data-suggest-msg class="hidden text-sm bg-slate-50 border border-slate-200 rounded p-3" role="status" aria-live="polite"></p>
+        </form>
+      </details>
+
+      <div data-empty class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+        <p class="text-sm text-slate-700">No reading-group picks yet. The AsPEN office adds new picks here. Suggest one above — could be yours!</p>
+      </div>
+
+      <div data-picks class="space-y-6"></div>
+    </div>
   </section>
 
-  <script is:inline define:vars={{ WORKER_URL, BASE: base, pubsByPmid }}>
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, pubsByPmid, EMOJIS }}>
     (() => {
       const setState = (name) => {
         document.querySelectorAll("[data-state]").forEach((el) => {
@@ -87,19 +110,64 @@ for (const p of pubsRaw as Pub[]) {
       const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
       }[c]));
-
       const fmtDate = (iso) => {
         try { return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }); }
         catch { return iso; }
       };
+      const fmtRel = (iso) => {
+        try {
+          const diffMs = Date.now() - new Date(iso).getTime();
+          const m = Math.floor(diffMs / 60000);
+          if (m < 1) return "just now";
+          if (m < 60) return m + " min ago";
+          const h = Math.floor(m / 60);
+          if (h < 24) return h + " h ago";
+          const d = Math.floor(h / 24);
+          if (d < 7) return d + " d ago";
+          return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        } catch { return iso; }
+      };
+
+      let me = { email: "", name: "" };
 
       const renderPick = (pick, isFeatured) => {
         const paper = pubsByPmid[pick.pmid];
         const fullTextLink = paper?.pmcid
           ? `https://pmc.ncbi.nlm.nih.gov/articles/${paper.pmcid}/`
           : paper?.fulltext;
+
+        const reactions = pick.reactions || {};
+        const reactionCounts = {};
+        for (const emoji of EMOJIS) reactionCounts[emoji] = 0;
+        let myReactions = new Set();
+        for (const [email, emojis] of Object.entries(reactions)) {
+          for (const e of emojis) {
+            if (EMOJIS.includes(e)) reactionCounts[e]++;
+            if (email.toLowerCase() === me.email.toLowerCase()) myReactions.add(e);
+          }
+        }
+
+        const takes = pick.takes || {};
+        const myTake = takes[me.email] || takes[me.email.toLowerCase()] || { text: "", share: false };
+        const publicTakes = Object.entries(takes)
+          .filter(([email, t]) => t.share && email.toLowerCase() !== me.email.toLowerCase());
+
+        const comments = pick.comments || [];
+
+        const reactionsHtml = EMOJIS.map((e) => {
+          const isOn = myReactions.has(e);
+          const count = reactionCounts[e];
+          return `
+            <button type="button" data-react data-pmid="${esc(pick.pmid)}" data-emoji="${esc(e)}"
+                    class="inline-flex items-center gap-1 px-2 py-1 rounded-full border text-sm transition ${isOn ? "border-brand-500 bg-brand-50 text-brand-700" : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"}">
+              <span>${esc(e)}</span>
+              ${count > 0 ? `<span class="text-[10px] tabular-nums font-semibold">${count}</span>` : ""}
+            </button>
+          `;
+        }).join("");
+
         return `
-          <article class="border border-slate-200 rounded-2xl bg-white shadow-sm overflow-hidden ${isFeatured ? "border-brand-500 border-2" : ""}">
+          <article data-pick-pmid="${esc(pick.pmid)}" class="border border-slate-200 rounded-2xl bg-white shadow-sm overflow-hidden ${isFeatured ? "border-brand-500 border-2" : ""}">
             ${isFeatured ? `
               <div class="bg-gradient-to-r from-brand-700 to-brand-800 text-white px-5 py-2">
                 <p class="text-[10px] uppercase tracking-widest font-bold">Latest pick · ${esc(fmtDate(pick.pickedAt))}</p>
@@ -109,10 +177,11 @@ for (const p of pubsRaw as Pub[]) {
                 <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">${esc(fmtDate(pick.pickedAt))}</p>
               </div>
             `}
-            <div class="p-5 space-y-3">
+            <div class="p-5 space-y-4">
               <h2 class="text-lg font-bold text-slate-900 leading-snug">${esc(pick.headline)}</h2>
               ${pick.commentary ? `<p class="text-sm text-slate-700 leading-relaxed whitespace-pre-line">${esc(pick.commentary)}</p>` : ""}
 
+              <!-- Paper -->
               <div class="pt-3 border-t border-slate-100">
                 <p class="text-[10px] uppercase tracking-widest text-brand-600 font-semibold">The paper</p>
                 ${paper ? `
@@ -128,28 +197,209 @@ for (const p of pubsRaw as Pub[]) {
                   <p class="mt-1 text-sm text-slate-500 italic">Paper (PMID ${esc(pick.pmid)}) — bibliographic info not yet in publications.json.</p>
                 `}
               </div>
+
+              <!-- Reactions -->
+              <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center gap-2">
+                <span class="text-[10px] uppercase tracking-widest text-brand-600 font-semibold mr-1">React</span>
+                ${reactionsHtml}
+              </div>
+
+              <!-- My take -->
+              <details class="pt-3 border-t border-slate-100" ${myTake.text ? "open" : ""}>
+                <summary class="cursor-pointer text-[10px] uppercase tracking-widest text-brand-600 font-semibold hover:text-brand-700">
+                  ${myTake.text ? "My take · saved" : "Jot a quick take (private by default)"}
+                </summary>
+                <form data-take-form data-pmid="${esc(pick.pmid)}" class="mt-3 space-y-2">
+                  <textarea name="text" rows="2" maxlength="2000" placeholder="1-2 lines: what would you take from this for your own research?"
+                            class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">${esc(myTake.text)}</textarea>
+                  <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <label class="inline-flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                      <input type="checkbox" name="share" ${myTake.share ? "checked" : ""}
+                             class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+                      Share with other members
+                    </label>
+                    <button type="submit" class="text-xs font-semibold bg-brand-700 hover:bg-brand-800 text-white px-3 py-1.5 rounded transition">Save take</button>
+                  </div>
+                  <p data-take-msg class="hidden text-xs"></p>
+                </form>
+              </details>
+
+              <!-- Shared takes from other members -->
+              ${publicTakes.length > 0 ? `
+                <div class="pt-3 border-t border-slate-100">
+                  <p class="text-[10px] uppercase tracking-widest text-brand-600 font-semibold mb-2">Other members' takes</p>
+                  <div class="space-y-2">
+                    ${publicTakes.map(([email, t]) => `
+                      <div class="bg-brand-50/40 border border-brand-100 rounded p-2">
+                        <p class="text-xs text-slate-700 leading-relaxed whitespace-pre-line">${esc(t.text)}</p>
+                        <p class="text-[10px] text-slate-500 mt-1">— ${esc(email)} · ${esc(fmtRel(t.updatedAt))}</p>
+                      </div>
+                    `).join("")}
+                  </div>
+                </div>
+              ` : ""}
+
+              <!-- Comments -->
+              <details class="pt-3 border-t border-slate-100" ${comments.length > 0 ? "open" : ""}>
+                <summary class="cursor-pointer text-[10px] uppercase tracking-widest text-brand-600 font-semibold hover:text-brand-700">
+                  Discuss · ${comments.length}
+                </summary>
+                <div class="mt-3 space-y-2">
+                  ${comments.length > 0 ? comments.map((c) => `
+                    <div class="border border-slate-200 rounded p-3 bg-white">
+                      <p class="text-sm text-slate-800 leading-relaxed whitespace-pre-line">${esc(c.body)}</p>
+                      <p class="text-[10px] text-slate-500 mt-1">${esc(c.name || c.author)} · ${esc(fmtRel(c.postedAt))}</p>
+                    </div>
+                  `).join("") : `<p class="text-xs text-slate-500 italic">No comments yet — start the discussion.</p>`}
+                </div>
+                <form data-comment-form data-pmid="${esc(pick.pmid)}" class="mt-3 space-y-2">
+                  <textarea name="body" required rows="2" maxlength="3000"
+                            placeholder="Add a thought…"
+                            class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+                  <div class="flex justify-end">
+                    <button type="submit" class="text-xs font-semibold bg-brand-700 hover:bg-brand-800 text-white px-3 py-1.5 rounded transition">Post</button>
+                  </div>
+                  <p data-comment-msg class="hidden text-xs"></p>
+                </form>
+              </details>
             </div>
           </article>
         `;
       };
 
+      const root = document.querySelector("[data-picks]");
+      const emptyEl = document.querySelector("[data-empty]");
+
       const refresh = async () => {
         try {
           const meR = await fetch(`${WORKER_URL}/api/me`, { credentials: "include" });
           if (!meR.ok) return setState("signed-out");
+          const meData = await meR.json();
+          me = { email: (meData?.member?.email || "").toLowerCase(), name: meData?.member?.name || "" };
+
           const r = await fetch(`${WORKER_URL}/api/reading`, { credentials: "include" });
           if (r.status === 401) return setState("signed-out");
           if (!r.ok) return setError("Couldn't load the reading group (" + r.status + ").");
           const data = await r.json();
           const picks = (data && data.picks) || [];
-          if (picks.length === 0) return setState("empty");
-          const root = document.querySelector("[data-picks]");
-          root.innerHTML = picks.map((p, i) => renderPick(p, i === 0)).join("");
           setState("ready");
+          if (picks.length === 0) {
+            emptyEl.classList.remove("hidden");
+            root.innerHTML = "";
+          } else {
+            emptyEl.classList.add("hidden");
+            root.innerHTML = picks.map((p, i) => renderPick(p, i === 0)).join("");
+          }
         } catch {
           setError("Couldn't reach the auth service.");
         }
       };
+
+      // ── Delegated event handlers ──
+
+      // React click
+      root?.addEventListener("click", async (e) => {
+        const t = e.target?.closest?.("[data-react]");
+        if (!t) return;
+        const pmid = t.dataset.pmid;
+        const emoji = t.dataset.emoji;
+        t.disabled = true;
+        try {
+          await fetch(`${WORKER_URL}/api/reading/react`, {
+            method: "POST", credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pmid, emoji }),
+          });
+          await refresh();
+        } finally { t.disabled = false; }
+      });
+
+      // Take submit
+      root?.addEventListener("submit", async (e) => {
+        const form = e.target;
+        if (!form.matches?.("[data-take-form]")) return;
+        e.preventDefault();
+        const pmid = form.dataset.pmid;
+        const data = new FormData(form);
+        const text = String(data.get("text") || "");
+        const share = data.get("share") === "on";
+        const msgEl = form.querySelector("[data-take-msg]");
+        msgEl.textContent = "Saving…"; msgEl.classList.remove("hidden");
+        const r = await fetch(`${WORKER_URL}/api/reading/take`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pmid, text, share }),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.ok) {
+          msgEl.textContent = text ? "Saved." : "Removed.";
+          setTimeout(refresh, 400);
+        } else {
+          msgEl.textContent = d.error || "Failed.";
+          msgEl.classList.add("text-rose-700");
+        }
+      });
+
+      // Comment submit
+      root?.addEventListener("submit", async (e) => {
+        const form = e.target;
+        if (!form.matches?.("[data-comment-form]")) return;
+        e.preventDefault();
+        const pmid = form.dataset.pmid;
+        const body = String(new FormData(form).get("body") || "").trim();
+        if (!body) return;
+        const msgEl = form.querySelector("[data-comment-msg]");
+        msgEl.textContent = "Posting…"; msgEl.classList.remove("hidden");
+        const r = await fetch(`${WORKER_URL}/api/reading/comment`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pmid, body }),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.ok) {
+          form.reset();
+          msgEl.classList.add("hidden");
+          setTimeout(refresh, 400);
+        } else {
+          msgEl.textContent = d.error || "Failed.";
+          msgEl.classList.add("text-rose-700");
+        }
+      });
+
+      // Suggest a paper
+      const suggestForm = document.querySelector("[data-suggest-form]");
+      const suggestMsg = suggestForm?.querySelector("[data-suggest-msg]");
+      const setSuggestMsg = (msg, isError = false) => {
+        suggestMsg.textContent = msg;
+        suggestMsg.classList.remove("hidden");
+        suggestMsg.classList.toggle("text-rose-700", isError);
+      };
+      suggestForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = new FormData(suggestForm);
+        const body = {
+          pmid: String(data.get("pmid") || ""),
+          reason: String(data.get("reason") || ""),
+        };
+        const btn = suggestForm.querySelector("button[type='submit']");
+        btn.disabled = true;
+        setSuggestMsg("Sending…");
+        const r = await fetch(`${WORKER_URL}/api/reading/suggest`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.ok) {
+          setSuggestMsg(d.deduped
+            ? "You've already suggested this — it's already in the queue."
+            : "Sent. Thanks — the chair will see this in the admin queue.");
+          suggestForm.reset();
+        } else {
+          setSuggestMsg(d.error || "Couldn't send.", true);
+        }
+        btn.disabled = false;
+      });
 
       refresh();
     })();
