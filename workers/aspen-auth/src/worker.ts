@@ -103,6 +103,14 @@ export default {
         resp = await handlePending(req, env);
       } else if (url.pathname === "/api/review" && req.method === "POST") {
         resp = await handleReview(req, env);
+      } else if (url.pathname === "/api/reading" && req.method === "GET") {
+        resp = await handleReadingList(req, env);
+      } else if (url.pathname === "/api/admin/reading" && req.method === "POST") {
+        resp = await handleAdminReading(req, env);
+      } else if (url.pathname === "/api/admin/members" && req.method === "GET") {
+        resp = await handleAdminMembersList(req, env);
+      } else if (url.pathname === "/api/admin/members" && req.method === "POST") {
+        resp = await handleAdminMembersUpsert(req, env);
       } else if (url.pathname === "/" || url.pathname === "") {
         resp = new Response("aspen-auth worker — ok", { status: 200 });
       } else {
@@ -531,6 +539,199 @@ async function handleReview(req: Request, env: Env): Promise<Response> {
   }
 
   return jsonResponse({ ok: true, action: "approved", destinations: destinations.map((d) => d.dst) });
+}
+
+// ── Reading group ──────────────────────────────────────────────────────
+
+interface ReadingPick {
+  pmid: string;
+  pickedAt: string;
+  pickedBy: string;
+  headline: string;
+  commentary: string;
+}
+
+async function handleReadingList(req: Request, env: Env): Promise<Response> {
+  // Any signed-in active member can read the reading list.
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  const picks = await fetchReading(env);
+  return jsonResponse({ ok: true, picks: picks.list });
+}
+
+async function handleAdminReading(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+
+  const body = await safeJson<{
+    action?: string;
+    pmid?: string;
+    headline?: string;
+    commentary?: string;
+  }>(req);
+  const action = body?.action;
+  const pmid = String(body?.pmid || "").trim();
+  if (!pmid) return jsonResponse({ ok: false, error: "Missing pmid." }, 400);
+  if (action !== "add" && action !== "remove") {
+    return jsonResponse({ ok: false, error: "Invalid action." }, 400);
+  }
+
+  const { list, sha } = await fetchReading(env);
+  let next = list.filter((p) => p.pmid !== pmid);
+
+  if (action === "add") {
+    const headline = String(body?.headline || "").trim();
+    const commentary = String(body?.commentary || "").trim();
+    if (!headline) return jsonResponse({ ok: false, error: "Headline required." }, 400);
+    next.unshift({
+      pmid,
+      pickedAt: new Date().toISOString(),
+      pickedBy: m.email,
+      headline,
+      commentary,
+    });
+  }
+
+  await putJsonFile(env, "reading.json", JSON.stringify(next, null, 2) + "\n", sha,
+    `Reading: ${action} ${pmid} by ${m.email}`);
+
+  return jsonResponse({ ok: true });
+}
+
+async function fetchReading(env: Env): Promise<{ list: ReadingPick[]; sha: string }> {
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/contents/reading.json?ref=${env.MEMBERS_BRANCH}`;
+  const r = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+    },
+  });
+  if (!r.ok) {
+    if (r.status === 404) return { list: [], sha: "" };
+    throw new Error(`fetchReading ${r.status}`);
+  }
+  const data = await r.json() as { content: string; sha: string };
+  const text = utf8FromBase64(data.content.replace(/\s+/g, ""));
+  let list: ReadingPick[] = [];
+  try { list = JSON.parse(text); } catch { list = []; }
+  if (!Array.isArray(list)) list = [];
+  return { list, sha: data.sha };
+}
+
+// Generalised JSON-file PUT (used by reading.json now; members.json has its own).
+async function putJsonFile(
+  env: Env,
+  path: string,
+  content: string,
+  sha: string,
+  message: string,
+): Promise<void> {
+  const contentB64 = base64FromUtf8(content);
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/contents/${path}`;
+  const body: Record<string, unknown> = {
+    message,
+    content: contentB64,
+    branch: env.MEMBERS_BRANCH,
+  };
+  if (sha) body.sha = sha;
+  const r = await fetch(url, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    const txt = await r.text().catch(() => "");
+    console.error("putJsonFile failed", r.status, txt);
+    throw new Error(`putJsonFile ${r.status}`);
+  }
+}
+
+// ── Admin: member CRUD ─────────────────────────────────────────────────
+
+async function handleAdminMembersList(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+  const { members } = await fetchMembersJson(env);
+  // Return everything except passwordHash for safety
+  return jsonResponse({
+    ok: true,
+    members: members.map((mem) => {
+      const { passwordHash, ...rest } = mem;
+      return { ...rest, hasPassword: Boolean(passwordHash) };
+    }),
+  });
+}
+
+async function handleAdminMembersUpsert(req: Request, env: Env): Promise<Response> {
+  const acting = await sessionMember(req, env);
+  if (!acting) return jsonResponse({ ok: false }, 401);
+  if (!acting.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+
+  const body = await safeJson<{
+    email?: string;
+    name?: string;
+    affiliation?: string;
+    country?: string;
+    role?: string;
+    status?: Member["status"];
+    admin?: boolean;
+  }>(req);
+
+  const email = String(body?.email || "").trim().toLowerCase();
+  if (!isLikelyEmail(email)) return jsonResponse({ ok: false, error: "Invalid email." }, 400);
+
+  const { members, sha } = await fetchMembersJson(env);
+  const existing = members.find((m) => m.email.toLowerCase() === email);
+
+  const status: Member["status"] =
+    body?.status === "active" || body?.status === "invited" || body?.status === "removed"
+      ? body.status
+      : existing?.status ?? "invited";
+
+  const next: Member = existing ?? {
+    email,
+    name: "",
+    status,
+    joinedDate: new Date().toISOString().slice(0, 10),
+  };
+
+  // Patch fields if provided. Always allow status/admin to be cleared by sending the keys explicitly.
+  if (typeof body?.name === "string")        next.name = body.name.trim();
+  if (typeof body?.affiliation === "string") next.affiliation = body.affiliation.trim() || undefined;
+  if (typeof body?.country === "string")     next.country = body.country.trim() || undefined;
+  if (typeof body?.role === "string")        next.role = body.role.trim() || undefined;
+  next.status = status;
+  if (typeof body?.admin === "boolean")      next.admin = body.admin || undefined;
+
+  // Safety rail: can't demote yourself (prevents lock-out)
+  if (email === acting.email.toLowerCase() && !next.admin) {
+    return jsonResponse({ ok: false, error: "You can't remove your own admin flag." }, 400);
+  }
+
+  if (!next.name) {
+    return jsonResponse({ ok: false, error: "Name required for new members." }, 400);
+  }
+
+  // Replace or append
+  if (existing) {
+    const idx = members.findIndex((m) => m.email.toLowerCase() === email);
+    members[idx] = next;
+  } else {
+    members.push(next);
+  }
+
+  await putMembersJson(env, members, sha,
+    `Admin ${acting.email}: ${existing ? "update" : "add"} ${email}`);
+
+  return jsonResponse({ ok: true, member: { ...next, hasPassword: Boolean(next.passwordHash) } });
 }
 
 // ── Helpers used by the new routes ─────────────────────────────────────

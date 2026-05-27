@@ -39,13 +39,20 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       </div>
 
       <!-- ── What's in here ────────────────────────────────── -->
-      <a href={`${base}/members/materials`} class="group block border border-slate-200 rounded-lg p-5 bg-white hover:shadow-md hover:border-brand-400 transition">
-        <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold">Working materials</p>
-        <h3 class="mt-2 font-bold text-slate-900 group-hover:text-brand-700 transition">Protocols, slides, code</h3>
-        <p class="mt-1 text-sm text-slate-600">Study protocols, presentation decks, analysis code shared by AsPEN study leads.</p>
-      </a>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <a href={`${base}/members/reading`} class="group block border border-slate-200 rounded-lg p-5 bg-white hover:shadow-md hover:border-brand-400 transition">
+          <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold">Reading group</p>
+          <h3 class="mt-2 font-bold text-slate-900 group-hover:text-brand-700 transition">AsPEN paper picks</h3>
+          <p class="mt-1 text-sm text-slate-600">Featured papers picked by the AsPEN office, with a short take on why each one matters.</p>
+        </a>
+        <a href={`${base}/members/materials`} class="group block border border-slate-200 rounded-lg p-5 bg-white hover:shadow-md hover:border-brand-400 transition">
+          <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold">Working materials</p>
+          <h3 class="mt-2 font-bold text-slate-900 group-hover:text-brand-700 transition">Protocols, slides, code</h3>
+          <p class="mt-1 text-sm text-slate-600">Study protocols, presentation decks, analysis code shared by AsPEN study leads.</p>
+        </a>
+      </div>
       <p class="text-xs text-slate-500 leading-relaxed">
-        For AsPEN publications, see the public <a class="text-brand-700 hover:underline" href={`${base}/publications/`}>Publications page</a> — full bibliography with PMC / publisher full-text links for the 34 of 43 papers that are openly available.
+        For the full AsPEN bibliography, see the public <a class="text-brand-700 hover:underline" href={`${base}/publications/`}>Publications page</a> (34 of 43 papers have free full-text links).
       </p>
 
       <!-- ── Admin-only card (hidden unless isAdmin) ────────── -->

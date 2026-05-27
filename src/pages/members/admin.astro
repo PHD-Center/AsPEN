@@ -2,18 +2,25 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageHeader from "../../components/PageHeader.astro";
 import { WORKER_URL } from "../../data/site-config";
+import pubsRaw from "../../data/publications.json";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+type Pub = (typeof pubsRaw)[number];
+const pubsForPicker = (pubsRaw as Pub[])
+  .filter((p) => p.pmid)
+  .sort((a, b) => b.year - a.year)
+  .map((p) => ({ pmid: p.pmid!, label: `${p.year} · ${p.authors.split(",")[0].trim()} et al. — ${p.title.slice(0, 75)}${p.title.length > 75 ? "…" : ""}` }));
 ---
 
 <BaseLayout
-  title="Admin · review queue — AsPEN members"
-  description="Pending uploads awaiting AsPEN office approval."
+  title="Admin — AsPEN members"
+  description="AsPEN office admin tools: review uploads, manage reading group, manage members."
 >
   <PageHeader
     eyebrow="Members → Admin"
-    title="Review queue"
-    description="Member-submitted uploads waiting for approval."
+    title="Office admin"
+    description="Review uploads, curate the reading group, and manage members."
   />
 
   <section class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10 space-y-6">
@@ -21,9 +28,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/`}>← Members area</a>
     </p>
 
-    <div data-state="loading" class="text-sm text-slate-600 italic">
-      Loading queue…
-    </div>
+    <div data-state="loading" class="text-sm text-slate-600 italic">Loading…</div>
 
     <div data-state="signed-out" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
       <p class="text-sm text-slate-700">
@@ -33,168 +38,415 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
     <div data-state="forbidden" class="hidden border border-rose-300 bg-rose-50 rounded-lg p-6">
       <p class="text-sm text-rose-800">
-        This page is for AsPEN admins. If you should have admin access, contact <a class="underline" href={`${base}/contact/`}>the office</a>.
+        Admin only.
       </p>
     </div>
 
-    <div data-state="empty" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
-      <p class="text-sm text-slate-700">
-        The review queue is empty — nothing to approve right now.
-      </p>
-    </div>
+    <div data-state="ready" class="hidden space-y-6">
+      <!-- ── Tab switcher ────────────────────────────────────── -->
+      <div role="tablist" class="flex gap-0.5 p-0.5 bg-slate-100 rounded-lg text-sm font-semibold">
+        <button type="button" role="tab" data-tab="uploads" aria-selected="true"
+                class="flex-1 px-3 py-2 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
+          Pending uploads <span data-uploads-count class="hidden ml-1 bg-brand-700 text-white text-[10px] rounded-full px-1.5 py-0.5 tabular-nums"></span>
+        </button>
+        <button type="button" role="tab" data-tab="reading" aria-selected="false"
+                class="flex-1 px-3 py-2 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
+          Reading group
+        </button>
+        <button type="button" role="tab" data-tab="members" aria-selected="false"
+                class="flex-1 px-3 py-2 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
+          Members
+        </button>
+      </div>
 
-    <div data-state="error" class="hidden border border-rose-300 bg-rose-50 rounded-lg p-6">
-      <p class="text-sm text-rose-800" data-error-msg></p>
-    </div>
+      <!-- ── Pane: Pending uploads ────────────────────────────── -->
+      <div data-pane="uploads" class="space-y-4" data-queue></div>
 
-    <div data-state="ready" class="hidden space-y-4" data-queue></div>
+      <!-- ── Pane: Reading group ─────────────────────────────── -->
+      <div data-pane="reading" class="hidden space-y-6">
+        <details class="border border-slate-200 rounded-lg bg-white">
+          <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-50/40 rounded-lg">
+            ＋ Add a reading-group pick
+          </summary>
+          <form data-pick-form class="p-4 space-y-3 border-t border-slate-100">
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Paper</span>
+              <select name="pmid" required class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="">Pick one of {pubsForPicker.length} publications…</option>
+                {pubsForPicker.map((p) => <option value={p.pmid}>{p.label}</option>)}
+              </select>
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Headline</span>
+              <input type="text" name="headline" required maxlength="120" placeholder="A one-line take, e.g. 'Where AsPEN began'"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Commentary</span>
+              <textarea name="commentary" rows="4" maxlength="3000"
+                        placeholder="Why this paper is worth reading. Plain text; line breaks preserved."
+                        class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+            </label>
+            <button type="submit" class="inline-flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2 rounded text-sm transition disabled:opacity-60">
+              Pick this paper
+            </button>
+            <p data-pick-msg class="hidden text-sm bg-slate-50 border border-slate-200 rounded p-3" role="status" aria-live="polite"></p>
+          </form>
+        </details>
+
+        <div data-reading-list class="space-y-3"></div>
+      </div>
+
+      <!-- ── Pane: Members ───────────────────────────────────── -->
+      <div data-pane="members" class="hidden space-y-6">
+        <details class="border border-slate-200 rounded-lg bg-white">
+          <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-50/40 rounded-lg">
+            ＋ Add a member
+          </summary>
+          <form data-member-form class="p-4 grid sm:grid-cols-2 gap-3 border-t border-slate-100">
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Email *</span>
+              <input type="email" name="email" required class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Name *</span>
+              <input type="text" name="name" required class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Affiliation</span>
+              <input type="text" name="affiliation" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Country (ISO)</span>
+              <input type="text" name="country" maxlength="4" placeholder="TW / JP / KR…" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Role</span>
+              <select name="role" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="academic">Academic</option>
+                <option value="industry">Industry</option>
+                <option value="regulator">Regulator</option>
+                <option value="clinician">Clinician</option>
+                <option value="student">Student</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Status</span>
+              <select name="status" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="active" selected>active</option>
+                <option value="invited">invited</option>
+                <option value="removed">removed</option>
+              </select>
+            </label>
+            <label class="flex items-center gap-2 sm:col-span-2 text-xs text-slate-700">
+              <input type="checkbox" name="admin" class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+              Admin (can review uploads, manage members, curate reading group)
+            </label>
+            <div class="sm:col-span-2">
+              <button type="submit" class="inline-flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2 rounded text-sm transition disabled:opacity-60">
+                Add member
+              </button>
+              <p data-member-msg class="hidden mt-3 text-sm bg-slate-50 border border-slate-200 rounded p-3" role="status" aria-live="polite"></p>
+            </div>
+          </form>
+        </details>
+
+        <div data-member-list class="border border-slate-200 rounded-lg overflow-hidden bg-white">
+          <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+            <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold">All members · <span data-member-count>0</span></p>
+          </div>
+          <ul data-member-rows class="divide-y divide-slate-100"></ul>
+        </div>
+      </div>
+    </div>
   </section>
 
-  <script is:inline define:vars={{ WORKER_URL, BASE: base }}>
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, pubsForPicker }}>
     (() => {
       const setState = (name) => {
         document.querySelectorAll("[data-state]").forEach((el) => {
           el.classList.toggle("hidden", el.dataset.state !== name);
         });
       };
-      const setError = (msg) => {
-        document.querySelector("[data-error-msg]").textContent = msg;
-        setState("error");
-      };
 
       if (!WORKER_URL) {
-        setError("Members area isn't enabled yet.");
+        document.querySelector("[data-state='loading']").textContent = "Members area isn't enabled yet.";
         return;
       }
 
       const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
       }[c]));
+      const fmtDate = (iso) => { try { return new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }); } catch { return iso; } };
+      const fmtSize = (n) => !n ? "" : n < 1024 ? n + " B" : n < 1024*1024 ? (n/1024).toFixed(1)+" KB" : (n/1024/1024).toFixed(1)+" MB";
 
-      const fmtSize = (n) => {
-        if (!n) return "";
-        if (n < 1024) return n + " B";
-        if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
-        return (n / (1024 * 1024)).toFixed(1) + " MB";
+      // Tab switching
+      const tabs = Array.from(document.querySelectorAll("[data-tab]"));
+      const panes = Array.from(document.querySelectorAll("[data-pane]"));
+      const showTab = (name) => {
+        tabs.forEach((t) => t.setAttribute("aria-selected", t.dataset.tab === name ? "true" : "false"));
+        panes.forEach((p) => p.classList.toggle("hidden", p.dataset.pane !== name));
       };
+      tabs.forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
 
-      const fmtDate = (iso) => {
-        try {
-          const d = new Date(iso);
-          return d.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
-        } catch { return iso || "—"; }
-      };
-
+      // ── Pending uploads ──
+      const queueRoot = document.querySelector("[data-queue]");
       const renderQueue = (items) => {
-        const root = document.querySelector("[data-queue]");
-        root.innerHTML = items.map((it) => {
-          const meta = it.meta || {};
-          const files = it.files || [];
-          const subfolderLabel = meta.subfolder ? ` / ${esc(meta.subfolder)}` : "";
-          return `
-            <article class="border border-slate-200 rounded-2xl bg-white shadow-sm p-5 space-y-3">
-              <header class="flex items-start justify-between gap-3">
-                <div>
-                  <p class="text-[10px] uppercase tracking-widest text-brand-700 font-bold">
-                    ${esc(meta.category || "?")}${subfolderLabel}
-                  </p>
-                  <p class="mt-1 text-sm font-semibold text-slate-900">${esc(meta.uploaderName || meta.uploader || "Unknown uploader")}</p>
-                  <p class="text-xs text-slate-500">${esc(meta.uploader || "")} · ${esc(fmtDate(meta.uploadedAt))}</p>
-                </div>
-              </header>
-
-              ${meta.description ? `<p class="text-sm text-slate-700 leading-relaxed bg-slate-50 border border-slate-200 rounded p-3">${esc(meta.description)}</p>` : ""}
-
-              <div class="text-xs space-y-1">
-                ${files.map((f) => `
-                  <div class="flex items-center justify-between gap-2">
-                    <a href="${esc(WORKER_URL)}/api/content/${esc(f.path)}" target="_blank" rel="noopener" class="text-brand-700 hover:underline truncate">${esc(f.path.split("/").pop())}</a>
-                    <span class="text-slate-500 tabular-nums">${esc(fmtSize(f.size))}</span>
+        if (items.length === 0) {
+          queueRoot.innerHTML = '<p class="text-sm text-slate-500 italic text-center py-8 border border-slate-200 rounded-lg bg-white">No pending uploads.</p>';
+        } else {
+          queueRoot.innerHTML = items.map((it) => {
+            const meta = it.meta || {};
+            const files = it.files || [];
+            const subfolderLabel = meta.subfolder ? ` / ${esc(meta.subfolder)}` : "";
+            return `
+              <article class="border border-slate-200 rounded-2xl bg-white shadow-sm p-5 space-y-3">
+                <header class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-[10px] uppercase tracking-widest text-brand-700 font-bold">${esc(meta.category || "?")}${subfolderLabel}</p>
+                    <p class="mt-1 text-sm font-semibold text-slate-900">${esc(meta.uploaderName || meta.uploader || "Unknown uploader")}</p>
+                    <p class="text-xs text-slate-500">${esc(meta.uploader || "")} · ${esc(fmtDate(meta.uploadedAt))}</p>
                   </div>
-                `).join("")}
-              </div>
-
-              <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
-                <input type="text" data-rename placeholder="Optional rename on approve (single-file only)"
-                       class="flex-1 border border-slate-300 rounded px-3 py-1.5 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-                <button type="button" data-action="approve" data-id="${esc(it.id)}"
-                        class="bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold px-3 py-1.5 rounded transition">
-                  Approve
-                </button>
-                <button type="button" data-action="reject" data-id="${esc(it.id)}"
-                        class="bg-white hover:bg-rose-50 border border-rose-300 text-rose-700 text-xs font-semibold px-3 py-1.5 rounded transition">
-                  Reject
-                </button>
-              </div>
-              <p data-row-msg class="hidden text-xs"></p>
-            </article>
-          `;
-        }).join("");
+                </header>
+                ${meta.description ? `<p class="text-sm text-slate-700 leading-relaxed bg-slate-50 border border-slate-200 rounded p-3">${esc(meta.description)}</p>` : ""}
+                <div class="text-xs space-y-1">
+                  ${files.map((f) => `
+                    <div class="flex items-center justify-between gap-2">
+                      <a href="${esc(WORKER_URL)}/api/content/${esc(f.path)}" target="_blank" rel="noopener" class="text-brand-700 hover:underline truncate">${esc(f.path.split("/").pop())}</a>
+                      <span class="text-slate-500 tabular-nums">${esc(fmtSize(f.size))}</span>
+                    </div>
+                  `).join("")}
+                </div>
+                <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+                  <input type="text" data-rename placeholder="Optional rename (single file only)" class="flex-1 border border-slate-300 rounded px-3 py-1.5 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+                  <button type="button" data-action="approve" data-id="${esc(it.id)}" class="bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold px-3 py-1.5 rounded transition">Approve</button>
+                  <button type="button" data-action="reject" data-id="${esc(it.id)}" class="bg-white hover:bg-rose-50 border border-rose-300 text-rose-700 text-xs font-semibold px-3 py-1.5 rounded transition">Reject</button>
+                </div>
+                <p data-row-msg class="hidden text-xs"></p>
+              </article>
+            `;
+          }).join("");
+        }
       };
 
-      const submitReview = async (id, action, rename) => {
+      const loadUploads = async () => {
+        try {
+          const r = await fetch(`${WORKER_URL}/api/pending`, { credentials: "include" });
+          if (!r.ok) return;
+          const data = await r.json();
+          const items = (data && data.items) || [];
+          renderQueue(items);
+          const badge = document.querySelector("[data-uploads-count]");
+          if (items.length > 0) { badge.textContent = String(items.length); badge.classList.remove("hidden"); }
+          else badge.classList.add("hidden");
+        } catch {}
+      };
+
+      queueRoot.addEventListener("click", async (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLElement) || !t.dataset.action) return;
+        const action = t.dataset.action;
+        const id = t.dataset.id;
+        const card = t.closest("article");
+        const renameInput = card?.querySelector("[data-rename]");
+        const rename = renameInput instanceof HTMLInputElement ? renameInput.value.trim() : "";
+        const msgEl = card?.querySelector("[data-row-msg]");
+        if (action === "reject" && !confirm("Reject and delete this submission?")) return;
+        if (msgEl) { msgEl.textContent = action === "approve" ? "Approving…" : "Rejecting…"; msgEl.classList.remove("hidden"); }
         const r = await fetch(`${WORKER_URL}/api/review`, {
-          method: "POST",
+          method: "POST", credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id, action, rename: rename || undefined }),
-          credentials: "include",
         });
-        return { ok: r.ok, data: await r.json().catch(() => ({})) };
+        const data = await r.json().catch(() => ({}));
+        if (r.ok && data.ok) {
+          if (msgEl) msgEl.textContent = action === "approve" ? "Approved → " + (data.destinations || []).join(", ") : "Rejected.";
+          setTimeout(loadUploads, 1200);
+        } else if (msgEl) {
+          msgEl.textContent = data.error || "Failed.";
+          msgEl.classList.add("text-rose-700");
+        }
+      });
+
+      // ── Reading group ──
+      const readingRoot = document.querySelector("[data-reading-list]");
+      const pubLabel = (pmid) => (pubsForPicker.find((p) => p.pmid === pmid) || {}).label || `PMID ${pmid}`;
+
+      const renderReading = (picks) => {
+        if (picks.length === 0) {
+          readingRoot.innerHTML = '<p class="text-sm text-slate-500 italic text-center py-6 border border-slate-200 rounded-lg bg-white">No picks yet.</p>';
+        } else {
+          readingRoot.innerHTML = picks.map((p) => `
+            <article class="border border-slate-200 rounded-lg bg-white p-4 flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="font-semibold text-slate-900 text-sm">${esc(p.headline)}</p>
+                <p class="text-xs text-slate-500 mt-0.5 truncate">${esc(pubLabel(p.pmid))}</p>
+                <p class="text-[10px] text-slate-400 mt-0.5">Picked ${esc(fmtDate(p.pickedAt))} by ${esc(p.pickedBy || "")}</p>
+              </div>
+              <button type="button" data-remove-pmid="${esc(p.pmid)}" class="shrink-0 text-xs font-semibold text-slate-500 hover:text-rose-600 hover:underline">Remove</button>
+            </article>
+          `).join("");
+        }
       };
 
-      const refresh = async () => {
+      const loadReading = async () => {
+        try {
+          const r = await fetch(`${WORKER_URL}/api/reading`, { credentials: "include" });
+          if (!r.ok) return;
+          const data = await r.json();
+          renderReading(data.picks || []);
+        } catch {}
+      };
+
+      readingRoot.addEventListener("click", async (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLElement) || !t.dataset.removePmid) return;
+        if (!confirm("Remove this pick from the reading group?")) return;
+        const r = await fetch(`${WORKER_URL}/api/admin/reading`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "remove", pmid: t.dataset.removePmid }),
+        });
+        if (r.ok) loadReading();
+      });
+
+      const pickForm = document.querySelector("[data-pick-form]");
+      const pickMsg = pickForm?.querySelector("[data-pick-msg]");
+      const setPickMsg = (msg, isError = false) => {
+        if (!pickMsg) return;
+        pickMsg.textContent = msg;
+        pickMsg.classList.remove("hidden");
+        pickMsg.classList.toggle("text-rose-700", isError);
+      };
+      pickForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = new FormData(pickForm);
+        const body = {
+          action: "add",
+          pmid: String(data.get("pmid") || ""),
+          headline: String(data.get("headline") || ""),
+          commentary: String(data.get("commentary") || ""),
+        };
+        const btn = pickForm.querySelector("button[type='submit']");
+        btn.disabled = true;
+        setPickMsg("Saving…");
+        const r = await fetch(`${WORKER_URL}/api/admin/reading`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.ok) {
+          setPickMsg("Added.");
+          pickForm.reset();
+          loadReading();
+        } else {
+          setPickMsg(d.error || "Failed.", true);
+        }
+        btn.disabled = false;
+      });
+
+      // ── Members ──
+      const memberRows = document.querySelector("[data-member-rows]");
+      const renderMembers = (members) => {
+        document.querySelector("[data-member-count]").textContent = members.length;
+        memberRows.innerHTML = members.map((m) => `
+          <li class="px-4 py-3 flex items-center justify-between gap-3 hover:bg-slate-50">
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-slate-900 truncate">${esc(m.name || m.email)}${m.admin ? ' <span class="ml-1 text-[9px] uppercase tracking-widest font-bold text-brand-700 align-middle">admin</span>' : ""}</p>
+              <p class="text-xs text-slate-600 truncate">${esc(m.email)}${m.affiliation ? " · " + esc(m.affiliation) : ""}${m.country ? " · " + esc(m.country) : ""}</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <select data-status-pmid="${esc(m.email)}" class="text-xs border border-slate-300 rounded px-2 py-1 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="active"  ${m.status === "active"  ? "selected" : ""}>active</option>
+                <option value="invited" ${m.status === "invited" ? "selected" : ""}>invited</option>
+                <option value="removed" ${m.status === "removed" ? "selected" : ""}>removed</option>
+              </select>
+              ${m.hasPassword ? '<span class="text-[10px] text-slate-500 italic" title="Has set a password">pwd</span>' : ""}
+            </div>
+          </li>
+        `).join("");
+      };
+
+      const loadMembers = async () => {
+        try {
+          const r = await fetch(`${WORKER_URL}/api/admin/members`, { credentials: "include" });
+          if (!r.ok) return;
+          const data = await r.json();
+          renderMembers(data.members || []);
+        } catch {}
+      };
+
+      memberRows.addEventListener("change", async (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLSelectElement) || !t.dataset.statusPmid) return;
+        const email = t.dataset.statusPmid;
+        const status = t.value;
+        const r = await fetch(`${WORKER_URL}/api/admin/members`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, status }),
+        });
+        if (!r.ok) {
+          const d = await r.json().catch(() => ({}));
+          alert(d.error || "Couldn't update.");
+          loadMembers();
+        }
+      });
+
+      const memberForm = document.querySelector("[data-member-form]");
+      const memberMsg = memberForm?.querySelector("[data-member-msg]");
+      const setMemberMsg = (msg, isError = false) => {
+        if (!memberMsg) return;
+        memberMsg.textContent = msg;
+        memberMsg.classList.remove("hidden");
+        memberMsg.classList.toggle("text-rose-700", isError);
+      };
+      memberForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = new FormData(memberForm);
+        const body = {
+          email: String(data.get("email") || ""),
+          name: String(data.get("name") || ""),
+          affiliation: String(data.get("affiliation") || ""),
+          country: String(data.get("country") || "").toUpperCase(),
+          role: String(data.get("role") || ""),
+          status: String(data.get("status") || "active"),
+          admin: data.get("admin") === "on",
+        };
+        const btn = memberForm.querySelector("button[type='submit']");
+        btn.disabled = true;
+        setMemberMsg("Saving…");
+        const r = await fetch(`${WORKER_URL}/api/admin/members`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.ok) {
+          setMemberMsg("Added.");
+          memberForm.reset();
+          loadMembers();
+        } else {
+          setMemberMsg(d.error || "Failed.", true);
+        }
+        btn.disabled = false;
+      });
+
+      // ── Boot ──
+      (async () => {
         try {
           const meR = await fetch(`${WORKER_URL}/api/me`, { credentials: "include" });
           if (!meR.ok) return setState("signed-out");
           const me = await meR.json();
           if (!me?.member?.isAdmin) return setState("forbidden");
-
-          const r = await fetch(`${WORKER_URL}/api/pending`, { credentials: "include" });
-          if (r.status === 401) return setState("signed-out");
-          if (r.status === 403) return setState("forbidden");
-          if (!r.ok) return setError("Couldn't load the queue (" + r.status + ").");
-
-          const data = await r.json();
-          const items = (data && data.items) || [];
-          if (items.length === 0) return setState("empty");
-          renderQueue(items);
           setState("ready");
-        } catch {
-          setError("Couldn't reach the auth service.");
-        }
-      };
-
-      document.addEventListener("click", async (e) => {
-        const t = e.target;
-        if (!(t instanceof HTMLElement) || !t.dataset.action) return;
-        const action = t.dataset.action;
-        const id = t.dataset.id;
-        if (!id) return;
-        const card = t.closest("article");
-        const renameInput = card?.querySelector("[data-rename]");
-        const rename = renameInput instanceof HTMLInputElement ? renameInput.value.trim() : "";
-        const msgEl = card?.querySelector("[data-row-msg]");
-        if (action === "reject" && !confirm("Reject and permanently delete this submission?")) return;
-        if (msgEl) { msgEl.textContent = action === "approve" ? "Approving…" : "Rejecting…"; msgEl.classList.remove("hidden"); }
-        const { ok, data } = await submitReview(id, action, rename);
-        if (ok && data.ok) {
-          if (msgEl) {
-            msgEl.textContent = action === "approve"
-              ? "Approved → " + (data.destinations || []).join(", ")
-              : "Rejected.";
-            msgEl.classList.remove("text-rose-700");
-            msgEl.classList.add("text-brand-700");
-          }
-          // Refresh the queue after a moment
-          setTimeout(refresh, 1200);
-        } else if (msgEl) {
-          msgEl.textContent = data.error || "Failed.";
-          msgEl.classList.remove("hidden");
-          msgEl.classList.add("text-rose-700");
-        }
-      });
-
-      refresh();
+          loadUploads();
+          loadReading();
+          loadMembers();
+        } catch { setState("signed-out"); }
+      })();
     })();
   </script>
 </BaseLayout>

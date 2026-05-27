@@ -1,0 +1,157 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import { WORKER_URL } from "../../data/site-config";
+import pubsRaw from "../../data/publications.json";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+// Compact lookup table — pmid → minimal paper info — embedded in the page
+// so the client doesn't need a second fetch to render bibliographic detail.
+type Pub = (typeof pubsRaw)[number];
+const pubsByPmid: Record<string, {
+  title: string;
+  authors: string;
+  journal: string;
+  year: number;
+  doi?: string;
+  pmcid?: string;
+  fulltext?: string;
+}> = {};
+for (const p of pubsRaw as Pub[]) {
+  if (!p.pmid) continue;
+  pubsByPmid[p.pmid] = {
+    title: p.title,
+    authors: p.authors,
+    journal: p.journal,
+    year: p.year,
+    doi: p.doi,
+    pmcid: (p as { pmcid?: string }).pmcid,
+    fulltext: (p as { fulltext?: string }).fulltext,
+  };
+}
+---
+
+<BaseLayout
+  title="Reading group — AsPEN members"
+  description="AsPEN paper-of-the-month picks with chair commentary."
+>
+  <PageHeader
+    eyebrow="Members → Reading group"
+    title="AsPEN reading group"
+    description="Featured papers picked by the AsPEN office, with a short take on why each one matters."
+  />
+
+  <section class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <p class="text-sm">
+      <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/`}>← Members area</a>
+    </p>
+
+    <div data-state="loading" class="text-sm text-slate-600 italic">
+      Loading…
+    </div>
+
+    <div data-state="signed-out" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm text-slate-700">
+        You're not signed in. <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Sign in →</a>
+      </p>
+    </div>
+
+    <div data-state="empty" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm text-slate-700">
+        No reading-group picks yet. The AsPEN office adds new picks here. Check back soon.
+      </p>
+    </div>
+
+    <div data-state="error" class="hidden border border-rose-300 bg-rose-50 rounded-lg p-6">
+      <p class="text-sm text-rose-800" data-error-msg></p>
+    </div>
+
+    <div data-state="ready" class="hidden space-y-6" data-picks></div>
+  </section>
+
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, pubsByPmid }}>
+    (() => {
+      const setState = (name) => {
+        document.querySelectorAll("[data-state]").forEach((el) => {
+          el.classList.toggle("hidden", el.dataset.state !== name);
+        });
+      };
+      const setError = (msg) => {
+        document.querySelector("[data-error-msg]").textContent = msg;
+        setState("error");
+      };
+
+      if (!WORKER_URL) return setError("Members area isn't enabled yet.");
+
+      const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[c]));
+
+      const fmtDate = (iso) => {
+        try { return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }); }
+        catch { return iso; }
+      };
+
+      const renderPick = (pick, isFeatured) => {
+        const paper = pubsByPmid[pick.pmid];
+        const fullTextLink = paper?.pmcid
+          ? `https://pmc.ncbi.nlm.nih.gov/articles/${paper.pmcid}/`
+          : paper?.fulltext;
+        return `
+          <article class="border border-slate-200 rounded-2xl bg-white shadow-sm overflow-hidden ${isFeatured ? "border-brand-500 border-2" : ""}">
+            ${isFeatured ? `
+              <div class="bg-gradient-to-r from-brand-700 to-brand-800 text-white px-5 py-2">
+                <p class="text-[10px] uppercase tracking-widest font-bold">Latest pick · ${esc(fmtDate(pick.pickedAt))}</p>
+              </div>
+            ` : `
+              <div class="bg-slate-50 px-5 py-2 border-b border-slate-100">
+                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">${esc(fmtDate(pick.pickedAt))}</p>
+              </div>
+            `}
+            <div class="p-5 space-y-3">
+              <h2 class="text-lg font-bold text-slate-900 leading-snug">${esc(pick.headline)}</h2>
+              ${pick.commentary ? `<p class="text-sm text-slate-700 leading-relaxed whitespace-pre-line">${esc(pick.commentary)}</p>` : ""}
+
+              <div class="pt-3 border-t border-slate-100">
+                <p class="text-[10px] uppercase tracking-widest text-brand-600 font-semibold">The paper</p>
+                ${paper ? `
+                  <p class="mt-1 font-semibold text-slate-900 leading-snug">${esc(paper.title)}</p>
+                  <p class="text-xs text-slate-600 mt-1">${esc(paper.authors)}</p>
+                  <p class="text-xs text-slate-500 mt-0.5">${esc(paper.journal)} · ${paper.year}</p>
+                  <div class="mt-2 flex flex-wrap gap-3 text-xs">
+                    ${fullTextLink ? `<a href="${esc(fullTextLink)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 bg-brand-600 text-white font-semibold hover:bg-brand-700 px-2 py-0.5 rounded transition">📄 Full text</a>` : ""}
+                    ${paper.doi ? `<a class="text-brand-600 hover:underline" target="_blank" rel="noopener" href="https://doi.org/${esc(paper.doi)}">DOI: ${esc(paper.doi)}</a>` : ""}
+                    <a class="text-brand-600 hover:underline" target="_blank" rel="noopener" href="https://pubmed.ncbi.nlm.nih.gov/${esc(pick.pmid)}/">PMID: ${esc(pick.pmid)}</a>
+                  </div>
+                ` : `
+                  <p class="mt-1 text-sm text-slate-500 italic">Paper (PMID ${esc(pick.pmid)}) — bibliographic info not yet in publications.json.</p>
+                `}
+              </div>
+            </div>
+          </article>
+        `;
+      };
+
+      const refresh = async () => {
+        try {
+          const meR = await fetch(`${WORKER_URL}/api/me`, { credentials: "include" });
+          if (!meR.ok) return setState("signed-out");
+          const r = await fetch(`${WORKER_URL}/api/reading`, { credentials: "include" });
+          if (r.status === 401) return setState("signed-out");
+          if (!r.ok) return setError("Couldn't load the reading group (" + r.status + ").");
+          const data = await r.json();
+          const picks = (data && data.picks) || [];
+          if (picks.length === 0) return setState("empty");
+          const root = document.querySelector("[data-picks]");
+          root.innerHTML = picks.map((p, i) => renderPick(p, i === 0)).join("");
+          setState("ready");
+        } catch {
+          setError("Couldn't reach the auth service.");
+        }
+      };
+
+      refresh();
+    })();
+  </script>
+</BaseLayout>
