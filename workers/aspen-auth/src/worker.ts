@@ -176,7 +176,14 @@ async function handleRequestLogin(req: Request, env: Env): Promise<Response> {
       minutes * 60,
     );
     const link = `${env.SITE_BASE_URL.replace(/\/$/, "")}/members/verify?t=${encodeURIComponent(token)}`;
-    await sendMagicLinkEmail(env, email, member.name, link, minutes);
+    // Swallow Resend errors here — we already mask whether an email exists
+    // by always returning ok:true, so masking Resend failures is consistent.
+    // Real failures show up in `wrangler tail` for the admin to see.
+    try {
+      await sendMagicLinkEmail(env, email, member.name, link, minutes);
+    } catch (e) {
+      console.error("magic-link send failed for", email, e);
+    }
   }
 
   return jsonResponse({ ok: true });
