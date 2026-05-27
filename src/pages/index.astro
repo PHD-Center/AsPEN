@@ -102,12 +102,14 @@ const countries = featured.length;
       <div class="flex flex-col gap-5">
         {[
           {
+            role: "Educational Lead",
             name: "Edward Lai",
             affiliation: "NCKU · Director, PHDc",
             photo: `${base}/images/Edward.png`,
             bio: "Professor of school of pharmacy, clinical pharmacy and pharmaceutical sciences at NCKU; director of the Population Health Data Center (PHDc). Methodology focus on self-controlled designs, target-trial emulation, and multi-database research across Asia-Pacific.",
           },
           {
+            role: "Educational Co-Lead",
             name: "Daniel Tsai",
             affiliation: "Research Fellow · PHDc, NCKU",
             photo: `${base}/images/Daniel.jpeg`,
@@ -119,7 +121,7 @@ const countries = featured.length;
               <img src={p.photo} alt={p.name} class="w-full h-full object-cover" />
             </div>
             <div>
-              <p class="text-xs uppercase tracking-widest text-slate-500">Educational Lead</p>
+              <p class="text-xs uppercase tracking-widest text-slate-500">{p.role}</p>
               <p class="text-xl font-semibold text-slate-900 mt-1">{p.name}</p>
               <p class="text-sm text-slate-600">{p.affiliation}</p>
               <p class="text-sm text-slate-700 mt-3 leading-relaxed">{p.bio}</p>
