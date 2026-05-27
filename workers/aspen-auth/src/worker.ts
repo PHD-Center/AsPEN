@@ -342,10 +342,12 @@ interface PendingMeta {
   uploadedAt: string;
   originalName: string;
   description?: string;
-  /** "papers" or "materials" */
-  category: "papers" | "materials";
+  /** "papers" or "materials" or "reading" (per-pick paper PDF) */
+  category: "papers" | "materials" | "reading";
   /** Subfolder under materials/ (protocols, slides, code, ...) — materials only */
   subfolder?: string;
+  /** PMID this upload is attached to — reading category only */
+  pmid?: string;
 }
 
 async function handleUpload(req: Request, env: Env): Promise<Response> {
@@ -377,12 +379,24 @@ async function handleUpload(req: Request, env: Env): Promise<Response> {
   }
 
   const category = String(form.get("category") || "");
-  if (category !== "papers" && category !== "materials") {
+  if (category !== "papers" && category !== "materials" && category !== "reading") {
     return jsonResponse({ ok: false, error: "Invalid category." }, 400);
   }
   const subfolder = String(form.get("subfolder") || "").trim().toLowerCase();
   if (category === "materials" && subfolder && !/^[a-z0-9-]+$/.test(subfolder)) {
     return jsonResponse({ ok: false, error: "Invalid subfolder name." }, 400);
+  }
+  // Reading-attached paper uploads must reference an existing pick by pmid.
+  let pmid: string | undefined;
+  if (category === "reading") {
+    pmid = String(form.get("pmid") || "").trim();
+    if (!/^\d{6,9}$/.test(pmid)) {
+      return jsonResponse({ ok: false, error: "PMID required for reading upload." }, 400);
+    }
+    const { list } = await fetchReading(env);
+    if (!list.some((p) => p.pmid === pmid)) {
+      return jsonResponse({ ok: false, error: "Pick not found for that PMID." }, 404);
+    }
   }
   const description = String(form.get("description") || "").trim().slice(0, 2000);
 
@@ -390,10 +404,12 @@ async function handleUpload(req: Request, env: Env): Promise<Response> {
   const originalName = sanitiseFilename(fileEntry.name || "upload.bin");
   if (!originalName) return jsonResponse({ ok: false, error: "Invalid filename." }, 400);
 
-  // Build unique pending dir: pending/<category>/<iso>-<rand>/
+  // Build unique pending dir: pending/<category>/<iso>-<rand>/  (reading prefixes with pmid for legibility)
   const stamp = new Date().toISOString().replace(/[:.]/g, "-").replace(/Z$/, "Z");
   const rand = randSlug(6);
-  const dirPath = `pending/${category}/${stamp}-${rand}`;
+  const dirPath = category === "reading"
+    ? `pending/reading/${pmid}-${stamp}-${rand}`
+    : `pending/${category}/${stamp}-${rand}`;
 
   // Upload the file
   const bytes = new Uint8Array(await fileEntry.arrayBuffer());
@@ -408,8 +424,9 @@ async function handleUpload(req: Request, env: Env): Promise<Response> {
     uploadedAt: new Date().toISOString(),
     originalName,
     description: description || undefined,
-    category,
+    category: category as PendingMeta["category"],
     subfolder: category === "materials" ? (subfolder || undefined) : undefined,
+    pmid: category === "reading" ? pmid : undefined,
   };
   const metaB64 = base64FromUtf8(JSON.stringify(meta, null, 2) + "\n");
   await putBinaryFile(env, `${dirPath}/meta.json`, metaB64,
@@ -444,7 +461,7 @@ async function handlePending(req: Request, env: Env): Promise<Response> {
   for (const it of data.tree) {
     if (it.type !== "blob") continue;
     if (!it.path.startsWith("pending/")) continue;
-    const m = it.path.match(/^(pending\/(?:papers|materials)\/[^/]+)\/(.+)$/);
+    const m = it.path.match(/^(pending\/(?:papers|materials|reading)\/[^/]+)\/(.+)$/);
     if (!m) continue;
     const dir = m[1];
     const name = m[2];
@@ -486,7 +503,7 @@ async function handleReview(req: Request, env: Env): Promise<Response> {
   const action = body?.action;
   const rename = (body?.rename || "").trim();
 
-  if (!id.match(/^pending\/(papers|materials)\/[^/]+$/)) {
+  if (!id.match(/^pending\/(papers|materials|reading)\/[^/]+$/)) {
     return jsonResponse({ ok: false, error: "Invalid id." }, 400);
   }
   if (action !== "approve" && action !== "reject") {
@@ -538,11 +555,17 @@ async function handleReview(req: Request, env: Env): Promise<Response> {
   // Determine destination filename: prefer admin's rename if provided, else originalName
   // (rename only applies when there's a single file in the pending; for multi-file
   // uploads we keep their basenames as-is.)
+  //
+  // Special-case: reading-attached PDFs always land at papers/pmid-{pmid}.{ext}
+  // so the listing endpoint can match them back to the right pick.
   const destinations: Array<{ src: string; dst: string }> = [];
   for (const src of filesToCopy) {
     const srcBasename = src.split("/").pop()!;
     let dstName = srcBasename;
-    if (filesToCopy.length === 1 && rename) {
+    if (meta.category === "reading" && meta.pmid) {
+      const ext = (srcBasename.match(/\.([a-zA-Z0-9]+)$/)?.[1] || "pdf").toLowerCase();
+      dstName = `pmid-${meta.pmid}.${ext}`;
+    } else if (filesToCopy.length === 1 && rename) {
       dstName = sanitiseFilename(rename) || srcBasename;
     }
     destinations.push({ src, dst: `${destBase}/${dstName}` });
@@ -614,6 +637,11 @@ async function handleReadingList(req: Request, env: Env): Promise<Response> {
   const { list } = await fetchReading(env);
   const me = m.email.toLowerCase();
 
+  // One-shot walk of papers/ to discover which pmids have an attached PDF
+  // (filename pattern: pmid-{pmid}.{ext}). This is one extra GitHub call
+  // per /api/reading hit, which keeps the listing endpoint fast.
+  const paperPdfs = await pmidToPaperPath(env);
+
   // For each pick: strip other members' private takes (keep only mine + shared).
   // Reactions and comments are public.
   const filtered = list.map((p) => {
@@ -621,10 +649,31 @@ async function handleReadingList(req: Request, env: Env): Promise<Response> {
     for (const [email, t] of Object.entries(p.takes ?? {})) {
       if (t.share || email.toLowerCase() === me) takes[email] = t;
     }
-    return { ...p, takes };
+    return { ...p, takes, paperPdf: paperPdfs.get(p.pmid) };
   });
 
   return jsonResponse({ ok: true, picks: filtered });
+}
+
+/** Walk papers/ and return a map of pmid → path for files named pmid-{pmid}.{ext}. */
+async function pmidToPaperPath(env: Env): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/git/trees/${env.MEMBERS_BRANCH}?recursive=1`;
+  const r = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+    },
+  });
+  if (!r.ok) return out;
+  const data = await r.json() as { tree: Array<{ path: string; type: string }> };
+  for (const it of data.tree) {
+    if (it.type !== "blob") continue;
+    const m = it.path.match(/^papers\/pmid-(\d{6,9})\.[a-zA-Z0-9]+$/);
+    if (m) out.set(m[1], it.path);
+  }
+  return out;
 }
 
 async function handleAdminReading(req: Request, env: Env): Promise<Response> {

@@ -223,11 +223,14 @@ const pubsForPicker = (pubsRaw as Pub[])
             const meta = it.meta || {};
             const files = it.files || [];
             const subfolderLabel = meta.subfolder ? ` / ${esc(meta.subfolder)}` : "";
+            const pmidLabel = meta.category === "reading" && meta.pmid
+              ? ` · PMID ${esc(meta.pmid)}`
+              : "";
             return `
               <article class="border border-slate-200 rounded-2xl bg-white shadow-sm p-5 space-y-3">
                 <header class="flex items-start justify-between gap-3">
                   <div>
-                    <p class="text-[10px] uppercase tracking-widest text-brand-700 font-bold">${esc(meta.category || "?")}${subfolderLabel}</p>
+                    <p class="text-[10px] uppercase tracking-widest text-brand-700 font-bold">${esc(meta.category || "?")}${subfolderLabel}${pmidLabel}</p>
                     <p class="mt-1 text-sm font-semibold text-slate-900">${esc(meta.uploaderName || meta.uploader || "Unknown uploader")}</p>
                     <p class="text-xs text-slate-500">${esc(meta.uploader || "")} · ${esc(fmtDate(meta.uploadedAt))}</p>
                   </div>
