@@ -115,13 +115,14 @@ Worker 的 GitHub PAT 也可以從 API 讀到這份檔案。
 
 ### 目前的維運分工
 
-兩位主要維護者皆有完整寫入權,推 main 即可自動部署網站、可獨立部署
-Worker:
+兩位主要維護者皆有**完整最高權限**,可獨立做任何維運動作。
+帳號層級擁有權仍在 Daniel(Cloudflare/Resend 註冊在他名下),但操作
+權限對等。
 
 | 維護者 | GitHub | Cloudflare | Resend |
 |---|---|---|---|
-| 蔡相德 Daniel Tsai | PHD-Center org admin · 兩個 repo 寫入 | 帳號擁有者 · 可看/改 secrets | 帳號擁有者 |
-| 邱宏嘉 Hong-Chia Chiu | `yumemi2020` · 兩個 repo Maintain | Account member · 可部署 worker(secrets 不需要知道,deploy 自動帶) | — |
+| 蔡相德 Daniel Tsai | PHD-Center org admin · 兩個 repo Admin | 帳號擁有者 · Super Administrator | 帳號擁有者 |
+| 邱宏嘉 Hong-Chia Chiu | `yumemi2020` · 兩個 repo Admin | Super Administrator (account member) | Owner/Admin (member) |
 
 意涵:
 - **網站更新** — 任一人 push 到 `PHD-Center/AsPEN` main → GitHub Actions
@@ -131,6 +132,8 @@ Worker:
   的 JSON 後 push。
 - **Worker 更新** — 任一人在本機 `cd workers/aspen-auth && npx wrangler deploy`
   即可,secrets 已存在 Cloudflare 不必重設。
+- **Secrets 輪替 / Resend 寄信網域變更 / 加減其他 collaborator** — 兩人
+  都可獨立操作,無需另一人協助。
 
 ---
 
