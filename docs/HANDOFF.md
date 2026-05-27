@@ -217,6 +217,8 @@ Worker 的 GitHub PAT 也可以從 API 讀到這份檔案。
 
 ## 6 · 聯絡人
 
-主要維護者:蔡享諦 Daniel Tsai (danielhttsai@gmail.com),NCKU。
-共同 lead:賴嘉鎮 Edward Lai (edward_lai@mail.ncku.edu.tw),NCKU。
+主要維護者:
+- 蔡相德 Daniel Tsai (danielhttsai@gmail.com),NCKU
+- 邱宏嘉 Hong-Chia Chiu,NCKU
+
 主席:申柱永 Ju-Young Shin,SKKU/SNU。
