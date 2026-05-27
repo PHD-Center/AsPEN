@@ -226,11 +226,21 @@ const pubsForPicker = (pubsRaw as Pub[])
             const pmidLabel = meta.category === "reading" && meta.pmid
               ? ` · PMID ${esc(meta.pmid)}`
               : "";
+            const sugLabel = meta.category === "reading" && meta.suggestionId
+              ? ` · suggestion`
+              : "";
+            const sugTitleLine = meta.category === "reading" && meta.suggestionId && meta.suggestionTitle
+              ? `<p class="mt-1 text-xs text-slate-600 italic">For suggestion: "${esc(meta.suggestionTitle)}"</p>`
+              : "";
+            const renamePlaceholder = (meta.category === "reading" && meta.suggestionId)
+              ? "Destination PMID (digits only)"
+              : "Optional rename (single file only)";
             return `
               <article class="border border-slate-200 rounded-2xl bg-white shadow-sm p-5 space-y-3">
                 <header class="flex items-start justify-between gap-3">
                   <div>
-                    <p class="text-[10px] uppercase tracking-widest text-brand-700 font-bold">${esc(meta.category || "?")}${subfolderLabel}${pmidLabel}</p>
+                    <p class="text-[10px] uppercase tracking-widest text-brand-700 font-bold">${esc(meta.category || "?")}${subfolderLabel}${pmidLabel}${sugLabel}</p>
+                    ${sugTitleLine}
                     <p class="mt-1 text-sm font-semibold text-slate-900">${esc(meta.uploaderName || meta.uploader || "Unknown uploader")}</p>
                     <p class="text-xs text-slate-500">${esc(meta.uploader || "")} · ${esc(fmtDate(meta.uploadedAt))}</p>
                   </div>
@@ -245,7 +255,7 @@ const pubsForPicker = (pubsRaw as Pub[])
                   `).join("")}
                 </div>
                 <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
-                  <input type="text" data-rename placeholder="Optional rename (single file only)" class="flex-1 border border-slate-300 rounded px-3 py-1.5 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+                  <input type="text" data-rename placeholder="${esc(renamePlaceholder)}" class="flex-1 border border-slate-300 rounded px-3 py-1.5 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
                   <button type="button" data-action="approve" data-id="${esc(it.id)}" class="bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold px-3 py-1.5 rounded transition">Approve</button>
                   <button type="button" data-action="reject" data-id="${esc(it.id)}" class="bg-white hover:bg-rose-50 border border-rose-300 text-rose-700 text-xs font-semibold px-3 py-1.5 rounded transition">Reject</button>
                 </div>
@@ -426,16 +436,29 @@ const pubsForPicker = (pubsRaw as Pub[])
           return;
         }
         suggestionsWrap.classList.remove("hidden");
-        suggestionsRoot.innerHTML = open.map((s) => `
-          <article class="border border-slate-200 rounded-lg p-3 bg-white">
-            <p class="text-xs text-slate-500"><a href="https://pubmed.ncbi.nlm.nih.gov/${esc(s.pmid)}/" target="_blank" rel="noopener" class="text-brand-700 hover:underline font-semibold">PMID ${esc(s.pmid)}</a> · suggested by ${esc(s.suggestedByName || s.suggestedBy)} · ${esc(fmtDate(s.suggestedAt))}</p>
-            <p class="text-sm text-slate-700 leading-relaxed mt-1 whitespace-pre-line">${esc(s.reason)}</p>
-            <div class="mt-2 flex gap-2">
-              <button type="button" data-promote-pmid="${esc(s.pmid)}" data-reason="${esc(s.reason)}" class="text-xs font-semibold bg-brand-700 hover:bg-brand-800 text-white px-3 py-1.5 rounded transition">Use as a pick →</button>
-              <button type="button" data-dismiss-pmid="${esc(s.pmid)}" class="text-xs font-semibold text-slate-500 hover:text-rose-600 hover:underline">Dismiss</button>
-            </div>
-          </article>
-        `).join("");
+        suggestionsRoot.innerHTML = open.map((s) => {
+          const sid = s.id || s.pmid || "";
+          const titleLine = s.title
+            ? `<p class="text-sm font-semibold text-slate-900">${esc(s.title)}</p>`
+            : "";
+          const pmidLink = s.pmid
+            ? `<a href="https://pubmed.ncbi.nlm.nih.gov/${esc(s.pmid)}/" target="_blank" rel="noopener" class="text-brand-700 hover:underline">PMID ${esc(s.pmid)}</a> · `
+            : "";
+          const searchLink = !s.pmid && s.title
+            ? `<a href="https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(s.title)}" target="_blank" rel="noopener" class="text-brand-700 hover:underline">Look up on PubMed</a> · `
+            : "";
+          return `
+            <article class="border border-slate-200 rounded-lg p-3 bg-white">
+              ${titleLine}
+              <p class="text-xs text-slate-500">${pmidLink}${searchLink}suggested by ${esc(s.suggestedByName || s.suggestedBy)} · ${esc(fmtDate(s.suggestedAt))}</p>
+              <p class="text-sm text-slate-700 leading-relaxed mt-1 whitespace-pre-line">${esc(s.reason)}</p>
+              <div class="mt-2 flex gap-2">
+                <button type="button" data-promote-sid="${esc(sid)}" data-promote-pmid="${esc(s.pmid || "")}" data-title="${esc(s.title || "")}" data-reason="${esc(s.reason)}" class="text-xs font-semibold bg-brand-700 hover:bg-brand-800 text-white px-3 py-1.5 rounded transition">Use as a pick →</button>
+                <button type="button" data-dismiss-sid="${esc(sid)}" class="text-xs font-semibold text-slate-500 hover:text-rose-600 hover:underline">Dismiss</button>
+              </div>
+            </article>
+          `;
+        }).join("");
       };
 
       const loadSuggestions = async () => {
@@ -450,15 +473,15 @@ const pubsForPicker = (pubsRaw as Pub[])
       suggestionsRoot?.addEventListener("click", async (e) => {
         const t = e.target;
         if (!(t instanceof HTMLElement)) return;
-        if (t.dataset.dismissPmid) {
+        if (t.dataset.dismissSid) {
           if (!confirm("Dismiss this suggestion?")) return;
           await fetch(`${WORKER_URL}/api/admin/reading/promote-suggestion`, {
             method: "POST", credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pmid: t.dataset.dismissPmid, action: "dismiss" }),
+            body: JSON.stringify({ id: t.dataset.dismissSid, action: "dismiss" }),
           });
           loadSuggestions();
-        } else if (t.dataset.promotePmid) {
+        } else if (t.dataset.promoteSid !== undefined) {
           // Pre-fill the pick form, scroll to it, open it
           const form = document.querySelector("[data-pick-form]");
           const details = document.querySelector("[data-pick-details]");
@@ -466,11 +489,14 @@ const pubsForPicker = (pubsRaw as Pub[])
             const pmidSelect = form.querySelector('select[name="pmid"]');
             const headlineInput = form.querySelector('input[name="headline"]');
             const commentaryArea = form.querySelector('textarea[name="commentary"]');
-            if (pmidSelect) pmidSelect.value = t.dataset.promotePmid;
+            // Pre-fill pmid only if the suggestion already came with one;
+            // otherwise admin must pick from the dropdown.
+            if (pmidSelect && t.dataset.promotePmid) pmidSelect.value = t.dataset.promotePmid;
+            if (headlineInput && t.dataset.title) headlineInput.value = t.dataset.title;
             if (commentaryArea && t.dataset.reason) commentaryArea.value = t.dataset.reason;
             if (headlineInput) headlineInput.focus();
-            // Mark for follow-up dismiss after a successful pick
-            form.dataset.promotingPmid = t.dataset.promotePmid;
+            // Mark for follow-up promote-suggestion after the pick is created
+            form.dataset.promotingSid = t.dataset.promoteSid;
           }
           if (details) details.open = true;
           details?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -505,15 +531,17 @@ const pubsForPicker = (pubsRaw as Pub[])
         const d = await r.json().catch(() => ({}));
         if (r.ok && d.ok) {
           setPickMsg("Added.");
-          // If this pick was promoted from a suggestion, mark the suggestion as promoted.
-          const promotedPmid = pickForm.dataset.promotingPmid;
-          if (promotedPmid && promotedPmid === body.pmid) {
+          // If this pick was promoted from a suggestion, mark the suggestion
+          // as promoted and record the resolved pmid so attached PDFs route
+          // to the right destination.
+          const promotingSid = pickForm.dataset.promotingSid;
+          if (promotingSid) {
             await fetch(`${WORKER_URL}/api/admin/reading/promote-suggestion`, {
               method: "POST", credentials: "include",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ pmid: promotedPmid, action: "promote" }),
+              body: JSON.stringify({ id: promotingSid, action: "promote", resolvedPmid: body.pmid }),
             });
-            delete pickForm.dataset.promotingPmid;
+            delete pickForm.dataset.promotingSid;
             loadSuggestions();
           }
           pickForm.reset();

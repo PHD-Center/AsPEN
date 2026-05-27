@@ -346,8 +346,14 @@ interface PendingMeta {
   category: "papers" | "materials" | "reading";
   /** Subfolder under materials/ (protocols, slides, code, ...) — materials only */
   subfolder?: string;
-  /** PMID this upload is attached to — reading category only */
+  /** PMID this upload is attached to — reading category only (per-pick) */
   pmid?: string;
+  /** Suggestion id this upload is attached to — reading category only
+      (when uploaded together with a Suggest a paper submission). */
+  suggestionId?: string;
+  /** Title at suggestion time — helps the admin reviewer recognise the
+      paper before its pmid is known. */
+  suggestionTitle?: string;
 }
 
 async function handleUpload(req: Request, env: Env): Promise<Response> {
@@ -386,23 +392,37 @@ async function handleUpload(req: Request, env: Env): Promise<Response> {
   if (category === "materials" && subfolder && !/^[a-z0-9-]+$/.test(subfolder)) {
     return jsonResponse({ ok: false, error: "Invalid subfolder name." }, 400);
   }
-  // Reading-attached paper uploads must reference a known pmid — either an
-  // existing pick OR an open suggestion (so members can attach the PDF when
-  // they suggest the paper, before the chair has promoted it).
+  // Reading-attached paper uploads come in two shapes:
+  //   (a) per-pick — caller sends `pmid`, must match an existing pick
+  //   (b) suggestion-attached — caller sends `suggestionId`, must match an
+  //       open suggestion (the chair will resolve the destination pmid
+  //       when approving the upload)
   let pmid: string | undefined;
+  let suggestionId: string | undefined;
+  let suggestionTitle: string | undefined;
   if (category === "reading") {
-    pmid = String(form.get("pmid") || "").trim();
-    if (!/^\d{6,9}$/.test(pmid)) {
-      return jsonResponse({ ok: false, error: "PMID required for reading upload." }, 400);
+    pmid = String(form.get("pmid") || "").trim() || undefined;
+    suggestionId = String(form.get("suggestionId") || "").trim() || undefined;
+    if (!pmid && !suggestionId) {
+      return jsonResponse({ ok: false, error: "pmid or suggestionId required." }, 400);
     }
-    const { list: picks } = await fetchReading(env);
-    const isPick = picks.some((p) => p.pmid === pmid);
-    if (!isPick) {
-      const { list: suggs } = await fetchSuggestions(env);
-      const isSuggested = suggs.some((s) => s.pmid === pmid && s.status === "open");
-      if (!isSuggested) {
-        return jsonResponse({ ok: false, error: "No pick or open suggestion for that PMID." }, 404);
+    if (pmid && !/^\d{6,9}$/.test(pmid)) {
+      return jsonResponse({ ok: false, error: "Invalid pmid." }, 400);
+    }
+    if (pmid) {
+      const { list: picks } = await fetchReading(env);
+      if (!picks.some((p) => p.pmid === pmid)) {
+        return jsonResponse({ ok: false, error: "Pick not found for that PMID." }, 404);
       }
+    } else if (suggestionId) {
+      const { list: suggs } = await fetchSuggestions(env);
+      const s = suggs.find((s) =>
+        s.status === "open" && suggestionKey(s) === suggestionId
+      );
+      if (!s) {
+        return jsonResponse({ ok: false, error: "No open suggestion with that id." }, 404);
+      }
+      suggestionTitle = s.title || s.pmid || "";
     }
   }
   const description = String(form.get("description") || "").trim().slice(0, 2000);
@@ -411,11 +431,14 @@ async function handleUpload(req: Request, env: Env): Promise<Response> {
   const originalName = sanitiseFilename(fileEntry.name || "upload.bin");
   if (!originalName) return jsonResponse({ ok: false, error: "Invalid filename." }, 400);
 
-  // Build unique pending dir: pending/<category>/<iso>-<rand>/  (reading prefixes with pmid for legibility)
+  // Build unique pending dir: pending/<category>/<iso>-<rand>/  (reading
+  // prefixes with pmid or sugg-{id} for legibility)
   const stamp = new Date().toISOString().replace(/[:.]/g, "-").replace(/Z$/, "Z");
   const rand = randSlug(6);
   const dirPath = category === "reading"
-    ? `pending/reading/${pmid}-${stamp}-${rand}`
+    ? (pmid
+        ? `pending/reading/${pmid}-${stamp}-${rand}`
+        : `pending/reading/${suggestionId}-${stamp}-${rand}`)
     : `pending/${category}/${stamp}-${rand}`;
 
   // Upload the file
@@ -434,6 +457,8 @@ async function handleUpload(req: Request, env: Env): Promise<Response> {
     category: category as PendingMeta["category"],
     subfolder: category === "materials" ? (subfolder || undefined) : undefined,
     pmid: category === "reading" ? pmid : undefined,
+    suggestionId: category === "reading" ? suggestionId : undefined,
+    suggestionTitle: category === "reading" ? suggestionTitle : undefined,
   };
   const metaB64 = base64FromUtf8(JSON.stringify(meta, null, 2) + "\n");
   await putBinaryFile(env, `${dirPath}/meta.json`, metaB64,
@@ -565,13 +590,31 @@ async function handleReview(req: Request, env: Env): Promise<Response> {
   //
   // Special-case: reading-attached PDFs always land at papers/pmid-{pmid}.{ext}
   // so the listing endpoint can match them back to the right pick.
+  //
+  // For suggestion-attached uploads (no pmid yet at upload time), admin
+  // must supply the destination pmid via the rename field (digits only).
   const destinations: Array<{ src: string; dst: string }> = [];
+  let effectivePmid: string | undefined;
+  if (meta.category === "reading") {
+    if (meta.pmid) {
+      effectivePmid = meta.pmid;
+    } else if (meta.suggestionId) {
+      const digits = rename.replace(/\D+/g, "");
+      if (!/^\d{6,9}$/.test(digits)) {
+        return jsonResponse({
+          ok: false,
+          error: "This PDF was attached to a suggestion — enter the destination PMID (6–9 digits) in the rename field before approving.",
+        }, 400);
+      }
+      effectivePmid = digits;
+    }
+  }
   for (const src of filesToCopy) {
     const srcBasename = src.split("/").pop()!;
     let dstName = srcBasename;
-    if (meta.category === "reading" && meta.pmid) {
+    if (meta.category === "reading" && effectivePmid) {
       const ext = (srcBasename.match(/\.([a-zA-Z0-9]+)$/)?.[1] || "pdf").toLowerCase();
-      dstName = `pmid-${meta.pmid}.${ext}`;
+      dstName = `pmid-${effectivePmid}.${ext}`;
     } else if (filesToCopy.length === 1 && rename) {
       dstName = sanitiseFilename(rename) || srcBasename;
     }
@@ -809,12 +852,26 @@ async function handleReadingComment(req: Request, env: Env): Promise<Response> {
 // ── Suggestions ────────────────────────────────────────────────────────
 
 interface ReadingSuggestion {
-  pmid: string;
+  /** Random slug — primary key for new suggestions. Legacy records may
+      lack this and fall back to pmid for identification. */
+  id?: string;
+  /** Free-text title (new flow). Legacy records have only pmid + reason. */
+  title?: string;
+  /** Optional — known if the suggester or chair has the PubMed id. */
+  pmid?: string;
   reason: string;
   suggestedBy: string;
   suggestedByName: string;
   suggestedAt: string;
   status: "open" | "promoted" | "dismissed";
+  /** Set once admin promotes the suggestion to a pick — records the pmid
+      of the resulting pick so uploaded PDFs can be routed there. */
+  resolvedPmid?: string;
+}
+
+/** Stable identifier for a suggestion — id for new records, pmid for legacy. */
+function suggestionKey(s: ReadingSuggestion): string {
+  return s.id || s.pmid || "";
 }
 
 async function fetchSuggestions(env: Env): Promise<{ list: ReadingSuggestion[]; sha: string }> {
@@ -841,25 +898,31 @@ async function fetchSuggestions(env: Env): Promise<{ list: ReadingSuggestion[]; 
 async function handleReadingSuggest(req: Request, env: Env): Promise<Response> {
   const m = await sessionMember(req, env);
   if (!m) return jsonResponse({ ok: false }, 401);
-  const body = await safeJson<{ pmid?: string; reason?: string }>(req);
+  const body = await safeJson<{ title?: string; pmid?: string; reason?: string }>(req);
+  const title = String(body?.title || "").trim().slice(0, 500);
   const pmid = String(body?.pmid || "").trim();
   const reason = String(body?.reason || "").trim().slice(0, 1500);
-  if (!/^\d{6,9}$/.test(pmid)) {
-    return jsonResponse({ ok: false, error: "PMID should be 6–9 digits." }, 400);
-  }
+  if (!title) return jsonResponse({ ok: false, error: "Title required." }, 400);
   if (!reason) return jsonResponse({ ok: false, error: "Tell us why." }, 400);
+  if (pmid && !/^\d{6,9}$/.test(pmid)) {
+    return jsonResponse({ ok: false, error: "PMID, if given, should be 6–9 digits." }, 400);
+  }
 
   const { list, sha } = await fetchSuggestions(env);
-  // Dedupe: same email + pmid + open → ignore
+  // Dedupe: same email + (title or pmid) + open → ignore
   const already = list.find((s) =>
-    s.pmid === pmid &&
+    s.status === "open" &&
     s.suggestedBy.toLowerCase() === m.email.toLowerCase() &&
-    s.status === "open"
+    ((s.title && s.title.toLowerCase() === title.toLowerCase()) ||
+     (pmid && s.pmid === pmid))
   );
-  if (already) return jsonResponse({ ok: true, deduped: true });
+  if (already) return jsonResponse({ ok: true, deduped: true, id: suggestionKey(already) });
 
+  const id = "s" + randSlug(10);
   list.unshift({
-    pmid,
+    id,
+    title,
+    pmid: pmid || undefined,
     reason,
     suggestedBy: m.email.toLowerCase(),
     suggestedByName: m.name,
@@ -868,8 +931,8 @@ async function handleReadingSuggest(req: Request, env: Env): Promise<Response> {
   });
   await putJsonFile(env, "suggestions.json",
     JSON.stringify(list, null, 2) + "\n", sha,
-    `Suggestion: ${pmid} by ${m.email}`);
-  return jsonResponse({ ok: true });
+    `Suggestion: ${title.slice(0, 80)} by ${m.email}`);
+  return jsonResponse({ ok: true, id });
 }
 
 async function handleReadingSuggestions(req: Request, env: Env): Promise<Response> {
@@ -884,19 +947,31 @@ async function handleAdminPromoteSuggestion(req: Request, env: Env): Promise<Res
   const m = await sessionMember(req, env);
   if (!m) return jsonResponse({ ok: false }, 401);
   if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
-  const body = await safeJson<{ pmid?: string; action?: "promote" | "dismiss" }>(req);
+  const body = await safeJson<{
+    id?: string; pmid?: string; resolvedPmid?: string;
+    action?: "promote" | "dismiss";
+  }>(req);
+  const id = String(body?.id || "");
   const pmid = String(body?.pmid || "");
+  const resolvedPmid = String(body?.resolvedPmid || "");
   const action = body?.action;
-  if (!pmid || (action !== "promote" && action !== "dismiss")) {
+  if ((!id && !pmid) || (action !== "promote" && action !== "dismiss")) {
     return jsonResponse({ ok: false, error: "Invalid request." }, 400);
   }
   const { list, sha } = await fetchSuggestions(env);
-  const target = list.find((s) => s.pmid === pmid && s.status === "open");
+  // Match by id first, then fall back to legacy pmid
+  const target = list.find((s) =>
+    s.status === "open" && ((id && suggestionKey(s) === id) || (!id && pmid && s.pmid === pmid))
+  );
   if (!target) return jsonResponse({ ok: false, error: "Suggestion not found." }, 404);
   target.status = action === "promote" ? "promoted" : "dismissed";
+  if (action === "promote" && resolvedPmid && /^\d{6,9}$/.test(resolvedPmid)) {
+    target.resolvedPmid = resolvedPmid;
+  }
+  const key = suggestionKey(target);
   await putJsonFile(env, "suggestions.json",
     JSON.stringify(list, null, 2) + "\n", sha,
-    `Suggestion ${pmid}: ${action} by ${m.email}`);
+    `Suggestion ${key}: ${action} by ${m.email}`);
   return jsonResponse({ ok: true });
 }
 
