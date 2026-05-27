@@ -42,13 +42,13 @@ jobs:
       # 🚀 新增：透過 WebDAV 同步上傳至單位 Synology NAS
       # ==========================================
       - name: Deploy to NCKU PHDc NAS via WebDAV
-        uses: cbroglie/wd-upload@v2
+        uses: bitoiu/webdav-deploy@v1
         with:
-          url: 'https://dev.aspensig.asia'             # 透過dev.aspensig.asia 443 連到中心更新網站
-          user: 'aspen-git'
+		      server: 'https://www.aspensig.asia'           # 透過dev.aspensig.asia 443 連到中心更新網站
+          username: 'aspen-git'
           password: ${{ secrets.NAS_PASSWORD }}
-          local: 'dist'
-          remote: '/AsPEN.sig'
+          local_dir: 'dist'
+          remote_dir: '/AsPEN.sig'
 
   deploy:
     needs: build
