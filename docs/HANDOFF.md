@@ -9,8 +9,9 @@
 > 上重建,本文件已列出所需的一切。
 
 **最後更新日期:** 2026-05-27。
-**目前網站 URL:** https://phd-center.github.io/AsPEN/
-**規劃中網域:** https://aspensig.asia (DNS 遷移待辦)。
+**正式網址:** https://www.aspensig.asia/ (PHDc 主機 + GitHub Pages 雙部署)
+**GH Pages 鏡像:** https://phd-center.github.io/AsPEN/ (仍可用,過渡期保留)
+**PHDc NAS:** https://dev.aspensig.asia/ (GitHub Actions 經 WebDAV 同步)
 
 ---
 

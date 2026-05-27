@@ -16,12 +16,14 @@ MEMBERS_BRANCH = "main"
 
 # The base URL of the AsPEN site. Used to build the magic-link URL that
 # goes in the email body and as the post-verify redirect target.
-# Change this when AsPEN switches domain (e.g. to "https://aspensig.asia").
-SITE_BASE_URL = "https://phd-center.github.io/AsPEN"
+SITE_BASE_URL = "https://www.aspensig.asia"
 
 # Which origins are allowed to call the worker (CORS). Comma-separated list.
-# Update when the AsPEN site domain changes.
-ALLOWED_ORIGINS = "https://phd-center.github.io,http://localhost:4321"
+# - www.aspensig.asia + aspensig.asia: primary domain (with/without www)
+# - dev.aspensig.asia: PHDc NAS deploy target
+# - phd-center.github.io: legacy GH Pages URL (kept active during transition)
+# - http://localhost:4321: local Astro dev server
+ALLOWED_ORIGINS = "https://www.aspensig.asia,https://aspensig.asia,https://dev.aspensig.asia,https://phd-center.github.io,http://localhost:4321"
 
 # Magic-link sender. Use the Resend sandbox until DNS for aspensig.asia is
 # verified, then switch to "noreply@aspensig.asia".
