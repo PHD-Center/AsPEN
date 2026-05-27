@@ -2,9 +2,9 @@
 
 **一頁式參考文件,供 IT 部門理解、備份、鏡像、或接手營運 AsPEN 網站平台使用。**
 
-> 目前系統已完整運作中,並仍在持續開發。主要維護者(蔡享諦/Daniel Tsai,
-> NCKU)計畫繼續以 PHD-Center 的 GitHub repo 作為「single source of truth」
-> 進行迭代開發。**建議模式:IT 保留鏡像/有讀取權以供稽核及備份,
+> 目前系統已完整運作中,並仍在持續開發。主要維護者(蔡相德/Daniel Tsai
+> 與邱宏嘉/Hong-Chia Chiu,皆為 NCKU)計畫繼續以 PHD-Center 的 GitHub
+> repo 作為「single source of truth」進行迭代開發。**建議模式:IT 保留鏡像/有讀取權以供稽核及備份,
 > 主要開發節奏仍由主席掌握。** 若 IT 之後想完全自架或在不同基礎建設
 > 上重建,本文件已列出所需的一切。
 
