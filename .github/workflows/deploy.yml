@@ -38,14 +38,22 @@ jobs:
         with:
           path: ./dist
 
+      # ==========================================
+      # 同步資料到PHDC中心
+      # ==========================================
+      - name: Install Rclone
+        run: sudo -v ; curl https://rclone.org/install.sh | sudo bash
       - name: Deploy to NCKU PHDc NAS via WebDAV
-        uses: bitoiu/webdav-deploy@v1
-        with:
-          server: 'https://www.aspensig.asia'
-          username: 'aspen-git'
-          password: ${{ secrets.NAS_PASSWORD }}
-          local_dir: 'dist'
-          remote_dir: '/AsPEN.sig'
+        env:
+          WEBDAV_PASS: ${{ secrets.NAS_PASSWORD }}
+        run: |
+          OBSCURED_PASS=$(rclone obscure "$WEBDAV_PASS")
+          # 同步指令
+          rclone sync ./dist :webdav:/AsPEN.sig \
+            --webdav-url="https://dev.aspensig.asia" \
+            --webdav-user="aspen-git" \
+            --webdav-pass="$OBSCURED_PASS" \
+            --webdav-vendor="other"
 
   deploy:
     needs: build
