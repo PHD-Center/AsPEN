@@ -131,6 +131,14 @@ export default {
         resp = await handleReadingSuggestions(req, env);
       } else if (url.pathname === "/api/admin/reading/promote-suggestion" && req.method === "POST") {
         resp = await handleAdminPromoteSuggestion(req, env);
+      } else if (url.pathname === "/api/admin/delete-file" && req.method === "POST") {
+        resp = await handleAdminDeleteFile(req, env);
+      } else if (url.pathname === "/api/request-delete" && req.method === "POST") {
+        resp = await handleRequestDelete(req, env);
+      } else if (url.pathname === "/api/delete-requests" && req.method === "GET") {
+        resp = await handleDeleteRequestsList(req, env);
+      } else if (url.pathname === "/api/admin/delete-requests" && req.method === "POST") {
+        resp = await handleAdminDeleteRequestAction(req, env);
       } else if (url.pathname === "/api/admin/members" && req.method === "GET") {
         resp = await handleAdminMembersList(req, env);
       } else if (url.pathname === "/api/admin/members" && req.method === "POST") {
@@ -834,6 +842,149 @@ async function handleAdminPromoteSuggestion(req: Request, env: Env): Promise<Res
     JSON.stringify(list, null, 2) + "\n", sha,
     `Suggestion ${pmid}: ${action} by ${m.email}`);
   return jsonResponse({ ok: true });
+}
+
+// ── File delete + delete-requests ──────────────────────────────────────
+
+interface DeleteRequest {
+  path: string;
+  reason: string;
+  requestedBy: string;
+  requestedByName: string;
+  requestedAt: string;
+  status: "open" | "approved" | "dismissed";
+}
+
+/** Defence-in-depth: only allow deleting files under materials/ or papers/. */
+function isDeletablePath(path: string): boolean {
+  if (!path || path.includes("..") || path.startsWith("/")) return false;
+  return path.startsWith("materials/") || path.startsWith("papers/");
+}
+
+async function handleAdminDeleteFile(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+
+  const body = await safeJson<{ path?: string }>(req);
+  const path = String(body?.path || "").trim();
+  if (!isDeletablePath(path)) return jsonResponse({ ok: false, error: "Invalid path." }, 400);
+
+  const file = await fetchFileWithSha(env, path);
+  if (!file) return jsonResponse({ ok: false, error: "File not found." }, 404);
+
+  await deleteFile(env, path, file.sha, `Admin ${m.email}: delete ${path}`);
+  return jsonResponse({ ok: true });
+}
+
+async function handleRequestDelete(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+
+  const body = await safeJson<{ path?: string; reason?: string }>(req);
+  const path = String(body?.path || "").trim();
+  const reason = String(body?.reason || "").trim().slice(0, 1500);
+  if (!isDeletablePath(path)) return jsonResponse({ ok: false, error: "Invalid path." }, 400);
+  if (!reason) return jsonResponse({ ok: false, error: "Please give a reason." }, 400);
+
+  const { list, sha } = await fetchDeleteRequests(env);
+  // Dedupe: same email + path + open → no-op
+  const already = list.find((d) =>
+    d.path === path && d.requestedBy.toLowerCase() === m.email.toLowerCase() && d.status === "open"
+  );
+  if (already) return jsonResponse({ ok: true, deduped: true });
+
+  list.unshift({
+    path,
+    reason,
+    requestedBy: m.email.toLowerCase(),
+    requestedByName: m.name,
+    requestedAt: new Date().toISOString(),
+    status: "open",
+  });
+  await putJsonFile(env, "delete-requests.json",
+    JSON.stringify(list, null, 2) + "\n", sha,
+    `Delete request: ${path} by ${m.email}`);
+  return jsonResponse({ ok: true });
+}
+
+async function handleDeleteRequestsList(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+  const { list } = await fetchDeleteRequests(env);
+  return jsonResponse({ ok: true, requests: list });
+}
+
+async function handleAdminDeleteRequestAction(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+
+  const body = await safeJson<{ path?: string; requestedAt?: string; action?: "approve" | "dismiss" }>(req);
+  const path = String(body?.path || "");
+  const requestedAt = String(body?.requestedAt || "");
+  const action = body?.action;
+  if (!path || !requestedAt || (action !== "approve" && action !== "dismiss")) {
+    return jsonResponse({ ok: false, error: "Invalid request." }, 400);
+  }
+
+  const { list, sha } = await fetchDeleteRequests(env);
+  // Match on path + requestedAt + open (timestamp disambiguates if same path requested twice)
+  const target = list.find((d) => d.path === path && d.requestedAt === requestedAt && d.status === "open");
+  if (!target) return jsonResponse({ ok: false, error: "Request not found." }, 404);
+
+  if (action === "approve") {
+    // Try to delete the file (may already be gone — that's still OK)
+    const file = await fetchFileWithSha(env, path);
+    if (file) {
+      try {
+        await deleteFile(env, path, file.sha,
+          `Admin ${m.email}: approve delete request for ${path}`);
+      } catch (e) {
+        return jsonResponse({ ok: false, error: "File delete failed: " + String(e) }, 502);
+      }
+    }
+    target.status = "approved";
+  } else {
+    target.status = "dismissed";
+  }
+
+  // Re-fetch SHA in case the previous file delete touched the tree (it doesn't
+  // touch delete-requests.json but be safe)
+  const fresh = await fetchDeleteRequests(env);
+  // Update the matching entry in fresh.list as well, in case there were any
+  // concurrent changes
+  const freshTarget = fresh.list.find((d) =>
+    d.path === path && d.requestedAt === requestedAt && d.status === "open"
+  );
+  if (freshTarget) freshTarget.status = target.status;
+  await putJsonFile(env, "delete-requests.json",
+    JSON.stringify(fresh.list, null, 2) + "\n", fresh.sha,
+    `Delete request ${action}: ${path} by ${m.email}`);
+
+  return jsonResponse({ ok: true });
+}
+
+async function fetchDeleteRequests(env: Env): Promise<{ list: DeleteRequest[]; sha: string }> {
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/contents/delete-requests.json?ref=${env.MEMBERS_BRANCH}`;
+  const r = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+    },
+  });
+  if (!r.ok) {
+    if (r.status === 404) return { list: [], sha: "" };
+    throw new Error(`fetchDeleteRequests ${r.status}`);
+  }
+  const data = await r.json() as { content: string; sha: string };
+  const text = utf8FromBase64(data.content.replace(/\s+/g, ""));
+  let list: DeleteRequest[] = [];
+  try { list = JSON.parse(text); } catch { list = []; }
+  if (!Array.isArray(list)) list = [];
+  return { list, sha: data.sha };
 }
 
 async function fetchReading(env: Env): Promise<{ list: ReadingPick[]; sha: string }> {

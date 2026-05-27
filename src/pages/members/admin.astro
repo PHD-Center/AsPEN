@@ -47,7 +47,7 @@ const pubsForPicker = (pubsRaw as Pub[])
       <div role="tablist" class="flex gap-0.5 p-0.5 bg-slate-100 rounded-lg text-sm font-semibold">
         <button type="button" role="tab" data-tab="uploads" aria-selected="true"
                 class="flex-1 px-3 py-2 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
-          Pending uploads <span data-uploads-count class="hidden ml-1 bg-brand-700 text-white text-[10px] rounded-full px-1.5 py-0.5 tabular-nums"></span>
+          Review queue <span data-uploads-count class="hidden ml-1 bg-brand-700 text-white text-[10px] rounded-full px-1.5 py-0.5 tabular-nums"></span>
         </button>
         <button type="button" role="tab" data-tab="reading" aria-selected="false"
                 class="flex-1 px-3 py-2 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
@@ -59,8 +59,24 @@ const pubsForPicker = (pubsRaw as Pub[])
         </button>
       </div>
 
-      <!-- ── Pane: Pending uploads ────────────────────────────── -->
-      <div data-pane="uploads" class="space-y-4" data-queue></div>
+      <!-- ── Pane: Pending uploads + delete requests ────────── -->
+      <div data-pane="uploads" class="space-y-8">
+        <!-- Delete requests first (usually faster to action) -->
+        <div data-delete-requests-wrap class="hidden">
+          <p class="text-xs uppercase tracking-widest text-rose-600 font-semibold mb-2">
+            Delete requests · <span data-delete-requests-count>0</span>
+          </p>
+          <div data-delete-requests class="space-y-2"></div>
+        </div>
+
+        <!-- Then upload submissions -->
+        <div>
+          <p data-uploads-header class="hidden text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">
+            Upload submissions
+          </p>
+          <div data-queue class="space-y-4"></div>
+        </div>
+      </div>
 
       <!-- ── Pane: Reading group ─────────────────────────────── -->
       <div data-pane="reading" class="hidden space-y-6">
@@ -237,6 +253,15 @@ const pubsForPicker = (pubsRaw as Pub[])
         }
       };
 
+      let uploadsCount = 0;
+      let deletesCount = 0;
+      const updateBadge = () => {
+        const badge = document.querySelector("[data-uploads-count]");
+        const total = uploadsCount + deletesCount;
+        if (total > 0) { badge.textContent = String(total); badge.classList.remove("hidden"); }
+        else badge.classList.add("hidden");
+      };
+
       const loadUploads = async () => {
         try {
           const r = await fetch(`${WORKER_URL}/api/pending`, { credentials: "include" });
@@ -244,11 +269,78 @@ const pubsForPicker = (pubsRaw as Pub[])
           const data = await r.json();
           const items = (data && data.items) || [];
           renderQueue(items);
-          const badge = document.querySelector("[data-uploads-count]");
-          if (items.length > 0) { badge.textContent = String(items.length); badge.classList.remove("hidden"); }
-          else badge.classList.add("hidden");
+          document.querySelector("[data-uploads-header]")?.classList.toggle("hidden", items.length === 0);
+          uploadsCount = items.length;
+          updateBadge();
         } catch {}
       };
+
+      // ── Delete requests ──
+      const dreqWrap = document.querySelector("[data-delete-requests-wrap]");
+      const dreqRoot = document.querySelector("[data-delete-requests]");
+      const dreqCount = document.querySelector("[data-delete-requests-count]");
+
+      const renderDeleteRequests = (reqs) => {
+        const open = reqs.filter((r) => r.status === "open");
+        dreqCount.textContent = open.length;
+        if (open.length === 0) {
+          dreqWrap.classList.add("hidden");
+          return;
+        }
+        dreqWrap.classList.remove("hidden");
+        dreqRoot.innerHTML = open.map((r) => `
+          <article class="border border-rose-200 rounded-lg p-3 bg-rose-50/40">
+            <p class="text-sm font-semibold text-slate-900 break-all">${esc(r.path)}</p>
+            <p class="text-xs text-slate-500 mt-0.5">requested by ${esc(r.requestedByName || r.requestedBy)} · ${esc(fmtDate(r.requestedAt))}</p>
+            <p class="text-sm text-slate-700 leading-relaxed mt-2 whitespace-pre-line bg-white border border-slate-200 rounded p-2">${esc(r.reason)}</p>
+            <div class="mt-2 flex gap-2">
+              <button type="button" data-dreq-approve data-path="${esc(r.path)}" data-requested-at="${esc(r.requestedAt)}" class="text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded transition">Delete file</button>
+              <button type="button" data-dreq-dismiss data-path="${esc(r.path)}" data-requested-at="${esc(r.requestedAt)}" class="text-xs font-semibold text-slate-500 hover:text-slate-700 hover:underline">Dismiss request</button>
+            </div>
+          </article>
+        `).join("");
+      };
+
+      const loadDeleteRequests = async () => {
+        try {
+          const r = await fetch(`${WORKER_URL}/api/delete-requests`, { credentials: "include" });
+          if (!r.ok) return;
+          const data = await r.json();
+          const reqs = (data && data.requests) || [];
+          renderDeleteRequests(reqs);
+          deletesCount = reqs.filter((r) => r.status === "open").length;
+          updateBadge();
+        } catch {}
+      };
+
+      dreqRoot?.addEventListener("click", async (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLElement)) return;
+        const path = t.dataset.path;
+        const requestedAt = t.dataset.requestedAt;
+        if (!path || !requestedAt) return;
+        let action;
+        if (t.hasAttribute("data-dreq-approve")) {
+          if (!confirm(`Permanently delete "${path}"?`)) return;
+          action = "approve";
+        } else if (t.hasAttribute("data-dreq-dismiss")) {
+          if (!confirm("Dismiss this request? File stays as-is.")) return;
+          action = "dismiss";
+        } else return;
+        t.disabled = true;
+        const r = await fetch(`${WORKER_URL}/api/admin/delete-requests`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ path, requestedAt, action }),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.ok) {
+          loadDeleteRequests();
+        } else {
+          alert(d.error || "Failed.");
+          t.disabled = false;
+        }
+      });
 
       queueRoot.addEventListener("click", async (e) => {
         const t = e.target;
@@ -546,6 +638,7 @@ const pubsForPicker = (pubsRaw as Pub[])
           if (!me?.member?.isAdmin) return setState("forbidden");
           setState("ready");
           loadUploads();
+          loadDeleteRequests();
           loadReading();
           loadSuggestions();
           loadMembers();
