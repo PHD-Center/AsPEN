@@ -1,240 +1,222 @@
-# AsPEN site — handoff for IT
+# AsPEN 網站 — IT 交接文件
 
-**One-page reference for an IT department that wants to understand,
-back up, mirror, or take over operation of the AsPEN web platform.**
+**一頁式參考文件,供 IT 部門理解、備份、鏡像、或接手營運 AsPEN 網站平台使用。**
 
-> Current setup is fully functional and being actively developed. The
-> primary chair (Daniel Tsai, NCKU) intends to keep doing iterative
-> development against PHD-Center's GitHub repos as the source of truth.
-> The recommended pattern: **IT keeps a mirror / has read access for
-> audit and backup; primary dev velocity remains with the chair.** If
-> IT later wants to fully self-host or rebuild on different
-> infrastructure, this doc lists everything needed to do so.
+> 目前系統已完整運作中,並仍在持續開發。主要維護者(蔡享諦/Daniel Tsai,
+> NCKU)計畫繼續以 PHD-Center 的 GitHub repo 作為「single source of truth」
+> 進行迭代開發。**建議模式:IT 保留鏡像/有讀取權以供稽核及備份,
+> 主要開發節奏仍由主席掌握。** 若 IT 之後想完全自架或在不同基礎建設
+> 上重建,本文件已列出所需的一切。
 
-**Last revised:** 2026-05-27.
-**Site URL today:** https://phd-center.github.io/AsPEN/
-**Planned domain:** https://aspensig.asia (DNS migration pending).
+**最後更新日期:** 2026-05-27。
+**目前網站 URL:** https://phd-center.github.io/AsPEN/
+**規劃中網域:** https://aspensig.asia (DNS 遷移待辦)。
 
 ---
 
-## 1 · Architecture in one picture
+## 1 · 一張圖看懂架構
 
 ```
-                    Member browser
+                    會員瀏覽器
                           │
-                          │  visits aspensig.asia
+                          │  訪問 aspensig.asia
                           ▼
         ┌──────────────────────────────────────────┐
-        │  AsPEN site (Astro 5, static)             │
-        │  Source: PHD-Center/AsPEN  (PUBLIC)        │  ← public website
+        │  AsPEN 網站 (Astro 5, 靜態)                │
+        │  原始碼: PHD-Center/AsPEN  (公開)          │  ← 公開網站
         │  Hosting: GitHub Pages                     │
         │  Build: GitHub Actions (.github/workflows) │
-        │  Pages: /, /about, /databases, /publications│
-        │         /activities, /contact, /membership, │
-        │         /nhird (Taiwan data infrastructure), │
-        │         /members/* (gated by Worker below)  │
+        │  頁面: /, /about, /databases, /publications│
+        │       /activities, /contact, /membership,  │
+        │       /nhird (台灣健保資料庫生態),         │
+        │       /members/* (由下方 Worker 把關存取)   │
         └──────────────────────────────────────────┘
                           │
-                          │  /members/* JS does cross-origin fetch
+                          │  /members/* 內的 JS 跨域 fetch
                           ▼
         ┌──────────────────────────────────────────┐
         │  aspen-auth Cloudflare Worker             │
-        │  Lives on Cloudflare (NOT GitHub Pages)    │  ← auth gateway
-        │  Source code: workers/aspen-auth/ inside   │
-        │              PHD-Center/AsPEN repo         │
+        │  部署在 Cloudflare (非 GitHub Pages)       │  ← 認證 gateway
+        │  原始碼: PHD-Center/AsPEN repo 的           │
+        │         workers/aspen-auth/                │
         │  URL: aspen-auth.danielhttsai.workers.dev  │
-        │  Routes: magic-link login, sessions,        │
-        │          reading-group state, file proxy,   │
-        │          admin actions                     │
-        │  Secrets (in CF dashboard):                │
-        │    · GITHUB_PAT   — read+write aspen-members│
-        │    · JWT_SECRET   — signs session cookies   │
-        │    · RESEND_API_KEY — sends magic-link mail │
+        │  路由: magic-link 登入、session、           │
+        │       reading group 狀態、檔案 proxy、       │
+        │       admin 操作                           │
+        │  Secrets (放在 CF dashboard):              │
+        │    · GITHUB_PAT   — 讀寫 aspen-members      │
+        │    · JWT_SECRET   — 簽 session cookie       │
+        │    · RESEND_API_KEY — 寄 magic-link 信件     │
         └──────────────────────────────────────────┘
                           │
                           │  GitHub REST API
                           ▼
         ┌──────────────────────────────────────────┐
-        │  PHD-Center/aspen-members  (PRIVATE repo) │  ← members + data
-        │  members.json      — emails, names, status │
-        │  reading.json      — reading-group picks, │
-        │                      reactions, takes,    │
-        │                      comments             │
-        │  suggestions.json  — open paper suggestions│
-        │  papers/           — (currently empty)     │
-        │  materials/        — protocols, slides, code│
-        │  pending/          — in-review uploads     │
+        │  PHD-Center/aspen-members  (私有 repo)    │  ← 會員 + 資料
+        │  members.json      — emails、姓名、狀態    │
+        │  reading.json      — 讀書會選文、reactions、│
+        │                      個人 take、留言        │
+        │  suggestions.json  — 待審的論文推薦         │
+        │  papers/           — (目前空的)             │
+        │  materials/        — protocol、slides、code │
+        │  pending/          — 審核中的上傳檔         │
         └──────────────────────────────────────────┘
 
         ┌──────────────────────────────────────────┐
-        │  Resend (separate vendor)                  │
-        │  Sends magic-link emails from              │
-        │  noreply@aspensig.asia (once domain        │
-        │  verified — sandbox onboarding@resend.dev  │
-        │  in use until then)                        │
+        │  Resend (獨立第三方)                       │
+        │  從 noreply@aspensig.asia 寄出 magic-link  │
+        │  (網域驗證完成前先用 sandbox                │
+        │  onboarding@resend.dev)                    │
         └──────────────────────────────────────────┘
 ```
 
-**Why three pieces, not one?** The public site is a static HTML/CSS/JS
-bundle (host-anywhere). The auth and members area need a small server
-component (the Worker) because static hosts can't safely hold the
-GitHub PAT. The private repo is a git-tracked database — chair can
-audit every change to membership and content via git history.
+**為什麼是三塊而不是一塊?** 公開網站是靜態的 HTML/CSS/JS bundle(到處都
+可以 host)。認證與會員區需要小型 server 元件(Worker),因為靜態主機
+無法安全保管 GitHub PAT。私有 repo 等於是個 git-tracked 的資料庫 —
+主席可以透過 git history 稽核會員資料與內容的每一次變更。
 
 ---
 
-## 2 · Inventory · everything that exists
+## 2 · 完整清單 · 系統包含的所有東西
 
-| Component | URL / location | Visibility | Owner |
+| 元件 | URL / 位置 | 公開性 | 擁有者 |
 |---|---|---|---|
-| Public site source | https://github.com/PHD-Center/AsPEN | Public | PHD-Center org |
-| Live public site (GH Pages) | https://phd-center.github.io/AsPEN/ | Public | served from above |
-| Auth worker source | `workers/aspen-auth/` inside above repo | Public | (same) |
-| Deployed worker | https://aspen-auth.danielhttsai.workers.dev | Public endpoint (CORS-gated) | Daniel's Cloudflare |
-| Private data repo | https://github.com/PHD-Center/aspen-members | **Private** | PHD-Center org |
-| Email vendor | https://resend.com/ — domain `aspensig.asia` | Vendor account | Daniel's Resend |
-| DNS for aspensig.asia | (registrar TBC by IT) | DNS provider | TBC |
-| GH Pages CI | `.github/workflows/deploy.yml` | In public repo | runs on every push to main |
-| Worker CI | none — `wrangler deploy` from local | Manual | currently chair runs |
+| 公開網站原始碼 | https://github.com/PHD-Center/AsPEN | 公開 | PHD-Center 組織 |
+| 線上公開網站 (GH Pages) | https://phd-center.github.io/AsPEN/ | 公開 | 由上面那包 build 出來 |
+| 認證 worker 原始碼 | 上述 repo 內的 `workers/aspen-auth/` | 公開 | (同上) |
+| 已部署的 worker | https://aspen-auth.danielhttsai.workers.dev | 公開 endpoint (CORS-gated) | Daniel 的 Cloudflare |
+| 私有資料 repo | https://github.com/PHD-Center/aspen-members | **私有** | PHD-Center 組織 |
+| Email 寄信服務 | https://resend.com/ — 網域 `aspensig.asia` | 第三方帳號 | Daniel 的 Resend |
+| aspensig.asia DNS | (註冊商由 IT 決定) | DNS provider | 待定 |
+| GH Pages CI | `.github/workflows/deploy.yml` | 在公開 repo 內 | 每次推 main 自動跑 |
+| Worker CI | 無 — 由本機跑 `wrangler deploy` | 手動 | 目前由主席執行 |
 
-### Files that contain real personal data
-- `PHD-Center/aspen-members/members.json` — member emails, names,
-  affiliations, optional `passwordHash` (PBKDF2-SHA256, 100k iterations).
-- `PHD-Center/aspen-members/reading.json` — public reactions and shared
-  takes are visible to all members; private takes are member-only.
-- `PHD-Center/aspen-members/pending/**/meta.json` — uploader email per
-  pending submission.
+### 含有真實個資的檔案
+- `PHD-Center/aspen-members/members.json` — 會員 email、姓名、機構、
+  可選的 `passwordHash` (PBKDF2-SHA256, 100k iterations)。
+- `PHD-Center/aspen-members/reading.json` — 公開的 reactions 與 shared
+  takes 對所有會員可見;private take 只有當事人看得到。
+- `PHD-Center/aspen-members/pending/**/meta.json` — 每筆待審上傳的上傳者
+  email。
 
-Whoever has access to the **aspen-members** repo can read every
-member's email. Worker's GitHub PAT can also be used to read it from
-the API.
+凡是有 **aspen-members** repo 存取權的人,都能讀到每一位會員的 email。
+Worker 的 GitHub PAT 也可以從 API 讀到這份檔案。
 
-### Secrets — never in git, never in chat
+### Secrets — 絕對不要進 git、不要進 chat
 
-| Secret | Where | What it does | Rotation impact |
+| Secret | 位置 | 用途 | 輪替的影響 |
 |---|---|---|---|
-| `GITHUB_PAT` | Cloudflare Worker secret store | Worker reads/writes aspen-members repo | Rotate without warning. Worker fails until updated. |
-| `JWT_SECRET` | Cloudflare Worker secret store | Signs session cookies | Rotating invalidates every existing session. All members must log in again. |
-| `RESEND_API_KEY` | Cloudflare Worker secret store | Sends magic-link emails | Rotating breaks magic-link sends until updated. |
-| Cloudflare account password / 2FA | Daniel | Owns worker + secrets | Loses ability to deploy / change worker. |
-| Resend account password / 2FA | Daniel | Owns sender domain | Loses ability to send / change senders. |
-| GitHub account | Daniel (org admin on PHD-Center) | Pushes to both repos | Loses commit access. |
+| `GITHUB_PAT` | Cloudflare Worker secret store | Worker 讀寫 aspen-members repo | 可隨時輪替。Worker 在更新前會失敗。 |
+| `JWT_SECRET` | Cloudflare Worker secret store | 簽 session cookie | 輪替會使所有現有 session 失效,所有會員必須重新登入。 |
+| `RESEND_API_KEY` | Cloudflare Worker secret store | 寄 magic-link 信件 | 輪替後在更新前無法寄信。 |
+| Cloudflare 帳號密碼 / 2FA | Daniel | 擁有 worker + secrets | 失去部署 / 變更 worker 的能力。 |
+| Resend 帳號密碼 / 2FA | Daniel | 擁有寄信網域 | 失去寄信 / 變更寄信者的能力。 |
+| GitHub 帳號 | Daniel (PHD-Center org admin) | Push 兩個 repo | 失去 commit 權限。 |
 
 ---
 
-## 3 · For IT: three ways to "have" this system
+## 3 · 給 IT 的三種「擁有」這套系統的方法
 
-### A · Read-only mirror / backup (lowest friction)
+### A · 唯讀鏡像 / 備份 (摩擦最少)
 
-Goal: IT has a copy of everything for audit / disaster recovery, but
-does not run the system day-to-day.
+目的:IT 持有完整副本以供稽核 / 災難復原,但日常營運不參與。
 
-1. **Mirror both GitHub repos** to IT's own Git server:
+1. **把兩個 GitHub repo 鏡像到 IT 自己的 Git server:**
    ```bash
    git clone --mirror https://github.com/PHD-Center/AsPEN.git
    git clone --mirror https://github.com/PHD-Center/aspen-members.git
    ```
-   Repeat periodically (cron, or set up GitHub Actions to push to
-   IT's git mirror on every commit).
-2. **Document Cloudflare + Resend access** in IT's password vault
-   (Daniel shares credentials with the IT admin).
-3. **No DNS change required.** aspensig.asia DNS still points at
-   GitHub Pages (or wherever you settle).
-4. **IT does nothing day-to-day.** Chair pushes to PHD-Center repos as
-   normal; mirror updates automatically.
+   定期重做(cron,或在 IT 的鏡像端設 GitHub Actions 讓每次 commit
+   都 push 過去)。
+2. **把 Cloudflare + Resend 的存取權記錄到 IT 的密碼保險庫**(Daniel
+   把帳密分享給 IT admin)。
+3. **DNS 不用動。** aspensig.asia DNS 仍指向 GitHub Pages(或其他目的地)。
+4. **IT 日常不需要做任何事。** 主席照常 push 到 PHD-Center repos,鏡像
+   自動同步。
 
-### B · IT hosts the public site, dev still on PHD-Center (recommended hybrid)
+### B · IT 接手公開網站、開發仍在 PHD-Center (推薦的混合模式)
 
-Goal: aspensig.asia served from IT's web server (compliance / "our
-infrastructure"), but chair keeps fast dev velocity on GitHub.
+目的:aspensig.asia 從 IT 的 web server 提供服務(合規 / 「自己的基礎
+建設」),但主席仍能在 GitHub 上維持快速開發節奏。
 
-1. Steps from A, plus:
-2. Set up a GitHub Actions job in PHD-Center/AsPEN that, on every push
-   to main: runs `npm run build`, then uploads `dist/` to IT's server
-   (rsync over SSH, S3 sync, FTP, whatever IT prefers). IT provides
-   credentials as GitHub secrets.
-3. Point aspensig.asia DNS at IT's server.
-4. Update **two** Cloudflare Worker env vars to match new domain:
+1. 做 A 的全部步驟,再加:
+2. 在 PHD-Center/AsPEN 設一個 GitHub Actions job:每次 push 到 main 時
+   執行 `npm run build`,然後把 `dist/` 上傳到 IT 的 server(rsync over
+   SSH、S3 sync、FTP 都行,看 IT 偏好)。IT 把帳密放進 GitHub secrets。
+3. 把 aspensig.asia DNS 指向 IT 的 server。
+4. 更新 Cloudflare Worker 的**兩個**環境變數以對應新網域:
    - `SITE_BASE_URL` → `https://aspensig.asia`
-   - `ALLOWED_ORIGINS` → `https://aspensig.asia` (CORS for the
-     /members/* fetches)
-5. Worker, private repo, Resend stay where they are. Magic-link emails
-   still route correctly. Members area still works.
+   - `ALLOWED_ORIGINS` → `https://aspensig.asia` (給 /members/* fetch
+     用的 CORS)
+5. Worker、私有 repo、Resend 維持原位。Magic-link 信件 URL 仍正確,
+   會員區仍可運作。
 
-Site lifecycle:
-- Chair pushes code → GH Actions builds + ships to IT server → live.
-- IT can also pull / inspect at any time.
+網站生命週期:
+- 主席推 code → GH Actions build + 部署到 IT server → 上線。
+- IT 隨時可拉下來看 / 稽核。
 
-### C · IT fully takes over (full migration)
+### C · IT 完全接手 (完整遷移)
 
-Goal: IT operates the entire stack. Chair hands off and stops being
-in the loop.
+目的:IT 營運整個 stack,主席交棒退出。
 
-1. Transfer ownership of GitHub repos to IT's org (GitHub Settings →
-   Transfer ownership), or have IT fork and treat their fork as
-   source of truth. Chair loses push access (or stays as collaborator).
-2. Transfer the Cloudflare account that hosts the Worker to IT (or
-   have IT recreate from `workers/aspen-auth/` source — same code,
-   new account, new URL).
-3. Transfer Resend account similarly.
-4. IT rotates `JWT_SECRET` after takeover (forces all members to re-login,
-   which is a clear signal of administrative handover).
-5. IT updates the Worker secrets, env vars, and `WORKER_URL` in
-   `src/data/site-config.ts` to match the new Worker URL.
-6. DNS is wholly IT's.
+1. 把 GitHub repos 的擁有權轉到 IT 的 org (GitHub Settings → Transfer
+   ownership),或讓 IT fork 後把 fork 視為 source of truth。主席失去
+   push 權(或保留為 collaborator)。
+2. 把 Worker 所在的 Cloudflare 帳號轉給 IT(或讓 IT 從 `workers/aspen-auth/`
+   原始碼重建 — code 一樣,帳號跟 URL 改新的)。
+3. 同樣轉移 Resend 帳號。
+4. 接手後 IT 輪替 `JWT_SECRET`(逼所有會員重新登入,等於是行政交接的
+   公開訊號)。
+5. IT 更新 Worker secrets、env vars,以及 `src/data/site-config.ts` 內
+   的 `WORKER_URL` 以對應新的 Worker URL。
+6. DNS 完全屬於 IT。
 
-This is irreversible without redoing all the steps. **Not
-recommended unless IT is genuinely operating the platform long-term.**
+這條路不重做以上所有步驟就無法回頭。**除非 IT 真的要長期營運這套平台,
+否則不建議走這條。**
 
 ---
 
-## 4 · Rebuild-from-scratch runbook (if all current infrastructure vanished)
+## 4 · 從零重建 runbook (假設既有基礎建設全部消失)
 
-Given only the two GitHub repos + this doc, IT can rebuild the
-entire system. Procedure:
+只要有兩個 GitHub repo + 本文件,IT 就能重建整個系統。步驟:
 
-1. **Public site**: clone PHD-Center/AsPEN, `npm install`,
-   `npm run build`. Deploy `dist/` to any static host (GH Pages,
-   Cloudflare Pages, Netlify, S3 + CloudFront, IT's own Nginx).
-2. **Worker**: clone the same repo, `cd workers/aspen-auth`,
-   `npm install`. Create a Cloudflare account (free tier works).
-   `wrangler login`. `wrangler secret put GITHUB_PAT` (fine-grained
-   PAT scoped to aspen-members repo, Contents Read+Write).
-   `wrangler secret put JWT_SECRET` (32 random bytes hex).
-   `wrangler secret put RESEND_API_KEY` (from Resend dashboard).
-   Edit `wrangler.toml` env vars for new domain. `wrangler deploy`.
-3. **Private data repo**: PHD-Center/aspen-members can be cloned by
-   anyone with read access. Recreate the repo on IT's git server if
-   needed; copy `members.json` and other JSON files over.
-4. **Resend**: sign up at resend.com, verify the sending domain
-   (DNS records: SPF, DKIM, MX, DMARC — Resend dashboard provides
-   exact values). Generate API key, push as Worker secret.
-5. **Wire**: update `src/data/site-config.ts` with the new Worker URL,
-   rebuild site, deploy.
-6. **Smoke test**: visit `/members/login`, request magic-link with
-   chair's email, click link, verify dashboard loads.
+1. **公開網站**:clone PHD-Center/AsPEN,`npm install`,`npm run build`。
+   把 `dist/` 部署到任何靜態 host(GH Pages、Cloudflare Pages、Netlify、
+   S3 + CloudFront、IT 自己的 Nginx 都行)。
+2. **Worker**:clone 同一個 repo,`cd workers/aspen-auth`,
+   `npm install`。開一個 Cloudflare 帳號(免費 tier 即可)。
+   `wrangler login`。`wrangler secret put GITHUB_PAT`(fine-grained PAT
+   scoped 到 aspen-members repo,Contents Read+Write)。
+   `wrangler secret put JWT_SECRET`(32 隨機 bytes 的 hex)。
+   `wrangler secret put RESEND_API_KEY`(從 Resend dashboard 拿)。
+   修改 `wrangler.toml` 內對應新網域的 env vars。`wrangler deploy`。
+3. **私有資料 repo**:PHD-Center/aspen-members 任何有讀權的人都能
+   clone。需要的話在 IT 的 git server 重建,把 `members.json` 等 JSON
+   檔搬過去。
+4. **Resend**:在 resend.com 註冊,驗證寄信網域(DNS 紀錄:SPF、DKIM、
+   MX、DMARC — Resend dashboard 會給確切的值)。產生 API key,push 成
+   Worker secret。
+5. **接線**:用新的 Worker URL 更新 `src/data/site-config.ts`,rebuild
+   網站,部署。
+6. **Smoke test**:打開 `/members/login`,用主席的 email 索取
+   magic-link,點 link,確認 dashboard 可載入。
 
-Total time: ~2-4 hours assuming all accounts exist and DNS is
-controllable.
+總時間:假設帳號都有、DNS 可控,大約 2-4 小時。
 
 ---
 
-## 5 · How the chair plans to keep developing
+## 5 · 主席接下來的開發計畫
 
-- All future commits go to **PHD-Center/AsPEN** main branch.
-- GH Pages auto-deploys (or, in scenario B, IT's CI receives the
-  built artifacts).
-- IT mirror should pull periodically (cron, or GitHub webhook → IT's
-  repo).
-- Worker updates: chair runs `wrangler deploy` from local `workers/aspen-auth/`.
-  IT does not need to redeploy in lockstep — Worker only changes when
-  endpoints change.
-- Member additions / reading-group picks / content review: done by
-  chair (+ admin members) via the in-site admin UI; writes to
-  aspen-members repo via Worker. No IT involvement required.
+- 未來所有 commit 推到 **PHD-Center/AsPEN** main branch。
+- GH Pages 自動部署(或在 B 方案下,IT 的 CI 接收 build 出來的成品)。
+- IT 的鏡像應定期 pull(cron,或 GitHub webhook → IT 的 repo)。
+- Worker 更新:主席從本機 `workers/aspen-auth/` 跑 `wrangler deploy`。
+  IT 不需要同步重新部署 — Worker 只在 endpoint 有變更時才動。
+- 新增會員 / 讀書會選文 / 內容審核:由主席 (+ admin 會員)透過站內 admin
+  UI 完成,經 Worker 寫回 aspen-members repo。不需要 IT 介入。
 
-## 6 · Contact
+## 6 · 聯絡人
 
-Primary maintainer: Daniel Tsai (danielhttsai@gmail.com), NCKU.
-Co-lead: Edward Lai (edward_lai@mail.ncku.edu.tw), NCKU.
-Chair: Ju-Young Shin, SKKU/SNU.
+主要維護者:蔡享諦 Daniel Tsai (danielhttsai@gmail.com),NCKU。
+共同 lead:賴嘉鎮 Edward Lai (edward_lai@mail.ncku.edu.tw),NCKU。
+主席:申柱永 Ju-Young Shin,SKKU/SNU。
