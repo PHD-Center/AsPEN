@@ -219,6 +219,6 @@ Worker 的 GitHub PAT 也可以從 API 讀到這份檔案。
 
 主要維護者:
 - 蔡相德 Daniel Tsai (danielhttsai@gmail.com),NCKU
-- 邱宏嘉 Hong-Chia Chiu,NCKU
+- 邱宏嘉 Hong-Chia Chiu (yumemi@hourcenter.org.tw),NCKU
 
 主席:申柱永 Ju-Young Shin,SKKU/SNU。
