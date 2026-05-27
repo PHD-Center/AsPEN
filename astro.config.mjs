@@ -7,8 +7,8 @@ import tailwindcss from '@tailwindcss/vite';
 // If you later switch to a custom apex domain (e.g. aspensig.asia),
 // change `site` and set `base: '/'`.
 export default defineConfig({
-  site: 'https://phd-center.github.io',
-  base: '/AsPEN',
+  site: 'https://www.aspensig.asia',
+  base: '/',
   trailingSlash: 'ignore',
   vite: {
     plugins: [tailwindcss()],
