@@ -352,13 +352,14 @@ const pubsForPicker = (pubsRaw as Pub[])
       const renderMembers = (members) => {
         document.querySelector("[data-member-count]").textContent = members.length;
         memberRows.innerHTML = members.map((m) => {
-          const badge = m.superAdmin
-            ? ' <span class="ml-1 text-[9px] uppercase tracking-widest font-bold text-white bg-brand-700 rounded px-1.5 py-0.5 align-middle">super admin</span>'
-            : m.admin
-              ? ' <span class="ml-1 text-[9px] uppercase tracking-widest font-bold text-brand-700 align-middle">admin</span>'
-              : "";
-          // Disable admin checkbox + status select for super admins
-          const sa = m.superAdmin ? " disabled title=\"Super admin (cannot be modified)\"" : "";
+          // Single "admin" badge for everyone with admin rights — super-admin
+          // status is enforced server-side but isn't called out in the UI.
+          const badge = m.admin
+            ? ' <span class="ml-1 text-[9px] uppercase tracking-widest font-bold text-brand-700 align-middle">admin</span>'
+            : "";
+          // Controls for super-admin rows stay disabled (so nobody can
+          // accidentally demote them in the UI) — just no visible label.
+          const sa = m.superAdmin ? " disabled title=\"Cannot be modified\"" : "";
           return `
             <li class="px-4 py-3 flex items-center justify-between gap-3 hover:bg-slate-50">
               <div class="min-w-0">
