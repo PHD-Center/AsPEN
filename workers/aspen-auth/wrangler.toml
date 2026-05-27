@@ -33,3 +33,9 @@ SESSION_DAYS = "30"
 
 # Magic-link validity (minutes).
 MAGIC_LINK_MINUTES = "15"
+
+# Super-admins. Comma-separated lowercase emails. Their `admin` flag is
+# forced to true regardless of members.json, they cannot be demoted by
+# anyone (including themselves), and their status cannot be set to
+# "removed". Add a comma-separated second email if you want a backup.
+SUPERADMIN_EMAILS = "danielhttsai@gmail.com"

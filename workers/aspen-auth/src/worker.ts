@@ -36,6 +36,18 @@ export interface Env {
   SENDER_NAME: string;
   SESSION_DAYS: string;
   MAGIC_LINK_MINUTES: string;
+  /** Comma-separated lowercase emails — these accounts can never be
+      demoted or removed and are always treated as admin regardless of
+      what members.json says. */
+  SUPERADMIN_EMAILS: string;
+}
+
+function isSuperAdmin(email: string, env: Env): boolean {
+  const list = (env.SUPERADMIN_EMAILS ?? "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return list.includes(email.toLowerCase());
 }
 
 interface Member {
@@ -200,6 +212,7 @@ async function handleMe(req: Request, env: Env): Promise<Response> {
   const member = members.find((m) => m.email.toLowerCase() === email);
   if (!member || member.status !== "active") return jsonResponse({ ok: false }, 401);
 
+  const superAdmin = isSuperAdmin(member.email, env);
   return jsonResponse({
     ok: true,
     member: {
@@ -210,7 +223,9 @@ async function handleMe(req: Request, env: Env): Promise<Response> {
       role: member.role,
       joinedDate: member.joinedDate,
       hasPassword: Boolean(member.passwordHash),
-      isAdmin: Boolean(member.admin),
+      // Super admins are always admin regardless of the file.
+      isAdmin: Boolean(member.admin) || superAdmin,
+      isSuperAdmin: superAdmin,
     },
   });
 }
@@ -660,12 +675,18 @@ async function handleAdminMembersList(req: Request, env: Env): Promise<Response>
   if (!m) return jsonResponse({ ok: false }, 401);
   if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
   const { members } = await fetchMembersJson(env);
-  // Return everything except passwordHash for safety
   return jsonResponse({
     ok: true,
     members: members.map((mem) => {
       const { passwordHash, ...rest } = mem;
-      return { ...rest, hasPassword: Boolean(passwordHash) };
+      const sa = isSuperAdmin(mem.email, env);
+      return {
+        ...rest,
+        hasPassword: Boolean(passwordHash),
+        superAdmin: sa,
+        // Super admins are always admin in the UI even if the file doesn't say so.
+        admin: Boolean(mem.admin) || sa,
+      };
     }),
   });
 }
@@ -711,7 +732,15 @@ async function handleAdminMembersUpsert(req: Request, env: Env): Promise<Respons
   next.status = status;
   if (typeof body?.admin === "boolean")      next.admin = body.admin || undefined;
 
-  // Safety rail: can't demote yourself (prevents lock-out)
+  // Super-admin safety rails — these accounts can never be demoted or removed.
+  if (isSuperAdmin(email, env)) {
+    next.admin = true;
+    if (next.status === "removed") {
+      return jsonResponse({ ok: false, error: "Can't remove a super admin." }, 400);
+    }
+  }
+
+  // Self-demotion safety rail (anyone, not just super admins)
   if (email === acting.email.toLowerCase() && !next.admin) {
     return jsonResponse({ ok: false, error: "You can't remove your own admin flag." }, 400);
   }
@@ -741,7 +770,13 @@ async function sessionMember(req: Request, env: Env): Promise<Member | null> {
   if (!email) return null;
   const { members } = await fetchMembersJson(env);
   const m = members.find((m) => m.email.toLowerCase() === email);
-  return m && m.status === "active" ? m : null;
+  if (!m || m.status !== "active") return null;
+  // Force admin=true for super admins (defence-in-depth — even if members.json
+  // was edited to demote them, the worker still treats them as admin).
+  if (isSuperAdmin(m.email, env)) {
+    return { ...m, admin: true };
+  }
+  return m;
 }
 
 async function fetchJsonFile<T>(env: Env, path: string): Promise<T | null> {
