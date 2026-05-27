@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy to GitHub Pages and Synology NAS
 
 on:
   push:
@@ -33,10 +33,22 @@ jobs:
       - name: Build Astro site
         run: npm run build
 
-      - name: Upload artifact
+      - name: Upload artifact to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
+
+      # ==========================================
+      # 🚀 新增：透過 WebDAV 同步上傳至單位 Synology NAS
+      # ==========================================
+      - name: Deploy to NCKU PHDc NAS via WebDAV
+        uses: cbroglie/wd-upload@v2
+        with:
+          url: 'https://dev.aspensig.asia'             # 透過dev.aspensig.asia 443 連到中心更新網站
+          user: 'aspen-git'
+          password: ${{ secrets.NAS_PASSWORD }}
+          local: 'dist'
+          remote: '/AsPEN.sig'
 
   deploy:
     needs: build
