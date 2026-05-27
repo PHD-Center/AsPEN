@@ -135,7 +135,6 @@ const pubsForPicker = (pubsRaw as Pub[])
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Status</span>
               <select name="status" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
                 <option value="active" selected>active</option>
-                <option value="invited">invited</option>
                 <option value="removed">removed</option>
               </select>
             </label>
@@ -375,8 +374,8 @@ const pubsForPicker = (pubsRaw as Pub[])
                 <select data-status-pmid="${esc(m.email)}"${sa}
                         class="text-xs border border-slate-300 rounded px-2 py-1 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${m.superAdmin ? "opacity-50" : ""}">
                   <option value="active"  ${m.status === "active"  ? "selected" : ""}>active</option>
-                  <option value="invited" ${m.status === "invited" ? "selected" : ""}>invited</option>
                   <option value="removed" ${m.status === "removed" ? "selected" : ""}>removed</option>
+                  ${m.status === "invited" ? '<option value="invited" selected>invited (legacy)</option>' : ""}
                 </select>
                 ${m.hasPassword ? '<span class="text-[10px] text-slate-500 italic" title="Has set a password">pwd</span>' : ""}
               </div>
