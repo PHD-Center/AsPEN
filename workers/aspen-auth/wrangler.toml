@@ -25,9 +25,10 @@ SITE_BASE_URL = "https://www.aspensig.asia"
 # - http://localhost:4321: local Astro dev server
 ALLOWED_ORIGINS = "https://www.aspensig.asia,https://aspensig.asia,https://dev.aspensig.asia,https://phd-center.github.io,http://localhost:4321"
 
-# Magic-link sender. Use the Resend sandbox until DNS for aspensig.asia is
-# verified, then switch to "noreply@aspensig.asia".
-SENDER_EMAIL = "onboarding@resend.dev"
+# Magic-link sender. aspensig.asia is verified in Resend (DKIM + SPF + MX
+# records live), so we can send to any recipient — not just the Resend
+# account owner.
+SENDER_EMAIL = "noreply@aspensig.asia"
 SENDER_NAME  = "AsPEN"
 
 # Session lifetime (days). Cookie max-age.
