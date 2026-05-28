@@ -1290,9 +1290,18 @@ _Drafted with the AsPEN protocol builder (${today})._
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(STORAGE_CITATIONS_KEY);
         pickedCitations = {};
-        form.reset();
-        const ta = form.querySelector('[name="timeline"]');
-        if (ta) ta.value = TIMELINE_PRESETS["12-month"];
+        // True blank slate — form.reset() only restores HTML defaults, which
+        // leaves all the pre-checked checkboxes ticked. Walk every form
+        // control and zero it out so "Clear" actually means clear.
+        form.querySelectorAll("input, textarea, select").forEach((el) => {
+          if (el.type === "checkbox" || el.type === "radio") {
+            el.checked = false;
+          } else if (el.tagName === "SELECT") {
+            el.selectedIndex = 0;
+          } else {
+            el.value = "";
+          }
+        });
         render();
         setMsg("Cleared.");
       };

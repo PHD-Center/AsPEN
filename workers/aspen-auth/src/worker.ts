@@ -103,6 +103,8 @@ export default {
         resp = await handleMe(req, env);
       } else if (url.pathname === "/api/set-password" && req.method === "POST") {
         resp = await handleSetPassword(req, env);
+      } else if (url.pathname === "/api/me/update" && req.method === "POST") {
+        resp = await handleUpdateOwnProfile(req, env);
       } else if (url.pathname === "/api/logout" && req.method === "POST") {
         resp = handleLogout();
       } else if (url.pathname.startsWith("/api/content/") && req.method === "GET") {
@@ -289,6 +291,47 @@ async function handleSetPassword(req: Request, env: Env): Promise<Response> {
   member.passwordHash = await hashPassword(newPassword);
   await putMembersJson(env, members, sha, `${email}: update passwordHash`);
 
+  return jsonResponse({ ok: true });
+}
+
+async function handleUpdateOwnProfile(req: Request, env: Env): Promise<Response> {
+  const email = await sessionEmail(req, env);
+  if (!email) return jsonResponse({ ok: false, error: "Not signed in." }, 401);
+
+  const body = await safeJson<{
+    name?: string;
+    affiliation?: string;
+    country?: string;
+    role?: string;
+  }>(req);
+
+  const { members, sha } = await fetchMembersJson(env);
+  const idx = members.findIndex((m) => m.email.toLowerCase() === email);
+  if (idx === -1 || members[idx].status !== "active") {
+    return jsonResponse({ ok: false, error: "Not signed in." }, 401);
+  }
+
+  const m = members[idx];
+  // Members can update these four fields about themselves.
+  // They CANNOT change their own email, status, admin flag, passwordHash,
+  // or joinedDate — those are admin-only.
+  if (typeof body?.name === "string") {
+    const n = body.name.trim();
+    if (!n) return jsonResponse({ ok: false, error: "Name can't be empty." }, 400);
+    m.name = n.slice(0, 200);
+  }
+  if (typeof body?.affiliation === "string") {
+    m.affiliation = body.affiliation.trim().slice(0, 300) || undefined;
+  }
+  if (typeof body?.country === "string") {
+    m.country = body.country.trim().slice(0, 30) || undefined;
+  }
+  if (typeof body?.role === "string") {
+    m.role = body.role.trim().slice(0, 50) || undefined;
+  }
+
+  members[idx] = m;
+  await putMembersJson(env, members, sha, `${email}: self-update profile`);
   return jsonResponse({ ok: true });
 }
 

@@ -64,7 +64,77 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         <p class="mt-1 text-sm text-slate-600">Member-submitted uploads waiting for approval.</p>
       </a>
 
-      <!-- ── Account settings ──────────────────────────────── -->
+      <!-- ── My profile (any member can update their own basic info) ── -->
+      <details class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+        <summary class="cursor-pointer select-none px-6 py-4 font-semibold text-slate-800 hover:bg-slate-50 rounded-2xl">
+          My profile
+          <span class="ml-2 text-xs font-normal text-slate-500">Update your name, affiliation, country, role</span>
+        </summary>
+        <div class="px-6 pb-6 space-y-3 border-t border-slate-100 pt-4">
+          <form data-profile-form class="grid sm:grid-cols-2 gap-3">
+            <label class="flex flex-col gap-1 sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Name *</span>
+              <input type="text" name="name" required class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="flex flex-col gap-1 sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Affiliation</span>
+              <input type="text" name="affiliation" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Country</span>
+              <select name="country" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="">— select —</option>
+                <option value="TW">Taiwan (TW)</option>
+                <option value="KR">South Korea (KR)</option>
+                <option value="JP">Japan (JP)</option>
+                <option value="HK">Hong Kong (HK)</option>
+                <option disabled>──────────</option>
+                <option value="AU">Australia (AU)</option>
+                <option value="CN">China (CN)</option>
+                <option value="DE">Germany (DE)</option>
+                <option value="FI">Finland (FI)</option>
+                <option value="FR">France (FR)</option>
+                <option value="GB">United Kingdom (GB)</option>
+                <option value="ID">Indonesia (ID)</option>
+                <option value="IN">India (IN)</option>
+                <option value="IT">Italy (IT)</option>
+                <option value="MO">Macau (MO)</option>
+                <option value="MY">Malaysia (MY)</option>
+                <option value="NL">Netherlands (NL)</option>
+                <option value="PH">Philippines (PH)</option>
+                <option value="SE">Sweden (SE)</option>
+                <option value="SG">Singapore (SG)</option>
+                <option value="TH">Thailand (TH)</option>
+                <option value="US">United States (US)</option>
+                <option value="VN">Vietnam (VN)</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Role</span>
+              <select name="role" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="">— select —</option>
+                <option value="academic">Academic</option>
+                <option value="industry">Industry</option>
+                <option value="regulator">Regulator</option>
+                <option value="clinician">Clinician</option>
+                <option value="student">Student</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            <p class="text-[11px] text-slate-500 sm:col-span-2 leading-relaxed">Email is shown for reference and can only be changed by an admin. Status / admin flag are also admin-only.</p>
+            <p class="text-xs text-slate-700 sm:col-span-2"><strong>Email:</strong> <span data-profile-email>—</span></p>
+            <div class="sm:col-span-2 flex items-center gap-3">
+              <button type="submit" class="inline-flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-2.5 rounded-lg transition text-sm disabled:opacity-60">
+                Save changes
+              </button>
+              <p data-profile-msg class="hidden text-xs"></p>
+            </div>
+          </form>
+        </div>
+      </details>
+
+      <!-- ── Account settings (password) ───────────────────── -->
       <details class="border border-slate-200 rounded-2xl bg-white shadow-sm">
         <summary class="cursor-pointer select-none px-6 py-4 font-semibold text-slate-800 hover:bg-slate-50 rounded-2xl">
           Account settings
@@ -154,6 +224,21 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         }
       };
 
+      const fillProfileForm = (member) => {
+        const form = document.querySelector("[data-profile-form]");
+        if (!form) return;
+        const set = (name, val) => {
+          const el = form.querySelector(`[name="${name}"]`);
+          if (el) el.value = val ?? "";
+        };
+        set("name", member.name);
+        set("affiliation", member.affiliation);
+        set("country", member.country);
+        set("role", member.role);
+        const emailEl = document.querySelector("[data-profile-email]");
+        if (emailEl) emailEl.textContent = member.email || "—";
+      };
+
       const refresh = async () => {
         try {
           const r = await fetch(`${WORKER_URL}/api/me`, { credentials: "include" });
@@ -162,6 +247,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
             if (data && data.ok && data.member) {
               document.querySelector("[data-member-name]").textContent = data.member.name || data.member.email;
               document.querySelector("[data-member-detail]").textContent = fmtDetail(data.member);
+              fillProfileForm(data.member);
               wireForm(Boolean(data.member.hasPassword));
               setState("signed-in");
 
@@ -227,6 +313,50 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
           }
         } catch {
           setPwdMsg("Couldn't reach the sign-in service — try again in a moment.", true);
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      // Save profile (any member can update their own basic info)
+      const profileForm = document.querySelector("[data-profile-form]");
+      const profileMsg = document.querySelector("[data-profile-msg]");
+      const setProfileMsg = (msg, isError = false) => {
+        if (!profileMsg) return;
+        profileMsg.textContent = msg;
+        profileMsg.classList.remove("hidden");
+        profileMsg.classList.toggle("text-rose-700", isError);
+        profileMsg.classList.toggle("text-brand-700", !isError);
+      };
+      profileForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = new FormData(profileForm);
+        const body = {
+          name:        String(data.get("name") || "").trim(),
+          affiliation: String(data.get("affiliation") || "").trim(),
+          country:     String(data.get("country") || "").trim(),
+          role:        String(data.get("role") || "").trim(),
+        };
+        if (!body.name) { setProfileMsg("Name can't be empty.", true); return; }
+        const btn = profileForm.querySelector("button[type='submit']");
+        btn.disabled = true;
+        setProfileMsg("Saving…");
+        try {
+          const r = await fetch(`${WORKER_URL}/api/me/update`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(body),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.ok && d.ok) {
+            setProfileMsg("Saved.");
+            refresh();  // Re-fetch + repopulate greeting line
+          } else {
+            setProfileMsg(d.error || "Couldn't save.", true);
+          }
+        } catch {
+          setProfileMsg("Couldn't reach the auth service — try again in a moment.", true);
         } finally {
           btn.disabled = false;
         }
