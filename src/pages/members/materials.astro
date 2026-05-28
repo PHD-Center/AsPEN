@@ -31,6 +31,16 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       </p>
     </div>
 
+    <div data-state="parked" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm font-semibold text-slate-800">Working materials is currently parked.</p>
+      <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+        This area was used to share protocols, slides and analysis code. The AsPEN office paused it while we settle on a single working template hub. Files already uploaded are preserved.
+      </p>
+      <p class="mt-3 text-sm text-slate-700">
+        For now, please use the <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/templates/active-comparator-new-user`}>Protocol template</a> or the <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/reading`}>Reading group</a>.
+      </p>
+    </div>
+
     <div data-state="empty" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
       <p class="text-sm text-slate-700">
         No materials yet. AsPEN study leads upload protocols, slide decks and analysis code as the working library grows.
@@ -139,6 +149,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
           if (!meR.ok) return setState("signed-out");
           const meData = await meR.json();
           isAdmin = Boolean(meData?.member?.isAdmin);
+
+          // Materials is parked — non-admin members see the friendly notice.
+          // Admins keep full access so they can manage / clean up existing
+          // files until we decide whether to bring it back.
+          if (!isAdmin) return setState("parked");
 
           // Show the upload form for logged-in members
           document.querySelector("[data-upload-wrap]")?.classList.remove("hidden");
