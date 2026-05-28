@@ -6,33 +6,13 @@ const nav = [
   { href: `${base}/databases/`, label: "Databases" },
   { href: `${base}/activities/`, label: "Activities" },
   { href: `${base}/publications/`, label: "Publications" },
+  { href: `${base}/open-source/`, label: "Open source" },
   { href: `${base}/contact/`, label: "Contact" },
-];
-// Open-source friendship links — shown as a thin strip above the main nav.
-// Drop in a logo image at the listed `image` path (under public/images/) to
-// replace the text-only fallback; update `href` to the real upstream URL.
-const oss = [
-  // Both are wordmarks (icon + text) so a single shared height works.
-  { label: "Ocean",  href: "https://ocean-dev.phdcenter.org.tw", image: "open-source/ocean.svg",  heightClass: "h-7" },
-  { label: "GitHub", href: "https://github.com/",                image: "open-source/github.svg", heightClass: "h-10" },
 ];
 const path = Astro.url.pathname.replace(/\/$/, "");
 const membersHref = `${base}/members/`;
 const isOnMembers = path.startsWith(`${base}/members`.replace(/\/$/, ""));
 ---
-
-<div class="bg-slate-50/80 border-b border-slate-200">
-  <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-end gap-5">
-    <span class="hidden sm:inline text-[10px] uppercase tracking-[0.18em] text-slate-500 font-bold">Open source</span>
-    {oss.map((s) => (
-      <a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}
-         class="inline-flex items-center gap-2 text-slate-600 hover:text-brand-700 transition">
-        <img src={`${base}/images/${s.image}`} alt={s.label} class:list={[s.heightClass, "w-auto"]} onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" />
-        <span class="hidden text-sm font-semibold">{s.label}</span>
-      </a>
-    ))}
-  </div>
-</div>
 
 <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
   <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
