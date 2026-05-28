@@ -104,6 +104,75 @@ const SUBGROUPS = [
   "Baseline HbA1c (≥8% vs <8%)",
 ];
 
+// Common inclusion / exclusion criteria — surfaced as checkboxes so a
+// typical AsPEN ACNU protocol can be assembled almost entirely by ticking.
+const INCLUSION = [
+  "Adult (≥18 years) at index date",
+  "Continuous enrolment in the source database for ≥365 d before index",
+  "≥1 outpatient visit in the 365 d before index (engagement with care)",
+  "≥1 prior dispensing of indication-defining drug class in look-back",
+  "Available primary-care record (CPRD / linked EHR studies only)",
+];
+
+const EXCLUSION = [
+  "Prior dispensing of EITHER exposure or comparator within the washout window",
+  "Type 1 diabetes (ICD-10 E10.x) ever before index",
+  "Pregnancy at or in the 90 d before index",
+  "eGFR <30 ml/min/1.73m² at index (where available)",
+  "End-stage renal disease / chronic dialysis ever",
+  "Active cancer in the 365 d before index (solid or haematologic)",
+  "Hospice or palliative-care enrolment in the 90 d before index",
+  "Severe liver disease ever (cirrhosis, decompensated)",
+  "Type 2 MI / unstable angina in the 30 d before index (if CV outcome)",
+  "In-hospital at index date",
+];
+
+// Twelve confounding-control approaches the user can pick from — covers
+// the standard pharmacoepi toolkit, including doubly-robust and HD-PS.
+const PS_METHODS: { value: string; label: string }[] = [
+  { value: "iptw",         label: "Stabilised IPTW with PS trimming (1st/99th percentile)" },
+  { value: "iptw-overlap", label: "Overlap weights (Li & Greene 2018) — downweights extreme PS" },
+  { value: "match-1to1",   label: "1:1 PS matching (nearest neighbour, caliper 0.2 × SD logit PS)" },
+  { value: "match-1ton",   label: "1:N variable-ratio PS matching (e.g., up to 1:4)" },
+  { value: "match-greedy", label: "Greedy PS matching with replacement" },
+  { value: "strat",        label: "PS stratification (deciles)" },
+  { value: "hdps",         label: "High-dimensional propensity score (HDPS, Schneeweiss 2009)" },
+  { value: "drs",          label: "Disease risk score (DRS) adjustment" },
+  { value: "tmle",         label: "Targeted maximum likelihood estimation (TMLE) — doubly robust" },
+  { value: "gformula",     label: "G-formula / parametric standardisation" },
+  { value: "msm",          label: "Marginal structural model (stabilised IPTW + Cox)" },
+  { value: "outcome-reg",  label: "Multivariable outcome regression (Cox PH with covariates)" },
+  { value: "iv",           label: "Instrumental variable (IV) analysis" },
+];
+
+const PS_METHOD_DESCRIPTIONS: Record<string, string> = Object.fromEntries(PS_METHODS.map((m) => [m.value, m.label]));
+
+const INDEX_DATE_OPTIONS: { value: string; label: string }[] = [
+  { value: "after-washout",      label: "First dispensing of exposure or comparator after the washout period" },
+  { value: "after-indication",   label: "First dispensing of exposure or comparator after first diagnosis of the indication" },
+  { value: "calendar-incident",  label: "First dispensing in the study period (incident new-user)" },
+  { value: "after-treatment",    label: "First dispensing after failure of a first-line treatment (treatment-pathway start)" },
+];
+
+const MAX_FOLLOWUP_OPTIONS = [
+  "1 year per patient",
+  "2 years per patient",
+  "3 years per patient",
+  "5 years per patient, or until censoring (whichever first)",
+  "10 years per patient, or until censoring",
+  "Until end of database availability (no cap)",
+];
+
+const CDM_OPTIONS = [
+  "Not applicable (no CDM)",
+  "OMOP CDM v5.4",
+  "OMOP CDM v6.0",
+  "Sentinel CDM v8.x",
+  "PCORnet CDM v6.x",
+  "Mini-Sentinel CDM",
+  "AsPEN harmonised local CDM",
+];
+
 const SENSITIVITY = [
   "PS trimming to area of common support",
   "Alternative washout period (180 d, 730 d)",
@@ -269,16 +338,38 @@ const TIMELINE_PRESETS: Record<string, string> = {
                 <option value="male">Male only</option>
               </select>
             </label>
-            <label class="flex flex-col gap-1 sm:col-span-2">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Inclusion criteria (one per line)</span>
-              <textarea name="inclusion" rows="3" placeholder="Continuous enrolment ≥365 d before index&#10;≥1 dispensing of metformin in the 365 d before index"
-                        class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
-            </label>
-            <label class="flex flex-col gap-1 sm:col-span-2">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exclusion criteria (one per line)</span>
-              <textarea name="exclusion" rows="4" placeholder="Type 1 diabetes (E10.x) ever&#10;eGFR <30 ml/min/1.73m² at index&#10;Pregnancy at index&#10;Active cancer in the 365 d before index"
-                        class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
-            </label>
+            <div class="sm:col-span-2">
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Inclusion criteria — tick those to apply</p>
+              <div class="mt-2 grid sm:grid-cols-2 gap-1.5">
+                {INCLUSION.map((c, i) => (
+                  <label class="flex items-start gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                    <input type="checkbox" name="inclusionPick" value={c} checked={i < 2} class="mt-0.5 rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+                    <span>{c}</span>
+                  </label>
+                ))}
+              </div>
+              <label class="flex flex-col gap-1 mt-3">
+                <span class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Custom inclusion criteria (one per line)</span>
+                <textarea name="inclusionCustom" rows="2" placeholder="Study-specific criteria"
+                          class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+              </label>
+            </div>
+            <div class="sm:col-span-2">
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exclusion criteria — tick those to apply</p>
+              <div class="mt-2 grid sm:grid-cols-2 gap-1.5">
+                {EXCLUSION.map((c, i) => (
+                  <label class="flex items-start gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                    <input type="checkbox" name="exclusionPick" value={c} checked={i < 5} class="mt-0.5 rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+                    <span>{c}</span>
+                  </label>
+                ))}
+              </div>
+              <label class="flex flex-col gap-1 mt-3">
+                <span class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Custom exclusion criteria (one per line)</span>
+                <textarea name="exclusionCustom" rows="2" placeholder="Study-specific criteria"
+                          class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+              </label>
+            </div>
           </div>
         </details>
 
@@ -311,11 +402,23 @@ const TIMELINE_PRESETS: Record<string, string> = {
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Washout (days)</span>
               <input type="number" name="washout" value="365" min="0" step="1"
                      class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              <div class="flex gap-1 mt-1 flex-wrap">
+                {[90, 180, 365, 730].map((d) => (
+                  <button type="button" data-set-input="washout" data-value={d}
+                          class="text-[10px] border border-slate-300 hover:border-brand-500 hover:bg-brand-50 hover:text-brand-700 text-slate-600 px-2 py-0.5 rounded transition">{d}</button>
+                ))}
+              </div>
             </label>
             <label class="flex flex-col gap-1">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Index date</span>
-              <input type="text" name="indexDate" value="First dispensing of exposure or comparator after the washout"
-                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Index date definition</span>
+              <select name="indexDateChoice" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                {INDEX_DATE_OPTIONS.map((o, i) => (
+                  <option value={o.value} selected={i === 0}>{o.label}</option>
+                ))}
+                <option value="custom">Custom — specify below</option>
+              </select>
+              <input type="text" name="indexDateCustom" placeholder="Used only if 'Custom' selected"
+                     class="border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
           </div>
         </details>
@@ -366,11 +469,23 @@ const TIMELINE_PRESETS: Record<string, string> = {
                 <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Grace period (days)</span>
                 <input type="number" name="grace" value="30" min="0" step="1"
                        class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+                <div class="flex gap-1 mt-1 flex-wrap">
+                  {[0, 30, 60, 90, 180].map((d) => (
+                    <button type="button" data-set-input="grace" data-value={d}
+                            class="text-[10px] border border-slate-300 hover:border-brand-500 hover:bg-brand-50 hover:text-brand-700 text-slate-600 px-2 py-0.5 rounded transition">{d}</button>
+                  ))}
+                </div>
               </label>
               <label class="flex flex-col gap-1 sm:col-span-2">
                 <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Maximum follow-up</span>
-                <input type="text" name="maxFollowup" value="5 years per patient, or until censoring (whichever first)"
-                       class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+                <select name="maxFollowupChoice" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                  {MAX_FOLLOWUP_OPTIONS.map((o, i) => (
+                    <option value={o} selected={i === 3}>{o}</option>
+                  ))}
+                  <option value="custom">Custom — specify below</option>
+                </select>
+                <input type="text" name="maxFollowupCustom" placeholder="Used only if 'Custom' selected"
+                       class="border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
               </label>
             </div>
             <div>
@@ -399,17 +514,24 @@ const TIMELINE_PRESETS: Record<string, string> = {
           <div class="px-5 pb-5 space-y-4">
             <div class="grid sm:grid-cols-2 gap-3">
               <label class="flex flex-col gap-1">
-                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Method</span>
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Primary confounding-control method</span>
                 <select name="psMethod" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
-                  <option value="iptw" selected>Stabilised IPTW (with trimming)</option>
-                  <option value="match">PS matching (1:1 nearest neighbour, caliper 0.2 × SD logit PS)</option>
-                  <option value="both">Both PS matching AND IPTW</option>
+                  {PS_METHODS.map((m, i) => (
+                    <option value={m.value} selected={i === 0}>{m.label}</option>
+                  ))}
                 </select>
+                <span class="text-[11px] text-slate-500">Secondary / alternative methods can be ticked under Sensitivity analyses.</span>
               </label>
               <label class="flex flex-col gap-1">
-                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Look-back (days)</span>
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Covariate look-back (days)</span>
                 <input type="number" name="lookback" value="365" min="0" step="1"
                        class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+                <div class="flex gap-1 mt-1 flex-wrap">
+                  {[90, 180, 365, 730].map((d) => (
+                    <button type="button" data-set-input="lookback" data-value={d}
+                            class="text-[10px] border border-slate-300 hover:border-brand-500 hover:bg-brand-50 hover:text-brand-700 text-slate-600 px-2 py-0.5 rounded transition">{d}</button>
+                  ))}
+                </div>
               </label>
             </div>
             <div>
@@ -510,9 +632,12 @@ const TIMELINE_PRESETS: Record<string, string> = {
                 </select>
               </label>
               <label class="flex flex-col gap-1">
-                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">CDM (if applicable)</span>
-                <input type="text" name="cdm" placeholder="OMOP CDM v5.4 / Sentinel CDM v8.0"
-                       class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">CDM</span>
+                <select name="cdm" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                  {CDM_OPTIONS.map((o, i) => (
+                    <option value={o} selected={i === 0}>{o}</option>
+                  ))}
+                </select>
               </label>
             </div>
             <div>
@@ -586,7 +711,7 @@ Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
   <!-- docx library (UMD bundle) — used to generate Word files client-side -->
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js" is:inline></script>
 
-  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES, TIMELINE_PRESETS }}>
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES, TIMELINE_PRESETS, PS_METHOD_DESCRIPTIONS, INDEX_DATE_OPTIONS }}>
     (() => {
       const setState = (name) => {
         document.querySelectorAll("[data-state]").forEach((el) => {
@@ -615,7 +740,7 @@ Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
         const data = new FormData(form);
         const out = {};
         // Multi-value keys → arrays
-        const multi = new Set(["sites", "censoringPick", "covariatesPick", "subgroupsPick", "sensitivityPick"]);
+        const multi = new Set(["sites", "censoringPick", "covariatesPick", "subgroupsPick", "sensitivityPick", "inclusionPick", "exclusionPick"]);
         for (const k of multi) out[k] = [];
         for (const [k, v] of data.entries()) {
           if (multi.has(k)) out[k].push(String(v));
@@ -625,7 +750,7 @@ Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
       };
 
       const writeForm = (state) => {
-        const multi = new Set(["sites", "censoringPick", "covariatesPick", "subgroupsPick", "sensitivityPick"]);
+        const multi = new Set(["sites", "censoringPick", "covariatesPick", "subgroupsPick", "sensitivityPick", "inclusionPick", "exclusionPick"]);
         for (const el of form.querySelectorAll("input, textarea, select")) {
           const name = el.name;
           if (!name) continue;
@@ -663,13 +788,18 @@ Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
         const lead     = orFb(s.leadInvestigator, "(lead investigator)");
         const version  = orFb(s.version,  "v0.1 draft · " + today);
 
+        // Resolve dropdown choices to free-text used in the protocol body
+        const indexDateLabel = (val) => (INDEX_DATE_OPTIONS.find((o) => o.value === val) || {}).label || "";
+        const resolvedIndexDate = s.indexDateChoice === "custom"
+          ? (s.indexDateCustom || "Custom — see study-specific protocol")
+          : indexDateLabel(s.indexDateChoice) || indexDateLabel("after-washout");
+        const resolvedMaxFu = s.maxFollowupChoice === "custom"
+          ? (s.maxFollowupCustom || "Custom — see study-specific protocol")
+          : (s.maxFollowupChoice || "5 years per patient, or until censoring (whichever first)");
+
         const sex      = ({ both: "both sexes", female: "female only", male: "male only" })[s.sex] || "both sexes";
         const primAn   = ({ ITT: "Intention-to-treat (ITT)", OT: "On-treatment (per-protocol)", both: "Both ITT and on-treatment" })[s.primaryAnalysisType] || "On-treatment";
-        const psM      = ({
-          match: "1:1 PS matching (nearest neighbour, caliper 0.2 × SD of logit PS, no replacement)",
-          iptw:  "Stabilised IPTW with PS trimming at 1st/99th percentile",
-          both:  "Both 1:1 PS matching AND stabilised IPTW, reported in parallel",
-        })[s.psMethod] || "PS-based adjustment";
+        const psM      = PS_METHOD_DESCRIPTIONS[s.psMethod] || "PS-based adjustment";
         const eff      = ({
           HR: "Hazard ratio (95% CI) from Cox proportional-hazards models",
           RR: "Risk ratio (95% CI) from Poisson regression",
@@ -687,11 +817,11 @@ Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
           centralised: "Centralised — site-level individual data are pooled at the coordinating centre under appropriate data-sharing agreements.",
         })[s.arch] || "Federated";
 
-        const inclusion  = (s.inclusion  || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-        const exclusion  = (s.exclusion  || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const secondary  = (s.secondaryOutcomes || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const refs       = (s.references || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const milestones = (s.timeline   || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const inclusion  = mergeList(s.inclusionPick,    s.inclusionCustom);
+        const exclusion  = mergeList(s.exclusionPick,    s.exclusionCustom);
         const censoring  = mergeList(s.censoringPick,    s.censoringCustom);
         const covariates = mergeList(s.covariatesPick,   s.covariatesCustom);
         const subgroups  = mergeList(s.subgroupsPick,    s.subgroupsCustom);
@@ -741,7 +871,7 @@ ${bullets(exclusion)}
 | **Comparator** | ${orFb(s.comparatorName, "_(comparator)_")} | ${orFb(s.comparatorCodes, "_(codes)_")} |
 
 - **Washout period:** ${s.washout || "365"} days — no prior dispensing of EITHER exposure or comparator in this window before index.
-- **Index date:** ${orFb(s.indexDate, "First dispensing of exposure or comparator after the washout period.")}
+- **Index date:** ${resolvedIndexDate}
 
 ## 5. Outcome ascertainment
 
@@ -759,7 +889,7 @@ ${bullets(secondary)}
 
 - **Primary analysis:** ${primAn}
 - **Grace period:** ${s.grace || "30"} days
-- **Maximum follow-up:** ${orFb(s.maxFollowup, "5 years per patient, or until censoring.")}
+- **Maximum follow-up:** ${resolvedMaxFu}
 
 **Censoring rules**
 
@@ -839,12 +969,20 @@ _Drafted with the AsPEN protocol builder (${today})._
       form.addEventListener("input", render);
       form.addEventListener("change", render);
 
-      // Timeline preset buttons
+      // Timeline preset buttons + numeric chip presets
       form.addEventListener("click", (e) => {
-        const t = e.target?.closest?.("[data-timeline-preset]");
-        if (!t) return;
-        const ta = form.querySelector('[name="timeline"]');
-        if (ta) { ta.value = TIMELINE_PRESETS[t.dataset.timelinePreset] || ta.value; render(); }
+        const tl = e.target?.closest?.("[data-timeline-preset]");
+        if (tl) {
+          const ta = form.querySelector('[name="timeline"]');
+          if (ta) { ta.value = TIMELINE_PRESETS[tl.dataset.timelinePreset] || ta.value; render(); }
+          return;
+        }
+        const chip = e.target?.closest?.("[data-set-input]");
+        if (chip) {
+          const target = form.querySelector(`[name="${chip.dataset.setInput}"]`);
+          if (target) { target.value = chip.dataset.value; render(); }
+          return;
+        }
       });
 
       // ── Filename ─────────────────────────────────────
@@ -994,8 +1132,8 @@ _Drafted with the AsPEN protocol builder (${today})._
           ],
         });
 
-        const inclusion  = (s.inclusion  || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-        const exclusion  = (s.exclusion  || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const inclusion  = mergeList(s.inclusionPick,    s.inclusionCustom);
+        const exclusion  = mergeList(s.exclusionPick,    s.exclusionCustom);
         const secondary  = (s.secondaryOutcomes || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const refs       = (s.references || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const milestones = (s.timeline   || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
@@ -1004,13 +1142,17 @@ _Drafted with the AsPEN protocol builder (${today})._
         const subgroups  = mergeList(s.subgroupsPick,    s.subgroupsCustom);
         const sensitivity = mergeList(s.sensitivityPick, s.sensitivityCustom);
 
+        const indexDateLabel = (val) => (INDEX_DATE_OPTIONS.find((o) => o.value === val) || {}).label || "";
+        const resolvedIndexDate = s.indexDateChoice === "custom"
+          ? (s.indexDateCustom || "Custom — see study-specific protocol")
+          : indexDateLabel(s.indexDateChoice) || indexDateLabel("after-washout");
+        const resolvedMaxFu = s.maxFollowupChoice === "custom"
+          ? (s.maxFollowupCustom || "Custom — see study-specific protocol")
+          : (s.maxFollowupChoice || "5 years per patient, or until censoring (whichever first)");
+
         const sex      = ({ both: "both sexes", female: "female only", male: "male only" })[s.sex] || "both sexes";
         const primAn   = ({ ITT: "Intention-to-treat (ITT)", OT: "On-treatment (per-protocol)", both: "Both ITT and on-treatment" })[s.primaryAnalysisType] || "On-treatment";
-        const psM      = ({
-          match: "1:1 PS matching (nearest neighbour, caliper 0.2 × SD of logit PS, no replacement)",
-          iptw:  "Stabilised IPTW with PS trimming at 1st/99th percentile",
-          both:  "Both 1:1 PS matching AND stabilised IPTW, reported in parallel",
-        })[s.psMethod] || "PS-based adjustment";
+        const psM      = PS_METHOD_DESCRIPTIONS[s.psMethod] || "PS-based adjustment";
         const eff      = ({ HR: "Hazard ratio (95% CI) from Cox proportional-hazards models", RR: "Risk ratio (95% CI) from Poisson regression", RD: "Risk difference (95% CI)", IRR: "Incidence rate ratio (95% CI)" })[s.effectMeasure] || "Hazard ratio";
         const meta     = ({
           re: "Random-effects (DerSimonian-Laird) meta-analysis pooling site-specific estimates; report I² and τ². Forest plot per outcome.",
@@ -1072,7 +1214,7 @@ _Drafted with the AsPEN protocol builder (${today})._
           ],
         ));
         children.push(para("Washout period: " + (s.washout || "365") + " days — no prior dispensing of EITHER exposure or comparator in this window before index."));
-        children.push(para("Index date: " + (s.indexDate || "First dispensing of exposure or comparator after the washout period.")));
+        children.push(para("Index date: " + resolvedIndexDate));
 
         children.push(h1("5. Outcome ascertainment"));
         children.push(p([text("Operational definition. ", { bold: true }), text(s.outcomeDef || "—")]));
@@ -1085,7 +1227,7 @@ _Drafted with the AsPEN protocol builder (${today})._
         children.push(labelTable([
           ["Primary analysis", primAn],
           ["Grace period", (s.grace || "30") + " days"],
-          ["Maximum follow-up", s.maxFollowup || "5 years per patient, or until censoring."],
+          ["Maximum follow-up", resolvedMaxFu],
         ]));
         children.push(h2("Censoring rules"));
         censoring.length ? censoring.forEach((l) => children.push(bullet(l))) : children.push(para("(none specified)"));
