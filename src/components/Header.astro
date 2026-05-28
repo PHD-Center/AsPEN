@@ -12,11 +12,9 @@ const nav = [
 // Drop in a logo image at the listed `image` path (under public/images/) to
 // replace the text-only fallback; update `href` to the real upstream URL.
 const oss = [
-  // `heightClass` lets us balance visual weight: Ocean is a wide wordmark so
-  // h-7 already feels big; GitHub is a square mark so it needs more height
-  // to read at a similar size next to it.
+  // Both are wordmarks (icon + text) so a single shared height works.
   { label: "Ocean",  href: "https://ocean-dev.phdcenter.org.tw", image: "open-source/ocean.svg",  heightClass: "h-7" },
-  { label: "GitHub", href: "https://github.com/",                image: "open-source/github.svg", heightClass: "h-9" },
+  { label: "GitHub", href: "https://github.com/",                image: "open-source/github.svg", heightClass: "h-7" },
 ];
 const path = Astro.url.pathname.replace(/\/$/, "");
 const membersHref = `${base}/members/`;
