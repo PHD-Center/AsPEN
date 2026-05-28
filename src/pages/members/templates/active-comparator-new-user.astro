@@ -5,12 +5,11 @@ import { WORKER_URL } from "../../../data/site-config";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-// AsPEN-relevant sites for the multi-select. Order matches the admin
-// country dropdown (core Asian first, then others alphabetically).
+// AsPEN-relevant sites. Order: TW / KR / JP / HK first, then others A-Z.
 const SITES = [
   { code: "TW", name: "Taiwan (NHIRD / CGRD)" },
   { code: "KR", name: "South Korea (HIRA / NHIS-NHID)" },
-  { code: "JP", name: "Japan (NDB / JMDC / DeSC / MDV)" },
+  { code: "JP", name: "Japan (NDB)" },
   { code: "HK", name: "Hong Kong (CDARS)" },
   { code: "AU", name: "Australia (PBS / VLHD)" },
   { code: "CN", name: "China" },
@@ -26,6 +25,126 @@ const SITES = [
   { code: "US", name: "United States (Medicare / Medicaid / Sentinel)" },
   { code: "VN", name: "Vietnam" },
 ];
+
+// Curated checkbox lists — keeps the form selectable; user can add custom
+// lines below each list.
+const CENSORING = [
+  "Discontinuation of index drug (gap > grace period)",
+  "Switch to the comparator drug class",
+  "Disenrolment from the source health-insurance database",
+  "Death from a non-outcome cause",
+  "End of database availability / study period",
+  "Pregnancy",
+  "Cancer diagnosis (if not an outcome)",
+  "Hospice or palliative-care enrolment",
+];
+
+const COVARIATES = [
+  { group: "Demographics", items: [
+    "Age (continuous)",
+    "Sex",
+    "Year of index",
+    "Insurance type",
+    "Region / urbanicity",
+  ]},
+  { group: "Comorbidities (binary, ever in look-back)", items: [
+    "Hypertension",
+    "Dyslipidaemia",
+    "Chronic kidney disease",
+    "Prior myocardial infarction",
+    "Prior stroke / TIA",
+    "Heart failure",
+    "Atrial fibrillation",
+    "COPD",
+    "Depression",
+    "Active cancer",
+    "Liver disease",
+    "Peripheral artery disease",
+    "Charlson Comorbidity Index (CCI)",
+  ]},
+  { group: "Medications (binary, dispensed in look-back)", items: [
+    "ACEi / ARB",
+    "Beta-blockers",
+    "Calcium channel blockers",
+    "Diuretics",
+    "Statins",
+    "Antiplatelets",
+    "Anticoagulants",
+    "NSAIDs",
+    "Glucocorticoids",
+    "Metformin",
+    "Sulfonylureas",
+    "TZDs",
+    "Insulin",
+    "GLP-1 receptor agonists",
+  ]},
+  { group: "Healthcare utilisation", items: [
+    "Outpatient visit count",
+    "Inpatient admission count",
+    "ED visit count",
+    "Polypharmacy (≥5 drug classes)",
+  ]},
+  { group: "Clinical / lab (where available)", items: [
+    "HbA1c",
+    "BMI",
+    "eGFR",
+    "Smoking status",
+    "Blood pressure",
+  ]},
+];
+
+const SUBGROUPS = [
+  "Age (≥65 vs <65 years)",
+  "Sex (male vs female)",
+  "Baseline CKD (eGFR <60 vs ≥60)",
+  "Prior CV disease (yes vs no)",
+  "Country / site",
+  "Index year (e.g., before vs after 2018)",
+  "Insulin use at baseline",
+  "Baseline HbA1c (≥8% vs <8%)",
+];
+
+const SENSITIVITY = [
+  "PS trimming to area of common support",
+  "Alternative washout period (180 d, 730 d)",
+  "Alternative grace period (0, 60, 90 d)",
+  "ITT vs on-treatment (whichever is not the primary)",
+  "Active-comparator restriction to a single agent",
+  "Negative-control outcome (e.g., fracture or skin infection)",
+  "Exclude first 30 days of follow-up (latency analysis)",
+  "High-dimensional propensity score (HDPS)",
+  "Restrict to incident users only (≥1 year look-back required)",
+  "Exclude pregnant patients",
+  "E-value for unmeasured confounding",
+];
+
+const TIMELINE_PRESETS: Record<string, string> = {
+  "12-month": [
+    "Month 0: Protocol finalised, site IRB submissions begin",
+    "Month 3: All site IRB approvals received",
+    "Month 4-6: Local data extraction and cohort assembly",
+    "Month 7-9: PS modelling and analytic execution at each site",
+    "Month 10-11: Site estimates returned to coordinating centre; meta-analysis",
+    "Month 12: First draft manuscript circulated; conference abstract",
+  ].join("\n"),
+  "18-month": [
+    "Month 0: Protocol finalised, site IRB submissions begin",
+    "Month 4: All site IRB approvals received",
+    "Month 5-8: Local data extraction and cohort assembly",
+    "Month 9-12: PS modelling and analytic execution at each site",
+    "Month 13-15: Sensitivity analyses; meta-analysis",
+    "Month 16-17: Manuscript drafting and internal review",
+    "Month 18: Manuscript submission",
+  ].join("\n"),
+  "24-month": [
+    "Month 0-3: Protocol finalisation, code-set harmonisation, IRB submissions",
+    "Month 4-6: IRB approvals; pilot data extraction at each site",
+    "Month 7-12: Full cohort assembly, PS modelling, primary analysis",
+    "Month 13-18: Sensitivity analyses; subgroup analyses; meta-analysis",
+    "Month 19-21: Manuscript drafting; conference presentations",
+    "Month 22-24: Peer review, revisions, publication",
+  ].join("\n"),
+};
 ---
 
 <BaseLayout
@@ -35,7 +154,7 @@ const SITES = [
   <PageHeader
     eyebrow="Members → Templates"
     title="Multi-national ACNU protocol builder"
-    description="Active-comparator new-user design. Fill the form on the left; a draft protocol updates on the right. Download the .md when you're happy and circulate it to the AsPEN office."
+    description="Active-comparator new-user design. Tick the boxes for the operational pieces; the protocol draft updates on the right. Export as Word (.docx) or Markdown."
   />
 
   <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -44,6 +163,9 @@ const SITES = [
     <div data-state="loading" class="text-sm text-slate-600 italic">Checking your session…</div>
     <div data-state="signed-out" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
       <p class="text-sm text-slate-700">Sign in to use the protocol builder. <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Sign in →</a></p>
+    </div>
+    <div data-state="forbidden" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm text-slate-700">The protocol builder is currently restricted to AsPEN admins. Ask the chair if you need access.</p>
     </div>
 
     <div data-state="ready" class="hidden grid gap-8 lg:grid-cols-[1fr,1fr] items-start">
@@ -55,69 +177,54 @@ const SITES = [
           <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
             1 · Study identification
           </summary>
-          <div class="px-5 pb-5 space-y-3">
-            <label class="block">
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <label class="flex flex-col gap-1 sm:col-span-2">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Study title</span>
-              <input type="text" name="title" placeholder="e.g. SGLT2 inhibitors vs DPP-4 inhibitors and risk of MACE: an AsPEN multi-country active-comparator new-user study"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              <input type="text" name="title" placeholder="e.g. SGLT2 inhibitors vs DPP-4 inhibitors and risk of MACE"
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
-            <label class="block">
+            <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Short ID</span>
-              <input type="text" name="shortId" placeholder="e.g. AsPEN-SGLT2-MACE-2026"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              <input type="text" name="shortId" placeholder="AsPEN-SGLT2-MACE-2026"
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead investigator(s)</span>
-              <input type="text" name="leadInvestigator" placeholder="Name, affiliation"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-            </label>
-            <label class="block">
+            <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Version · Date</span>
               <input type="text" name="version" placeholder="v0.1 draft · 2026-05-28"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="flex flex-col gap-1 sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead investigator(s)</span>
+              <input type="text" name="leadInvestigator" placeholder="Name, affiliation; co-leads if any"
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
           </div>
         </details>
 
         <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
           <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
-            2 · Research question (PICOT)
+            2 · Research question (one-line summary)
           </summary>
           <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
-            <label class="block sm:col-span-2">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Background rationale</span>
-              <textarea name="background" rows="3" placeholder="Why this question, why now, why across sites."
-                        class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Population</span>
+              <input type="text" name="picoP" placeholder="Adults ≥40y initiating second-line T2DM therapy"
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">P — Population</span>
-              <input type="text" name="picoP" placeholder="e.g. Adults ≥40y initiating second-line T2DM therapy"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure</span>
+              <input type="text" name="picoI" placeholder="SGLT2 inhibitors (any agent)"
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">I — Intervention</span>
-              <input type="text" name="picoI" placeholder="e.g. SGLT2 inhibitors (any agent)"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Comparator</span>
+              <input type="text" name="picoC" placeholder="DPP-4 inhibitors (any agent)"
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">C — Comparator</span>
-              <input type="text" name="picoC" placeholder="e.g. DPP-4 inhibitors (any agent)"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-            </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">O — Outcome (primary)</span>
-              <input type="text" name="picoO" placeholder="e.g. 3-point MACE (CV death, non-fatal MI, non-fatal stroke)"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-            </label>
-            <label class="block sm:col-span-2">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">T — Time horizon</span>
-              <input type="text" name="picoT" placeholder="e.g. 5-year accrual (2018-2023), median follow-up ~2.5y per patient"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-            </label>
-            <label class="block sm:col-span-2">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Secondary outcomes (one per line)</span>
-              <textarea name="secondaryOutcomes" rows="3" placeholder="e.g.&#10;Heart failure hospitalisation&#10;All-cause mortality&#10;DKA"
-                        class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Primary outcome</span>
+              <input type="text" name="picoO" placeholder="3-point MACE (CV death, MI, stroke)"
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
           </div>
         </details>
@@ -130,9 +237,9 @@ const SITES = [
             <p class="text-xs text-slate-500">Tick every site whose data partner has agreed to run the common protocol locally.</p>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {SITES.map((s) => (
-                <label class="flex items-center gap-2 text-sm border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                <label class="flex items-center gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
                   <input type="checkbox" name="sites" value={s.code} class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
-                  <span class="text-xs"><span class="font-semibold">{s.code}</span> · {s.name}</span>
+                  <span><span class="font-semibold">{s.code}</span> · {s.name}</span>
                 </label>
               ))}
             </div>
@@ -141,75 +248,74 @@ const SITES = [
 
         <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
           <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
-            4 · Study population
+            4 · Cohort definition
           </summary>
           <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
-            <label class="block sm:col-span-2">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Indication / cohort definition</span>
-              <input type="text" name="indication" placeholder="e.g. T2DM diagnosis (ICD-10 E11.x) ever before index"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            <label class="flex flex-col gap-1 sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Indication / cohort entry condition</span>
+              <input type="text" name="indication" placeholder="T2DM (ICD-10 E11.x) ever before index"
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
-            <label class="block">
+            <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Age range (years)</span>
-              <input type="text" name="ageRange" placeholder="e.g. ≥18, no upper limit"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              <input type="text" name="ageRange" placeholder="≥18, no upper limit"
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
-            <label class="block">
+            <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Sex</span>
-              <select name="sex" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+              <select name="sex" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
                 <option value="both">Both</option>
                 <option value="female">Female only</option>
                 <option value="male">Male only</option>
               </select>
             </label>
-            <label class="block sm:col-span-2">
+            <label class="flex flex-col gap-1 sm:col-span-2">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Inclusion criteria (one per line)</span>
-              <textarea name="inclusion" rows="4" placeholder="e.g.&#10;Continuous enrolment ≥365d before index&#10;≥1 prescription of metformin in the 365d before index"
-                        class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+              <textarea name="inclusion" rows="3" placeholder="Continuous enrolment ≥365 d before index&#10;≥1 dispensing of metformin in the 365 d before index"
+                        class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
             </label>
-            <label class="block sm:col-span-2">
+            <label class="flex flex-col gap-1 sm:col-span-2">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exclusion criteria (one per line)</span>
-              <textarea name="exclusion" rows="4" placeholder="e.g.&#10;Type 1 diabetes (E10.x) ever&#10;eGFR &lt;30 ml/min/1.73m² at index&#10;Pregnancy at index&#10;Active cancer in the 365d before index"
-                        class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+              <textarea name="exclusion" rows="4" placeholder="Type 1 diabetes (E10.x) ever&#10;eGFR <30 ml/min/1.73m² at index&#10;Pregnancy at index&#10;Active cancer in the 365 d before index"
+                        class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
             </label>
           </div>
         </details>
 
         <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
           <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
-            5 · Exposure & comparator
+            5 · Exposure &amp; comparator
           </summary>
           <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Index drug — name</span>
-              <input type="text" name="exposureName" placeholder="e.g. SGLT2 inhibitors"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure — name</span>
+              <input type="text" name="exposureName" placeholder="SGLT2 inhibitors"
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Index drug — code(s)</span>
-              <input type="text" name="exposureCodes" placeholder="e.g. ATC A10BK*"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure — code set</span>
+              <input type="text" name="exposureCodes" placeholder="ATC A10BK*"
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Active comparator — name</span>
-              <input type="text" name="comparatorName" placeholder="e.g. DPP-4 inhibitors"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Comparator — name</span>
+              <input type="text" name="comparatorName" placeholder="DPP-4 inhibitors"
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Active comparator — code(s)</span>
-              <input type="text" name="comparatorCodes" placeholder="e.g. ATC A10BH*"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Comparator — code set</span>
+              <input type="text" name="comparatorCodes" placeholder="ATC A10BH*"
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Washout period (days)</span>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Washout (days)</span>
               <input type="number" name="washout" value="365" min="0" step="1"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-              <span class="block mt-1 text-[11px] text-slate-500">No prior dispensing of EITHER exposure or comparator in this window before index.</span>
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Index date definition</span>
-              <input type="text" name="indexDate" value="First dispensing of exposure or comparator after the washout period"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Index date</span>
+              <input type="text" name="indexDate" value="First dispensing of exposure or comparator after the washout"
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
           </div>
         </details>
@@ -219,56 +325,70 @@ const SITES = [
             6 · Outcome ascertainment
           </summary>
           <div class="px-5 pb-5 space-y-3">
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Primary outcome — operational definition</span>
-              <textarea name="outcomeDef" rows="3" placeholder="e.g. First hospitalisation with primary discharge diagnosis I21.x (MI), I63.x (ischemic stroke), or CV death (cause-of-death I00-I99) — composite, time-to-first-event."
-                        class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Operational definition</span>
+              <textarea name="outcomeDef" rows="3" placeholder="First hospitalisation with primary discharge diagnosis I21.x (MI), I63.x (ischemic stroke), or CV death — composite, time-to-first-event."
+                        class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
             </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Outcome code(s)</span>
-              <input type="text" name="outcomeCodes" placeholder="e.g. ICD-10 I21.*, I63.*; cause-of-death I00–I99"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Code set</span>
+              <input type="text" name="outcomeCodes" placeholder="ICD-10 I21.*, I63.*; cause-of-death I00-I99"
+                     class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Validation</span>
-              <input type="text" name="outcomeValidation" placeholder="e.g. Inpatient primary-diagnosis algorithm shown PPV ~85% in prior NHIRD validation (Lai 2018)"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Validation (if any)</span>
+              <input type="text" name="outcomeValidation" placeholder="Inpatient primary-diagnosis algorithm PPV ~85% (Lai 2018)"
+                     class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Secondary outcomes (one per line)</span>
+              <textarea name="secondaryOutcomes" rows="3" placeholder="Heart failure hospitalisation&#10;All-cause mortality"
+                        class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
             </label>
           </div>
         </details>
 
         <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
           <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
-            7 · Follow-up & censoring
+            7 · Follow-up &amp; censoring
           </summary>
-          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Primary analysis</span>
-              <select name="primaryAnalysisType" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
-                <option value="ITT">Intention-to-treat (ITT)</option>
-                <option value="OT" selected>On-treatment (per-protocol)</option>
-                <option value="both">Both ITT and on-treatment</option>
-              </select>
-            </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Grace period (days)</span>
-              <input type="number" name="grace" value="30" min="0" step="1"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-              <span class="block mt-1 text-[11px] text-slate-500">Allowable gap between successive dispensings before deemed off-treatment.</span>
-            </label>
-            <label class="block sm:col-span-2">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Censoring rules (one per line)</span>
-              <textarea name="censoring" rows="4" placeholder="e.g.&#10;Discontinuation of index drug (gap > grace period)&#10;Switch to comparator drug class&#10;Disenrolment from health-insurance database&#10;Death from non-outcome cause&#10;End of database availability">Discontinuation of index drug (gap &gt; grace period)
-Switch to comparator drug class
-Disenrolment from the health-insurance database
-Death from non-outcome cause
-End of database availability</textarea>
-            </label>
-            <label class="block sm:col-span-2">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Maximum follow-up</span>
-              <input type="text" name="maxFollowup" value="5 years per patient, or until censoring (whichever first)"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-            </label>
+          <div class="px-5 pb-5 space-y-4">
+            <div class="grid sm:grid-cols-2 gap-3">
+              <label class="flex flex-col gap-1">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Primary analysis</span>
+                <select name="primaryAnalysisType" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                  <option value="OT" selected>On-treatment (per-protocol)</option>
+                  <option value="ITT">Intention-to-treat (ITT)</option>
+                  <option value="both">Both ITT and on-treatment</option>
+                </select>
+              </label>
+              <label class="flex flex-col gap-1">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Grace period (days)</span>
+                <input type="number" name="grace" value="30" min="0" step="1"
+                       class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              </label>
+              <label class="flex flex-col gap-1 sm:col-span-2">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Maximum follow-up</span>
+                <input type="text" name="maxFollowup" value="5 years per patient, or until censoring (whichever first)"
+                       class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              </label>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Censoring rules — tick those that apply</p>
+              <div class="mt-2 grid sm:grid-cols-2 gap-1.5">
+                {CENSORING.map((c, i) => (
+                  <label class="flex items-start gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                    <input type="checkbox" name="censoringPick" value={c} checked={i < 5} class="mt-0.5 rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+                    <span>{c}</span>
+                  </label>
+                ))}
+              </div>
+              <label class="flex flex-col gap-1 mt-3">
+                <span class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Custom censoring rules (one per line)</span>
+                <textarea name="censoringCustom" rows="2" placeholder="Additional rules specific to this study"
+                          class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+              </label>
+            </div>
           </div>
         </details>
 
@@ -276,30 +396,45 @@ End of database availability</textarea>
           <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
             8 · Confounding control
           </summary>
-          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Method</span>
-              <select name="psMethod" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
-                <option value="match">PS matching (1:1 nearest neighbour, caliper 0.2 × SD of logit PS)</option>
-                <option value="iptw" selected>Stabilised IPTW (with trimming)</option>
-                <option value="both">Both PS matching AND IPTW</option>
-              </select>
-            </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Covariate look-back (days)</span>
-              <input type="number" name="lookback" value="365" min="0" step="1"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-            </label>
-            <label class="block sm:col-span-2">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Baseline covariates (one per line)</span>
-              <textarea name="covariates" rows="8">Demographics: age (continuous), sex, year of index
-Comorbidities: HTN, dyslipidaemia, CKD, prior MI, prior stroke, HF, AF, COPD, depression, cancer
-Cardiovascular medications: ACEi/ARB, BB, CCB, diuretics, statins, antiplatelets, anticoagulants
-Diabetes medications history: metformin, sulfonylureas, TZDs, insulin (binary, ever in look-back)
-Healthcare utilisation: number of outpatient visits, number of hospitalisations, ED visits, polypharmacy (≥5 drug classes)
-Charlson Comorbidity Index (CCI) score at index
-Where available: HbA1c, BMI, eGFR, smoking status</textarea>
-            </label>
+          <div class="px-5 pb-5 space-y-4">
+            <div class="grid sm:grid-cols-2 gap-3">
+              <label class="flex flex-col gap-1">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Method</span>
+                <select name="psMethod" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                  <option value="iptw" selected>Stabilised IPTW (with trimming)</option>
+                  <option value="match">PS matching (1:1 nearest neighbour, caliper 0.2 × SD logit PS)</option>
+                  <option value="both">Both PS matching AND IPTW</option>
+                </select>
+              </label>
+              <label class="flex flex-col gap-1">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Look-back (days)</span>
+                <input type="number" name="lookback" value="365" min="0" step="1"
+                       class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              </label>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Baseline covariates — tick those to adjust for</p>
+              <div class="mt-2 space-y-3">
+                {COVARIATES.map((g) => (
+                  <div>
+                    <p class="text-[11px] font-semibold text-slate-700">{g.group}</p>
+                    <div class="mt-1 grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                      {g.items.map((it) => (
+                        <label class="flex items-start gap-1.5 text-xs border border-slate-200 rounded px-2 py-1.5 hover:bg-slate-50 cursor-pointer">
+                          <input type="checkbox" name="covariatesPick" value={it} checked={true} class="mt-0.5 rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+                          <span>{it}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <label class="flex flex-col gap-1 mt-3">
+                <span class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Custom covariates (one per line)</span>
+                <textarea name="covariatesCustom" rows="2" placeholder="Study-specific covariates not listed above"
+                          class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+              </label>
+            </div>
           </div>
         </details>
 
@@ -307,74 +442,91 @@ Where available: HbA1c, BMI, eGFR, smoking status</textarea>
           <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
             9 · Statistical analysis
           </summary>
-          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Effect estimate</span>
-              <select name="effectMeasure" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
-                <option value="HR" selected>Hazard ratio (Cox PH)</option>
-                <option value="RR">Risk ratio (Poisson)</option>
-                <option value="RD">Risk difference</option>
-                <option value="IRR">Incidence rate ratio</option>
-              </select>
-            </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Robust SE / clustering</span>
-              <input type="text" name="seMethod" value="Robust SE (sandwich) with clustering on matched pair / PS stratum"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-            </label>
-            <label class="block sm:col-span-2">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Subgroup analyses (one per line)</span>
-              <textarea name="subgroups" rows="4">Age (≥65 vs &lt;65)
-Sex
-Baseline CKD (eGFR &lt;60 vs ≥60)
-Prior CV disease (yes vs no)
-Country / site</textarea>
-            </label>
-            <label class="block sm:col-span-2">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Sensitivity analyses (one per line)</span>
-              <textarea name="sensitivity" rows="6">PS trimming to area of common support (e.g. trim non-overlapping tails)
-Alternative washout (e.g. 180 d, 730 d)
-Alternative grace period (0, 60, 90 d)
-ITT vs on-treatment (whichever is not the primary)
-Active-comparator restriction to a single agent
-Negative-control outcome (e.g. fracture or skin infection — should show null association)
-Exclude first 30 days of follow-up (latent-period analysis)</textarea>
-            </label>
-            <label class="block sm:col-span-2">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Meta-analysis across sites</span>
-              <input type="text" name="meta" value="Random-effects (DerSimonian–Laird) meta-analysis pooling site-specific HR estimates; report I² and τ². Forest plot per outcome."
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-            </label>
+          <div class="px-5 pb-5 space-y-4">
+            <div class="grid sm:grid-cols-2 gap-3">
+              <label class="flex flex-col gap-1">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Effect estimate</span>
+                <select name="effectMeasure" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                  <option value="HR" selected>Hazard ratio (Cox PH)</option>
+                  <option value="RR">Risk ratio (Poisson)</option>
+                  <option value="RD">Risk difference</option>
+                  <option value="IRR">Incidence rate ratio</option>
+                </select>
+              </label>
+              <label class="flex flex-col gap-1">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Meta-analysis</span>
+                <select name="metaMethod" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                  <option value="re" selected>Random-effects (DerSimonian-Laird)</option>
+                  <option value="re-reml">Random-effects (REML)</option>
+                  <option value="fe">Fixed-effects (inverse-variance)</option>
+                </select>
+              </label>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Subgroup analyses — tick those to perform</p>
+              <div class="mt-2 grid sm:grid-cols-2 gap-1.5">
+                {SUBGROUPS.map((s, i) => (
+                  <label class="flex items-start gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                    <input type="checkbox" name="subgroupsPick" value={s} checked={i < 5} class="mt-0.5 rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+                    <span>{s}</span>
+                  </label>
+                ))}
+              </div>
+              <label class="flex flex-col gap-1 mt-3">
+                <span class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Custom subgroups (one per line)</span>
+                <textarea name="subgroupsCustom" rows="2" class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+              </label>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Sensitivity analyses — tick those to include</p>
+              <div class="mt-2 grid sm:grid-cols-2 gap-1.5">
+                {SENSITIVITY.map((s, i) => (
+                  <label class="flex items-start gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                    <input type="checkbox" name="sensitivityPick" value={s} checked={i < 6} class="mt-0.5 rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+                    <span>{s}</span>
+                  </label>
+                ))}
+              </div>
+              <label class="flex flex-col gap-1 mt-3">
+                <span class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Custom sensitivity analyses (one per line)</span>
+                <textarea name="sensitivityCustom" rows="2" class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+              </label>
+            </div>
           </div>
         </details>
 
         <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
           <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
-            10 · Execution & timeline
+            10 · Execution &amp; timeline
           </summary>
-          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Architecture</span>
-              <select name="arch" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
-                <option value="federated" selected>Federated — each site runs locally, shares aggregate estimates</option>
-                <option value="cdm">Common Data Model — each site transforms to OMOP/Sentinel CDM first, then runs shared package</option>
-                <option value="centralised">Centralised — pooled individual-level data (only where DUA permits)</option>
-              </select>
-            </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">CDM (if applicable)</span>
-              <input type="text" name="cdm" placeholder="e.g. OMOP CDM v5.4 / Sentinel CDM v8.0"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-            </label>
-            <label class="block sm:col-span-2">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Timeline milestones (one per line)</span>
-              <textarea name="timeline" rows="6">Month 0: Protocol finalised, site IRB submissions begin
-Month 3: All site IRB approvals received
-Month 4–6: Local data extraction and cohort assembly
-Month 7–9: PS modelling and analytic execution at each site
-Month 10–11: Site-level estimates returned to coordinating centre; meta-analysis
-Month 12: First draft manuscript circulated; ISPE Asian conference abstract</textarea>
-            </label>
+          <div class="px-5 pb-5 space-y-3">
+            <div class="grid sm:grid-cols-2 gap-3">
+              <label class="flex flex-col gap-1">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Architecture</span>
+                <select name="arch" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                  <option value="federated" selected>Federated (local analysis, share aggregates)</option>
+                  <option value="cdm">Common Data Model (OMOP / Sentinel)</option>
+                  <option value="centralised">Centralised (pooled individual data, where DUA permits)</option>
+                </select>
+              </label>
+              <label class="flex flex-col gap-1">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">CDM (if applicable)</span>
+                <input type="text" name="cdm" placeholder="OMOP CDM v5.4 / Sentinel CDM v8.0"
+                       class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              </label>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Timeline preset</p>
+              <div class="mt-2 flex gap-2 flex-wrap">
+                <button type="button" data-timeline-preset="12-month" class="text-xs border border-brand-300 text-brand-700 hover:bg-brand-50 font-semibold px-3 py-1.5 rounded transition">Use 12-month plan</button>
+                <button type="button" data-timeline-preset="18-month" class="text-xs border border-brand-300 text-brand-700 hover:bg-brand-50 font-semibold px-3 py-1.5 rounded transition">Use 18-month plan</button>
+                <button type="button" data-timeline-preset="24-month" class="text-xs border border-brand-300 text-brand-700 hover:bg-brand-50 font-semibold px-3 py-1.5 rounded transition">Use 24-month plan</button>
+              </div>
+              <label class="flex flex-col gap-1 mt-3">
+                <span class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Milestones (one per line)</span>
+                <textarea name="timeline" rows="6" class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+              </label>
+            </div>
           </div>
         </details>
 
@@ -383,29 +535,32 @@ Month 12: First draft manuscript circulated; ISPE Asian conference abstract</tex
             11 · Ethics, dissemination, references (optional)
           </summary>
           <div class="px-5 pb-5 space-y-3">
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Ethics / regulatory</span>
-              <textarea name="ethics" rows="3" placeholder="e.g. Each site obtains local IRB / ethics approval before data extraction. No individual-level data leaves any site under a federated design.">Each participating site obtains local IRB / ethics approval before data extraction. Under a federated design, only aggregate site-level estimates are shared with the coordinating centre — no individual-level data leaves any site.</textarea>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Ethics</span>
+              <textarea name="ethics" rows="2" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Each participating site obtains local IRB / ethics approval before data extraction. Under a federated design, only aggregate site-level estimates are shared with the coordinating centre.</textarea>
             </label>
-            <label class="block">
+            <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Dissemination</span>
-              <textarea name="dissemination" rows="2">Primary manuscript submitted to a peer-reviewed pharmacoepidemiology journal; conference presentation at ICPE / ISPE Asian conference; study registered on ENCePP EU PAS Register and/or ClinicalTrials.gov where applicable.</textarea>
+              <textarea name="dissemination" rows="2" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Primary manuscript to a peer-reviewed pharmacoepidemiology journal; presentation at ICPE / ISPE Asian conference; registration on ENCePP EU PAS Register and/or ClinicalTrials.gov where applicable.</textarea>
             </label>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Key references (one per line; will appear as numbered list)</span>
-              <textarea name="references" rows="5" placeholder="e.g.&#10;Lund JL et al. Pharmacoepidemiol Drug Saf. 2015 (active comparator)&#10;Hernán MA et al. JAMA. 2008 (new-user design)">Lund JL et al. Pharmacoepidemiol Drug Saf. 2015 (active comparator design)
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Key references (one per line)</span>
+              <textarea name="references" rows="4" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Lund JL et al. Pharmacoepidemiol Drug Saf. 2015 (active comparator design)
 Hernán MA, Robins JM. JAMA. 2008 (new-user design; target trial)
 Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
             </label>
           </div>
         </details>
 
-        <div class="flex flex-wrap gap-3 pt-2">
-          <button type="button" data-action="download" class="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-2.5 rounded-lg transition text-sm">
-            ⬇ Download .md
+        <div class="flex flex-wrap gap-3 pt-2 items-center">
+          <button type="button" data-action="download-docx" class="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-2.5 rounded-lg transition text-sm">
+            ⬇ Download Word (.docx)
           </button>
-          <button type="button" data-action="copy" class="bg-white border border-brand-700 text-brand-700 hover:bg-brand-50 font-semibold px-5 py-2.5 rounded-lg transition text-sm">
-            📋 Copy as Markdown
+          <button type="button" data-action="download-md" class="bg-white border border-brand-700 text-brand-700 hover:bg-brand-50 font-semibold px-5 py-2.5 rounded-lg transition text-sm">
+            ⬇ Markdown (.md)
+          </button>
+          <button type="button" data-action="copy" class="text-brand-700 hover:underline font-semibold text-sm">
+            📋 Copy Markdown
           </button>
           <button type="button" data-action="reset" class="ml-auto text-slate-500 hover:text-rose-600 hover:underline text-sm font-semibold">
             Clear all
@@ -418,8 +573,8 @@ Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
       <aside class="lg:sticky lg:top-20">
         <div class="border border-slate-200 rounded-2xl bg-slate-50 shadow-sm overflow-hidden">
           <header class="flex items-center justify-between px-4 py-2 bg-white border-b border-slate-200">
-            <p class="text-xs uppercase tracking-widest text-brand-700 font-bold">Live preview · Markdown</p>
-            <p class="text-[10px] text-slate-500">Auto-saved to this browser</p>
+            <p class="text-xs uppercase tracking-widest text-brand-700 font-bold">Live preview</p>
+            <p class="text-[10px] text-slate-500">Auto-saved to this browser · server save coming soon</p>
           </header>
           <pre data-preview class="text-xs leading-relaxed text-slate-800 p-4 overflow-auto max-h-[calc(100vh-12rem)] whitespace-pre-wrap font-mono"></pre>
         </div>
@@ -428,7 +583,10 @@ Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
     </div>
   </section>
 
-  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES }}>
+  <!-- docx library (UMD bundle) — used to generate Word files client-side -->
+  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js" is:inline></script>
+
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES, TIMELINE_PRESETS }}>
     (() => {
       const setState = (name) => {
         document.querySelectorAll("[data-state]").forEach((el) => {
@@ -456,93 +614,88 @@ Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
       const readForm = () => {
         const data = new FormData(form);
         const out = {};
+        // Multi-value keys → arrays
+        const multi = new Set(["sites", "censoringPick", "covariatesPick", "subgroupsPick", "sensitivityPick"]);
+        for (const k of multi) out[k] = [];
         for (const [k, v] of data.entries()) {
-          if (k === "sites") {
-            (out.sites ??= []).push(String(v));
-          } else {
-            out[k] = String(v);
-          }
+          if (multi.has(k)) out[k].push(String(v));
+          else out[k] = String(v);
         }
-        // include unchecked sites as empty so toggling off is captured
-        if (!out.sites) out.sites = [];
         return out;
       };
 
       const writeForm = (state) => {
+        const multi = new Set(["sites", "censoringPick", "covariatesPick", "subgroupsPick", "sensitivityPick"]);
         for (const el of form.querySelectorAll("input, textarea, select")) {
           const name = el.name;
           if (!name) continue;
-          if (el.type === "checkbox" && name === "sites") {
-            el.checked = (state.sites || []).includes(el.value);
+          if (el.type === "checkbox" && multi.has(name)) {
+            el.checked = (state[name] || []).includes(el.value);
           } else if (state[name] !== undefined) {
             el.value = state[name];
           }
         }
       };
 
-      // ── Markdown template ───────────────────────────
-      const bullets = (s) => (s || "")
-        .split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
-        .map((l) => "- " + l).join("\n") || "_(none specified)_";
+      // ── Merge built-in checkboxes + custom textarea ───
+      const mergeList = (picks, customText) => {
+        const lines = (customText || "")
+          .split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        return [...(picks || []), ...lines];
+      };
 
-      const numbered = (s) => (s || "")
-        .split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
-        .map((l, i) => (i + 1) + ". " + l).join("\n") || "_(none)_";
+      const bullets = (arr) =>
+        arr.length === 0 ? "_(none specified)_" : arr.map((l) => "- " + l).join("\n");
+      const numbered = (arr) =>
+        arr.length === 0 ? "_(none)_" : arr.map((l, i) => (i + 1) + ". " + l).join("\n");
 
+      const orFb = (s, fb) => (s && s.trim()) ? s : fb;
       const sitesLine = (codes) => {
         if (!codes || codes.length === 0) return "_(no sites selected)_";
         return codes.map((c) => "**" + c + "** — " + (SITE_LABEL[c] || c)).join(" · ");
       };
 
-      const orFallback = (s, fb) => (s && s.trim()) ? s : fb;
-
+      // ── Markdown template ───────────────────────────
       const buildMarkdown = (s) => {
-        const title    = orFallback(s.title, "(Untitled multi-national ACNU study)");
-        const shortId  = orFallback(s.shortId, "(short id)");
-        const lead     = orFallback(s.leadInvestigator, "(lead investigator)");
-        const version  = orFallback(s.version, "v0.1 draft · " + new Date().toISOString().slice(0, 10));
-        const back     = orFallback(s.background, "_(rationale to be drafted)_");
-        const picoP    = orFallback(s.picoP, "_(population)_");
-        const picoI    = orFallback(s.picoI, "_(intervention)_");
-        const picoC    = orFallback(s.picoC, "_(comparator)_");
-        const picoO    = orFallback(s.picoO, "_(outcome)_");
-        const picoT    = orFallback(s.picoT, "_(time horizon)_");
+        const today    = new Date().toISOString().slice(0, 10);
+        const title    = orFb(s.title,    "(Untitled multi-national ACNU study)");
+        const shortId  = orFb(s.shortId,  "(short id)");
+        const lead     = orFb(s.leadInvestigator, "(lead investigator)");
+        const version  = orFb(s.version,  "v0.1 draft · " + today);
 
-        const ind      = orFallback(s.indication, "_(cohort definition)_");
-        const age      = orFallback(s.ageRange, "_(age range)_");
-        const sex      = ({ both: "both sexes", female: "female only", male: "male only" })[s.sex] || s.sex || "both sexes";
-
-        const expName  = orFallback(s.exposureName, "_(exposure)_");
-        const expCode  = orFallback(s.exposureCodes, "_(codes TBD)_");
-        const cmpName  = orFallback(s.comparatorName, "_(comparator)_");
-        const cmpCode  = orFallback(s.comparatorCodes, "_(codes TBD)_");
-        const washout  = s.washout || "365";
-        const indexDt  = orFallback(s.indexDate, "First dispensing of exposure or comparator after the washout period.");
-
-        const outcomeDef = orFallback(s.outcomeDef, "_(operational outcome definition)_");
-        const outcomeCd  = orFallback(s.outcomeCodes, "_(code set)_");
-        const outcomeVal = orFallback(s.outcomeValidation, "_(prior validation, if any)_");
-
-        const primAn   = ({ ITT: "Intention-to-treat (ITT)", OT: "On-treatment (per-protocol)", both: "Both ITT and on-treatment" })[s.primaryAnalysisType] || s.primaryAnalysisType || "On-treatment";
-        const grace    = s.grace || "30";
-        const maxFu    = orFallback(s.maxFollowup, "5 years per patient, or until censoring.");
-
+        const sex      = ({ both: "both sexes", female: "female only", male: "male only" })[s.sex] || "both sexes";
+        const primAn   = ({ ITT: "Intention-to-treat (ITT)", OT: "On-treatment (per-protocol)", both: "Both ITT and on-treatment" })[s.primaryAnalysisType] || "On-treatment";
         const psM      = ({
-          match: "**1:1 PS matching** (nearest neighbour, caliper 0.2 × SD of logit PS, no replacement)",
-          iptw:  "**Stabilised IPTW** with PS trimming at 1st/99th percentile",
-          both:  "**Both** 1:1 PS matching AND stabilised IPTW, reported in parallel",
+          match: "1:1 PS matching (nearest neighbour, caliper 0.2 × SD of logit PS, no replacement)",
+          iptw:  "Stabilised IPTW with PS trimming at 1st/99th percentile",
+          both:  "Both 1:1 PS matching AND stabilised IPTW, reported in parallel",
         })[s.psMethod] || "PS-based adjustment";
-        const lookback = s.lookback || "365";
-
-        const eff      = ({ HR: "Hazard ratio (95% CI) from Cox proportional-hazards models", RR: "Risk ratio (95% CI) from Poisson regression", RD: "Risk difference (95% CI)", IRR: "Incidence rate ratio (95% CI)" })[s.effectMeasure] || s.effectMeasure;
-        const seM      = orFallback(s.seMethod, "Robust SE with clustering on matched pair / PS stratum.");
-
+        const eff      = ({
+          HR: "Hazard ratio (95% CI) from Cox proportional-hazards models",
+          RR: "Risk ratio (95% CI) from Poisson regression",
+          RD: "Risk difference (95% CI)",
+          IRR: "Incidence rate ratio (95% CI)",
+        })[s.effectMeasure] || "Hazard ratio";
+        const meta     = ({
+          re: "Random-effects (DerSimonian-Laird) meta-analysis pooling site-specific estimates; report I² and τ². Forest plot per outcome.",
+          "re-reml": "Random-effects (REML) meta-analysis pooling site-specific estimates; report I² and τ². Forest plot per outcome.",
+          fe: "Fixed-effects (inverse-variance) meta-analysis pooling site-specific estimates. Forest plot per outcome.",
+        })[s.metaMethod] || "Random-effects meta-analysis.";
         const arch     = ({
-          federated:   "**Federated** — each AsPEN site executes a common analytic package locally and shares only aggregate site-level estimates with the coordinating centre.",
-          cdm:         "**Common Data Model** — each site first transforms its source database into the agreed CDM (e.g. OMOP), then runs the shared SQL/R/Python package.",
-          centralised: "**Centralised** — site-level individual data are pooled at the coordinating centre under appropriate data-sharing agreements.",
+          federated:   "Federated — each AsPEN site executes a common analytic package locally and shares only aggregate site-level estimates with the coordinating centre.",
+          cdm:         "Common Data Model — each site first transforms its source database into the agreed CDM (e.g. OMOP), then runs the shared SQL/R/Python package.",
+          centralised: "Centralised — site-level individual data are pooled at the coordinating centre under appropriate data-sharing agreements.",
         })[s.arch] || "Federated";
-        const cdmText  = orFallback(s.cdm, "_(specify CDM if applicable)_");
+
+        const inclusion  = (s.inclusion  || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const exclusion  = (s.exclusion  || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const secondary  = (s.secondaryOutcomes || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const refs       = (s.references || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const milestones = (s.timeline   || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const censoring  = mergeList(s.censoringPick,    s.censoringCustom);
+        const covariates = mergeList(s.covariatesPick,   s.covariatesCustom);
+        const subgroups  = mergeList(s.subgroupsPick,    s.subgroupsCustom);
+        const sensitivity = mergeList(s.sensitivityPick, s.sensitivityCustom);
 
         return `# ${title}
 
@@ -553,136 +706,116 @@ Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
 
 ---
 
-## 1. Background and rationale
-
-${back}
-
-## 2. Objectives
-
-**Primary objective.** Among ${picoP}, to compare the risk of ${picoO} between new users of ${picoI} and new users of ${picoC}, over a time horizon of ${picoT}.
-
-**PICOT.**
+## 1. Research question
 
 | | |
 |---|---|
-| **P** — Population | ${picoP} |
-| **I** — Intervention | ${picoI} |
-| **C** — Comparator | ${picoC} |
-| **O** — Outcome (primary) | ${picoO} |
-| **T** — Time | ${picoT} |
+| **Population** | ${orFb(s.picoP, "_(population)_")} |
+| **Exposure** | ${orFb(s.picoI, "_(exposure)_")} |
+| **Comparator** | ${orFb(s.picoC, "_(comparator)_")} |
+| **Primary outcome** | ${orFb(s.picoO, "_(outcome)_")} |
 
-**Secondary outcomes.**
-
-${bullets(s.secondaryOutcomes)}
-
-## 3. Study sites
-
-This protocol is to be executed in parallel at the following AsPEN sites:
+## 2. Sites
 
 ${sitesLine(s.sites)}
 
-## 4. Study design
+## 3. Cohort definition
 
-A **new-user, active-comparator cohort design** is used to minimise confounding by indication and immortal-time / prevalent-user bias.
-
-- **Index date:** ${indexDt}
-- **Washout period:** ${washout} days — no prior dispensing of EITHER the exposure or comparator in this window before index.
-- **Cohort entry:** patients meeting the cohort definition above, contributing person-time from index date forward.
-
-## 5. Study population
-
-- **Indication / cohort definition:** ${ind}
-- **Age:** ${age}
+- **Indication / cohort entry:** ${orFb(s.indication, "_(condition)_")}
+- **Age:** ${orFb(s.ageRange, "_(age)_")}
 - **Sex:** ${sex}
 
 **Inclusion criteria**
 
-${bullets(s.inclusion)}
+${bullets(inclusion)}
 
 **Exclusion criteria**
 
-${bullets(s.exclusion)}
+${bullets(exclusion)}
 
-## 6. Exposure and comparator
+## 4. Exposure and comparator
 
 | | Name | Code set |
 |---|---|---|
-| **Exposure** | ${expName} | ${expCode} |
-| **Comparator** | ${cmpName} | ${cmpCode} |
+| **Exposure** | ${orFb(s.exposureName, "_(exposure)_")} | ${orFb(s.exposureCodes, "_(codes)_")} |
+| **Comparator** | ${orFb(s.comparatorName, "_(comparator)_")} | ${orFb(s.comparatorCodes, "_(codes)_")} |
 
-A patient enters either the exposure or comparator cohort based on which drug is dispensed first on or after the index date, provided no prior dispensing of either drug within the washout window.
+- **Washout period:** ${s.washout || "365"} days — no prior dispensing of EITHER exposure or comparator in this window before index.
+- **Index date:** ${orFb(s.indexDate, "First dispensing of exposure or comparator after the washout period.")}
 
-## 7. Outcome ascertainment
+## 5. Outcome ascertainment
 
-**Operational definition.** ${outcomeDef}
+**Operational definition.** ${orFb(s.outcomeDef, "_(operational outcome definition)_")}
 
-**Code set.** ${outcomeCd}
+**Code set.** ${orFb(s.outcomeCodes, "_(code set)_")}
 
-**Validation.** ${outcomeVal}
+**Validation.** ${orFb(s.outcomeValidation, "_(prior validation, if any)_")}
 
-## 8. Follow-up and censoring
+**Secondary outcomes**
+
+${bullets(secondary)}
+
+## 6. Follow-up and censoring
 
 - **Primary analysis:** ${primAn}
-- **Grace period:** ${grace} days
-- **Maximum follow-up:** ${maxFu}
+- **Grace period:** ${s.grace || "30"} days
+- **Maximum follow-up:** ${orFb(s.maxFollowup, "5 years per patient, or until censoring.")}
 
 **Censoring rules**
 
-${bullets(s.censoring)}
+${bullets(censoring)}
 
-## 9. Confounding control
+## 7. Confounding control
 
 - **Method:** ${psM}
-- **Covariate look-back window:** ${lookback} days prior to index date
+- **Covariate look-back window:** ${s.lookback || "365"} days prior to index date
 
 **Baseline covariates**
 
-${bullets(s.covariates)}
+${bullets(covariates)}
 
 PS model performance is assessed via standardised mean differences (SMDs) before/after weighting/matching (target < 0.1 across all covariates) and the c-statistic of the PS model.
 
-## 10. Statistical analysis
+## 8. Statistical analysis
 
 - **Effect estimate:** ${eff}
-- **Standard errors:** ${seM}
+- **Meta-analysis across sites:** ${meta}
 
 **Subgroup analyses**
 
-${bullets(s.subgroups)}
+${bullets(subgroups)}
 
 **Sensitivity analyses**
 
-${bullets(s.sensitivity)}
+${bullets(sensitivity)}
 
-**Meta-analysis across sites.** ${orFallback(s.meta, "Random-effects (DerSimonian–Laird) meta-analysis pooling site-specific HR estimates; report I² and τ². Forest plot per outcome.")}
+## 9. Sample size and power
 
-## 11. Sample size and power
+To be calculated per site using observed event rates among comparator users in pilot extractions; aim for ≥80% power to detect the smallest clinically meaningful effect for the primary outcome at α = 0.05, two-sided, after pooling. Pilot estimates are circulated before final analytic execution.
 
-To be calculated per site using observed event rates among comparator users in pilot extractions; aim for ≥80% power to detect the smallest clinically meaningful HR (e.g. 0.85 or 1.15) for the primary outcome at α = 0.05, two-sided, after pooling. Pilot estimates are circulated before final analytic execution.
-
-## 12. Execution and timeline
+## 10. Execution and timeline
 
 **Architecture.** ${arch}
 
-**CDM:** ${cdmText}
+**CDM:** ${orFb(s.cdm, "_(specify CDM if applicable)_")}
 
 **Timeline milestones**
 
-${numbered(s.timeline)}
+${numbered(milestones)}
 
-## 13. Ethics, data sharing, dissemination
+## 11. Ethics, data sharing, dissemination
 
-**Ethics.** ${orFallback(s.ethics, "Each participating site obtains local IRB / ethics approval before data extraction.")}
+**Ethics.** ${orFb(s.ethics, "Each participating site obtains local IRB / ethics approval before data extraction.")}
 
-**Dissemination.** ${orFallback(s.dissemination, "Primary manuscript to a peer-reviewed pharmacoepidemiology journal; conference presentation at ICPE / ISPE Asian conference; registration on ENCePP EU PAS Register and/or ClinicalTrials.gov where applicable.")}
+**Dissemination.** ${orFb(s.dissemination, "Primary manuscript to a peer-reviewed pharmacoepidemiology journal; conference presentation at ICPE / ISPE Asian conference.")}
 
-## 14. Key references
+## 12. Key references
 
-${numbered(s.references)}
+${numbered(refs)}
 
 ---
 
-_Drafted with the AsPEN protocol builder. Reviewed and adapted by the Academic & Education office before circulation._
+_Drafted with the AsPEN protocol builder (${today})._
 `;
       };
 
@@ -698,29 +831,42 @@ _Drafted with the AsPEN protocol builder. Reviewed and adapted by the Academic &
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) writeForm(JSON.parse(saved));
       } catch {}
+      // Always pre-fill a default timeline so the section isn't empty
+      const timelineTa = form.querySelector('[name="timeline"]');
+      if (timelineTa && !timelineTa.value) timelineTa.value = TIMELINE_PRESETS["12-month"];
       render();
 
-      // Re-render on any form change
       form.addEventListener("input", render);
       form.addEventListener("change", render);
 
-      // Download
-      document.querySelector("[data-action='download']")?.addEventListener("click", () => {
-        const md = preview.textContent || "";
+      // Timeline preset buttons
+      form.addEventListener("click", (e) => {
+        const t = e.target?.closest?.("[data-timeline-preset]");
+        if (!t) return;
+        const ta = form.querySelector('[name="timeline"]');
+        if (ta) { ta.value = TIMELINE_PRESETS[t.dataset.timelinePreset] || ta.value; render(); }
+      });
+
+      // ── Filename ─────────────────────────────────────
+      const buildFilename = (ext) => {
         const state = readForm();
         const slug = (state.shortId || "aspen-protocol-acnu")
           .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "aspen-protocol-acnu";
         const today = new Date().toISOString().slice(0, 10);
-        const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+        return slug + "-" + today + "." + ext;
+      };
+
+      // ── Markdown download / copy ─────────────────────
+      document.querySelector("[data-action='download-md']")?.addEventListener("click", () => {
+        const blob = new Blob([preview.textContent || ""], { type: "text/markdown;charset=utf-8" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.href = url; a.download = slug + "-" + today + ".md";
+        a.href = url; a.download = buildFilename("md");
         document.body.appendChild(a); a.click(); a.remove();
         URL.revokeObjectURL(url);
         setMsg("Downloaded " + a.download);
       });
 
-      // Copy
       document.querySelector("[data-action='copy']")?.addEventListener("click", async () => {
         try {
           await navigator.clipboard.writeText(preview.textContent || "");
@@ -730,21 +876,305 @@ _Drafted with the AsPEN protocol builder. Reviewed and adapted by the Academic &
         }
       });
 
-      // Reset
       document.querySelector("[data-action='reset']")?.addEventListener("click", () => {
         if (!confirm("Clear every field and forget the saved draft?")) return;
         localStorage.removeItem(STORAGE_KEY);
         form.reset();
+        const ta = form.querySelector('[name="timeline"]');
+        if (ta) ta.value = TIMELINE_PRESETS["12-month"];
         render();
         setMsg("Cleared.");
       });
 
-      // ── Auth gate ───────────────────────────────────
+      // ── Word .docx download (Times New Roman, with tables) ─
+      document.querySelector("[data-action='download-docx']")?.addEventListener("click", async () => {
+        if (typeof docx === "undefined") {
+          setMsg("Word library failed to load — check your network and try again.", true);
+          return;
+        }
+        setMsg("Building Word document…");
+        try {
+          const blob = await buildDocx(readForm());
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url; a.download = buildFilename("docx");
+          document.body.appendChild(a); a.click(); a.remove();
+          URL.revokeObjectURL(url);
+          setMsg("Downloaded " + a.download);
+        } catch (e) {
+          console.error(e);
+          setMsg("Couldn't build the Word file: " + String(e), true);
+        }
+      });
+
+      const buildDocx = async (s) => {
+        const D = docx;
+        const today = new Date().toISOString().slice(0, 10);
+
+        // ── Style helpers (Times New Roman everywhere) ────
+        const FONT = "Times New Roman";
+        const text = (str, opts = {}) => new D.TextRun({ text: String(str ?? ""), font: FONT, size: 22, ...opts });
+        const p = (children, opts = {}) => new D.Paragraph({
+          children: Array.isArray(children) ? children : [children],
+          spacing: { before: 60, after: 60, ...(opts.spacing || {}) },
+          ...opts,
+        });
+        const h1 = (str) => new D.Paragraph({
+          children: [text(str, { bold: true, size: 28 })],
+          spacing: { before: 200, after: 80 },
+          heading: D.HeadingLevel.HEADING_1,
+        });
+        const h2 = (str) => new D.Paragraph({
+          children: [text(str, { bold: true, size: 24 })],
+          spacing: { before: 160, after: 60 },
+          heading: D.HeadingLevel.HEADING_2,
+        });
+        const para = (str) => p([text(str)]);
+        const bullet = (str) => new D.Paragraph({
+          children: [text(str)],
+          bullet: { level: 0 },
+          spacing: { before: 0, after: 0 },
+        });
+        const numItem = (str) => new D.Paragraph({
+          children: [text(str)],
+          numbering: { reference: "ordered", level: 0 },
+          spacing: { before: 0, after: 0 },
+        });
+
+        const border = { style: D.BorderStyle.SINGLE, size: 4, color: "BBBBBB" };
+        const cellBorders = { top: border, bottom: border, left: border, right: border };
+
+        // Build a 2-col labelled table (label · value rows).
+        // Total width 9026 DXA (A4 minus 1" margins).
+        const labelTable = (rows) => new D.Table({
+          width: { size: 9026, type: D.WidthType.DXA },
+          columnWidths: [3000, 6026],
+          rows: rows.map(([label, value]) => new D.TableRow({
+            children: [
+              new D.TableCell({
+                borders: cellBorders,
+                width: { size: 3000, type: D.WidthType.DXA },
+                margins: { top: 60, bottom: 60, left: 100, right: 100 },
+                shading: { fill: "F5F5F5", type: D.ShadingType.CLEAR },
+                children: [p([text(label, { bold: true })])],
+              }),
+              new D.TableCell({
+                borders: cellBorders,
+                width: { size: 6026, type: D.WidthType.DXA },
+                margins: { top: 60, bottom: 60, left: 100, right: 100 },
+                children: [p([text(value || "—")])],
+              }),
+            ],
+          })),
+        });
+
+        // 3-col table for exposure/comparator
+        const threeColTable = (header, rows) => new D.Table({
+          width: { size: 9026, type: D.WidthType.DXA },
+          columnWidths: [2200, 3000, 3826],
+          rows: [
+            new D.TableRow({
+              tableHeader: true,
+              children: header.map((h, i) => new D.TableCell({
+                borders: cellBorders,
+                width: { size: [2200, 3000, 3826][i], type: D.WidthType.DXA },
+                margins: { top: 60, bottom: 60, left: 100, right: 100 },
+                shading: { fill: "21443E", type: D.ShadingType.CLEAR },
+                children: [p([text(h, { bold: true, color: "FFFFFF" })])],
+              })),
+            }),
+            ...rows.map((cells) => new D.TableRow({
+              children: cells.map((c, i) => new D.TableCell({
+                borders: cellBorders,
+                width: { size: [2200, 3000, 3826][i], type: D.WidthType.DXA },
+                margins: { top: 60, bottom: 60, left: 100, right: 100 },
+                children: [p([text(c || "—")])],
+              })),
+            })),
+          ],
+        });
+
+        const inclusion  = (s.inclusion  || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const exclusion  = (s.exclusion  || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const secondary  = (s.secondaryOutcomes || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const refs       = (s.references || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const milestones = (s.timeline   || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const censoring  = mergeList(s.censoringPick,    s.censoringCustom);
+        const covariates = mergeList(s.covariatesPick,   s.covariatesCustom);
+        const subgroups  = mergeList(s.subgroupsPick,    s.subgroupsCustom);
+        const sensitivity = mergeList(s.sensitivityPick, s.sensitivityCustom);
+
+        const sex      = ({ both: "both sexes", female: "female only", male: "male only" })[s.sex] || "both sexes";
+        const primAn   = ({ ITT: "Intention-to-treat (ITT)", OT: "On-treatment (per-protocol)", both: "Both ITT and on-treatment" })[s.primaryAnalysisType] || "On-treatment";
+        const psM      = ({
+          match: "1:1 PS matching (nearest neighbour, caliper 0.2 × SD of logit PS, no replacement)",
+          iptw:  "Stabilised IPTW with PS trimming at 1st/99th percentile",
+          both:  "Both 1:1 PS matching AND stabilised IPTW, reported in parallel",
+        })[s.psMethod] || "PS-based adjustment";
+        const eff      = ({ HR: "Hazard ratio (95% CI) from Cox proportional-hazards models", RR: "Risk ratio (95% CI) from Poisson regression", RD: "Risk difference (95% CI)", IRR: "Incidence rate ratio (95% CI)" })[s.effectMeasure] || "Hazard ratio";
+        const meta     = ({
+          re: "Random-effects (DerSimonian-Laird) meta-analysis pooling site-specific estimates; report I² and τ². Forest plot per outcome.",
+          "re-reml": "Random-effects (REML) meta-analysis pooling site-specific estimates; report I² and τ². Forest plot per outcome.",
+          fe: "Fixed-effects (inverse-variance) meta-analysis pooling site-specific estimates. Forest plot per outcome.",
+        })[s.metaMethod] || "Random-effects meta-analysis.";
+        const arch     = ({
+          federated:   "Federated — each AsPEN site executes a common analytic package locally and shares only aggregate site-level estimates with the coordinating centre.",
+          cdm:         "Common Data Model — each site first transforms its source database into the agreed CDM (e.g. OMOP), then runs the shared SQL/R/Python package.",
+          centralised: "Centralised — site-level individual data are pooled at the coordinating centre under appropriate data-sharing agreements.",
+        })[s.arch] || "Federated";
+
+        const sitesText = (s.sites && s.sites.length > 0)
+          ? s.sites.map((c) => c + " — " + (SITE_LABEL[c] || c)).join("; ")
+          : "(no sites selected)";
+
+        const children = [];
+
+        // Title block
+        children.push(new D.Paragraph({
+          children: [text(s.title || "(Untitled multi-national ACNU study)", { bold: true, size: 32 })],
+          spacing: { before: 0, after: 120 },
+        }));
+        children.push(labelTable([
+          ["Study ID", s.shortId || ""],
+          ["Lead investigator(s)", s.leadInvestigator || ""],
+          ["Version", s.version || ("v0.1 draft · " + today)],
+          ["Design", "Multi-national active-comparator new-user (ACNU) cohort study"],
+        ]));
+
+        children.push(h1("1. Research question"));
+        children.push(labelTable([
+          ["Population", s.picoP || ""],
+          ["Exposure", s.picoI || ""],
+          ["Comparator", s.picoC || ""],
+          ["Primary outcome", s.picoO || ""],
+        ]));
+
+        children.push(h1("2. Sites"));
+        children.push(para(sitesText));
+
+        children.push(h1("3. Cohort definition"));
+        children.push(labelTable([
+          ["Indication / cohort entry", s.indication || ""],
+          ["Age range", s.ageRange || ""],
+          ["Sex", sex],
+        ]));
+        children.push(h2("Inclusion criteria"));
+        inclusion.length ? inclusion.forEach((l) => children.push(bullet(l))) : children.push(para("(none specified)"));
+        children.push(h2("Exclusion criteria"));
+        exclusion.length ? exclusion.forEach((l) => children.push(bullet(l))) : children.push(para("(none specified)"));
+
+        children.push(h1("4. Exposure and comparator"));
+        children.push(threeColTable(
+          ["", "Name", "Code set"],
+          [
+            ["Exposure",   s.exposureName,   s.exposureCodes],
+            ["Comparator", s.comparatorName, s.comparatorCodes],
+          ],
+        ));
+        children.push(para("Washout period: " + (s.washout || "365") + " days — no prior dispensing of EITHER exposure or comparator in this window before index."));
+        children.push(para("Index date: " + (s.indexDate || "First dispensing of exposure or comparator after the washout period.")));
+
+        children.push(h1("5. Outcome ascertainment"));
+        children.push(p([text("Operational definition. ", { bold: true }), text(s.outcomeDef || "—")]));
+        children.push(p([text("Code set. ", { bold: true }), text(s.outcomeCodes || "—")]));
+        children.push(p([text("Validation. ", { bold: true }), text(s.outcomeValidation || "—")]));
+        children.push(h2("Secondary outcomes"));
+        secondary.length ? secondary.forEach((l) => children.push(bullet(l))) : children.push(para("(none specified)"));
+
+        children.push(h1("6. Follow-up and censoring"));
+        children.push(labelTable([
+          ["Primary analysis", primAn],
+          ["Grace period", (s.grace || "30") + " days"],
+          ["Maximum follow-up", s.maxFollowup || "5 years per patient, or until censoring."],
+        ]));
+        children.push(h2("Censoring rules"));
+        censoring.length ? censoring.forEach((l) => children.push(bullet(l))) : children.push(para("(none specified)"));
+
+        children.push(h1("7. Confounding control"));
+        children.push(labelTable([
+          ["Method", psM],
+          ["Covariate look-back", (s.lookback || "365") + " days prior to index date"],
+        ]));
+        children.push(h2("Baseline covariates"));
+        covariates.length ? covariates.forEach((l) => children.push(bullet(l))) : children.push(para("(none specified)"));
+        children.push(para("PS model performance is assessed via standardised mean differences (SMDs) before/after weighting/matching (target < 0.1 across all covariates) and the c-statistic of the PS model."));
+
+        children.push(h1("8. Statistical analysis"));
+        children.push(labelTable([
+          ["Effect estimate", eff],
+          ["Meta-analysis", meta],
+        ]));
+        children.push(h2("Subgroup analyses"));
+        subgroups.length ? subgroups.forEach((l) => children.push(bullet(l))) : children.push(para("(none specified)"));
+        children.push(h2("Sensitivity analyses"));
+        sensitivity.length ? sensitivity.forEach((l) => children.push(bullet(l))) : children.push(para("(none specified)"));
+
+        children.push(h1("9. Sample size and power"));
+        children.push(para("To be calculated per site using observed event rates among comparator users in pilot extractions; aim for ≥80% power to detect the smallest clinically meaningful effect for the primary outcome at α = 0.05, two-sided, after pooling. Pilot estimates are circulated before final analytic execution."));
+
+        children.push(h1("10. Execution and timeline"));
+        children.push(labelTable([
+          ["Architecture", arch],
+          ["CDM", s.cdm || "—"],
+        ]));
+        children.push(h2("Timeline milestones"));
+        milestones.length ? milestones.forEach((l) => children.push(numItem(l))) : children.push(para("(none)"));
+
+        children.push(h1("11. Ethics, data sharing, dissemination"));
+        children.push(p([text("Ethics. ", { bold: true }), text(s.ethics || "Each participating site obtains local IRB / ethics approval before data extraction.")]));
+        children.push(p([text("Dissemination. ", { bold: true }), text(s.dissemination || "Primary manuscript to a peer-reviewed pharmacoepidemiology journal; conference presentation at ICPE / ISPE Asian conference.")]));
+
+        children.push(h1("12. Key references"));
+        refs.length ? refs.forEach((l) => children.push(numItem(l))) : children.push(para("(none)"));
+
+        // Footer-style line
+        children.push(p([new D.TextRun({ text: "Drafted with the AsPEN protocol builder (" + today + ").", font: FONT, size: 18, italics: true, color: "808080" })], { spacing: { before: 400 } }));
+
+        const doc = new D.Document({
+          creator: "AsPEN protocol builder",
+          title: s.title || "AsPEN ACNU protocol",
+          styles: {
+            default: { document: { run: { font: FONT, size: 22 } } },   // 11pt body
+            paragraphStyles: [
+              { id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
+                run: { size: 28, bold: true, font: FONT },
+                paragraph: { spacing: { before: 200, after: 80 }, outlineLevel: 0 } },
+              { id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
+                run: { size: 24, bold: true, font: FONT },
+                paragraph: { spacing: { before: 160, after: 60 }, outlineLevel: 1 } },
+            ],
+          },
+          numbering: {
+            config: [{
+              reference: "ordered",
+              levels: [{
+                level: 0, format: D.LevelFormat.DECIMAL, text: "%1.",
+                alignment: D.AlignmentType.LEFT,
+                style: { paragraph: { indent: { left: 720, hanging: 360 } } },
+              }],
+            }],
+          },
+          sections: [{
+            properties: {
+              page: {
+                size: { width: 11906, height: 16838 },  // A4
+                margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 },
+              },
+            },
+            children,
+          }],
+        });
+
+        return await D.Packer.toBlob(doc);
+      };
+
+      // ── Auth gate (admin only) ──────────────────────
       fetch(`${WORKER_URL}/api/me`, { credentials: "include" })
         .then((r) => r.ok ? r.json() : null)
         .then((data) => {
-          if (data && data.ok) setState("ready");
-          else setState("signed-out");
+          if (!data || !data.ok) return setState("signed-out");
+          if (!data.member?.isAdmin) return setState("forbidden");
+          setState("ready");
         })
         .catch(() => setState("signed-out"));
     })();
