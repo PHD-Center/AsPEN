@@ -1,0 +1,839 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PageHeader from "../../../components/PageHeader.astro";
+import { WORKER_URL } from "../../../data/site-config";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const SITES = [
+  { code: "TW", name: "Taiwan (NHIRD / CGRD)" },
+  { code: "KR", name: "South Korea (HIRA / NHIS-NHID)" },
+  { code: "JP", name: "Japan (NDB)" },
+  { code: "HK", name: "Hong Kong (CDARS)" },
+  { code: "AU", name: "Australia (PBS / VLHD)" },
+  { code: "CN", name: "China" },
+  { code: "FI", name: "Finland (FinReg)" },
+  { code: "GB", name: "United Kingdom (CPRD / THIN)" },
+  { code: "ID", name: "Indonesia" },
+  { code: "IN", name: "India" },
+  { code: "MY", name: "Malaysia" },
+  { code: "NL", name: "Netherlands (PHARMO)" },
+  { code: "PH", name: "Philippines" },
+  { code: "SG", name: "Singapore" },
+  { code: "TH", name: "Thailand" },
+  { code: "US", name: "United States (Medicare / Medicaid / Sentinel)" },
+  { code: "VN", name: "Vietnam" },
+];
+
+const PHENOTYPES = {
+  exposures: [
+    { name: "SGLT2 inhibitors",          codes: "ATC A10BK*" },
+    { name: "GLP-1 receptor agonists",   codes: "ATC A10BJ*" },
+    { name: "Antipsychotics (any)",      codes: "ATC N05A*" },
+    { name: "ADHD stimulants",           codes: "ATC N06BA — methylphenidate N06BA04, amphetamine N06BA01, lisdexamfetamine N06BA12" },
+    { name: "Opioid analgesics",         codes: "ATC N02A*" },
+    { name: "NSAIDs",                    codes: "ATC M01A* (excluding M01AX)" },
+    { name: "PPIs",                      codes: "ATC A02BC*" },
+    { name: "Z-drugs (zolpidem etc.)",   codes: "ATC N05CF*" },
+    { name: "Benzodiazepines",           codes: "ATC N05BA*, N05CD*" },
+    { name: "Anticholinergics",          codes: "ATC N06AA*, N04A*, R06AA*, R06AD*, A03BA*" },
+    { name: "Anticoagulants — DOACs",    codes: "ATC B01AE07, B01AF01, B01AF02, B01AF03" },
+    { name: "Anticoagulants — warfarin", codes: "ATC B01AA03" },
+  ],
+  outcomes: [
+    {
+      name: "Myocardial infarction (MI)",
+      codes: "ICD-10 I21.*, I22.* (primary discharge diagnosis)",
+      definition: "First hospitalisation with a primary discharge diagnosis of acute MI within the case-ascertainment window.",
+      validation: "Cheng CL et al. Validation of acute MI cases in the NHIRD. J Epidemiol 2014;24(6):500-7.",
+    },
+    {
+      name: "Ischemic stroke",
+      codes: "ICD-10 I63.*, I64.* (primary discharge diagnosis)",
+      definition: "First hospitalisation with primary discharge diagnosis of ischemic stroke.",
+      validation: "Cheng CL et al. Pharmacoepidemiol Drug Saf 2011;20(3):236-42. Hsieh CY et al. J Formos Med Assoc 2015;114(3):254-9.",
+    },
+    {
+      name: "Hip fracture",
+      codes: "ICD-10 S72.0, S72.1, S72.2 (primary discharge diagnosis), paired with surgical-fixation procedure code.",
+      definition: "First hospitalisation with primary discharge hip-fracture diagnosis during the case-ascertainment window.",
+      validation: "AsPEN hip-fracture multi-country work — Lai EC et al, BMJ Open 2021/2023.",
+    },
+    {
+      name: "Falls",
+      codes: "ICD-10 W00-W19 (external cause), with paired injury codes for higher specificity.",
+      definition: "First ED / hospital encounter with a fall code.",
+      validation: "Used in the AsPEN antipsychotic-cholinesterase falls/fractures SCCS (Wang GH et al, BMJ 2021;PMID 34503972).",
+    },
+    {
+      name: "Acute kidney injury (AKI)",
+      codes: "ICD-10 N17.* (primary discharge diagnosis), with creatinine criteria where lab linkage exists.",
+      definition: "First hospitalisation with primary discharge AKI diagnosis.",
+      validation: "Shao SC et al CGRD AKI work.",
+    },
+    {
+      name: "Intracranial haemorrhage",
+      codes: "ICD-10 I60.*, I61.*, I62.* (primary discharge diagnosis)",
+      definition: "First hospitalisation with primary discharge ICH diagnosis.",
+      validation: "NHIRD-validated; CGRD-confirmed in Shao SC et al DOAC studies.",
+    },
+    {
+      name: "GI bleeding",
+      codes: "ICD-10 K25.0/.2/.4/.6, K26.0/.2/.4/.6, K27.*, K28.*, K29.0, K92.0/.1/.2 (primary discharge diagnosis)",
+      definition: "First hospitalisation with primary discharge GI bleed diagnosis.",
+      validation: "Used in AsPEN PSSA NSAID/PPI safety work (Andersen M, Pratt N et al. PDS 2013).",
+    },
+    {
+      name: "Suicide / self-harm",
+      codes: "ICD-10 X60-X84, Y87.0; T-codes for intentional poisoning.",
+      definition: "First ED / hospital / mortality record with suicide or intentional self-harm code.",
+      validation: "Man KKC et al Lancet Psychiatry 2024 (PMID 39241791).",
+    },
+  ],
+};
+
+const SENSITIVITY = [
+  "Alternative hazard window length (e.g., 1 d, 7 d, 14 d, 30 d)",
+  "Alternative control window offset (30, 60, 90, 180 d before)",
+  "Multiple control windows (e.g., 4 control periods to reduce variance)",
+  "Restrict to incident exposure only (first ever dispensing)",
+  "Time-stratified case-crossover (Janes et al 2005) — controls drawn from same calendar stratum",
+  "Symmetric bidirectional sampling (control before and after event)",
+  "Negative-control outcome — should show null",
+  "Exclude events within 30 days of cohort entry to avoid prevalent-user bias",
+  "Stratify by season to control for time-trends in exposure",
+];
+
+const TIMELINE_PRESETS: Record<string, string> = {
+  "12-month": [
+    "Month 0: Protocol finalised, site IRB submissions begin",
+    "Month 3: All site IRB approvals received",
+    "Month 4-6: Local case identification and hazard/control window construction",
+    "Month 7-9: Conditional logistic regression at each site",
+    "Month 10-11: Site ORs returned to coordinating centre; meta-analysis",
+    "Month 12: First manuscript draft circulated",
+  ].join("\n"),
+  "18-month": [
+    "Month 0-3: Protocol finalisation, code-set harmonisation, IRB submissions",
+    "Month 4-7: Local case identification and window construction",
+    "Month 8-12: Primary case-crossover, time-stratified sensitivity",
+    "Month 13-15: Meta-analysis and forest plots",
+    "Month 16-18: Manuscript drafting and submission",
+  ].join("\n"),
+};
+---
+
+<BaseLayout
+  title="Protocol template · Case-crossover — AsPEN members"
+  description="Guided form for drafting a multi-national case-crossover protocol."
+>
+  <PageHeader
+    eyebrow="Members → Templates → Case-crossover"
+    title="Multi-national case-crossover builder"
+    description="Each case acts as their own control across time. Compare exposure prevalence in a short hazard window immediately before the event with prevalence in matched control windows further back."
+  />
+
+  <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <a class="text-sm text-brand-700 hover:underline font-semibold" href={`${base}/members/templates/`}>← All templates</a>
+      <button type="button" data-action="reset-top" class="text-xs font-semibold text-rose-700 border border-rose-300 hover:bg-rose-50 px-3 py-1.5 rounded transition">
+        ⟲ Clear &amp; start over
+      </button>
+    </div>
+
+    <div data-state="loading" class="text-sm text-slate-600 italic">Checking your session…</div>
+    <div data-state="signed-out" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm text-slate-700">Sign in to use the protocol builder. <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Sign in →</a></p>
+    </div>
+    <div data-state="forbidden" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm text-slate-700">The protocol builder is currently restricted to AsPEN admins.</p>
+    </div>
+
+    <div data-state="ready" class="hidden grid gap-8 lg:grid-cols-[1fr,1fr] items-start">
+
+      <form data-builder class="space-y-6">
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">1 · Study identification</summary>
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <label class="flex flex-col gap-1 sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Study title</span>
+              <input type="text" name="title" placeholder="e.g. NSAID dispensing in the 7 days before acute MI: an AsPEN multi-country case-crossover study" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Short ID</span>
+              <input type="text" name="shortId" placeholder="AsPEN-NSAID-MI-CCO-2026" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Version · Date</span>
+              <input type="text" name="version" placeholder="v0.1 draft · 2026-05-29" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="flex flex-col gap-1 sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead investigator(s)</span>
+              <input type="text" name="leadInvestigator" placeholder="Name, affiliation; co-leads if any" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">2 · Research question</summary>
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <label class="flex flex-col gap-1 sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Population</span>
+              <input type="text" name="picoP" placeholder="Adults hospitalised with a first MI during the study period" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure</span>
+              <input type="text" name="picoI" placeholder="NSAID dispensing" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Outcome (defines case)</span>
+              <input type="text" name="picoO" placeholder="Acute myocardial infarction" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">3 · Sites</summary>
+          <div class="px-5 pb-5 space-y-3">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {SITES.map((s) => (
+                <label class="flex items-center gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                  <input type="checkbox" name="sites" value={s.code} class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+                  <span><span class="font-semibold">{s.code}</span> · {s.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">4 · Case definition (outcome)</summary>
+          <div class="px-5 pb-5 space-y-3">
+            <div>
+              <button type="button" data-open-library data-category="outcomes" data-target-def="outcomeDef" data-target-codes="outcomeCodes" data-also-fill="picoO" class="text-[10px] uppercase tracking-widest font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2 py-1 rounded transition">📚 Pick outcome from library</button>
+              <span class="ml-2 text-[11px] text-slate-500">Validation citation auto-appends to References on export.</span>
+            </div>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Operational case definition</span>
+              <textarea name="outcomeDef" rows="3" placeholder="First hospitalisation with primary discharge diagnosis of …" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Code set</span>
+              <input type="text" name="outcomeCodes" placeholder="ICD-10 I21.*, I22.*" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Index date for the case</span>
+              <input type="text" name="indexDateDef" value="Admission date of first hospitalisation meeting the case definition" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">5 · Exposure definition</summary>
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <div class="sm:col-span-2">
+              <button type="button" data-open-library data-category="exposures" data-target-name="exposureName" data-target-codes="exposureCodes" data-also-fill="picoI" class="text-[10px] uppercase tracking-widest font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2 py-1 rounded transition">📚 Pick exposure from library</button>
+            </div>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure — name</span>
+              <input type="text" name="exposureName" placeholder="NSAIDs" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure — code set</span>
+              <input type="text" name="exposureCodes" placeholder="ATC M01A*" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="flex flex-col gap-1 sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure ascertainment rule</span>
+              <input type="text" name="exposureRule" value="Any dispensing within the window counts as exposed" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">6 · Hazard (case) window</summary>
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Hazard window length (days)</span>
+              <select name="hazardLen" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="1">1 day (immediate trigger)</option>
+                <option value="7" selected>7 days</option>
+                <option value="14">14 days</option>
+                <option value="30">30 days</option>
+                <option value="60">60 days</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">End anchor (relative to event)</span>
+              <select name="hazardEnd" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="day-minus-1" selected>Day -1 (day before event)</option>
+                <option value="day-0">Day 0 (day of event, inclusive)</option>
+              </select>
+              <span class="text-[11px] text-slate-500">Day -1 avoids reverse-causation where the exposure is dispensed because the event has occurred.</span>
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">7 · Control window(s)</summary>
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Number of control windows</span>
+              <select name="nControls" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="1">1 control window</option>
+                <option value="2">2 control windows</option>
+                <option value="3" selected>3 control windows (reduces variance)</option>
+                <option value="4">4 control windows</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Offset to first control (days before event)</span>
+              <select name="controlOffset" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="30">30 d before event</option>
+                <option value="60" selected>60 d before event</option>
+                <option value="90">90 d before event</option>
+                <option value="180">180 d before event</option>
+                <option value="365">365 d before event (annual recurrence control)</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-1 sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Length of each control window</span>
+              <select name="controlLen" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="same" selected>Same as hazard window (matched)</option>
+                <option value="custom">Custom — specify below</option>
+              </select>
+              <input type="text" name="controlLenCustom" placeholder="Used only if 'Custom' selected" class="border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">8 · Design variant</summary>
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <label class="flex flex-col gap-1 sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Case-crossover variant</span>
+              <select name="ccoVariant" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="standard" selected>Standard (Maclure 1991) — fixed offset(s) before event</option>
+                <option value="time-stratified">Time-stratified (Janes 2005) — controls drawn from same calendar stratum (e.g., same month-of-year, same weekday)</option>
+                <option value="symmetric">Symmetric bidirectional — controls before AND after event</option>
+              </select>
+              <span class="text-[11px] text-slate-500">Time-stratified controls for secular trends in exposure prevalence; symmetric requires post-event exposure not to be influenced by the event.</span>
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">9 · Statistical analysis</summary>
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <label class="flex flex-col gap-1 sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Primary model</span>
+              <input type="text" name="primaryModel" value="Conditional logistic regression with the case as the conditioning stratum; exposure indicator coded for each hazard/control window" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Effect estimate</span>
+              <input type="text" name="effectMeasure" value="Odds ratio (OR) — interpreted as incidence rate ratio under the rare-disease assumption" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Meta-analysis</span>
+              <select name="metaMethod" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="re" selected>Random-effects (DerSimonian-Laird)</option>
+                <option value="re-reml">Random-effects (REML)</option>
+                <option value="fe">Fixed-effects (inverse-variance)</option>
+              </select>
+            </label>
+            <label class="flex flex-col gap-1 sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Subgroup analyses (one per line)</span>
+              <textarea name="subgroups" rows="3">Age (≥65 vs &lt;65)
+Sex
+Country / site
+First-ever vs repeated exposure</textarea>
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">10 · Sensitivity analyses</summary>
+          <div class="px-5 pb-5 space-y-3">
+            <div class="grid sm:grid-cols-2 gap-1.5">
+              {SENSITIVITY.map((s, i) => (
+                <label class="flex items-start gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                  <input type="checkbox" name="sensitivityPick" value={s} checked={i < 5} class="mt-0.5 rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+                  <span>{s}</span>
+                </label>
+              ))}
+            </div>
+            <label class="flex flex-col gap-1">
+              <span class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Custom sensitivity analyses (one per line)</span>
+              <textarea name="sensitivityCustom" rows="2" class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">11 · Execution &amp; timeline</summary>
+          <div class="px-5 pb-5 space-y-3">
+            <div class="grid sm:grid-cols-2 gap-3">
+              <label class="flex flex-col gap-1">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Architecture</span>
+                <select name="arch" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                  <option value="federated" selected>Federated</option>
+                  <option value="cdm">Common Data Model</option>
+                  <option value="centralised">Centralised (DUA permits)</option>
+                </select>
+              </label>
+            </div>
+            <div>
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Timeline preset</p>
+              <div class="mt-2 flex gap-2 flex-wrap">
+                <button type="button" data-timeline-preset="12-month" class="text-xs border border-brand-300 text-brand-700 hover:bg-brand-50 font-semibold px-3 py-1.5 rounded transition">Use 12-month plan</button>
+                <button type="button" data-timeline-preset="18-month" class="text-xs border border-brand-300 text-brand-700 hover:bg-brand-50 font-semibold px-3 py-1.5 rounded transition">Use 18-month plan</button>
+              </div>
+              <label class="flex flex-col gap-1 mt-3">
+                <span class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Milestones (one per line)</span>
+                <textarea name="timeline" rows="6" class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+              </label>
+            </div>
+          </div>
+        </details>
+
+        <details class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">12 · Ethics, dissemination, references (optional)</summary>
+          <div class="px-5 pb-5 space-y-3">
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Ethics</span>
+              <textarea name="ethics" rows="2" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Each participating site obtains local IRB / ethics approval before data extraction. Under a federated design only aggregate site-level estimates are shared with the coordinating centre.</textarea>
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Dissemination</span>
+              <textarea name="dissemination" rows="2" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Primary manuscript to a peer-reviewed pharmacoepidemiology journal; presentation at ICPE / ISPE Asian conference.</textarea>
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Key references (one per line)</span>
+              <textarea name="references" rows="6" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Maclure M. The case-crossover design: a method for studying transient effects on the risk of acute events. Am J Epidemiol 1991;133(2):144-53.
+Mittleman MA, Maclure M, Robins JM. Control sampling strategies for the case-crossover design: an assessment of relative efficiency. Am J Epidemiol 1995;142(1):91-8.
+Janes H, Sheppard L, Lumley T. Case-crossover analyses of air pollution exposure data: referent selection strategies and their implications for bias. Epidemiology 2005;16(6):717-26.
+Hsieh CY, Su CC, Shao SC, Sung SF, Lin SJ, Kao Yang YH, Lai EC. Taiwan's NHIRD: past and future. Clin Epidemiol 2019;11:349-358.
+Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Chang Gung Research Database. Pharmacoepidemiol Drug Saf 2019;28(5):593-600.</textarea>
+            </label>
+          </div>
+        </details>
+
+        <div class="flex flex-wrap gap-3 pt-2 items-center">
+          <button type="button" data-action="download-docx" class="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-2.5 rounded-lg transition text-sm">⬇ Download Word (.docx)</button>
+          <button type="button" data-action="download-md" class="bg-white border border-brand-700 text-brand-700 hover:bg-brand-50 font-semibold px-5 py-2.5 rounded-lg transition text-sm">⬇ Markdown (.md)</button>
+          <button type="button" data-action="copy" class="text-brand-700 hover:underline font-semibold text-sm">📋 Copy Markdown</button>
+          <button type="button" data-action="reset" class="ml-auto text-slate-500 hover:text-rose-600 hover:underline text-sm font-semibold">Clear all</button>
+          <p data-action-msg class="basis-full text-xs"></p>
+        </div>
+      </form>
+
+      <aside class="lg:sticky lg:top-20">
+        <div class="border border-slate-200 rounded-2xl bg-slate-50 shadow-sm overflow-hidden">
+          <header class="flex items-center justify-between px-4 py-2 bg-white border-b border-slate-200">
+            <p class="text-xs uppercase tracking-widest text-brand-700 font-bold">Live preview</p>
+            <p class="text-[10px] text-slate-500">Auto-saved to this browser</p>
+          </header>
+          <pre data-preview class="text-xs leading-relaxed text-slate-800 p-4 overflow-auto max-h-[calc(100vh-12rem)] whitespace-pre-wrap font-mono"></pre>
+        </div>
+      </aside>
+    </div>
+
+    <div data-library-modal class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-start justify-center p-4 sm:p-8 overflow-y-auto">
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-3xl my-8">
+        <header class="flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-100">
+          <div>
+            <p class="text-xs uppercase tracking-widest text-brand-700 font-bold">Validated phenotype library</p>
+            <h3 class="text-lg font-bold text-slate-900 mt-0.5" data-library-title>Pick a phenotype</h3>
+          </div>
+          <button type="button" data-library-close class="text-slate-400 hover:text-slate-700 text-2xl leading-none">×</button>
+        </header>
+        <div class="px-5 py-3 border-b border-slate-100">
+          <input type="text" data-library-search placeholder="Filter…" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+        </div>
+        <div data-library-list class="px-2 py-2 max-h-[60vh] overflow-y-auto"></div>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js" is:inline></script>
+
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES, PHENOTYPES, TIMELINE_PRESETS }}>
+    (() => {
+      const setState = (name) => { document.querySelectorAll("[data-state]").forEach((el) => el.classList.toggle("hidden", el.dataset.state !== name)); };
+      if (!WORKER_URL) return setState("signed-out");
+
+      const STORAGE_KEY = "aspen.protocol-builder.cco";
+      const STORAGE_CITATIONS_KEY = "aspen.protocol-builder.cco.citations";
+      const form = document.querySelector("[data-builder]");
+      const preview = document.querySelector("[data-preview]");
+      const actionMsg = document.querySelector("[data-action-msg]");
+      const setMsg = (msg, isError = false) => { if (!actionMsg) return; actionMsg.textContent = msg; actionMsg.classList.toggle("text-rose-700", isError); actionMsg.classList.toggle("text-brand-700", !isError); };
+      let pickedCitations = {};
+      try { pickedCitations = JSON.parse(localStorage.getItem(STORAGE_CITATIONS_KEY) || "{}") || {}; } catch {}
+      const savePickedCitations = () => { try { localStorage.setItem(STORAGE_CITATIONS_KEY, JSON.stringify(pickedCitations)); } catch {} };
+      const SITE_LABEL = Object.fromEntries(SITES.map((s) => [s.code, s.name]));
+
+      const readForm = () => {
+        const data = new FormData(form);
+        const out = {};
+        const multi = new Set(["sites", "sensitivityPick"]);
+        for (const k of multi) out[k] = [];
+        for (const [k, v] of data.entries()) { if (multi.has(k)) out[k].push(String(v)); else out[k] = String(v); }
+        return out;
+      };
+      const writeForm = (state) => {
+        const multi = new Set(["sites", "sensitivityPick"]);
+        for (const el of form.querySelectorAll("input, textarea, select")) {
+          const name = el.name; if (!name) continue;
+          if (el.type === "checkbox" && multi.has(name)) el.checked = (state[name] || []).includes(el.value);
+          else if (state[name] !== undefined) el.value = state[name];
+        }
+      };
+      const mergeList = (picks, customText) => { const lines = (customText || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean); return [...(picks || []), ...lines]; };
+      const bullets = (arr) => arr.length === 0 ? "_(none specified)_" : arr.map((l) => "- " + l).join("\n");
+      const numbered = (arr) => arr.length === 0 ? "_(none)_" : arr.map((l, i) => (i + 1) + ". " + l).join("\n");
+      const orFb = (s, fb) => (s && s.trim()) ? s : fb;
+      const sitesLine = (codes) => !codes || codes.length === 0 ? "_(no sites selected)_" : codes.map((c) => "**" + c + "** — " + (SITE_LABEL[c] || c)).join(" · ");
+
+      const buildMarkdown = (s) => {
+        const today = new Date().toISOString().slice(0, 10);
+        const title = orFb(s.title, "(Untitled multi-national case-crossover study)");
+        const hazardEnd = s.hazardEnd === "day-0" ? "Day 0 (event day inclusive)" : "Day -1 (day before event)";
+        const variant = ({ standard: "Standard (Maclure 1991) — fixed offset(s) before event", "time-stratified": "Time-stratified (Janes 2005) — controls drawn from same calendar stratum", symmetric: "Symmetric bidirectional — controls before AND after event" })[s.ccoVariant] || "Standard";
+        const controlLenText = s.controlLen === "same" ? "Same as hazard window (matched)" : (s.controlLenCustom || "Custom (specify)");
+        const meta = ({ re: "Random-effects (DerSimonian-Laird) meta-analysis pooling site-specific ORs; report I² and τ². Forest plot per outcome.", "re-reml": "Random-effects (REML) meta-analysis; report I² and τ²; forest plot per outcome.", fe: "Fixed-effects (inverse-variance) meta-analysis; forest plot per outcome." })[s.metaMethod] || "Random-effects meta-analysis.";
+        const arch = ({ federated: "Federated — each AsPEN site executes a common analytic package locally and shares aggregate ORs.", cdm: "Common Data Model — each site transforms data into agreed CDM, runs shared package.", centralised: "Centralised — site-level individual data pooled under DUA." })[s.arch] || "Federated";
+
+        const refsUser = (s.references || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const refs = (() => { const set = new Set(refsUser); for (const c of Object.values(pickedCitations)) if (c && c.trim()) set.add(c.trim()); return Array.from(set); })();
+        const milestones  = (s.timeline  || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const subgroups   = (s.subgroups || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const sensitivity = mergeList(s.sensitivityPick, s.sensitivityCustom);
+
+        return `# ${title}
+
+**Study ID:** ${orFb(s.shortId, "(short id)")}
+**Lead investigator(s):** ${orFb(s.leadInvestigator, "(lead)")}
+**Version:** ${orFb(s.version, "v0.1 draft · " + today)}
+**Design:** Multi-national case-crossover study
+
+---
+
+## 1. Research question
+
+| | |
+|---|---|
+| **Population** | ${orFb(s.picoP, "_(population)_")} |
+| **Exposure**   | ${orFb(s.picoI, "_(exposure)_")} |
+| **Outcome (case)** | ${orFb(s.picoO, "_(outcome)_")} |
+
+## 2. Sites
+
+${sitesLine(s.sites)}
+
+## 3. Case definition
+
+**Operational definition.** ${orFb(s.outcomeDef, "_(case definition)_")}
+
+**Code set.** ${orFb(s.outcomeCodes, "_(codes)_")}
+
+**Index date.** ${orFb(s.indexDateDef, "Admission date of first hospitalisation meeting the case definition.")}
+
+## 4. Exposure definition
+
+| | |
+|---|---|
+| **Name** | ${orFb(s.exposureName, "_(exposure)_")} |
+| **Code set** | ${orFb(s.exposureCodes, "_(codes)_")} |
+| **Ascertainment rule** | ${orFb(s.exposureRule, "Any dispensing within the window counts as exposed.")} |
+
+## 5. Hazard (case) window
+
+| | |
+|---|---|
+| **Length** | ${s.hazardLen || "7"} days |
+| **End anchor** | ${hazardEnd} |
+
+## 6. Control window(s)
+
+| | |
+|---|---|
+| **Number of control windows** | ${s.nControls || "3"} |
+| **Offset to first control** | ${s.controlOffset || "60"} days before event |
+| **Length** | ${controlLenText} |
+
+## 7. Design variant
+
+${variant}
+
+## 8. Statistical analysis
+
+- **Primary model:** ${orFb(s.primaryModel, "Conditional logistic regression with the case as the conditioning stratum.")}
+- **Effect estimate:** ${orFb(s.effectMeasure, "Odds ratio (OR) — interpreted as IRR under the rare-disease assumption.")}
+- **Meta-analysis across sites:** ${meta}
+
+**Subgroup analyses**
+
+${bullets(subgroups)}
+
+**Sensitivity analyses**
+
+${bullets(sensitivity)}
+
+## 9. Execution and timeline
+
+**Architecture.** ${arch}
+
+**Timeline milestones**
+
+${numbered(milestones)}
+
+## 10. Ethics, data sharing, dissemination
+
+**Ethics.** ${orFb(s.ethics, "Each participating site obtains local IRB / ethics approval before data extraction.")}
+
+**Dissemination.** ${orFb(s.dissemination, "Primary manuscript to a peer-reviewed pharmacoepidemiology journal.")}
+
+## 11. Key references
+
+${numbered(refs)}
+
+---
+
+_Drafted with the AsPEN case-crossover builder (${today})._
+`;
+      };
+
+      const render = () => { const state = readForm(); preview.textContent = buildMarkdown(state); try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {} };
+      try { const saved = localStorage.getItem(STORAGE_KEY); if (saved) writeForm(JSON.parse(saved)); } catch {}
+      const timelineTa = form.querySelector('[name="timeline"]');
+      if (timelineTa && !timelineTa.value) timelineTa.value = TIMELINE_PRESETS["12-month"];
+      render();
+      form.addEventListener("input", render);
+      form.addEventListener("change", render);
+      form.addEventListener("click", (e) => {
+        const tl = e.target?.closest?.("[data-timeline-preset]");
+        if (tl) { const ta = form.querySelector('[name="timeline"]'); if (ta) { ta.value = TIMELINE_PRESETS[tl.dataset.timelinePreset] || ta.value; render(); } }
+      });
+
+      const buildFilename = (ext) => {
+        const state = readForm();
+        const slug = (state.shortId || "aspen-protocol-cco").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "aspen-protocol-cco";
+        const today = new Date().toISOString().slice(0, 10);
+        return slug + "-" + today + "." + ext;
+      };
+      document.querySelector("[data-action='download-md']")?.addEventListener("click", () => {
+        const blob = new Blob([preview.textContent || ""], { type: "text/markdown;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a"); a.href = url; a.download = buildFilename("md");
+        document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        setMsg("Downloaded " + a.download);
+      });
+      document.querySelector("[data-action='copy']")?.addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(preview.textContent || ""); setMsg("Copied to clipboard."); }
+        catch { setMsg("Couldn't copy — your browser may block clipboard access.", true); }
+      });
+      const doReset = () => {
+        if (!confirm("Clear every field and forget the saved draft?")) return;
+        localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(STORAGE_CITATIONS_KEY); pickedCitations = {};
+        form.querySelectorAll("input, textarea, select").forEach((el) => {
+          if (el.type === "checkbox" || el.type === "radio") el.checked = false;
+          else if (el.tagName === "SELECT") el.selectedIndex = 0;
+          else el.value = "";
+        });
+        render();
+        setMsg("Cleared.");
+      };
+      document.querySelector("[data-action='reset']")?.addEventListener("click", doReset);
+      document.querySelector("[data-action='reset-top']")?.addEventListener("click", doReset);
+
+      document.querySelector("[data-action='download-docx']")?.addEventListener("click", async () => {
+        if (typeof docx === "undefined") { setMsg("Word library failed to load.", true); return; }
+        setMsg("Building Word document…");
+        try {
+          const blob = await buildDocx(readForm());
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a"); a.href = url; a.download = buildFilename("docx");
+          document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+          setMsg("Downloaded " + a.download);
+        } catch (e) { console.error(e); setMsg("Couldn't build the Word file: " + String(e), true); }
+      });
+
+      const buildDocx = async (s) => {
+        const D = docx;
+        const FONT = "Times New Roman";
+        const today = new Date().toISOString().slice(0, 10);
+        const text = (str, opts = {}) => new D.TextRun({ text: String(str ?? ""), font: FONT, size: 22, ...opts });
+        const p = (children, opts = {}) => new D.Paragraph({ children: Array.isArray(children) ? children : [children], spacing: { before: 60, after: 60, ...(opts.spacing || {}) }, ...opts });
+        const h1 = (str) => new D.Paragraph({ children: [text(str, { bold: true, size: 28 })], spacing: { before: 200, after: 80 }, heading: D.HeadingLevel.HEADING_1 });
+        const h2 = (str) => new D.Paragraph({ children: [text(str, { bold: true, size: 24 })], spacing: { before: 160, after: 60 }, heading: D.HeadingLevel.HEADING_2 });
+        const para = (str) => p([text(str)]);
+        const bullet = (str) => new D.Paragraph({ children: [text(str)], bullet: { level: 0 }, spacing: { before: 0, after: 0 } });
+        const numItem = (str) => new D.Paragraph({ children: [text(str)], numbering: { reference: "ordered", level: 0 }, spacing: { before: 0, after: 0 } });
+        const border = { style: D.BorderStyle.SINGLE, size: 4, color: "BBBBBB" };
+        const cellBorders = { top: border, bottom: border, left: border, right: border };
+        const labelTable = (rows) => new D.Table({
+          width: { size: 9026, type: D.WidthType.DXA },
+          columnWidths: [3000, 6026],
+          rows: rows.map(([l, v]) => new D.TableRow({
+            children: [
+              new D.TableCell({ borders: cellBorders, width: { size: 3000, type: D.WidthType.DXA }, margins: { top: 60, bottom: 60, left: 100, right: 100 }, shading: { fill: "F5F5F5", type: D.ShadingType.CLEAR }, children: [p([text(l, { bold: true })])] }),
+              new D.TableCell({ borders: cellBorders, width: { size: 6026, type: D.WidthType.DXA }, margins: { top: 60, bottom: 60, left: 100, right: 100 }, children: [p([text(v || "—")])] }),
+            ],
+          })),
+        });
+
+        const refsUser = (s.references || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const refs = (() => { const set = new Set(refsUser); for (const c of Object.values(pickedCitations)) if (c && c.trim()) set.add(c.trim()); return Array.from(set); })();
+        const milestones  = (s.timeline  || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const subgroups   = (s.subgroups || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const sensitivity = mergeList(s.sensitivityPick, s.sensitivityCustom);
+        const sitesText = (s.sites && s.sites.length > 0) ? s.sites.map((c) => c + " — " + (SITE_LABEL[c] || c)).join("; ") : "(no sites selected)";
+        const hazardEnd = s.hazardEnd === "day-0" ? "Day 0 (event day inclusive)" : "Day -1 (day before event)";
+        const variant = ({ standard: "Standard (Maclure 1991)", "time-stratified": "Time-stratified (Janes 2005)", symmetric: "Symmetric bidirectional" })[s.ccoVariant] || "Standard";
+        const controlLenText = s.controlLen === "same" ? "Same as hazard window (matched)" : (s.controlLenCustom || "Custom");
+        const meta = ({ re: "Random-effects (DerSimonian-Laird)", "re-reml": "Random-effects (REML)", fe: "Fixed-effects (inverse-variance)" })[s.metaMethod] || "Random-effects";
+        const arch = ({ federated: "Federated — each AsPEN site executes locally; aggregate ORs leave.", cdm: "Common Data Model — transforms to OMOP/Sentinel, runs shared package.", centralised: "Centralised — pooled individual data under DUA." })[s.arch] || "Federated";
+
+        const children = [];
+        children.push(new D.Paragraph({ children: [text(s.title || "(Untitled multi-national case-crossover study)", { bold: true, size: 32 })], spacing: { before: 0, after: 120 } }));
+        children.push(labelTable([
+          ["Study ID", s.shortId || ""],
+          ["Lead investigator(s)", s.leadInvestigator || ""],
+          ["Version", s.version || ("v0.1 draft · " + today)],
+          ["Design", "Multi-national case-crossover study"],
+        ]));
+
+        children.push(h1("1. Research question"));
+        children.push(labelTable([["Population", s.picoP || ""], ["Exposure", s.picoI || ""], ["Outcome (case)", s.picoO || ""]]));
+
+        children.push(h1("2. Sites"));
+        children.push(para(sitesText));
+
+        children.push(h1("3. Case definition"));
+        children.push(p([text("Operational definition. ", { bold: true }), text(s.outcomeDef || "—")]));
+        children.push(p([text("Code set. ", { bold: true }), text(s.outcomeCodes || "—")]));
+        children.push(p([text("Index date. ", { bold: true }), text(s.indexDateDef || "Admission date of first hospitalisation meeting the case definition.")]));
+
+        children.push(h1("4. Exposure definition"));
+        children.push(labelTable([
+          ["Name", s.exposureName || ""],
+          ["Code set", s.exposureCodes || ""],
+          ["Ascertainment rule", s.exposureRule || "Any dispensing within the window counts as exposed."],
+        ]));
+
+        children.push(h1("5. Hazard (case) window"));
+        children.push(labelTable([["Length", (s.hazardLen || "7") + " days"], ["End anchor", hazardEnd]]));
+
+        children.push(h1("6. Control window(s)"));
+        children.push(labelTable([
+          ["Number of control windows", s.nControls || "3"],
+          ["Offset to first control", (s.controlOffset || "60") + " days before event"],
+          ["Length", controlLenText],
+        ]));
+
+        children.push(h1("7. Design variant"));
+        children.push(para(variant));
+
+        children.push(h1("8. Statistical analysis"));
+        children.push(labelTable([
+          ["Primary model", s.primaryModel || "Conditional logistic regression with case as conditioning stratum"],
+          ["Effect estimate", s.effectMeasure || "Odds ratio (OR) — interpreted as IRR under rare-disease assumption"],
+          ["Meta-analysis", meta],
+        ]));
+        children.push(h2("Subgroup analyses"));
+        subgroups.length ? subgroups.forEach((l) => children.push(bullet(l))) : children.push(para("(none specified)"));
+        children.push(h2("Sensitivity analyses"));
+        sensitivity.length ? sensitivity.forEach((l) => children.push(bullet(l))) : children.push(para("(none specified)"));
+
+        children.push(h1("9. Execution and timeline"));
+        children.push(labelTable([["Architecture", arch]]));
+        children.push(h2("Timeline milestones"));
+        milestones.length ? milestones.forEach((l) => children.push(numItem(l))) : children.push(para("(none)"));
+
+        children.push(h1("10. Ethics, data sharing, dissemination"));
+        children.push(p([text("Ethics. ", { bold: true }), text(s.ethics || "Each participating site obtains local IRB / ethics approval before data extraction.")]));
+        children.push(p([text("Dissemination. ", { bold: true }), text(s.dissemination || "Primary manuscript to a peer-reviewed pharmacoepidemiology journal.")]));
+
+        children.push(h1("11. Key references"));
+        refs.length ? refs.forEach((l) => children.push(numItem(l))) : children.push(para("(none)"));
+
+        children.push(p([new D.TextRun({ text: "Drafted with the AsPEN case-crossover builder (" + today + ").", font: FONT, size: 18, italics: true, color: "808080" })], { spacing: { before: 400 } }));
+
+        const doc = new D.Document({
+          creator: "AsPEN protocol builder",
+          title: s.title || "AsPEN case-crossover protocol",
+          styles: { default: { document: { run: { font: FONT, size: 22 } } }, paragraphStyles: [
+            { id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true, run: { size: 28, bold: true, font: FONT }, paragraph: { spacing: { before: 200, after: 80 }, outlineLevel: 0 } },
+            { id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true, run: { size: 24, bold: true, font: FONT }, paragraph: { spacing: { before: 160, after: 60 }, outlineLevel: 1 } },
+          ] },
+          numbering: { config: [{ reference: "ordered", levels: [{ level: 0, format: D.LevelFormat.DECIMAL, text: "%1.", alignment: D.AlignmentType.LEFT, style: { paragraph: { indent: { left: 720, hanging: 360 } } } }] }] },
+          sections: [{ properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } }, children }],
+        });
+        return await D.Packer.toBlob(doc);
+      };
+
+      // Library modal
+      const modal = document.querySelector("[data-library-modal]");
+      const modalTitle = document.querySelector("[data-library-title]");
+      const modalList = document.querySelector("[data-library-list]");
+      const modalSearch = document.querySelector("[data-library-search]");
+      let currentCategory = "outcomes";
+      let currentTargets = {};
+      const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+      const renderLibrary = (filter = "") => {
+        const items = PHENOTYPES[currentCategory] || [];
+        const f = filter.trim().toLowerCase();
+        const filtered = f ? items.filter((it) => (it.name || "").toLowerCase().includes(f) || (it.codes || "").toLowerCase().includes(f) || (it.definition || "").toLowerCase().includes(f) || (it.validation || "").toLowerCase().includes(f)) : items;
+        if (filtered.length === 0) { modalList.innerHTML = '<p class="px-3 py-6 text-sm text-slate-500 italic text-center">No phenotype matches.</p>'; return; }
+        modalList.innerHTML = filtered.map((it, idx) => `
+          <button type="button" data-phenotype-idx="${idx}" class="block w-full text-left px-4 py-3 rounded-lg border border-transparent hover:border-brand-300 hover:bg-brand-50/40 transition">
+            <p class="font-semibold text-slate-900 text-sm">${esc(it.name)}</p>
+            <p class="mt-1 text-xs text-slate-700 font-mono leading-relaxed">${esc(it.codes || "")}</p>
+            ${it.definition ? `<p class="mt-1 text-xs text-slate-600 leading-relaxed">${esc(it.definition)}</p>` : ""}
+            ${it.validation ? `<p class="mt-1 text-[11px] text-slate-500 italic leading-relaxed">${esc(it.validation)}</p>` : ""}
+          </button>
+        `).join("");
+        modalList.querySelectorAll("[data-phenotype-idx]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const it = filtered[parseInt(btn.dataset.phenotypeIdx, 10)];
+            if (!it) return;
+            const fill = (key, val) => { const fieldName = currentTargets[key]; if (!fieldName || val === undefined) return; const el = form.querySelector(`[name="${fieldName}"]`); if (el) el.value = val; };
+            fill("name", it.name); fill("codes", it.codes); fill("def", it.definition);
+            if (currentTargets.alsoFill) { const el = form.querySelector(`[name="${currentTargets.alsoFill}"]`); if (el && it.name) el.value = it.name; }
+            if (it.validation) { pickedCitations[it.name] = it.validation; savePickedCitations(); }
+            closeLibrary();
+            render();
+          });
+        });
+      };
+      const openLibrary = (category, targets) => {
+        currentCategory = category;
+        currentTargets = targets;
+        modalTitle.textContent = ({ outcomes: "Pick an outcome (case definition)", exposures: "Pick a drug class (exposure)" })[category] || "Pick a phenotype";
+        modalSearch.value = "";
+        renderLibrary("");
+        modal.classList.remove("hidden");
+        setTimeout(() => modalSearch.focus(), 50);
+      };
+      const closeLibrary = () => modal.classList.add("hidden");
+      document.querySelectorAll("[data-open-library]").forEach((btn) => {
+        btn.addEventListener("click", () => openLibrary(btn.dataset.category, { name: btn.dataset.targetName, codes: btn.dataset.targetCodes, def: btn.dataset.targetDef, alsoFill: btn.dataset.alsoFill }));
+      });
+      document.querySelector("[data-library-close]")?.addEventListener("click", closeLibrary);
+      modal.addEventListener("click", (e) => { if (e.target === modal) closeLibrary(); });
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLibrary(); });
+      modalSearch.addEventListener("input", () => renderLibrary(modalSearch.value));
+
+      fetch(`${WORKER_URL}/api/me`, { credentials: "include" })
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => {
+          if (!data || !data.ok) return setState("signed-out");
+          if (!data.member?.isAdmin) return setState("forbidden");
+          setState("ready");
+        })
+        .catch(() => setState("signed-out"));
+    })();
+  </script>
+</BaseLayout>
