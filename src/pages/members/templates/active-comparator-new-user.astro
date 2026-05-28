@@ -163,6 +163,158 @@ const MAX_FOLLOWUP_OPTIONS = [
   "Until end of database availability (no cap)",
 ];
 
+// ─── Validated phenotype library ─────────────────────────────────────
+// Curated, published code sets for the things AsPEN protocols repeat most.
+// Clicking a row in the library modal one-shot-fills the relevant input(s).
+// All references are real but kept brief; full citations are added to the
+// References section of the generated protocol.
+const PHENOTYPES = {
+  indications: [
+    { name: "Type 2 diabetes (T2DM)", codes: "ICD-10 E11.* (or ICD-9 250.*0 / 250.*2); confirm by ≥1 antidiabetic dispensing", notes: "Exclude T1DM (E10.*) separately in the exclusion section." },
+    { name: "Hypertension", codes: "ICD-10 I10-I15; or ≥2 dispensings of antihypertensive (ATC C02-C09) within 365 d", notes: "" },
+    { name: "Atrial fibrillation", codes: "ICD-10 I48.*; PPV ~90% in claims when from inpatient primary diagnosis", notes: "" },
+    { name: "Heart failure", codes: "ICD-10 I50.*; or I11.0 / I13.0 / I13.2 (hypertensive HF)", notes: "" },
+    { name: "Chronic kidney disease (CKD)", codes: "ICD-10 N18.*; or eGFR <60 ml/min/1.73m² on ≥2 occasions ≥90 d apart", notes: "" },
+    { name: "COPD", codes: "ICD-10 J44.*; ≥1 inpatient or ≥2 outpatient", notes: "" },
+    { name: "Schizophrenia", codes: "ICD-10 F20.* (or F25.* schizoaffective); ≥1 inpatient or ≥2 outpatient", notes: "" },
+    { name: "Major depressive disorder", codes: "ICD-10 F32.*, F33.*", notes: "" },
+    { name: "ADHD", codes: "ICD-10 F90.*; consider linkage to stimulant dispensing for confirmation", notes: "" },
+    { name: "Dementia", codes: "ICD-10 F00-F03, G30.*, G31.0, G31.83", notes: "" },
+    { name: "Osteoporosis", codes: "ICD-10 M80.*, M81.*", notes: "" },
+    { name: "Pregnancy", codes: "ICD-10 O*, Z3*; supplemented by pregnancy-specific dispensings", notes: "Consider trimester-specific look-back." },
+  ],
+  exposures: [
+    { name: "Metformin", codes: "ATC A10BA02", notes: "" },
+    { name: "Sulfonylureas", codes: "ATC A10BB* (glibenclamide A10BB01, gliclazide A10BB09, glimepiride A10BB12, glipizide A10BB07)", notes: "" },
+    { name: "DPP-4 inhibitors", codes: "ATC A10BH* (sitagliptin A10BH01, vildagliptin A10BH02, saxagliptin A10BH03, linagliptin A10BH05, alogliptin A10BH04)", notes: "" },
+    { name: "SGLT2 inhibitors", codes: "ATC A10BK* (canagliflozin A10BK02, dapagliflozin A10BK01, empagliflozin A10BK03, ertugliflozin A10BK04)", notes: "Available in most AsPEN sites from ~2014 onward." },
+    { name: "GLP-1 receptor agonists", codes: "ATC A10BJ* (exenatide A10BJ01, liraglutide A10BJ02, dulaglutide A10BJ05, semaglutide A10BJ06, tirzepatide A10BX16)", notes: "" },
+    { name: "Thiazolidinediones (TZDs)", codes: "ATC A10BG* (pioglitazone A10BG03)", notes: "" },
+    { name: "Insulin (any)", codes: "ATC A10A*", notes: "" },
+    { name: "Statins", codes: "ATC C10AA*", notes: "" },
+    { name: "ACE inhibitors", codes: "ATC C09A* / C09B*", notes: "" },
+    { name: "ARBs", codes: "ATC C09C* / C09D*", notes: "" },
+    { name: "Beta-blockers", codes: "ATC C07A*", notes: "" },
+    { name: "Antipsychotics (any)", codes: "ATC N05A*", notes: "Atypicals N05AH/N05AL/N05AX; typicals N05AA-N05AG." },
+    { name: "ADHD stimulants", codes: "ATC N06BA (methylphenidate N06BA04, amphetamine N06BA01, lisdexamfetamine N06BA12)", notes: "" },
+    { name: "Opioid analgesics", codes: "ATC N02A* (excluding diamorphine where required)", notes: "Consider OMEDD calculation for dose comparison across sites." },
+    { name: "NSAIDs", codes: "ATC M01A* (excluding M01AX, the topical / non-systemic)", notes: "" },
+    { name: "Bisphosphonates", codes: "ATC M05BA* / M05BB*", notes: "" },
+    { name: "Anticoagulants — DOACs", codes: "ATC B01AE07 (dabigatran), B01AF01 (rivaroxaban), B01AF02 (apixaban), B01AF03 (edoxaban)", notes: "" },
+    { name: "Anticoagulants — warfarin", codes: "ATC B01AA03", notes: "" },
+  ],
+  outcomes: [
+    {
+      name: "Myocardial infarction (MI)",
+      codes: "ICD-10 I21.*, I22.* (primary discharge diagnosis)",
+      definition: "First hospitalisation with a primary discharge diagnosis of acute MI.",
+      validation: "PPV ~94% in NHIRD (Cheng CL, Pharmacoepidemiol Drug Saf 2011); ~93% in Medicare (Kiyota Y, Am Heart J 2004).",
+    },
+    {
+      name: "Ischemic stroke",
+      codes: "ICD-10 I63.*, I64.* (primary discharge diagnosis)",
+      definition: "First hospitalisation with a primary discharge diagnosis of ischemic stroke.",
+      validation: "PPV ~88% in NHIRD (Cheng CL, J Epidemiol 2014); ~85% in Medicare (Tirschwell DL, Stroke 2002).",
+    },
+    {
+      name: "Heart failure hospitalisation",
+      codes: "ICD-10 I50.*, I11.0, I13.0, I13.2 (primary discharge diagnosis)",
+      definition: "First hospitalisation with a primary discharge diagnosis of heart failure.",
+      validation: "PPV ~85% with primary-position requirement (Saczynski JS, Am J Cardiol 2012).",
+    },
+    {
+      name: "3-point MACE",
+      codes: "Composite: ICD-10 I21.*, I22.* (MI); I63.*, I64.* (stroke); cause-of-death I00-I99 (CV death)",
+      definition: "Time to first of: non-fatal MI, non-fatal ischemic stroke, or cardiovascular death — whichever occurs first.",
+      validation: "Standard composite endpoint in CV outcome trials; component validation as per individual outcomes above.",
+    },
+    {
+      name: "4-point MACE",
+      codes: "3-point MACE + ICD-10 I50.* heart-failure hospitalisation",
+      definition: "Time to first of: non-fatal MI, non-fatal stroke, CV death, or heart-failure hospitalisation.",
+      validation: "Component validation per individual outcomes.",
+    },
+    {
+      name: "All-cause mortality",
+      codes: "National death-registry linkage (or disenrolment as proxy where linkage unavailable)",
+      definition: "Date of death from any cause.",
+      validation: "Near-complete in NHIRD / CPRD / Sentinel via national death registry; sites without linkage use disenrolment + ≥30-day gap as proxy.",
+    },
+    {
+      name: "Cardiovascular death",
+      codes: "Cause-of-death ICD-10 I00-I99 (primary cause)",
+      definition: "Death with a cardiovascular primary cause on the death certificate.",
+      validation: "Cause-of-death has moderate accuracy; sensitivity analysis with broader CV cause definition recommended.",
+    },
+    {
+      name: "Acute kidney injury (AKI)",
+      codes: "ICD-10 N17.* (primary discharge diagnosis); supplement with creatinine criteria where available",
+      definition: "First hospitalisation with primary discharge AKI diagnosis OR creatinine doubling.",
+      validation: "PPV ~70-80% from claims alone; higher with lab linkage (Grams ME, Clin J Am Soc Nephrol 2014).",
+    },
+    {
+      name: "Diabetic ketoacidosis (DKA)",
+      codes: "ICD-10 E10.1, E11.1, E13.1, E14.1 (primary discharge diagnosis)",
+      definition: "First hospitalisation with primary discharge diagnosis of DKA.",
+      validation: "PPV ~90% in inpatient claims (Adhikari S, Diabetologia 2022).",
+    },
+    {
+      name: "Hip fracture",
+      codes: "ICD-10 S72.0, S72.1, S72.2 (primary discharge diagnosis)",
+      definition: "First hospitalisation with primary discharge diagnosis of hip fracture.",
+      validation: "PPV ~95% (Tamblyn R, J Clin Epidemiol 2000; validated repeatedly).",
+    },
+    {
+      name: "Any fracture",
+      codes: "ICD-10 S02 (skull), S12 (neck), S22 (rib), S32 (lumbar/pelvis), S42 (shoulder), S52 (forearm), S62 (hand), S72 (femur), S82 (leg), S92 (foot)",
+      definition: "First hospitalisation or specialist outpatient visit with a fracture diagnosis.",
+      validation: "Site-dependent; restrict to primary discharge diagnosis for highest specificity.",
+    },
+    {
+      name: "Falls",
+      codes: "ICD-10 W00-W19 (external cause); or R29.6 (history of falling)",
+      definition: "First ED or hospital encounter with a fall code.",
+      validation: "Sensitivity is low; combine with fall-related injury codes for higher capture.",
+    },
+    {
+      name: "Pneumonia hospitalisation",
+      codes: "ICD-10 J12-J18 (primary discharge diagnosis)",
+      definition: "First hospitalisation with primary discharge pneumonia diagnosis.",
+      validation: "PPV ~75% from claims (Skull SA, Vaccine 2008).",
+    },
+    {
+      name: "GI bleeding",
+      codes: "ICD-10 K25.0, K25.2, K25.4, K25.6, K26.0, K26.2, K26.4, K26.6, K27.*, K28.*, K29.0, K92.0, K92.1, K92.2",
+      definition: "First hospitalisation with primary discharge diagnosis of GI bleeding.",
+      validation: "PPV ~85-90% (Cunningham A, Pharmacoepidemiol Drug Saf 2008).",
+    },
+    {
+      name: "Intracranial haemorrhage",
+      codes: "ICD-10 I60.*, I61.*, I62.* (primary discharge diagnosis)",
+      definition: "First hospitalisation with primary discharge intracranial-haemorrhage diagnosis.",
+      validation: "PPV ~90% in NHIRD; high specificity when restricted to inpatient primary diagnosis.",
+    },
+    {
+      name: "Suicide / self-harm",
+      codes: "ICD-10 X60-X84 (suicide attempts), Y87.0 (sequelae); supplement with T-codes for poisoning",
+      definition: "First ED or hospital encounter with suicide / intentional self-harm code.",
+      validation: "Codes have low sensitivity; mortality-linked underestimate true rates.",
+    },
+    {
+      name: "Dementia (incident)",
+      codes: "ICD-10 F00-F03, G30.*, G31.0, G31.83; supplement with dispensing of dementia drug (donepezil, galantamine, rivastigmine, memantine)",
+      definition: "First diagnosis of dementia OR first dispensing of a dementia medication, whichever earlier.",
+      validation: "PPV ~85-90% in Asian claims (Wang KH, Int J Geriatr Psychiatry 2010).",
+    },
+    {
+      name: "Thyroid cancer",
+      codes: "ICD-10 C73; linked to national cancer registry where available",
+      definition: "First diagnosis of thyroid cancer from cancer-registry linkage.",
+      validation: "Use registry where available (NHIRD-linked, CGRD-linked, Korea KNCI); claims-only has lower PPV.",
+    },
+  ],
+};
+
 const CDM_OPTIONS = [
   "Not applicable (no CDM)",
   "OMOP CDM v5.4",
@@ -320,11 +472,17 @@ const TIMELINE_PRESETS: Record<string, string> = {
             4 · Cohort definition
           </summary>
           <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
-            <label class="flex flex-col gap-1 sm:col-span-2">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Indication / cohort entry condition</span>
+            <div class="sm:col-span-2 flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold flex items-center gap-2">
+                Indication / cohort entry condition
+                <button type="button" data-open-library data-category="indications" data-target-name="indication"
+                        class="text-[10px] uppercase tracking-widest font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2 py-0.5 rounded transition">
+                  📚 Pick from library
+                </button>
+              </span>
               <input type="text" name="indication" placeholder="T2DM (ICD-10 E11.x) ever before index"
                      class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-            </label>
+            </div>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Age range (years)</span>
               <input type="text" name="ageRange" placeholder="≥18, no upper limit"
@@ -378,6 +536,16 @@ const TIMELINE_PRESETS: Record<string, string> = {
             5 · Exposure &amp; comparator
           </summary>
           <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <div class="sm:col-span-2 flex items-center gap-2 flex-wrap">
+              <button type="button" data-open-library data-category="exposures" data-target-name="exposureName" data-target-codes="exposureCodes"
+                      class="text-[10px] uppercase tracking-widest font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2 py-1 rounded transition">
+                📚 Pick exposure from library
+              </button>
+              <button type="button" data-open-library data-category="exposures" data-target-name="comparatorName" data-target-codes="comparatorCodes"
+                      class="text-[10px] uppercase tracking-widest font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2 py-1 rounded transition">
+                📚 Pick comparator from library
+              </button>
+            </div>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure — name</span>
               <input type="text" name="exposureName" placeholder="SGLT2 inhibitors"
@@ -428,6 +596,13 @@ const TIMELINE_PRESETS: Record<string, string> = {
             6 · Outcome ascertainment
           </summary>
           <div class="px-5 pb-5 space-y-3">
+            <div>
+              <button type="button" data-open-library data-category="outcomes" data-target-name="outcomeNameHint" data-target-def="outcomeDef" data-target-codes="outcomeCodes" data-target-validation="outcomeValidation"
+                      class="text-[10px] uppercase tracking-widest font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2 py-1 rounded transition">
+                📚 Pick outcome from validated library
+              </button>
+              <span class="ml-2 text-[11px] text-slate-500">Fills definition, codes, and prior-validation citation in one click.</span>
+            </div>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Operational definition</span>
               <textarea name="outcomeDef" rows="3" placeholder="First hospitalisation with primary discharge diagnosis I21.x (MI), I63.x (ischemic stroke), or CV death — composite, time-to-first-event."
@@ -706,12 +881,34 @@ Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
       </aside>
 
     </div>
+
+    <!-- ── Phenotype-library modal ───────────────────────── -->
+    <div data-library-modal class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-start justify-center p-4 sm:p-8 overflow-y-auto">
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-3xl my-8">
+        <header class="flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-100">
+          <div>
+            <p class="text-xs uppercase tracking-widest text-brand-700 font-bold">Validated phenotype library</p>
+            <h3 class="text-lg font-bold text-slate-900 mt-0.5" data-library-title>Pick a phenotype</h3>
+          </div>
+          <button type="button" data-library-close class="text-slate-400 hover:text-slate-700 text-2xl leading-none">×</button>
+        </header>
+        <div class="px-5 py-3 border-b border-slate-100">
+          <input type="text" data-library-search placeholder="Filter… (e.g., 'MI', 'SGLT2', 'cancer')"
+                 class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+        </div>
+        <div data-library-list class="px-2 py-2 max-h-[60vh] overflow-y-auto"></div>
+        <footer class="px-5 py-3 border-t border-slate-100 text-[11px] text-slate-500 leading-relaxed">
+          Code sets are starting points based on published literature — always confirm against your site's coding system version and indication-specific guidance before locking the protocol.
+        </footer>
+      </div>
+    </div>
+
   </section>
 
   <!-- docx library (UMD bundle) — used to generate Word files client-side -->
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js" is:inline></script>
 
-  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES, TIMELINE_PRESETS, PS_METHOD_DESCRIPTIONS, INDEX_DATE_OPTIONS }}>
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES, TIMELINE_PRESETS, PS_METHOD_DESCRIPTIONS, INDEX_DATE_OPTIONS, PHENOTYPES }}>
     (() => {
       const setState = (name) => {
         document.querySelectorAll("[data-state]").forEach((el) => {
@@ -1309,6 +1506,95 @@ _Drafted with the AsPEN protocol builder (${today})._
 
         return await D.Packer.toBlob(doc);
       };
+
+      // ── Phenotype library modal ─────────────────────
+      const modal      = document.querySelector("[data-library-modal]");
+      const modalTitle = document.querySelector("[data-library-title]");
+      const modalList  = document.querySelector("[data-library-list]");
+      const modalSearch= document.querySelector("[data-library-search]");
+      let currentCategory = "indications";
+      let currentTargets  = {}; // { name?, codes?, def?, validation? }
+
+      const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[c]));
+
+      const renderLibrary = (filter = "") => {
+        const items = PHENOTYPES[currentCategory] || [];
+        const f = filter.trim().toLowerCase();
+        const filtered = f
+          ? items.filter((it) =>
+              (it.name || "").toLowerCase().includes(f) ||
+              (it.codes || "").toLowerCase().includes(f) ||
+              (it.notes || "").toLowerCase().includes(f) ||
+              (it.definition || "").toLowerCase().includes(f) ||
+              (it.validation || "").toLowerCase().includes(f))
+          : items;
+        if (filtered.length === 0) {
+          modalList.innerHTML = '<p class="px-3 py-6 text-sm text-slate-500 italic text-center">No phenotype matches.</p>';
+          return;
+        }
+        modalList.innerHTML = filtered.map((it, idx) => `
+          <button type="button" data-phenotype-idx="${idx}"
+                  class="block w-full text-left px-4 py-3 rounded-lg border border-transparent hover:border-brand-300 hover:bg-brand-50/40 transition">
+            <p class="font-semibold text-slate-900 text-sm">${esc(it.name)}</p>
+            <p class="mt-1 text-xs text-slate-700 font-mono leading-relaxed">${esc(it.codes || "")}</p>
+            ${it.definition ? `<p class="mt-1 text-xs text-slate-600 leading-relaxed">${esc(it.definition)}</p>` : ""}
+            ${it.validation ? `<p class="mt-1 text-[11px] text-slate-500 italic leading-relaxed">${esc(it.validation)}</p>` : ""}
+            ${it.notes ? `<p class="mt-1 text-[11px] text-slate-500 leading-relaxed">${esc(it.notes)}</p>` : ""}
+          </button>
+        `).join("");
+        // Click handler — fill targets + close
+        modalList.querySelectorAll("[data-phenotype-idx]").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const it = filtered[parseInt(btn.dataset.phenotypeIdx, 10)];
+            if (!it) return;
+            const fill = (key, val) => {
+              const fieldName = currentTargets[key];
+              if (!fieldName || val === undefined) return;
+              const el = form.querySelector(`[name="${fieldName}"]`);
+              if (el) el.value = val;
+            };
+            fill("name",       it.name);
+            fill("codes",      it.codes);
+            fill("def",        it.definition);
+            fill("validation", it.validation);
+            closeLibrary();
+            render();
+          });
+        });
+      };
+
+      const openLibrary = (category, targets) => {
+        currentCategory = category;
+        currentTargets  = targets;
+        modalTitle.textContent = ({
+          indications: "Pick an indication (cohort definition)",
+          exposures:   "Pick a drug class (exposure or comparator)",
+          outcomes:    "Pick an outcome — fills definition, codes & validation",
+        })[category] || "Pick a phenotype";
+        modalSearch.value = "";
+        renderLibrary("");
+        modal.classList.remove("hidden");
+        setTimeout(() => modalSearch.focus(), 50);
+      };
+      const closeLibrary = () => modal.classList.add("hidden");
+
+      // Bind library triggers (from form section headers)
+      document.querySelectorAll("[data-open-library]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          openLibrary(btn.dataset.category, {
+            name:       btn.dataset.targetName,
+            codes:      btn.dataset.targetCodes,
+            def:        btn.dataset.targetDef,
+            validation: btn.dataset.targetValidation,
+          });
+        });
+      });
+      document.querySelector("[data-library-close]")?.addEventListener("click", closeLibrary);
+      modal.addEventListener("click", (e) => { if (e.target === modal) closeLibrary(); });
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLibrary(); });
+      modalSearch.addEventListener("input", () => renderLibrary(modalSearch.value));
 
       // ── Auth gate (admin only) ──────────────────────
       fetch(`${WORKER_URL}/api/me`, { credentials: "include" })
