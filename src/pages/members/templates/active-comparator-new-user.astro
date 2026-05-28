@@ -1,0 +1,752 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PageHeader from "../../../components/PageHeader.astro";
+import { WORKER_URL } from "../../../data/site-config";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+// AsPEN-relevant sites for the multi-select. Order matches the admin
+// country dropdown (core Asian first, then others alphabetically).
+const SITES = [
+  { code: "TW", name: "Taiwan (NHIRD / CGRD)" },
+  { code: "KR", name: "South Korea (HIRA / NHIS-NHID)" },
+  { code: "JP", name: "Japan (NDB / JMDC / DeSC / MDV)" },
+  { code: "HK", name: "Hong Kong (CDARS)" },
+  { code: "AU", name: "Australia (PBS / VLHD)" },
+  { code: "CN", name: "China" },
+  { code: "FI", name: "Finland (FinReg)" },
+  { code: "GB", name: "United Kingdom (CPRD / THIN)" },
+  { code: "ID", name: "Indonesia" },
+  { code: "IN", name: "India" },
+  { code: "MY", name: "Malaysia" },
+  { code: "NL", name: "Netherlands (PHARMO)" },
+  { code: "PH", name: "Philippines" },
+  { code: "SG", name: "Singapore" },
+  { code: "TH", name: "Thailand" },
+  { code: "US", name: "United States (Medicare / Medicaid / Sentinel)" },
+  { code: "VN", name: "Vietnam" },
+];
+---
+
+<BaseLayout
+  title="Protocol template · ACNU — AsPEN members"
+  description="Guided form that drafts a multi-national active-comparator new-user (ACNU) study protocol for AsPEN sites."
+>
+  <PageHeader
+    eyebrow="Members → Templates"
+    title="Multi-national ACNU protocol builder"
+    description="Active-comparator new-user design. Fill the form on the left; a draft protocol updates on the right. Download the .md when you're happy and circulate it to the AsPEN office."
+  />
+
+  <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <a class="text-sm text-brand-700 hover:underline font-semibold" href={`${base}/members/`}>← Members area</a>
+
+    <div data-state="loading" class="text-sm text-slate-600 italic">Checking your session…</div>
+    <div data-state="signed-out" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm text-slate-700">Sign in to use the protocol builder. <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Sign in →</a></p>
+    </div>
+
+    <div data-state="ready" class="hidden grid gap-8 lg:grid-cols-[1fr,1fr] items-start">
+
+      <!-- ── Wizard form (left) ─────────────────────────────── -->
+      <form data-builder class="space-y-6">
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
+            1 · Study identification
+          </summary>
+          <div class="px-5 pb-5 space-y-3">
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Study title</span>
+              <input type="text" name="title" placeholder="e.g. SGLT2 inhibitors vs DPP-4 inhibitors and risk of MACE: an AsPEN multi-country active-comparator new-user study"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Short ID</span>
+              <input type="text" name="shortId" placeholder="e.g. AsPEN-SGLT2-MACE-2026"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead investigator(s)</span>
+              <input type="text" name="leadInvestigator" placeholder="Name, affiliation"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Version · Date</span>
+              <input type="text" name="version" placeholder="v0.1 draft · 2026-05-28"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
+            2 · Research question (PICOT)
+          </summary>
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Background rationale</span>
+              <textarea name="background" rows="3" placeholder="Why this question, why now, why across sites."
+                        class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">P — Population</span>
+              <input type="text" name="picoP" placeholder="e.g. Adults ≥40y initiating second-line T2DM therapy"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">I — Intervention</span>
+              <input type="text" name="picoI" placeholder="e.g. SGLT2 inhibitors (any agent)"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">C — Comparator</span>
+              <input type="text" name="picoC" placeholder="e.g. DPP-4 inhibitors (any agent)"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">O — Outcome (primary)</span>
+              <input type="text" name="picoO" placeholder="e.g. 3-point MACE (CV death, non-fatal MI, non-fatal stroke)"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">T — Time horizon</span>
+              <input type="text" name="picoT" placeholder="e.g. 5-year accrual (2018-2023), median follow-up ~2.5y per patient"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Secondary outcomes (one per line)</span>
+              <textarea name="secondaryOutcomes" rows="3" placeholder="e.g.&#10;Heart failure hospitalisation&#10;All-cause mortality&#10;DKA"
+                        class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
+            3 · Sites
+          </summary>
+          <div class="px-5 pb-5 space-y-3">
+            <p class="text-xs text-slate-500">Tick every site whose data partner has agreed to run the common protocol locally.</p>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {SITES.map((s) => (
+                <label class="flex items-center gap-2 text-sm border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                  <input type="checkbox" name="sites" value={s.code} class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+                  <span class="text-xs"><span class="font-semibold">{s.code}</span> · {s.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
+            4 · Study population
+          </summary>
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Indication / cohort definition</span>
+              <input type="text" name="indication" placeholder="e.g. T2DM diagnosis (ICD-10 E11.x) ever before index"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Age range (years)</span>
+              <input type="text" name="ageRange" placeholder="e.g. ≥18, no upper limit"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Sex</span>
+              <select name="sex" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="both">Both</option>
+                <option value="female">Female only</option>
+                <option value="male">Male only</option>
+              </select>
+            </label>
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Inclusion criteria (one per line)</span>
+              <textarea name="inclusion" rows="4" placeholder="e.g.&#10;Continuous enrolment ≥365d before index&#10;≥1 prescription of metformin in the 365d before index"
+                        class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+            </label>
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exclusion criteria (one per line)</span>
+              <textarea name="exclusion" rows="4" placeholder="e.g.&#10;Type 1 diabetes (E10.x) ever&#10;eGFR &lt;30 ml/min/1.73m² at index&#10;Pregnancy at index&#10;Active cancer in the 365d before index"
+                        class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
+            5 · Exposure & comparator
+          </summary>
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Index drug — name</span>
+              <input type="text" name="exposureName" placeholder="e.g. SGLT2 inhibitors"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Index drug — code(s)</span>
+              <input type="text" name="exposureCodes" placeholder="e.g. ATC A10BK*"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Active comparator — name</span>
+              <input type="text" name="comparatorName" placeholder="e.g. DPP-4 inhibitors"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Active comparator — code(s)</span>
+              <input type="text" name="comparatorCodes" placeholder="e.g. ATC A10BH*"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Washout period (days)</span>
+              <input type="number" name="washout" value="365" min="0" step="1"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              <span class="block mt-1 text-[11px] text-slate-500">No prior dispensing of EITHER exposure or comparator in this window before index.</span>
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Index date definition</span>
+              <input type="text" name="indexDate" value="First dispensing of exposure or comparator after the washout period"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
+            6 · Outcome ascertainment
+          </summary>
+          <div class="px-5 pb-5 space-y-3">
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Primary outcome — operational definition</span>
+              <textarea name="outcomeDef" rows="3" placeholder="e.g. First hospitalisation with primary discharge diagnosis I21.x (MI), I63.x (ischemic stroke), or CV death (cause-of-death I00-I99) — composite, time-to-first-event."
+                        class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Outcome code(s)</span>
+              <input type="text" name="outcomeCodes" placeholder="e.g. ICD-10 I21.*, I63.*; cause-of-death I00–I99"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Validation</span>
+              <input type="text" name="outcomeValidation" placeholder="e.g. Inpatient primary-diagnosis algorithm shown PPV ~85% in prior NHIRD validation (Lai 2018)"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
+            7 · Follow-up & censoring
+          </summary>
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Primary analysis</span>
+              <select name="primaryAnalysisType" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="ITT">Intention-to-treat (ITT)</option>
+                <option value="OT" selected>On-treatment (per-protocol)</option>
+                <option value="both">Both ITT and on-treatment</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Grace period (days)</span>
+              <input type="number" name="grace" value="30" min="0" step="1"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              <span class="block mt-1 text-[11px] text-slate-500">Allowable gap between successive dispensings before deemed off-treatment.</span>
+            </label>
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Censoring rules (one per line)</span>
+              <textarea name="censoring" rows="4" placeholder="e.g.&#10;Discontinuation of index drug (gap > grace period)&#10;Switch to comparator drug class&#10;Disenrolment from health-insurance database&#10;Death from non-outcome cause&#10;End of database availability">Discontinuation of index drug (gap &gt; grace period)
+Switch to comparator drug class
+Disenrolment from the health-insurance database
+Death from non-outcome cause
+End of database availability</textarea>
+            </label>
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Maximum follow-up</span>
+              <input type="text" name="maxFollowup" value="5 years per patient, or until censoring (whichever first)"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
+            8 · Confounding control
+          </summary>
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Method</span>
+              <select name="psMethod" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="match">PS matching (1:1 nearest neighbour, caliper 0.2 × SD of logit PS)</option>
+                <option value="iptw" selected>Stabilised IPTW (with trimming)</option>
+                <option value="both">Both PS matching AND IPTW</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Covariate look-back (days)</span>
+              <input type="number" name="lookback" value="365" min="0" step="1"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Baseline covariates (one per line)</span>
+              <textarea name="covariates" rows="8">Demographics: age (continuous), sex, year of index
+Comorbidities: HTN, dyslipidaemia, CKD, prior MI, prior stroke, HF, AF, COPD, depression, cancer
+Cardiovascular medications: ACEi/ARB, BB, CCB, diuretics, statins, antiplatelets, anticoagulants
+Diabetes medications history: metformin, sulfonylureas, TZDs, insulin (binary, ever in look-back)
+Healthcare utilisation: number of outpatient visits, number of hospitalisations, ED visits, polypharmacy (≥5 drug classes)
+Charlson Comorbidity Index (CCI) score at index
+Where available: HbA1c, BMI, eGFR, smoking status</textarea>
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
+            9 · Statistical analysis
+          </summary>
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Effect estimate</span>
+              <select name="effectMeasure" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="HR" selected>Hazard ratio (Cox PH)</option>
+                <option value="RR">Risk ratio (Poisson)</option>
+                <option value="RD">Risk difference</option>
+                <option value="IRR">Incidence rate ratio</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Robust SE / clustering</span>
+              <input type="text" name="seMethod" value="Robust SE (sandwich) with clustering on matched pair / PS stratum"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Subgroup analyses (one per line)</span>
+              <textarea name="subgroups" rows="4">Age (≥65 vs &lt;65)
+Sex
+Baseline CKD (eGFR &lt;60 vs ≥60)
+Prior CV disease (yes vs no)
+Country / site</textarea>
+            </label>
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Sensitivity analyses (one per line)</span>
+              <textarea name="sensitivity" rows="6">PS trimming to area of common support (e.g. trim non-overlapping tails)
+Alternative washout (e.g. 180 d, 730 d)
+Alternative grace period (0, 60, 90 d)
+ITT vs on-treatment (whichever is not the primary)
+Active-comparator restriction to a single agent
+Negative-control outcome (e.g. fracture or skin infection — should show null association)
+Exclude first 30 days of follow-up (latent-period analysis)</textarea>
+            </label>
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Meta-analysis across sites</span>
+              <input type="text" name="meta" value="Random-effects (DerSimonian–Laird) meta-analysis pooling site-specific HR estimates; report I² and τ². Forest plot per outcome."
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
+            10 · Execution & timeline
+          </summary>
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Architecture</span>
+              <select name="arch" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="federated" selected>Federated — each site runs locally, shares aggregate estimates</option>
+                <option value="cdm">Common Data Model — each site transforms to OMOP/Sentinel CDM first, then runs shared package</option>
+                <option value="centralised">Centralised — pooled individual-level data (only where DUA permits)</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">CDM (if applicable)</span>
+              <input type="text" name="cdm" placeholder="e.g. OMOP CDM v5.4 / Sentinel CDM v8.0"
+                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Timeline milestones (one per line)</span>
+              <textarea name="timeline" rows="6">Month 0: Protocol finalised, site IRB submissions begin
+Month 3: All site IRB approvals received
+Month 4–6: Local data extraction and cohort assembly
+Month 7–9: PS modelling and analytic execution at each site
+Month 10–11: Site-level estimates returned to coordinating centre; meta-analysis
+Month 12: First draft manuscript circulated; ISPE Asian conference abstract</textarea>
+            </label>
+          </div>
+        </details>
+
+        <details class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
+            11 · Ethics, dissemination, references (optional)
+          </summary>
+          <div class="px-5 pb-5 space-y-3">
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Ethics / regulatory</span>
+              <textarea name="ethics" rows="3" placeholder="e.g. Each site obtains local IRB / ethics approval before data extraction. No individual-level data leaves any site under a federated design.">Each participating site obtains local IRB / ethics approval before data extraction. Under a federated design, only aggregate site-level estimates are shared with the coordinating centre — no individual-level data leaves any site.</textarea>
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Dissemination</span>
+              <textarea name="dissemination" rows="2">Primary manuscript submitted to a peer-reviewed pharmacoepidemiology journal; conference presentation at ICPE / ISPE Asian conference; study registered on ENCePP EU PAS Register and/or ClinicalTrials.gov where applicable.</textarea>
+            </label>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Key references (one per line; will appear as numbered list)</span>
+              <textarea name="references" rows="5" placeholder="e.g.&#10;Lund JL et al. Pharmacoepidemiol Drug Saf. 2015 (active comparator)&#10;Hernán MA et al. JAMA. 2008 (new-user design)">Lund JL et al. Pharmacoepidemiol Drug Saf. 2015 (active comparator design)
+Hernán MA, Robins JM. JAMA. 2008 (new-user design; target trial)
+Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
+            </label>
+          </div>
+        </details>
+
+        <div class="flex flex-wrap gap-3 pt-2">
+          <button type="button" data-action="download" class="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-2.5 rounded-lg transition text-sm">
+            ⬇ Download .md
+          </button>
+          <button type="button" data-action="copy" class="bg-white border border-brand-700 text-brand-700 hover:bg-brand-50 font-semibold px-5 py-2.5 rounded-lg transition text-sm">
+            📋 Copy as Markdown
+          </button>
+          <button type="button" data-action="reset" class="ml-auto text-slate-500 hover:text-rose-600 hover:underline text-sm font-semibold">
+            Clear all
+          </button>
+          <p data-action-msg class="basis-full text-xs"></p>
+        </div>
+      </form>
+
+      <!-- ── Live Markdown preview (right) ──────────────────── -->
+      <aside class="lg:sticky lg:top-20">
+        <div class="border border-slate-200 rounded-2xl bg-slate-50 shadow-sm overflow-hidden">
+          <header class="flex items-center justify-between px-4 py-2 bg-white border-b border-slate-200">
+            <p class="text-xs uppercase tracking-widest text-brand-700 font-bold">Live preview · Markdown</p>
+            <p class="text-[10px] text-slate-500">Auto-saved to this browser</p>
+          </header>
+          <pre data-preview class="text-xs leading-relaxed text-slate-800 p-4 overflow-auto max-h-[calc(100vh-12rem)] whitespace-pre-wrap font-mono"></pre>
+        </div>
+      </aside>
+
+    </div>
+  </section>
+
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES }}>
+    (() => {
+      const setState = (name) => {
+        document.querySelectorAll("[data-state]").forEach((el) => {
+          el.classList.toggle("hidden", el.dataset.state !== name);
+        });
+      };
+
+      if (!WORKER_URL) return setState("signed-out");
+
+      const STORAGE_KEY = "aspen.protocol-builder.acnu";
+      const form = document.querySelector("[data-builder]");
+      const preview = document.querySelector("[data-preview]");
+      const actionMsg = document.querySelector("[data-action-msg]");
+
+      const setMsg = (msg, isError = false) => {
+        if (!actionMsg) return;
+        actionMsg.textContent = msg;
+        actionMsg.classList.toggle("text-rose-700", isError);
+        actionMsg.classList.toggle("text-brand-700", !isError);
+      };
+
+      const SITE_LABEL = Object.fromEntries(SITES.map((s) => [s.code, s.name]));
+
+      // ── Form state read / write ─────────────────────
+      const readForm = () => {
+        const data = new FormData(form);
+        const out = {};
+        for (const [k, v] of data.entries()) {
+          if (k === "sites") {
+            (out.sites ??= []).push(String(v));
+          } else {
+            out[k] = String(v);
+          }
+        }
+        // include unchecked sites as empty so toggling off is captured
+        if (!out.sites) out.sites = [];
+        return out;
+      };
+
+      const writeForm = (state) => {
+        for (const el of form.querySelectorAll("input, textarea, select")) {
+          const name = el.name;
+          if (!name) continue;
+          if (el.type === "checkbox" && name === "sites") {
+            el.checked = (state.sites || []).includes(el.value);
+          } else if (state[name] !== undefined) {
+            el.value = state[name];
+          }
+        }
+      };
+
+      // ── Markdown template ───────────────────────────
+      const bullets = (s) => (s || "")
+        .split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+        .map((l) => "- " + l).join("\n") || "_(none specified)_";
+
+      const numbered = (s) => (s || "")
+        .split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+        .map((l, i) => (i + 1) + ". " + l).join("\n") || "_(none)_";
+
+      const sitesLine = (codes) => {
+        if (!codes || codes.length === 0) return "_(no sites selected)_";
+        return codes.map((c) => "**" + c + "** — " + (SITE_LABEL[c] || c)).join(" · ");
+      };
+
+      const orFallback = (s, fb) => (s && s.trim()) ? s : fb;
+
+      const buildMarkdown = (s) => {
+        const title    = orFallback(s.title, "(Untitled multi-national ACNU study)");
+        const shortId  = orFallback(s.shortId, "(short id)");
+        const lead     = orFallback(s.leadInvestigator, "(lead investigator)");
+        const version  = orFallback(s.version, "v0.1 draft · " + new Date().toISOString().slice(0, 10));
+        const back     = orFallback(s.background, "_(rationale to be drafted)_");
+        const picoP    = orFallback(s.picoP, "_(population)_");
+        const picoI    = orFallback(s.picoI, "_(intervention)_");
+        const picoC    = orFallback(s.picoC, "_(comparator)_");
+        const picoO    = orFallback(s.picoO, "_(outcome)_");
+        const picoT    = orFallback(s.picoT, "_(time horizon)_");
+
+        const ind      = orFallback(s.indication, "_(cohort definition)_");
+        const age      = orFallback(s.ageRange, "_(age range)_");
+        const sex      = ({ both: "both sexes", female: "female only", male: "male only" })[s.sex] || s.sex || "both sexes";
+
+        const expName  = orFallback(s.exposureName, "_(exposure)_");
+        const expCode  = orFallback(s.exposureCodes, "_(codes TBD)_");
+        const cmpName  = orFallback(s.comparatorName, "_(comparator)_");
+        const cmpCode  = orFallback(s.comparatorCodes, "_(codes TBD)_");
+        const washout  = s.washout || "365";
+        const indexDt  = orFallback(s.indexDate, "First dispensing of exposure or comparator after the washout period.");
+
+        const outcomeDef = orFallback(s.outcomeDef, "_(operational outcome definition)_");
+        const outcomeCd  = orFallback(s.outcomeCodes, "_(code set)_");
+        const outcomeVal = orFallback(s.outcomeValidation, "_(prior validation, if any)_");
+
+        const primAn   = ({ ITT: "Intention-to-treat (ITT)", OT: "On-treatment (per-protocol)", both: "Both ITT and on-treatment" })[s.primaryAnalysisType] || s.primaryAnalysisType || "On-treatment";
+        const grace    = s.grace || "30";
+        const maxFu    = orFallback(s.maxFollowup, "5 years per patient, or until censoring.");
+
+        const psM      = ({
+          match: "**1:1 PS matching** (nearest neighbour, caliper 0.2 × SD of logit PS, no replacement)",
+          iptw:  "**Stabilised IPTW** with PS trimming at 1st/99th percentile",
+          both:  "**Both** 1:1 PS matching AND stabilised IPTW, reported in parallel",
+        })[s.psMethod] || "PS-based adjustment";
+        const lookback = s.lookback || "365";
+
+        const eff      = ({ HR: "Hazard ratio (95% CI) from Cox proportional-hazards models", RR: "Risk ratio (95% CI) from Poisson regression", RD: "Risk difference (95% CI)", IRR: "Incidence rate ratio (95% CI)" })[s.effectMeasure] || s.effectMeasure;
+        const seM      = orFallback(s.seMethod, "Robust SE with clustering on matched pair / PS stratum.");
+
+        const arch     = ({
+          federated:   "**Federated** — each AsPEN site executes a common analytic package locally and shares only aggregate site-level estimates with the coordinating centre.",
+          cdm:         "**Common Data Model** — each site first transforms its source database into the agreed CDM (e.g. OMOP), then runs the shared SQL/R/Python package.",
+          centralised: "**Centralised** — site-level individual data are pooled at the coordinating centre under appropriate data-sharing agreements.",
+        })[s.arch] || "Federated";
+        const cdmText  = orFallback(s.cdm, "_(specify CDM if applicable)_");
+
+        return `# ${title}
+
+**Study ID:** ${shortId}
+**Lead investigator(s):** ${lead}
+**Version:** ${version}
+**Design:** Multi-national active-comparator new-user (ACNU) cohort study
+
+---
+
+## 1. Background and rationale
+
+${back}
+
+## 2. Objectives
+
+**Primary objective.** Among ${picoP}, to compare the risk of ${picoO} between new users of ${picoI} and new users of ${picoC}, over a time horizon of ${picoT}.
+
+**PICOT.**
+
+| | |
+|---|---|
+| **P** — Population | ${picoP} |
+| **I** — Intervention | ${picoI} |
+| **C** — Comparator | ${picoC} |
+| **O** — Outcome (primary) | ${picoO} |
+| **T** — Time | ${picoT} |
+
+**Secondary outcomes.**
+
+${bullets(s.secondaryOutcomes)}
+
+## 3. Study sites
+
+This protocol is to be executed in parallel at the following AsPEN sites:
+
+${sitesLine(s.sites)}
+
+## 4. Study design
+
+A **new-user, active-comparator cohort design** is used to minimise confounding by indication and immortal-time / prevalent-user bias.
+
+- **Index date:** ${indexDt}
+- **Washout period:** ${washout} days — no prior dispensing of EITHER the exposure or comparator in this window before index.
+- **Cohort entry:** patients meeting the cohort definition above, contributing person-time from index date forward.
+
+## 5. Study population
+
+- **Indication / cohort definition:** ${ind}
+- **Age:** ${age}
+- **Sex:** ${sex}
+
+**Inclusion criteria**
+
+${bullets(s.inclusion)}
+
+**Exclusion criteria**
+
+${bullets(s.exclusion)}
+
+## 6. Exposure and comparator
+
+| | Name | Code set |
+|---|---|---|
+| **Exposure** | ${expName} | ${expCode} |
+| **Comparator** | ${cmpName} | ${cmpCode} |
+
+A patient enters either the exposure or comparator cohort based on which drug is dispensed first on or after the index date, provided no prior dispensing of either drug within the washout window.
+
+## 7. Outcome ascertainment
+
+**Operational definition.** ${outcomeDef}
+
+**Code set.** ${outcomeCd}
+
+**Validation.** ${outcomeVal}
+
+## 8. Follow-up and censoring
+
+- **Primary analysis:** ${primAn}
+- **Grace period:** ${grace} days
+- **Maximum follow-up:** ${maxFu}
+
+**Censoring rules**
+
+${bullets(s.censoring)}
+
+## 9. Confounding control
+
+- **Method:** ${psM}
+- **Covariate look-back window:** ${lookback} days prior to index date
+
+**Baseline covariates**
+
+${bullets(s.covariates)}
+
+PS model performance is assessed via standardised mean differences (SMDs) before/after weighting/matching (target < 0.1 across all covariates) and the c-statistic of the PS model.
+
+## 10. Statistical analysis
+
+- **Effect estimate:** ${eff}
+- **Standard errors:** ${seM}
+
+**Subgroup analyses**
+
+${bullets(s.subgroups)}
+
+**Sensitivity analyses**
+
+${bullets(s.sensitivity)}
+
+**Meta-analysis across sites.** ${orFallback(s.meta, "Random-effects (DerSimonian–Laird) meta-analysis pooling site-specific HR estimates; report I² and τ². Forest plot per outcome.")}
+
+## 11. Sample size and power
+
+To be calculated per site using observed event rates among comparator users in pilot extractions; aim for ≥80% power to detect the smallest clinically meaningful HR (e.g. 0.85 or 1.15) for the primary outcome at α = 0.05, two-sided, after pooling. Pilot estimates are circulated before final analytic execution.
+
+## 12. Execution and timeline
+
+**Architecture.** ${arch}
+
+**CDM:** ${cdmText}
+
+**Timeline milestones**
+
+${numbered(s.timeline)}
+
+## 13. Ethics, data sharing, dissemination
+
+**Ethics.** ${orFallback(s.ethics, "Each participating site obtains local IRB / ethics approval before data extraction.")}
+
+**Dissemination.** ${orFallback(s.dissemination, "Primary manuscript to a peer-reviewed pharmacoepidemiology journal; conference presentation at ICPE / ISPE Asian conference; registration on ENCePP EU PAS Register and/or ClinicalTrials.gov where applicable.")}
+
+## 14. Key references
+
+${numbered(s.references)}
+
+---
+
+_Drafted with the AsPEN protocol builder. Reviewed and adapted by the Academic & Education office before circulation._
+`;
+      };
+
+      // ── Render preview from current form state ──────
+      const render = () => {
+        const state = readForm();
+        preview.textContent = buildMarkdown(state);
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+      };
+
+      // ── Restore saved state, then render ────────────
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) writeForm(JSON.parse(saved));
+      } catch {}
+      render();
+
+      // Re-render on any form change
+      form.addEventListener("input", render);
+      form.addEventListener("change", render);
+
+      // Download
+      document.querySelector("[data-action='download']")?.addEventListener("click", () => {
+        const md = preview.textContent || "";
+        const state = readForm();
+        const slug = (state.shortId || "aspen-protocol-acnu")
+          .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "aspen-protocol-acnu";
+        const today = new Date().toISOString().slice(0, 10);
+        const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = slug + "-" + today + ".md";
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+        setMsg("Downloaded " + a.download);
+      });
+
+      // Copy
+      document.querySelector("[data-action='copy']")?.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(preview.textContent || "");
+          setMsg("Copied to clipboard.");
+        } catch {
+          setMsg("Couldn't copy — your browser may block clipboard access.", true);
+        }
+      });
+
+      // Reset
+      document.querySelector("[data-action='reset']")?.addEventListener("click", () => {
+        if (!confirm("Clear every field and forget the saved draft?")) return;
+        localStorage.removeItem(STORAGE_KEY);
+        form.reset();
+        render();
+        setMsg("Cleared.");
+      });
+
+      // ── Auth gate ───────────────────────────────────
+      fetch(`${WORKER_URL}/api/me`, { credentials: "include" })
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => {
+          if (data && data.ok) setState("ready");
+          else setState("signed-out");
+        })
+        .catch(() => setState("signed-out"));
+    })();
+  </script>
+</BaseLayout>
