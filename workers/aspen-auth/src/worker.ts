@@ -598,22 +598,34 @@ async function handleReview(req: Request, env: Env): Promise<Response> {
   // Special-case: reading-attached PDFs always land at papers/pmid-{pmid}.{ext}
   // so the listing endpoint can match them back to the right pick.
   //
-  // For suggestion-attached uploads (no pmid yet at upload time), admin
-  // must supply the destination pmid via the rename field (digits only).
+  // For suggestion-attached uploads, the chair already supplied the PMID
+  // when promoting the suggestion to a pick (recorded as resolvedPmid on
+  // the suggestion). So look that up automatically — no second entry
+  // needed. The rename field is only consulted as a last resort if the
+  // suggestion hasn't been promoted yet.
   const destinations: Array<{ src: string; dst: string }> = [];
   let effectivePmid: string | undefined;
   if (meta.category === "reading") {
     if (meta.pmid) {
       effectivePmid = meta.pmid;
     } else if (meta.suggestionId) {
-      const digits = rename.replace(/\D+/g, "");
-      if (!/^\d{6,9}$/.test(digits)) {
-        return jsonResponse({
-          ok: false,
-          error: "This PDF was attached to a suggestion — enter the destination PMID (6–9 digits) in the rename field before approving.",
-        }, 400);
+      // Look up the resolvedPmid stored on the suggestion when it was promoted.
+      const { list: suggs } = await fetchSuggestions(env);
+      const sugg = suggs.find((s) => suggestionKey(s) === meta.suggestionId);
+      if (sugg?.resolvedPmid && /^\d{6,9}$/.test(sugg.resolvedPmid)) {
+        effectivePmid = sugg.resolvedPmid;
+      } else {
+        // Fallback: admin can still override / supply PMID via rename
+        const digits = rename.replace(/\D+/g, "");
+        if (/^\d{6,9}$/.test(digits)) {
+          effectivePmid = digits;
+        } else {
+          return jsonResponse({
+            ok: false,
+            error: "Promote the linked suggestion to a pick first (so a PMID is recorded), or type the destination PMID in the rename field, before approving this PDF.",
+          }, 400);
+        }
       }
-      effectivePmid = digits;
     }
   }
   for (const src of filesToCopy) {
