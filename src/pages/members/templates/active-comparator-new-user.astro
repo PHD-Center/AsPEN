@@ -182,6 +182,12 @@ const PHENOTYPES = {
     { name: "Dementia", codes: "ICD-10 F00-F03, G30.*, G31.0, G31.83", notes: "" },
     { name: "Osteoporosis", codes: "ICD-10 M80.*, M81.*", notes: "" },
     { name: "Pregnancy", codes: "ICD-10 O*, Z3*; supplemented by pregnancy-specific dispensings", notes: "Consider trimester-specific look-back." },
+    {
+      name: "Lennox-Gastaut Syndrome (LGS)",
+      codes: "Confirmed LGS: ICD-10 G40.812 OR ≥1 rufinamide dispensing. Probable LGS: age ≤10 y at index with ≥3 antiseizure medications co-prescribed, plus ICD-9/10 developmental-delay codes.",
+      notes: "NHIRD-CGRD two-stage validation: NHIRD identification adjusted by CGRD EMR-confirmed PPV. 2018 PPV-adjusted prevalence ~2.4 / 100,000 overall (0.6 adult, 10.2 paediatric).",
+      validation: "Yang ASH, Tsai DHT (co-first), Chen LW, Cheng WM, Wang CC, Shao SC, Song WW, Kouhkamari MH, Huang WC, Bowditch S, Lai ECC. Epidemiology and Burden of Illness of Lennox-Gastaut Syndrome in Taiwan: A Retrospective Cohort Study. Risk Manag Healthc Policy 2025;18:3153-3166. PMID: 41000540.",
+    },
   ],
   exposures: [
     { name: "Metformin", codes: "ATC A10BA02", notes: "" },
