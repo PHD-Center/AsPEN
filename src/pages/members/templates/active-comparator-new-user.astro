@@ -573,11 +573,11 @@ const TIMELINE_PRESETS: Record<string, string> = {
           </summary>
           <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
             <div class="sm:col-span-2 flex items-center gap-2 flex-wrap">
-              <button type="button" data-open-library data-category="exposures" data-target-name="exposureName" data-target-codes="exposureCodes"
+              <button type="button" data-open-library data-category="exposures" data-target-name="exposureName" data-target-codes="exposureCodes" data-also-fill="picoI"
                       class="text-[10px] uppercase tracking-widest font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2 py-1 rounded transition">
                 📚 Pick exposure from library
               </button>
-              <button type="button" data-open-library data-category="exposures" data-target-name="comparatorName" data-target-codes="comparatorCodes"
+              <button type="button" data-open-library data-category="exposures" data-target-name="comparatorName" data-target-codes="comparatorCodes" data-also-fill="picoC"
                       class="text-[10px] uppercase tracking-widest font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2 py-1 rounded transition">
                 📚 Pick comparator from library
               </button>
@@ -633,11 +633,11 @@ const TIMELINE_PRESETS: Record<string, string> = {
           </summary>
           <div class="px-5 pb-5 space-y-3">
             <div>
-              <button type="button" data-open-library data-category="outcomes" data-target-name="outcomeNameHint" data-target-def="outcomeDef" data-target-codes="outcomeCodes" data-target-validation="outcomeValidation"
+              <button type="button" data-open-library data-category="outcomes" data-target-def="outcomeDef" data-target-codes="outcomeCodes" data-also-fill="picoO"
                       class="text-[10px] uppercase tracking-widest font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2 py-1 rounded transition">
                 📚 Pick outcome from validated library
               </button>
-              <span class="ml-2 text-[11px] text-slate-500">Fills definition, codes, and prior-validation citation in one click.</span>
+              <span class="ml-2 text-[11px] text-slate-500">Fills definition + codes; the validation citation is added to the References section automatically on export.</span>
             </div>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Operational definition</span>
@@ -647,11 +647,6 @@ const TIMELINE_PRESETS: Record<string, string> = {
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Code set</span>
               <input type="text" name="outcomeCodes" placeholder="ICD-10 I21.*, I63.*; cause-of-death I00-I99"
-                     class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-            </label>
-            <label class="flex flex-col gap-1">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Validation (if any)</span>
-              <input type="text" name="outcomeValidation" placeholder="Inpatient primary-diagnosis algorithm PPV ~85% (Lai 2018)"
                      class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
             <div>
@@ -972,9 +967,18 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
       if (!WORKER_URL) return setState("signed-out");
 
       const STORAGE_KEY = "aspen.protocol-builder.acnu";
+      const STORAGE_CITATIONS_KEY = "aspen.protocol-builder.acnu.citations";
       const form = document.querySelector("[data-builder]");
       const preview = document.querySelector("[data-preview]");
       const actionMsg = document.querySelector("[data-action-msg]");
+
+      // ── Picked citations (from library picks) — appended to References on export.
+      // Stored as { phenotypeName: citationString } so we dedup and can clear.
+      let pickedCitations = {};
+      try { pickedCitations = JSON.parse(localStorage.getItem(STORAGE_CITATIONS_KEY) || "{}") || {}; } catch {}
+      const savePickedCitations = () => {
+        try { localStorage.setItem(STORAGE_CITATIONS_KEY, JSON.stringify(pickedCitations)); } catch {}
+      };
 
       const setMsg = (msg, isError = false) => {
         if (!actionMsg) return;
@@ -1067,7 +1071,17 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
           centralised: "Centralised — site-level individual data are pooled at the coordinating centre under appropriate data-sharing agreements.",
         })[s.arch] || "Federated";
 
-        const refs       = (s.references || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const refsUser   = (s.references || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        // Merge user-typed references with citations harvested from library
+        // picks (dedup by exact string).
+        const refsAll    = (() => {
+          const set = new Set(refsUser);
+          for (const cite of Object.values(pickedCitations)) {
+            if (cite && cite.trim()) set.add(cite.trim());
+          }
+          return Array.from(set);
+        })();
+        const refs       = refsAll;
         const milestones = (s.timeline   || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const inclusion  = mergeList(s.inclusionPick,    s.inclusionCustom);
         const exclusion  = mergeList(s.exclusionPick,    s.exclusionCustom);
@@ -1131,8 +1145,6 @@ ${bullets(exclusion)}
 **Operational definition.** ${orFb(s.outcomeDef, "_(operational outcome definition)_")}
 
 **Code set.** ${orFb(s.outcomeCodes, "_(code set)_")}
-
-**Validation.** ${orFb(s.outcomeValidation, "_(prior validation, if any)_")}
 
 **Secondary outcomes**
 
@@ -1270,6 +1282,8 @@ _Drafted with the AsPEN protocol builder (${today})._
       const doReset = () => {
         if (!confirm("Clear every field and forget the saved draft?")) return;
         localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(STORAGE_CITATIONS_KEY);
+        pickedCitations = {};
         form.reset();
         const ta = form.querySelector('[name="timeline"]');
         if (ta) ta.value = TIMELINE_PRESETS["12-month"];
@@ -1389,7 +1403,14 @@ _Drafted with the AsPEN protocol builder (${today})._
 
         const inclusion  = mergeList(s.inclusionPick,    s.inclusionCustom);
         const exclusion  = mergeList(s.exclusionPick,    s.exclusionCustom);
-        const refs       = (s.references || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const refsUser   = (s.references || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const refs       = (() => {
+          const set = new Set(refsUser);
+          for (const cite of Object.values(pickedCitations)) {
+            if (cite && cite.trim()) set.add(cite.trim());
+          }
+          return Array.from(set);
+        })();
         const milestones = (s.timeline   || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const censoring  = mergeList(s.censoringPick,    s.censoringCustom);
         const covariates = mergeList(s.covariatesPick,   s.covariatesCustom);
@@ -1477,7 +1498,6 @@ _Drafted with the AsPEN protocol builder (${today})._
         children.push(h1("5. Outcome ascertainment"));
         children.push(p([text("Operational definition. ", { bold: true }), text(s.outcomeDef || "—")]));
         children.push(p([text("Code set. ", { bold: true }), text(s.outcomeCodes || "—")]));
-        children.push(p([text("Validation. ", { bold: true }), text(s.outcomeValidation || "—")]));
         children.push(h2("Secondary outcomes"));
         secondary.length ? secondary.forEach((l) => children.push(bullet(l))) : children.push(para("(none specified)"));
 
@@ -1616,10 +1636,19 @@ _Drafted with the AsPEN protocol builder (${today})._
               const el = form.querySelector(`[name="${fieldName}"]`);
               if (el) el.value = val;
             };
-            fill("name",       it.name);
-            fill("codes",      it.codes);
-            fill("def",        it.definition);
-            fill("validation", it.validation);
+            fill("name",  it.name);
+            fill("codes", it.codes);
+            fill("def",   it.definition);
+            // Also-fill: mirror the phenotype name into a PICO field
+            if (currentTargets.alsoFill) {
+              const el = form.querySelector(`[name="${currentTargets.alsoFill}"]`);
+              if (el && it.name) el.value = it.name;
+            }
+            // Record citation for the References section
+            if (it.validation) {
+              pickedCitations[it.name] = it.validation;
+              savePickedCitations();
+            }
             closeLibrary();
             render();
           });
@@ -1645,10 +1674,10 @@ _Drafted with the AsPEN protocol builder (${today})._
       document.querySelectorAll("[data-open-library]").forEach((btn) => {
         btn.addEventListener("click", () => {
           openLibrary(btn.dataset.category, {
-            name:       btn.dataset.targetName,
-            codes:      btn.dataset.targetCodes,
-            def:        btn.dataset.targetDef,
-            validation: btn.dataset.targetValidation,
+            name:     btn.dataset.targetName,
+            codes:    btn.dataset.targetCodes,
+            def:      btn.dataset.targetDef,
+            alsoFill: btn.dataset.alsoFill,
           });
         });
       });
