@@ -73,6 +73,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         <div class="px-6 pb-6 space-y-3 border-t border-slate-100 pt-4">
           <form data-profile-form class="grid sm:grid-cols-2 gap-3">
             <label class="flex flex-col gap-1 sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Email *</span>
+              <input type="email" name="email" required class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              <span class="text-[11px] text-slate-500">Changing your email re-issues your session and cascades through reading group, suggestions, and delete-requests. Super admin email can't be changed here.</span>
+            </label>
+            <label class="flex flex-col gap-1 sm:col-span-2">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Name *</span>
               <input type="text" name="name" required class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
@@ -122,8 +127,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
                 <option value="other">Other</option>
               </select>
             </label>
-            <p class="text-[11px] text-slate-500 sm:col-span-2 leading-relaxed">Email is shown for reference and can only be changed by an admin. Status / admin flag are also admin-only.</p>
-            <p class="text-xs text-slate-700 sm:col-span-2"><strong>Email:</strong> <span data-profile-email>—</span></p>
+            <p class="text-[11px] text-slate-500 sm:col-span-2 leading-relaxed">Status and admin flag are admin-only. Set password lives in Account settings below.</p>
             <div class="sm:col-span-2 flex items-center gap-3">
               <button type="submit" class="inline-flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-2.5 rounded-lg transition text-sm disabled:opacity-60">
                 Save changes
@@ -231,12 +235,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
           const el = form.querySelector(`[name="${name}"]`);
           if (el) el.value = val ?? "";
         };
+        set("email", member.email);
         set("name", member.name);
         set("affiliation", member.affiliation);
         set("country", member.country);
         set("role", member.role);
-        const emailEl = document.querySelector("[data-profile-email]");
-        if (emailEl) emailEl.textContent = member.email || "—";
       };
 
       const refresh = async () => {
@@ -332,12 +335,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         e.preventDefault();
         const data = new FormData(profileForm);
         const body = {
+          email:       String(data.get("email") || "").trim(),
           name:        String(data.get("name") || "").trim(),
           affiliation: String(data.get("affiliation") || "").trim(),
           country:     String(data.get("country") || "").trim(),
           role:        String(data.get("role") || "").trim(),
         };
-        if (!body.name) { setProfileMsg("Name can't be empty.", true); return; }
+        if (!body.name)  { setProfileMsg("Name can't be empty.",  true); return; }
+        if (!body.email) { setProfileMsg("Email can't be empty.", true); return; }
         const btn = profileForm.querySelector("button[type='submit']");
         btn.disabled = true;
         setProfileMsg("Saving…");
@@ -350,7 +355,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
           });
           const d = await r.json().catch(() => ({}));
           if (r.ok && d.ok) {
-            setProfileMsg("Saved.");
+            if (d.emailChanged) {
+              setProfileMsg("Saved. Email changed — your session has been refreshed.");
+            } else {
+              setProfileMsg("Saved.");
+            }
             refresh();  // Re-fetch + repopulate greeting line
           } else {
             setProfileMsg(d.error || "Couldn't save.", true);

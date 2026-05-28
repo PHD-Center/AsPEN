@@ -295,26 +295,50 @@ async function handleSetPassword(req: Request, env: Env): Promise<Response> {
 }
 
 async function handleUpdateOwnProfile(req: Request, env: Env): Promise<Response> {
-  const email = await sessionEmail(req, env);
-  if (!email) return jsonResponse({ ok: false, error: "Not signed in." }, 401);
+  const oldEmail = await sessionEmail(req, env);
+  if (!oldEmail) return jsonResponse({ ok: false, error: "Not signed in." }, 401);
 
   const body = await safeJson<{
+    email?: string;
     name?: string;
     affiliation?: string;
     country?: string;
     role?: string;
   }>(req);
 
+  // Detect email change up front; lowercase for lookups, preserve case for display.
+  const newEmailRaw = typeof body?.email === "string" ? body.email.trim() : "";
+  const newEmailLc  = newEmailRaw.toLowerCase();
+  const wantsEmailChange = newEmailLc !== "" && newEmailLc !== oldEmail;
+
+  if (wantsEmailChange) {
+    if (!isLikelyEmail(newEmailLc)) {
+      return jsonResponse({ ok: false, error: "New email doesn't look valid." }, 400);
+    }
+    if (isSuperAdmin(oldEmail, env)) {
+      return jsonResponse({
+        ok: false,
+        error: "Super-admin email is pinned in deployment config and can't be changed via self-edit. Ask the deployer to update SUPERADMIN_EMAILS.",
+      }, 400);
+    }
+  }
+
   const { members, sha } = await fetchMembersJson(env);
-  const idx = members.findIndex((m) => m.email.toLowerCase() === email);
+  // Check new email isn't taken by another member.
+  if (wantsEmailChange && members.some((m) => m.email.toLowerCase() === newEmailLc && m.email.toLowerCase() !== oldEmail)) {
+    return jsonResponse({ ok: false, error: "That email is already taken by another member." }, 400);
+  }
+
+  const idx = members.findIndex((m) => m.email.toLowerCase() === oldEmail);
   if (idx === -1 || members[idx].status !== "active") {
     return jsonResponse({ ok: false, error: "Not signed in." }, 401);
   }
 
   const m = members[idx];
-  // Members can update these four fields about themselves.
-  // They CANNOT change their own email, status, admin flag, passwordHash,
-  // or joinedDate — those are admin-only.
+  // Members can update these fields about themselves. They CANNOT change
+  // their status, admin flag, passwordHash, or joinedDate — those are
+  // admin-only. Email change is allowed but cascades through other JSON
+  // files (reading / suggestions / delete-requests).
   if (typeof body?.name === "string") {
     const n = body.name.trim();
     if (!n) return jsonResponse({ ok: false, error: "Name can't be empty." }, 400);
@@ -329,9 +353,94 @@ async function handleUpdateOwnProfile(req: Request, env: Env): Promise<Response>
   if (typeof body?.role === "string") {
     m.role = body.role.trim().slice(0, 50) || undefined;
   }
+  if (wantsEmailChange) {
+    m.email = newEmailRaw;
+  }
 
   members[idx] = m;
-  await putMembersJson(env, members, sha, `${email}: self-update profile`);
+  await putMembersJson(env, members, sha,
+    `${oldEmail}${wantsEmailChange ? ` → ${newEmailLc}` : ""}: self-update profile`);
+
+  // Cascade email change across other JSON files where it appears as a key
+  // or author reference. Each is a separate atomic PUT — best-effort, but
+  // logged so the chair can audit via git history if anything goes wrong.
+  if (wantsEmailChange) {
+    try {
+      const { list: picks, sha: picksSha } = await fetchReading(env);
+      let changed = false;
+      for (const p of picks) {
+        if (p.pickedBy?.toLowerCase() === oldEmail) { p.pickedBy = newEmailLc; changed = true; }
+        if (p.reactions) {
+          for (const k of Object.keys(p.reactions)) {
+            if (k.toLowerCase() === oldEmail) {
+              p.reactions[newEmailLc] = p.reactions[k];
+              if (k !== newEmailLc) delete p.reactions[k];
+              changed = true;
+            }
+          }
+        }
+        if (p.takes) {
+          for (const k of Object.keys(p.takes)) {
+            if (k.toLowerCase() === oldEmail) {
+              p.takes[newEmailLc] = p.takes[k];
+              if (k !== newEmailLc) delete p.takes[k];
+              changed = true;
+            }
+          }
+        }
+        if (p.comments) {
+          for (const c of p.comments) {
+            if (c.author?.toLowerCase() === oldEmail) { c.author = newEmailLc; changed = true; }
+          }
+        }
+      }
+      if (changed) {
+        await putJsonFile(env, "reading.json",
+          JSON.stringify(picks, null, 2) + "\n", picksSha,
+          `Email change cascade: ${oldEmail} → ${newEmailLc} (reading.json)`);
+      }
+    } catch (e) { console.error("cascade reading", e); }
+
+    try {
+      const { list: suggs, sha: suggsSha } = await fetchSuggestions(env);
+      let changed = false;
+      for (const s of suggs) {
+        if (s.suggestedBy?.toLowerCase() === oldEmail) { s.suggestedBy = newEmailLc; changed = true; }
+      }
+      if (changed) {
+        await putJsonFile(env, "suggestions.json",
+          JSON.stringify(suggs, null, 2) + "\n", suggsSha,
+          `Email change cascade: ${oldEmail} → ${newEmailLc} (suggestions.json)`);
+      }
+    } catch (e) { console.error("cascade suggestions", e); }
+
+    try {
+      const { list: dreqs, sha: dreqsSha } = await fetchDeleteRequests(env);
+      let changed = false;
+      for (const d of dreqs) {
+        if (d.requestedBy?.toLowerCase() === oldEmail) { d.requestedBy = newEmailLc; changed = true; }
+      }
+      if (changed) {
+        await putJsonFile(env, "delete-requests.json",
+          JSON.stringify(dreqs, null, 2) + "\n", dreqsSha,
+          `Email change cascade: ${oldEmail} → ${newEmailLc} (delete-requests.json)`);
+      }
+    } catch (e) { console.error("cascade delete-requests", e); }
+
+    // Re-issue session cookie with the new email as sub — otherwise the
+    // current cookie's sub no longer matches a member and the user gets
+    // bounced to the sign-in page on the very next request.
+    const days = parseInt(env.SESSION_DAYS, 10) || 30;
+    const session = await signJwt(
+      { sub: newEmailLc, purpose: "session" },
+      env.JWT_SECRET,
+      days * 24 * 60 * 60,
+    );
+    const headers = new Headers();
+    headers.set("Set-Cookie", buildSessionCookie(session, days));
+    return jsonResponse({ ok: true, emailChanged: true }, 200, headers);
+  }
+
   return jsonResponse({ ok: true });
 }
 
