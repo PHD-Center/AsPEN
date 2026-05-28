@@ -204,7 +204,16 @@ const EMOJIS = ["👍", "🤔", "📌", "⭐"];
                 <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-brand-700">
                   ${isFeatured ? "Latest issue" : "Issue"} · No. ${issueNum}
                 </p>
-                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">${esc(fmtDate(pick.pickedAt))}</p>
+                <div class="flex items-center gap-3">
+                  <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">${esc(fmtDate(pick.pickedAt))}</p>
+                  ${me.isAdmin ? `
+                    <button type="button" data-admin-delete-pick data-pmid="${esc(pick.pmid)}"
+                            class="text-[10px] uppercase tracking-widest font-bold text-rose-700 hover:bg-rose-50 border border-rose-300 px-2 py-0.5 rounded transition"
+                            title="Remove this pick from the reading group">
+                      Delete pick
+                    </button>
+                  ` : ""}
+                </div>
               </div>
               <h2 class="mt-4 font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 leading-tight tracking-tight">
                 ${esc(pick.headline)}
@@ -224,6 +233,14 @@ const EMOJIS = ["👍", "🤔", "📌", "⭐"];
                   <p class="text-[15px] text-slate-700 leading-relaxed whitespace-pre-line">${esc(restCommentary)}</p>
                 ` : ""}
                 ${!lede && !restCommentary ? `<p class="text-sm text-slate-400 italic">No editor's note for this issue.</p>` : ""}
+
+                <!-- Auto-pulled paper excerpt (discussion para 1, or abstract) -->
+                <div data-paper-excerpt data-pmid="${esc(pick.pmid)}" data-pmcid="${esc(paper?.pmcid || "")}" class="mt-6 pt-6 border-t border-slate-100">
+                  <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">From the paper</p>
+                  <p class="text-xs text-slate-400 italic mt-2" data-excerpt-status>Loading excerpt…</p>
+                  <div data-excerpt-body class="hidden mt-2 text-[15px] text-slate-700 leading-relaxed font-serif whitespace-pre-line"></div>
+                  <p data-excerpt-source class="hidden mt-2 text-[10px] uppercase tracking-widest text-slate-500"></p>
+                </div>
               </div>
 
               <!-- Paper-of-issue side rail -->
@@ -386,6 +403,7 @@ const EMOJIS = ["👍", "🤔", "📌", "⭐"];
             emptyEl.classList.add("hidden");
             totalPicks = picks.length;
             root.innerHTML = picks.map((p, i) => renderPick(p, i)).join("");
+            renderExcerpts();
           }
         } catch {
           setError("Couldn't reach the auth service.");
@@ -462,6 +480,120 @@ const EMOJIS = ["👍", "🤔", "📌", "⭐"];
           msgEl.classList.add("text-rose-700");
         }
       });
+
+      // Admin: delete a whole pick from the magazine view.
+      root?.addEventListener("click", async (e) => {
+        const btn = e.target?.closest?.("[data-admin-delete-pick]");
+        if (!btn) return;
+        const pmid = btn.dataset.pmid;
+        if (!confirm(`Remove this pick (PMID ${pmid}) from the reading group? Reactions, takes and comments will go with it. The paper PDF (if any) stays in the repo.`)) return;
+        btn.disabled = true;
+        const r = await fetch(`${WORKER_URL}/api/admin/reading`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "remove", pmid }),
+        });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.ok) {
+          setTimeout(refresh, 400);
+        } else {
+          alert(d.error || "Delete failed.");
+          btn.disabled = false;
+        }
+      });
+
+      // ── Auto-fetch a paper excerpt for each pick ─────────────────
+      // Tries PMC first (Discussion section, first paragraph) then falls back
+      // to the PubMed abstract. Cached in localStorage by pmid so repeat
+      // visits don't hammer eutils.
+      const EXCERPT_CACHE_PREFIX = "aspen.paper-excerpt.v1.";
+
+      const fetchExcerpt = async (pmid, pmcid) => {
+        // Discussion first paragraph via PMC
+        if (pmcid) {
+          try {
+            const cleanPmc = String(pmcid).replace(/^PMC/i, "");
+            const r = await fetch(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pmc&id=${cleanPmc}&rettype=full&retmode=xml`);
+            if (r.ok) {
+              const xml = await r.text();
+              const doc = new DOMParser().parseFromString(xml, "text/xml");
+              // Try sec[sec-type=discussion] first, then headings containing "Discussion"
+              let discussionSec = doc.querySelector('sec[sec-type="discussion"]');
+              if (!discussionSec) {
+                for (const sec of doc.querySelectorAll("sec")) {
+                  const title = sec.querySelector(":scope > title");
+                  if (title && /discussion/i.test(title.textContent || "")) {
+                    discussionSec = sec; break;
+                  }
+                }
+              }
+              if (discussionSec) {
+                const firstP = discussionSec.querySelector("p");
+                const txt = (firstP?.textContent || "").trim();
+                if (txt.length > 100) {
+                  return { source: "discussion", text: txt.slice(0, 1800) };
+                }
+              }
+            }
+          } catch {}
+        }
+        // Fall back to PubMed abstract
+        try {
+          const r = await fetch(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${pmid}&retmode=xml`);
+          if (!r.ok) return null;
+          const xml = await r.text();
+          const doc = new DOMParser().parseFromString(xml, "text/xml");
+          const parts = Array.from(doc.querySelectorAll("AbstractText")).map((el) => {
+            const label = el.getAttribute("Label");
+            const text = (el.textContent || "").trim();
+            return label ? `**${label}.** ${text}` : text;
+          }).filter(Boolean);
+          if (parts.length === 0) return null;
+          return { source: "abstract", text: parts.join("\n\n") };
+        } catch {}
+        return null;
+      };
+
+      const renderExcerpts = () => {
+        const blocks = root?.querySelectorAll("[data-paper-excerpt]") || [];
+        blocks.forEach(async (block) => {
+          if (block.dataset.loaded) return;
+          block.dataset.loaded = "1";
+          const pmid  = block.dataset.pmid;
+          const pmcid = block.dataset.pmcid;
+          if (!pmid) return;
+          const statusEl = block.querySelector("[data-excerpt-status]");
+          const bodyEl   = block.querySelector("[data-excerpt-body]");
+          const sourceEl = block.querySelector("[data-excerpt-source]");
+          const show = (data) => {
+            if (!data) {
+              if (statusEl) statusEl.textContent = "Excerpt not available for this paper.";
+              return;
+            }
+            if (statusEl) statusEl.classList.add("hidden");
+            if (bodyEl) {
+              bodyEl.classList.remove("hidden");
+              bodyEl.textContent = data.text;
+            }
+            if (sourceEl) {
+              sourceEl.classList.remove("hidden");
+              sourceEl.textContent = data.source === "discussion"
+                ? "from the discussion section · via pmc"
+                : "from the abstract · via pubmed";
+            }
+          };
+          // Cache
+          try {
+            const cached = localStorage.getItem(EXCERPT_CACHE_PREFIX + pmid);
+            if (cached) { show(JSON.parse(cached)); return; }
+          } catch {}
+          const data = await fetchExcerpt(pmid, pmcid);
+          if (data) {
+            try { localStorage.setItem(EXCERPT_CACHE_PREFIX + pmid, JSON.stringify(data)); } catch {}
+          }
+          show(data);
+        });
+      };
 
       // Download paper PDF (member-contributed) — fetch private blob → save as file.
       // Path is always under papers/, so /api/content/<path> is the right endpoint.
