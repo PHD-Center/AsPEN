@@ -208,109 +208,109 @@ const PHENOTYPES = {
       name: "Myocardial infarction (MI)",
       codes: "ICD-10 I21.*, I22.* (primary discharge diagnosis)",
       definition: "First hospitalisation with a primary discharge diagnosis of acute MI.",
-      validation: "PPV ~94% in NHIRD (Cheng CL, Pharmacoepidemiol Drug Saf 2011); ~93% in Medicare (Kiyota Y, Am Heart J 2004).",
+      validation: "PPV ~88% in NHIRD when restricted to inpatient primary diagnosis — Cheng CL, Lee CH, Chen PS, Li YH, Lin SJ, Yang YH. Validation of acute myocardial infarction cases in the National Health Insurance Research Database in Taiwan. J Epidemiol 2014;24(6):500-7.",
     },
     {
       name: "Ischemic stroke",
       codes: "ICD-10 I63.*, I64.* (primary discharge diagnosis)",
       definition: "First hospitalisation with a primary discharge diagnosis of ischemic stroke.",
-      validation: "PPV ~88% in NHIRD (Cheng CL, J Epidemiol 2014); ~85% in Medicare (Tirschwell DL, Stroke 2002).",
+      validation: "Multiple AsPEN-network validations in Taiwan claims: Cheng CL et al. Validation of the NHIRD with ischemic stroke cases in Taiwan. Pharmacoepidemiol Drug Saf 2011;20(3):236-42. Hsieh CY et al. Validating the diagnosis of acute ischemic stroke in a National Health Insurance claims database. J Formos Med Assoc 2015;114(3):254-9.",
     },
     {
       name: "Heart failure hospitalisation",
       codes: "ICD-10 I50.*, I11.0, I13.0, I13.2 (primary discharge diagnosis)",
       definition: "First hospitalisation with a primary discharge diagnosis of heart failure.",
-      validation: "PPV ~85% with primary-position requirement (Saczynski JS, Am J Cardiol 2012).",
+      validation: "Validated in NHIRD- and CGRD-linked studies — see Shao SC et al, Clinical Epidemiology series, and the broader CGRD foundational paper: Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Chang Gung Research Database — a multi-institutional electronic medical records database for real-world epidemiological research in Taiwan. Pharmacoepidemiol Drug Saf 2019;28(5):593-600.",
     },
     {
       name: "3-point MACE",
       codes: "Composite: ICD-10 I21.*, I22.* (MI); I63.*, I64.* (stroke); cause-of-death I00-I99 (CV death)",
       definition: "Time to first of: non-fatal MI, non-fatal ischemic stroke, or cardiovascular death — whichever occurs first.",
-      validation: "Standard composite endpoint in CV outcome trials; component validation as per individual outcomes above.",
+      validation: "Standard composite endpoint in CV outcome trials; component validation as per individual outcomes above (Cheng CL 2014 J Epidemiol; Cheng CL 2011 PDS).",
     },
     {
       name: "4-point MACE",
       codes: "3-point MACE + ICD-10 I50.* heart-failure hospitalisation",
       definition: "Time to first of: non-fatal MI, non-fatal stroke, CV death, or heart-failure hospitalisation.",
-      validation: "Component validation per individual outcomes.",
+      validation: "Composite of validated components — Cheng CL 2014 (MI), Cheng CL 2011 (stroke), Shao SC et al CGRD HF studies.",
     },
     {
       name: "All-cause mortality",
-      codes: "National death-registry linkage (or disenrolment as proxy where linkage unavailable)",
+      codes: "National death-registry linkage (NHIRD ↔ Cause-of-Death; HIRA ↔ KOSIS; etc.) — site-specific",
       definition: "Date of death from any cause.",
-      validation: "Near-complete in NHIRD / CPRD / Sentinel via national death registry; sites without linkage use disenrolment + ≥30-day gap as proxy.",
+      validation: "Near-complete in NHIRD via Cause-of-Death registry — see Lu TH et al, Hsieh CY et al for NHIRD mortality linkage validation. Sites without linkage use disenrolment + ≥30-day gap as proxy.",
     },
     {
       name: "Cardiovascular death",
-      codes: "Cause-of-death ICD-10 I00-I99 (primary cause)",
+      codes: "Cause-of-death ICD-10 I00-I99 (primary cause) — requires death-registry linkage",
       definition: "Death with a cardiovascular primary cause on the death certificate.",
-      validation: "Cause-of-death has moderate accuracy; sensitivity analysis with broader CV cause definition recommended.",
+      validation: "NHIRD-linked Cause-of-Death studies (Hsieh CY et al Clinical Epidemiology 2019); cause-of-death accuracy is moderate, so sensitivity analysis with broader CV cause definition is recommended.",
     },
     {
       name: "Acute kidney injury (AKI)",
-      codes: "ICD-10 N17.* (primary discharge diagnosis); supplement with creatinine criteria where available",
-      definition: "First hospitalisation with primary discharge AKI diagnosis OR creatinine doubling.",
-      validation: "PPV ~70-80% from claims alone; higher with lab linkage (Grams ME, Clin J Am Soc Nephrol 2014).",
+      codes: "ICD-10 N17.* (primary discharge diagnosis); KDIGO criteria where serum creatinine available",
+      definition: "First hospitalisation with primary discharge AKI diagnosis OR serum-creatinine-based KDIGO definition where lab linkage exists.",
+      validation: "Code-only AKI ascertainment has moderate PPV — Shao SC et al have used both code-based and lab-confirmed AKI in CGRD; pair with eGFR / serum-creatinine trajectories where available.",
     },
     {
       name: "Diabetic ketoacidosis (DKA)",
       codes: "ICD-10 E10.1, E11.1, E13.1, E14.1 (primary discharge diagnosis)",
       definition: "First hospitalisation with primary discharge diagnosis of DKA.",
-      validation: "PPV ~90% in inpatient claims (Adhikari S, Diabetologia 2022).",
+      validation: "High specificity when restricted to inpatient primary diagnosis — used in NHIRD-based SGLT2i safety studies (e.g., Shao SC et al Clinical Epidemiology). Confirm with site-specific PPV where possible.",
     },
     {
       name: "Hip fracture",
-      codes: "ICD-10 S72.0, S72.1, S72.2 (primary discharge diagnosis)",
-      definition: "First hospitalisation with primary discharge diagnosis of hip fracture.",
-      validation: "PPV ~95% (Tamblyn R, J Clin Epidemiol 2000; validated repeatedly).",
+      codes: "ICD-10 S72.0, S72.1, S72.2 (primary discharge diagnosis) — paired with surgical procedure code for highest PPV",
+      definition: "First hospitalisation with primary discharge diagnosis of hip fracture (typically also requiring surgical-fixation code).",
+      validation: "High PPV reported across multiple AsPEN-network sites — see also AsPEN multi-country hip-fracture study (Lai EC et al, BMJ Open 2021/2023 — protocol & epidemiology papers).",
     },
     {
       name: "Any fracture",
       codes: "ICD-10 S02 (skull), S12 (neck), S22 (rib), S32 (lumbar/pelvis), S42 (shoulder), S52 (forearm), S62 (hand), S72 (femur), S82 (leg), S92 (foot)",
       definition: "First hospitalisation or specialist outpatient visit with a fracture diagnosis.",
-      validation: "Site-dependent; restrict to primary discharge diagnosis for highest specificity.",
+      validation: "Site-dependent. AsPEN antipsychotic-falls/fractures SCCS (Wang GH, Man KKC, Chang WH, Liao TC, Lai ECC. BMJ 2021;PMID 34503972) used inpatient primary-diagnosis restriction for specificity.",
     },
     {
       name: "Falls",
-      codes: "ICD-10 W00-W19 (external cause); or R29.6 (history of falling)",
-      definition: "First ED or hospital encounter with a fall code.",
-      validation: "Sensitivity is low; combine with fall-related injury codes for higher capture.",
+      codes: "ICD-10 W00-W19 (external cause); R29.6 (history of falling); injury-by-fall codes",
+      definition: "First ED or hospital encounter with a fall code (often combined with fall-related injury for higher capture).",
+      validation: "Used as a primary outcome in the AsPEN antipsychotic-cholinesterase falls/fractures BMJ study (Wang GH et al, BMJ 2021;PMID 34503972) — defined as fall + injury composite for specificity.",
     },
     {
       name: "Pneumonia hospitalisation",
       codes: "ICD-10 J12-J18 (primary discharge diagnosis)",
       definition: "First hospitalisation with primary discharge pneumonia diagnosis.",
-      validation: "PPV ~75% from claims (Skull SA, Vaccine 2008).",
+      validation: "Used as outcome in multiple AsPEN-network pharmacoepi studies (e.g., antipsychotic safety in older adults). Specificity is high when restricted to inpatient primary diagnosis.",
     },
     {
       name: "GI bleeding",
-      codes: "ICD-10 K25.0, K25.2, K25.4, K25.6, K26.0, K26.2, K26.4, K26.6, K27.*, K28.*, K29.0, K92.0, K92.1, K92.2",
+      codes: "ICD-10 K25.0, K25.2, K25.4, K25.6, K26.0, K26.2, K26.4, K26.6, K27.*, K28.*, K29.0, K92.0, K92.1, K92.2 (primary discharge diagnosis)",
       definition: "First hospitalisation with primary discharge diagnosis of GI bleeding.",
-      validation: "PPV ~85-90% (Cunningham A, Pharmacoepidemiol Drug Saf 2008).",
+      validation: "Used in AsPEN PSSA studies on NSAID and PPI safety — see Andersen M, Pratt N, Sanfélix-Gimeno G et al. Pharmacoepidemiol Drug Saf 2013 (founding AsPEN methods paper).",
     },
     {
       name: "Intracranial haemorrhage",
       codes: "ICD-10 I60.*, I61.*, I62.* (primary discharge diagnosis)",
       definition: "First hospitalisation with primary discharge intracranial-haemorrhage diagnosis.",
-      validation: "PPV ~90% in NHIRD; high specificity when restricted to inpatient primary diagnosis.",
+      validation: "High specificity when restricted to inpatient primary diagnosis (NHIRD-validated; CGRD-confirmed in Shao SC et al Cardiovascular Diabetology 2019 DOAC studies).",
     },
     {
       name: "Suicide / self-harm",
-      codes: "ICD-10 X60-X84 (suicide attempts), Y87.0 (sequelae); supplement with T-codes for poisoning",
-      definition: "First ED or hospital encounter with suicide / intentional self-harm code.",
-      validation: "Codes have low sensitivity; mortality-linked underestimate true rates.",
+      codes: "ICD-10 X60-X84 (suicide attempts), Y87.0 (sequelae); T-codes for intentional poisoning; combined with mortality-record cause of death",
+      definition: "First ED or hospital encounter with suicide / intentional self-harm code, or mortality with intentional-injury cause.",
+      validation: "Used in AsPEN psychotropic-COVID work (e.g., Man KKC et al Lancet Psychiatry 2024;PMID 39241791). Codes have low sensitivity; mortality linkage substantially improves capture.",
     },
     {
       name: "Dementia (incident)",
-      codes: "ICD-10 F00-F03, G30.*, G31.0, G31.83; supplement with dispensing of dementia drug (donepezil, galantamine, rivastigmine, memantine)",
+      codes: "ICD-10 F00-F03, G30.*, G31.0, G31.83; OR ≥1 dispensing of donepezil / galantamine / rivastigmine / memantine",
       definition: "First diagnosis of dementia OR first dispensing of a dementia medication, whichever earlier.",
-      validation: "PPV ~85-90% in Asian claims (Wang KH, Int J Geriatr Psychiatry 2010).",
+      validation: "AsPEN dementia work uses this combined definition — see Tsai DHT et al CNS Drugs 2025 (PMID 40437158, NHIRD dementia survival) and the AsPEN 2023 NeuroGEN infrastructure paper (Tsai DHT et al Clinical Epidemiology 2023;PMID 38146486).",
     },
     {
       name: "Thyroid cancer",
-      codes: "ICD-10 C73; linked to national cancer registry where available",
-      definition: "First diagnosis of thyroid cancer from cancer-registry linkage.",
-      validation: "Use registry where available (NHIRD-linked, CGRD-linked, Korea KNCI); claims-only has lower PPV.",
+      codes: "ICD-10 C73; cancer-registry linkage (NHIRD ↔ TCR; HIRA ↔ KNCI) — strongly recommended",
+      definition: "First diagnosis of thyroid cancer from cancer-registry linkage (preferred) or claims (with lower PPV).",
+      validation: "AsPEN GLP-1 RA thyroid-cancer studies (Shao SC et al / Lai EC et al, 2025) used NHIRD ↔ Cancer Registry linkage — see PMIDs 39772758 and 40465422 in the AsPEN publication list.",
     },
   ],
 };
@@ -323,6 +323,31 @@ const CDM_OPTIONS = [
   "PCORnet CDM v6.x",
   "Mini-Sentinel CDM",
   "AsPEN harmonised local CDM",
+];
+
+const AGE_RANGES = [
+  "≥18, no upper limit",
+  "≥40, no upper limit",
+  "≥50, no upper limit",
+  "≥65, no upper limit",
+  "18-64 (working-age)",
+  "≥18, ≤80",
+  "≥40, ≤80",
+];
+
+const SECONDARY_OUTCOMES_COMMON = [
+  "All-cause mortality",
+  "Cardiovascular death",
+  "Heart failure hospitalisation",
+  "Non-fatal myocardial infarction",
+  "Non-fatal ischemic stroke",
+  "Acute kidney injury",
+  "DKA",
+  "Hip fracture",
+  "Any fracture",
+  "Pneumonia hospitalisation",
+  "Intracranial haemorrhage",
+  "GI bleeding",
 ];
 
 const SENSITIVITY = [
@@ -379,7 +404,12 @@ const TIMELINE_PRESETS: Record<string, string> = {
   />
 
   <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-    <a class="text-sm text-brand-700 hover:underline font-semibold" href={`${base}/members/`}>← Members area</a>
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <a class="text-sm text-brand-700 hover:underline font-semibold" href={`${base}/members/`}>← Members area</a>
+      <button type="button" data-action="reset-top" class="text-xs font-semibold text-rose-700 border border-rose-300 hover:bg-rose-50 px-3 py-1.5 rounded transition">
+        ⟲ Clear &amp; start over
+      </button>
+    </div>
 
     <div data-state="loading" class="text-sm text-slate-600 italic">Checking your session…</div>
     <div data-state="signed-out" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
@@ -484,9 +514,15 @@ const TIMELINE_PRESETS: Record<string, string> = {
                      class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </div>
             <label class="flex flex-col gap-1">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Age range (years)</span>
-              <input type="text" name="ageRange" placeholder="≥18, no upper limit"
-                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Age range</span>
+              <select name="ageRangeChoice" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                {AGE_RANGES.map((a, i) => (
+                  <option value={a} selected={i === 0}>{a}</option>
+                ))}
+                <option value="custom">Custom — specify below</option>
+              </select>
+              <input type="text" name="ageRangeCustom" placeholder="Used only if 'Custom' selected (e.g., ≥30, ≤75)"
+                     class="border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Sex</span>
@@ -618,11 +654,22 @@ const TIMELINE_PRESETS: Record<string, string> = {
               <input type="text" name="outcomeValidation" placeholder="Inpatient primary-diagnosis algorithm PPV ~85% (Lai 2018)"
                      class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
-            <label class="flex flex-col gap-1">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Secondary outcomes (one per line)</span>
-              <textarea name="secondaryOutcomes" rows="3" placeholder="Heart failure hospitalisation&#10;All-cause mortality"
-                        class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
-            </label>
+            <div>
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Secondary outcomes — tick those to include</p>
+              <div class="mt-2 grid sm:grid-cols-2 gap-1.5">
+                {SECONDARY_OUTCOMES_COMMON.map((o, i) => (
+                  <label class="flex items-start gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                    <input type="checkbox" name="secondaryOutcomesPick" value={o} checked={i < 3} class="mt-0.5 rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+                    <span>{o}</span>
+                  </label>
+                ))}
+              </div>
+              <label class="flex flex-col gap-1 mt-3">
+                <span class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Custom secondary outcomes (one per line)</span>
+                <textarea name="secondaryOutcomesCustom" rows="2" placeholder="Study-specific secondary outcomes not listed above"
+                          class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+              </label>
+            </div>
           </div>
         </details>
 
@@ -845,9 +892,15 @@ const TIMELINE_PRESETS: Record<string, string> = {
             </label>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Key references (one per line)</span>
-              <textarea name="references" rows="4" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Lund JL et al. Pharmacoepidemiol Drug Saf. 2015 (active comparator design)
-Hernán MA, Robins JM. JAMA. 2008 (new-user design; target trial)
-Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
+              <textarea name="references" rows="8" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Andersen M, Pratt N, Sanfélix-Gimeno G et al. Pharmacoepidemiol Drug Saf. 2013 (AsPEN founding methods paper; PSSA on antipsychotics and acute hyperglycaemia).
+Lai EC, Man KK, Chaiyakunapruk N et al. Epidemiology 2015 (AsPEN database survey of Asia-Pacific population-level data sources).
+Pratt NL, Mack CD, Meyer AM et al. Pharmacoepidemiol Drug Saf 2018 (AsPEN common data model framework).
+Hsieh CY, Su CC, Shao SC, Sung SF, Lin SJ, Kao Yang YH, Lai EC. Taiwan's NHIRD: past and future. Clin Epidemiol 2019;11:349-358.
+Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Chang Gung Research Database (CGRD). Pharmacoepidemiol Drug Saf 2019;28(5):593-600.
+Tsai DHT, Wong ICK, Pratt N et al. Clin Epidemiol 2023 (NeuroGEN multi-database infrastructure for CNS drug research).
+Lund JL et al. Pharmacoepidemiol Drug Saf 2015 (active comparator design).
+Hernán MA, Robins JM. JAMA 2008 (new-user design; target trial).
+Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</textarea>
             </label>
           </div>
         </details>
@@ -937,7 +990,7 @@ Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
         const data = new FormData(form);
         const out = {};
         // Multi-value keys → arrays
-        const multi = new Set(["sites", "censoringPick", "covariatesPick", "subgroupsPick", "sensitivityPick", "inclusionPick", "exclusionPick"]);
+        const multi = new Set(["sites", "censoringPick", "covariatesPick", "subgroupsPick", "sensitivityPick", "inclusionPick", "exclusionPick", "secondaryOutcomesPick"]);
         for (const k of multi) out[k] = [];
         for (const [k, v] of data.entries()) {
           if (multi.has(k)) out[k].push(String(v));
@@ -947,7 +1000,7 @@ Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
       };
 
       const writeForm = (state) => {
-        const multi = new Set(["sites", "censoringPick", "covariatesPick", "subgroupsPick", "sensitivityPick", "inclusionPick", "exclusionPick"]);
+        const multi = new Set(["sites", "censoringPick", "covariatesPick", "subgroupsPick", "sensitivityPick", "inclusionPick", "exclusionPick", "secondaryOutcomesPick"]);
         for (const el of form.querySelectorAll("input, textarea, select")) {
           const name = el.name;
           if (!name) continue;
@@ -1014,7 +1067,6 @@ Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
           centralised: "Centralised — site-level individual data are pooled at the coordinating centre under appropriate data-sharing agreements.",
         })[s.arch] || "Federated";
 
-        const secondary  = (s.secondaryOutcomes || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const refs       = (s.references || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const milestones = (s.timeline   || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const inclusion  = mergeList(s.inclusionPick,    s.inclusionCustom);
@@ -1023,6 +1075,10 @@ Schneeweiss S et al. Epidemiology. 2009 (high-dimensional PS)</textarea>
         const covariates = mergeList(s.covariatesPick,   s.covariatesCustom);
         const subgroups  = mergeList(s.subgroupsPick,    s.subgroupsCustom);
         const sensitivity = mergeList(s.sensitivityPick, s.sensitivityCustom);
+        const secondary   = mergeList(s.secondaryOutcomesPick, s.secondaryOutcomesCustom);
+        const resolvedAge = s.ageRangeChoice === "custom"
+          ? (s.ageRangeCustom || "(specify)")
+          : (s.ageRangeChoice || "≥18, no upper limit");
 
         return `# ${title}
 
@@ -1049,7 +1105,7 @@ ${sitesLine(s.sites)}
 ## 3. Cohort definition
 
 - **Indication / cohort entry:** ${orFb(s.indication, "_(condition)_")}
-- **Age:** ${orFb(s.ageRange, "_(age)_")}
+- **Age:** ${resolvedAge}
 - **Sex:** ${sex}
 
 **Inclusion criteria**
@@ -1211,7 +1267,7 @@ _Drafted with the AsPEN protocol builder (${today})._
         }
       });
 
-      document.querySelector("[data-action='reset']")?.addEventListener("click", () => {
+      const doReset = () => {
         if (!confirm("Clear every field and forget the saved draft?")) return;
         localStorage.removeItem(STORAGE_KEY);
         form.reset();
@@ -1219,7 +1275,9 @@ _Drafted with the AsPEN protocol builder (${today})._
         if (ta) ta.value = TIMELINE_PRESETS["12-month"];
         render();
         setMsg("Cleared.");
-      });
+      };
+      document.querySelector("[data-action='reset']")?.addEventListener("click", doReset);
+      document.querySelector("[data-action='reset-top']")?.addEventListener("click", doReset);
 
       // ── Word .docx download (Times New Roman, with tables) ─
       document.querySelector("[data-action='download-docx']")?.addEventListener("click", async () => {
@@ -1331,13 +1389,16 @@ _Drafted with the AsPEN protocol builder (${today})._
 
         const inclusion  = mergeList(s.inclusionPick,    s.inclusionCustom);
         const exclusion  = mergeList(s.exclusionPick,    s.exclusionCustom);
-        const secondary  = (s.secondaryOutcomes || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const refs       = (s.references || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const milestones = (s.timeline   || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const censoring  = mergeList(s.censoringPick,    s.censoringCustom);
         const covariates = mergeList(s.covariatesPick,   s.covariatesCustom);
         const subgroups  = mergeList(s.subgroupsPick,    s.subgroupsCustom);
         const sensitivity = mergeList(s.sensitivityPick, s.sensitivityCustom);
+        const secondary   = mergeList(s.secondaryOutcomesPick, s.secondaryOutcomesCustom);
+        const resolvedAge = s.ageRangeChoice === "custom"
+          ? (s.ageRangeCustom || "(specify)")
+          : (s.ageRangeChoice || "≥18, no upper limit");
 
         const indexDateLabel = (val) => (INDEX_DATE_OPTIONS.find((o) => o.value === val) || {}).label || "";
         const resolvedIndexDate = s.indexDateChoice === "custom"
@@ -1394,7 +1455,7 @@ _Drafted with the AsPEN protocol builder (${today})._
         children.push(h1("3. Cohort definition"));
         children.push(labelTable([
           ["Indication / cohort entry", s.indication || ""],
-          ["Age range", s.ageRange || ""],
+          ["Age range", resolvedAge],
           ["Sex", sex],
         ]));
         children.push(h2("Inclusion criteria"));
