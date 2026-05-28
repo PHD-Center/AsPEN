@@ -141,8 +141,34 @@ const pubsForPicker = (pubsRaw as Pub[])
               <input type="text" name="affiliation" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
             <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Country (ISO)</span>
-              <input type="text" name="country" maxlength="4" placeholder="TW / JP / KR…" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Country</span>
+              <select name="country" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="">— select —</option>
+                <option value="TW">Taiwan (TW)</option>
+                <option value="KR">South Korea (KR)</option>
+                <option value="JP">Japan (JP)</option>
+                <option value="HK">Hong Kong (HK)</option>
+                <option disabled>──────────</option>
+                <option value="AU">Australia (AU)</option>
+                <option value="CN">China (CN)</option>
+                <option value="DE">Germany (DE)</option>
+                <option value="FI">Finland (FI)</option>
+                <option value="FR">France (FR)</option>
+                <option value="GB">United Kingdom (GB)</option>
+                <option value="ID">Indonesia (ID)</option>
+                <option value="IN">India (IN)</option>
+                <option value="IT">Italy (IT)</option>
+                <option value="MO">Macau (MO)</option>
+                <option value="MY">Malaysia (MY)</option>
+                <option value="NL">Netherlands (NL)</option>
+                <option value="PH">Philippines (PH)</option>
+                <option value="SE">Sweden (SE)</option>
+                <option value="SG">Singapore (SG)</option>
+                <option value="TH">Thailand (TH)</option>
+                <option value="US">United States (US)</option>
+                <option value="VN">Vietnam (VN)</option>
+                <option value="OTHER">Other</option>
+              </select>
             </label>
             <label class="block">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Role</span>

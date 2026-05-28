@@ -48,6 +48,36 @@
     "features": ["labs", "genomics"]
   },
   {
+    "country": "South Korea",
+    "code": "KR",
+    "city": "Seoul",
+    "lat": 37.5665,
+    "lng": 126.978,
+    "name": "Health Insurance Review and Assessment Service (HIRA)",
+    "type": "Claims",
+    "coverage": "~50M individuals · nationwide Korea (universal NHI) · since 2009",
+    "notes": "Independent agency that reviews claims for reimbursement appropriateness; provides researchers a separate access pathway to Korean NHI claims since 2009 (open data initiative 2013).",
+    "since": 2009,
+    "popM": 50,
+    "lagMonths": 12,
+    "features": ["rx", "dx"]
+  },
+  {
+    "country": "South Korea",
+    "code": "KR",
+    "city": "Seoul",
+    "lat": 37.5665,
+    "lng": 126.978,
+    "name": "National Health Insurance Service – National Health Information Database (NHIS-NHID)",
+    "type": "Claims",
+    "coverage": "~50M individuals · nationwide Korea (compulsory NHI) · since 2002",
+    "notes": "Population-level claims with periodic national health screening linkage; complementary to HIRA, with stronger linkage to enrolment and health-check data.",
+    "since": 2002,
+    "popM": 50,
+    "lagMonths": 7,
+    "features": ["rx", "dx", "labs", "mortality", "cancer"]
+  },
+  {
     "country": "Japan",
     "code": "JP",
     "city": "Tokyo",
@@ -106,36 +136,6 @@
     "popM": 48,
     "lagMonths": 6,
     "features": ["rx", "dx", "labs"]
-  },
-  {
-    "country": "South Korea",
-    "code": "KR",
-    "city": "Seoul",
-    "lat": 37.5665,
-    "lng": 126.978,
-    "name": "Health Insurance Review and Assessment Service (HIRA)",
-    "type": "Claims",
-    "coverage": "~50M individuals · nationwide Korea (universal NHI) · since 2009",
-    "notes": "Independent agency that reviews claims for reimbursement appropriateness; provides researchers a separate access pathway to Korean NHI claims since 2009 (open data initiative 2013).",
-    "since": 2009,
-    "popM": 50,
-    "lagMonths": 12,
-    "features": ["rx", "dx"]
-  },
-  {
-    "country": "South Korea",
-    "code": "KR",
-    "city": "Seoul",
-    "lat": 37.5665,
-    "lng": 126.978,
-    "name": "National Health Insurance Service – National Health Information Database (NHIS-NHID)",
-    "type": "Claims",
-    "coverage": "~50M individuals · nationwide Korea (compulsory NHI) · since 2002",
-    "notes": "Population-level claims with periodic national health screening linkage; complementary to HIRA, with stronger linkage to enrolment and health-check data.",
-    "since": 2002,
-    "popM": 50,
-    "lagMonths": 7,
-    "features": ["rx", "dx", "labs", "mortality", "cancer"]
   },
   {
     "country": "Hong Kong",
