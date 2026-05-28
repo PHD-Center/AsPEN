@@ -15,6 +15,7 @@ const pubsByPmid: Record<string, {
   doi?: string;
   pmcid?: string;
   fulltext?: string;
+  tags?: string[];
 }> = {};
 for (const p of pubsRaw as Pub[]) {
   if (!p.pmid) continue;
@@ -26,6 +27,7 @@ for (const p of pubsRaw as Pub[]) {
     doi: p.doi,
     pmcid: (p as { pmcid?: string }).pmcid,
     fulltext: (p as { fulltext?: string }).fulltext,
+    tags: (p as { tags?: string[] }).tags,
   };
 }
 
@@ -42,7 +44,7 @@ const EMOJIS = ["👍", "🤔", "📌", "⭐"];
     description="Featured papers with chair commentary. React, jot down your own take, or join the discussion."
   />
 
-  <section class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+  <section class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10 space-y-10">
     <div class="flex items-center justify-between gap-3 flex-wrap text-sm">
       <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/`}>← Members area</a>
       <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/reading/notes`}>My reading notes →</a>
@@ -135,12 +137,19 @@ const EMOJIS = ["👍", "🤔", "📌", "⭐"];
       };
 
       let me = { email: "", name: "", isAdmin: false };
+      let totalPicks = 0;     // populated by refresh() — used to compute issue numbers
 
-      const renderPick = (pick, isFeatured) => {
+      const renderPick = (pick, indexFromTop) => {
+        // Issue numbering: latest pick is the highest number. Picks come in
+        // newest-first, so issue = totalPicks - indexFromTop.
+        const issueNum = totalPicks - indexFromTop;
+        const isFeatured = indexFromTop === 0;
+
         const paper = pubsByPmid[pick.pmid];
         const fullTextLink = paper?.pmcid
           ? `https://pmc.ncbi.nlm.nih.gov/articles/${paper.pmcid}/`
           : paper?.fulltext;
+        const tags = (paper?.tags || []).slice(0, 4);
 
         const reactions = pick.reactions || {};
         const reactionCounts = {};
@@ -165,44 +174,79 @@ const EMOJIS = ["👍", "🤔", "📌", "⭐"];
           const count = reactionCounts[e];
           return `
             <button type="button" data-react data-pmid="${esc(pick.pmid)}" data-emoji="${esc(e)}"
-                    class="inline-flex items-center gap-1 px-2 py-1 rounded-full border text-sm transition ${isOn ? "border-brand-500 bg-brand-50 text-brand-700" : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"}">
+                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full border text-sm transition ${isOn ? "border-brand-500 bg-brand-50 text-brand-700" : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"}">
               <span>${esc(e)}</span>
-              ${count > 0 ? `<span class="text-[10px] tabular-nums font-semibold">${count}</span>` : ""}
+              ${count > 0 ? `<span class="text-[11px] tabular-nums font-semibold">${count}</span>` : ""}
             </button>
           `;
         }).join("");
 
-        return `
-          <article data-pick-pmid="${esc(pick.pmid)}" class="border border-slate-200 rounded-2xl bg-white shadow-sm overflow-hidden ${isFeatured ? "border-brand-500 border-2" : ""}">
-            ${isFeatured ? `
-              <div class="bg-gradient-to-r from-brand-700 to-brand-800 text-white px-5 py-2">
-                <p class="text-[10px] uppercase tracking-widest font-bold">Latest pick · ${esc(fmtDate(pick.pickedAt))}</p>
-              </div>
-            ` : `
-              <div class="bg-slate-50 px-5 py-2 border-b border-slate-100">
-                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">${esc(fmtDate(pick.pickedAt))}</p>
-              </div>
-            `}
-            <div class="p-5 space-y-4">
-              <h2 class="text-lg font-bold text-slate-900 leading-snug">${esc(pick.headline)}</h2>
-              ${pick.commentary ? `<p class="text-sm text-slate-700 leading-relaxed whitespace-pre-line">${esc(pick.commentary)}</p>` : ""}
+        // Split commentary at first paragraph — first paragraph becomes a
+        // pull-quote lede with drop-cap; the rest renders as normal body.
+        const commentary = (pick.commentary || "").trim();
+        const splitIdx = commentary.indexOf("\n\n");
+        const lede = splitIdx > 0 ? commentary.slice(0, splitIdx).trim() : commentary;
+        const restCommentary = splitIdx > 0 ? commentary.slice(splitIdx + 2).trim() : "";
 
-              <!-- Paper -->
-              <div class="pt-3 border-t border-slate-100">
-                <p class="text-[10px] uppercase tracking-widest text-brand-600 font-semibold">The paper</p>
+        const tagsHtml = tags.length > 0
+          ? `<div class="flex flex-wrap gap-1.5 mt-3">${tags.map((t) => `
+              <span class="text-[10px] uppercase tracking-wider font-semibold text-brand-700 bg-brand-50 border border-brand-100 rounded-full px-2 py-0.5">${esc(t)}</span>
+            `).join("")}</div>`
+          : "";
+
+        return `
+          <article data-pick-pmid="${esc(pick.pmid)}"
+                   class="bg-white border ${isFeatured ? "border-brand-500 shadow-lg" : "border-slate-200 shadow-sm"} rounded-3xl overflow-hidden">
+
+            <!-- ── Magazine masthead ─────────────────────────────── -->
+            <header class="px-6 sm:px-10 pt-8 pb-6 border-b border-slate-100 ${isFeatured ? "bg-gradient-to-br from-brand-50/60 to-white" : ""}">
+              <div class="flex items-baseline justify-between gap-4 flex-wrap">
+                <p class="text-[10px] uppercase tracking-[0.2em] font-bold text-brand-700">
+                  ${isFeatured ? "Latest issue" : "Issue"} · No. ${issueNum}
+                </p>
+                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-semibold">${esc(fmtDate(pick.pickedAt))}</p>
+              </div>
+              <h2 class="mt-4 font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 leading-tight tracking-tight">
+                ${esc(pick.headline)}
+              </h2>
+              ${tagsHtml}
+            </header>
+
+            <!-- ── Article body: 2-column on desktop (lede on left, paper rail on right) ─ -->
+            <div class="grid gap-8 px-6 sm:px-10 py-8 lg:grid-cols-[1fr,18rem]">
+
+              <!-- Editor's commentary -->
+              <div class="space-y-4">
+                ${lede ? `
+                  <p class="font-serif text-lg sm:text-xl text-slate-800 leading-relaxed first-letter:font-bold first-letter:text-5xl first-letter:font-serif first-letter:text-brand-700 first-letter:float-left first-letter:mr-2 first-letter:mt-1 first-letter:leading-none whitespace-pre-line">${esc(lede)}</p>
+                ` : ""}
+                ${restCommentary ? `
+                  <p class="text-[15px] text-slate-700 leading-relaxed whitespace-pre-line">${esc(restCommentary)}</p>
+                ` : ""}
+                ${!lede && !restCommentary ? `<p class="text-sm text-slate-400 italic">No editor's note for this issue.</p>` : ""}
+              </div>
+
+              <!-- Paper-of-issue side rail -->
+              <aside class="lg:border-l lg:border-slate-100 lg:pl-8">
+                <p class="text-[10px] uppercase tracking-[0.2em] text-brand-700 font-bold">The paper</p>
                 ${paper ? `
-                  <p class="mt-1 font-semibold text-slate-900 leading-snug">${esc(paper.title)}</p>
-                  <p class="text-xs text-slate-600 mt-1">${esc(paper.authors)}</p>
-                  <p class="text-xs text-slate-500 mt-0.5">${esc(paper.journal)} · ${paper.year}</p>
-                  <div class="mt-2 flex flex-wrap gap-3 text-xs">
-                    ${fullTextLink ? `<a href="${esc(fullTextLink)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 bg-brand-600 text-white font-semibold hover:bg-brand-700 px-2 py-0.5 rounded transition">📄 Full text</a>` : ""}
-                    ${paper.doi ? `<a class="text-brand-600 hover:underline" target="_blank" rel="noopener" href="https://doi.org/${esc(paper.doi)}">DOI: ${esc(paper.doi)}</a>` : ""}
-                    <a class="text-brand-600 hover:underline" target="_blank" rel="noopener" href="https://pubmed.ncbi.nlm.nih.gov/${esc(pick.pmid)}/">PMID: ${esc(pick.pmid)}</a>
+                  <p class="mt-2 font-serif font-semibold text-slate-900 leading-snug text-[15px]">${esc(paper.title)}</p>
+                  <p class="text-xs text-slate-600 mt-2 leading-relaxed">${esc(paper.authors)}</p>
+                  <p class="text-xs text-slate-500 mt-1 italic">${esc(paper.journal)} · ${paper.year}</p>
+                  <div class="mt-4 flex flex-col gap-2 text-xs">
+                    ${fullTextLink ? `<a href="${esc(fullTextLink)}" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-1.5 bg-brand-700 text-white font-semibold hover:bg-brand-800 px-3 py-2 rounded transition">📄 Open full text</a>` : ""}
+                    ${paper.doi ? `<a class="text-brand-700 hover:underline truncate" target="_blank" rel="noopener" href="https://doi.org/${esc(paper.doi)}">DOI: ${esc(paper.doi)}</a>` : ""}
+                    <a class="text-brand-700 hover:underline" target="_blank" rel="noopener" href="https://pubmed.ncbi.nlm.nih.gov/${esc(pick.pmid)}/">PubMed: ${esc(pick.pmid)}</a>
                   </div>
                 ` : `
-                  <p class="mt-1 text-sm text-slate-500 italic">Paper (PMID ${esc(pick.pmid)}) — bibliographic info not yet in publications.json.</p>
+                  <p class="mt-2 text-sm text-slate-500 italic">Paper (PMID ${esc(pick.pmid)}) — bibliographic info not yet in publications.json.</p>
                 `}
-              </div>
+              </aside>
+
+            </div>
+
+            <!-- ── Engagement bar ─────────────────────────────────── -->
+            <div class="px-6 sm:px-10 pb-8 space-y-6">
 
               <!-- Member-contributed PDF (per pick) -->
               <div class="pt-3 border-t border-slate-100">
@@ -340,7 +384,8 @@ const EMOJIS = ["👍", "🤔", "📌", "⭐"];
             root.innerHTML = "";
           } else {
             emptyEl.classList.add("hidden");
-            root.innerHTML = picks.map((p, i) => renderPick(p, i === 0)).join("");
+            totalPicks = picks.length;
+            root.innerHTML = picks.map((p, i) => renderPick(p, i)).join("");
           }
         } catch {
           setError("Couldn't reach the auth service.");
