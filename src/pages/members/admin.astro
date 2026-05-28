@@ -103,13 +103,15 @@ const pubsForPicker = (pubsRaw as Pub[])
           </summary>
           <form data-pick-form class="p-4 space-y-3 border-t border-slate-100">
             <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">PMID</span>
-              <input type="text" name="pmid" required pattern="\d{6,9}" inputmode="numeric" placeholder="e.g. 34503972"
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Paper</span>
+              <input type="text" data-paper-input
+                     placeholder="Paste a PubMed URL, DOI, PMID, or type the title to search…"
                      class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-              <span class="block mt-1 text-[11px] text-slate-500">Pre-filled when you came in from a member suggestion or an orphan PDF. Any 6–9 digit PMID is accepted.</span>
+              <input type="hidden" name="pmid" required />
+              <div data-paper-state class="mt-2 text-xs"></div>
             </label>
             <details class="text-xs">
-              <summary class="cursor-pointer text-brand-700 font-semibold hover:underline select-none">Browse {pubsForPicker.length} AsPEN publications…</summary>
+              <summary class="cursor-pointer text-brand-700 font-semibold hover:underline select-none">Or browse {pubsForPicker.length} AsPEN publications…</summary>
               <select data-pub-browser class="mt-2 w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
                 <option value="">Click to pick one from publications.json</option>
                 {pubsForPicker.map((p) => <option value={p.pmid}>{p.label}</option>)}
@@ -513,10 +515,12 @@ const pubsForPicker = (pubsRaw as Pub[])
         const form = document.querySelector("[data-pick-form]");
         const details = document.querySelector("[data-pick-details]");
         if (form) {
-          const pmidInput     = form.querySelector('input[name="pmid"]');
+          const paperEl       = form.querySelector('[data-paper-input]');
+          const pmidEl        = form.querySelector('input[name="pmid"]');
           const headlineInput = form.querySelector('input[name="headline"]');
           const commentaryArea= form.querySelector('textarea[name="commentary"]');
-          if (pmidInput) pmidInput.value = pmid;
+          if (paperEl) { paperEl.value = pmid; paperEl.dispatchEvent(new Event("input", { bubbles: true })); }
+          else if (pmidEl) pmidEl.value = pmid;
           if (headlineInput) headlineInput.value = t.dataset.headline || "";
           if (commentaryArea) commentaryArea.value = t.dataset.commentary || "";
           if (headlineInput && !headlineInput.value) headlineInput.focus();
@@ -588,17 +592,19 @@ const pubsForPicker = (pubsRaw as Pub[])
           const form = document.querySelector("[data-pick-form]");
           const details = document.querySelector("[data-pick-details]");
           if (form) {
-            const pmidInput     = form.querySelector('input[name="pmid"]');
+            const paperEl       = form.querySelector('[data-paper-input]');
             const headlineInput = form.querySelector('input[name="headline"]');
             const commentaryArea = form.querySelector('textarea[name="commentary"]');
-            // Pre-fill pmid only if the suggestion already came with one;
-            // otherwise the chair types it into the input.
-            if (pmidInput && t.dataset.promotePmid) pmidInput.value = t.dataset.promotePmid;
+            // Pre-fill paper field with PMID if suggestion had one; otherwise
+            // pre-fill with the suggestion's title so PubMed lookup fires.
+            if (paperEl) {
+              paperEl.value = t.dataset.promotePmid || t.dataset.title || "";
+              paperEl.dispatchEvent(new Event("input", { bubbles: true }));
+            }
             if (headlineInput && t.dataset.title) headlineInput.value = t.dataset.title;
             if (commentaryArea && t.dataset.reason) commentaryArea.value = t.dataset.reason;
-            if (pmidInput && !pmidInput.value) pmidInput.focus();
+            if (paperEl && !paperEl.value) paperEl.focus();
             else if (headlineInput) headlineInput.focus();
-            // Mark for follow-up promote-suggestion after the pick is created
             form.dataset.promotingSid = t.dataset.promoteSid;
           }
           if (details) details.open = true;
@@ -608,17 +614,132 @@ const pubsForPicker = (pubsRaw as Pub[])
 
       const pickForm = document.querySelector("[data-pick-form]");
 
-      // Browse-publications helper: picking from the dropdown drops the
-      // chosen PMID into the main PMID input.
+      // ── Smart Paper input ──────────────────────────────
+      // Accept anything — PMID, DOI, PubMed URL, or title — and resolve
+      // to a canonical PMID + display title/authors confirmation.
+      const paperInput  = pickForm?.querySelector("[data-paper-input]");
+      const pmidHidden  = pickForm?.querySelector('input[name="pmid"]');
+      const paperState  = pickForm?.querySelector("[data-paper-state]");
+
+      const setPaperState = (html, cls = "text-slate-500") => {
+        if (!paperState) return;
+        paperState.className = "mt-2 text-xs " + cls;
+        paperState.innerHTML = html;
+      };
+
+      // Show a paper as the "selected" state
+      const showSelectedPaper = (pmid, title, authors, journal, year) => {
+        if (pmidHidden) pmidHidden.value = pmid;
+        setPaperState(
+          `<div class="bg-brand-50/60 border border-brand-200 rounded p-2">
+             <p class="font-semibold text-brand-700">PMID ${pmid} · selected</p>
+             ${title ? `<p class="mt-1 text-slate-800">${title.replace(/</g, "&lt;")}</p>` : ""}
+             ${authors ? `<p class="mt-1 text-slate-600">${authors.replace(/</g, "&lt;")}</p>` : ""}
+             ${journal || year ? `<p class="text-slate-500 italic">${(journal || "").replace(/</g, "&lt;")}${year ? ` · ${year}` : ""}</p>` : ""}
+           </div>`,
+          "mt-2 text-xs"
+        );
+      };
+
+      const fetchSummary = async (pmid) => {
+        try {
+          const r = await fetch(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${pmid}&retmode=json`);
+          if (!r.ok) return null;
+          const d = await r.json();
+          const item = d?.result?.[pmid];
+          if (!item) return null;
+          return {
+            title:   item.title || "",
+            authors: (item.authors || []).slice(0, 3).map((a) => a.name).join(", ")
+                     + ((item.authors || []).length > 3 ? ", et al." : ""),
+            journal: item.fulljournalname || item.source || "",
+            year:    String(item.pubdate || "").slice(0, 4),
+          };
+        } catch { return null; }
+      };
+
+      const searchByTerm = async (term) => {
+        const url = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(term)}&retmode=json&retmax=5`;
+        const r = await fetch(url);
+        if (!r.ok) throw new Error("PubMed search failed");
+        const d = await r.json();
+        return d?.esearchresult?.idlist || [];
+      };
+
+      // Pure helper — extract a PMID from various input shapes.
+      const parsePaperInput = (raw) => {
+        const s = (raw || "").trim();
+        if (!s) return { kind: "empty" };
+        // PubMed URL: pubmed.ncbi.nlm.nih.gov/123456
+        const urlM = s.match(/pubmed\.ncbi\.nlm\.nih\.gov\/(\d{6,9})/i);
+        if (urlM) return { kind: "pmid", pmid: urlM[1] };
+        // PMC URL — only use if it's of the form /articles/PMC\d+ — but we
+        // need PMID, so fall through to title search if we see a PMCID
+        // Bare PMID
+        if (/^\d{6,9}$/.test(s)) return { kind: "pmid", pmid: s };
+        // DOI
+        const doiM = s.match(/10\.\d{4,9}\/\S+/);
+        if (doiM) return { kind: "doi", doi: doiM[0] };
+        // Anything else — treat as a title to search
+        return { kind: "title", query: s };
+      };
+
+      const resolvePaper = async (raw) => {
+        const parsed = parsePaperInput(raw);
+        if (parsed.kind === "empty") {
+          if (pmidHidden) pmidHidden.value = "";
+          setPaperState("");
+          return;
+        }
+        setPaperState("Looking up on PubMed…", "mt-2 text-xs text-slate-500 italic");
+        try {
+          let pmid = null;
+          if (parsed.kind === "pmid") {
+            pmid = parsed.pmid;
+          } else if (parsed.kind === "doi") {
+            const ids = await searchByTerm(`${parsed.doi}[doi]`);
+            if (ids.length > 0) pmid = ids[0];
+          } else if (parsed.kind === "title") {
+            const ids = await searchByTerm(parsed.query);
+            if (ids.length > 0) pmid = ids[0];
+          }
+          if (!pmid) {
+            if (pmidHidden) pmidHidden.value = "";
+            setPaperState("Couldn't find a PubMed match. Try pasting the PMID directly or a PubMed URL.", "mt-2 text-xs text-rose-700");
+            return;
+          }
+          const meta = await fetchSummary(pmid);
+          if (meta) {
+            showSelectedPaper(pmid, meta.title, meta.authors, meta.journal, meta.year);
+          } else {
+            // Couldn't get metadata but PMID is good
+            if (pmidHidden) pmidHidden.value = pmid;
+            setPaperState(`PMID ${pmid} · selected (couldn't fetch title from PubMed)`, "mt-2 text-xs text-brand-700");
+          }
+        } catch (e) {
+          if (pmidHidden) pmidHidden.value = "";
+          setPaperState("PubMed lookup failed (network?). Try again or paste a PMID directly.", "mt-2 text-xs text-rose-700");
+        }
+      };
+
+      // Debounced lookup as the chair types/pastes
+      let resolveTimer = null;
+      paperInput?.addEventListener("input", () => {
+        if (resolveTimer) clearTimeout(resolveTimer);
+        resolveTimer = setTimeout(() => resolvePaper(paperInput.value), 400);
+      });
+
+      // Browse-publications helper still works — picking fills the input
+      // with the selected PMID and triggers resolution.
       const pubBrowser = pickForm?.querySelector("[data-pub-browser]");
       pubBrowser?.addEventListener("change", (e) => {
         const target = e.target;
         if (!(target instanceof HTMLSelectElement)) return;
         const pmid = target.value;
         if (!pmid) return;
-        const pmidInput = pickForm.querySelector('input[name="pmid"]');
-        if (pmidInput) pmidInput.value = pmid;
-        target.value = "";  // reset the browser so user can pick again
+        if (paperInput) paperInput.value = pmid;
+        resolvePaper(pmid);
+        target.value = "";
       });
 
       const pickMsg = pickForm?.querySelector("[data-pick-msg]");
@@ -662,6 +783,8 @@ const pubsForPicker = (pubsRaw as Pub[])
             loadSuggestions();
           }
           pickForm.reset();
+          if (paperInput) paperInput.value = "";
+          if (paperState) paperState.innerHTML = "";
           loadReading();
           loadOrphans();
         } else {
