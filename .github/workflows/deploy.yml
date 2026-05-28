@@ -49,11 +49,17 @@ jobs:
         run: |
           OBSCURED_PASS=$(rclone obscure "$WEBDAV_PASS")
           # 同步指令
+          # --checksum: compare by MD5 hash, not size+mtime. WebDAV on the NAS
+          # doesn't preserve modification times reliably, so size+mtime alone
+          # caused stale HTML files (e.g. /publications/index.html that referenced
+          # a deleted CSS hash) to skip upload when their byte length happened
+          # to be unchanged. MD5 comparison catches content changes regardless.
           rclone sync ./dist :webdav:/AsPEN.sig \
             --webdav-url="https://dev.aspensig.asia" \
             --webdav-user="aspen-git" \
             --webdav-pass="$OBSCURED_PASS" \
-            --webdav-vendor="other"
+            --webdav-vendor="other" \
+            --checksum
 
   deploy:
     needs: build
