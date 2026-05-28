@@ -80,6 +80,15 @@ const pubsForPicker = (pubsRaw as Pub[])
 
       <!-- ── Pane: Reading group ─────────────────────────────── -->
       <div data-pane="reading" class="hidden space-y-6">
+        <!-- Orphan papers — PDFs in papers/ with no matching pick (= won't show on the magazine page) -->
+        <div data-orphans-wrap class="hidden">
+          <p class="text-xs uppercase tracking-widest text-rose-700 font-semibold mb-2">
+            Orphan PDFs · <span data-orphans-count>0</span>
+            <span class="ml-1 text-[10px] normal-case tracking-normal text-slate-500 font-normal">approved PDFs that don't have a matching reading-group pick yet — they're invisible to members until you add a pick.</span>
+          </p>
+          <div data-orphans class="space-y-2"></div>
+        </div>
+
         <!-- Member-suggested papers -->
         <div data-suggestions-wrap class="hidden">
           <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">
@@ -449,6 +458,67 @@ const pubsForPicker = (pubsRaw as Pub[])
         if (r.ok) loadReading();
       });
 
+      // ── Orphan papers sub-section ──
+      const orphansWrap  = document.querySelector("[data-orphans-wrap]");
+      const orphansRoot  = document.querySelector("[data-orphans]");
+      const orphansCount = document.querySelector("[data-orphans-count]");
+
+      const renderOrphans = (items) => {
+        orphansCount.textContent = String(items.length);
+        if (items.length === 0) {
+          orphansWrap.classList.add("hidden");
+          return;
+        }
+        orphansWrap.classList.remove("hidden");
+        orphansRoot.innerHTML = items.map((o) => `
+          <article class="border border-rose-200 rounded-lg p-3 bg-rose-50/30">
+            <p class="text-xs text-slate-500">
+              <a href="https://pubmed.ncbi.nlm.nih.gov/${esc(o.pmid)}/" target="_blank" rel="noopener" class="text-brand-700 hover:underline font-semibold">PMID ${esc(o.pmid)}</a>
+              · <span class="font-mono text-[10px]">${esc(o.path)}</span>
+            </p>
+            ${o.suggestedHeadline ? `<p class="text-sm font-semibold text-slate-900 mt-1">${esc(o.suggestedHeadline)}</p>` : ""}
+            ${o.suggestedCommentary ? `<p class="text-sm text-slate-700 leading-relaxed mt-1 whitespace-pre-line">${esc(o.suggestedCommentary)}</p>` : ""}
+            <div class="mt-2">
+              <button type="button" data-orphan-pmid="${esc(o.pmid)}" data-headline="${esc(o.suggestedHeadline || "")}" data-commentary="${esc(o.suggestedCommentary || "")}"
+                      class="text-xs font-semibold bg-brand-700 hover:bg-brand-800 text-white px-3 py-1.5 rounded transition">
+                Create matching pick →
+              </button>
+            </div>
+          </article>
+        `).join("");
+      };
+
+      const loadOrphans = async () => {
+        try {
+          const r = await fetch(`${WORKER_URL}/api/admin/orphan-papers`, { credentials: "include" });
+          if (!r.ok) return;
+          const data = await r.json();
+          renderOrphans(data.orphans || []);
+        } catch {}
+      };
+
+      // Click "Create matching pick" — pre-fills the Add-pick form (same
+      // flow as promoting a suggestion) so admin just confirms.
+      orphansRoot?.addEventListener("click", (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLElement)) return;
+        const pmid = t.dataset.orphanPmid;
+        if (!pmid) return;
+        const form = document.querySelector("[data-pick-form]");
+        const details = document.querySelector("[data-pick-details]");
+        if (form) {
+          const pmidSelect    = form.querySelector('select[name="pmid"]');
+          const headlineInput = form.querySelector('input[name="headline"]');
+          const commentaryArea= form.querySelector('textarea[name="commentary"]');
+          if (pmidSelect) pmidSelect.value = pmid;
+          if (headlineInput) headlineInput.value = t.dataset.headline || "";
+          if (commentaryArea) commentaryArea.value = t.dataset.commentary || "";
+          if (headlineInput && !headlineInput.value) headlineInput.focus();
+        }
+        if (details) details.open = true;
+        details?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+
       // Suggestions sub-section
       const suggestionsWrap = document.querySelector("[data-suggestions-wrap]");
       const suggestionsRoot = document.querySelector("[data-suggestions]");
@@ -572,6 +642,7 @@ const pubsForPicker = (pubsRaw as Pub[])
           }
           pickForm.reset();
           loadReading();
+          loadOrphans();
         } else {
           setPickMsg(d.error || "Failed.", true);
         }
@@ -700,6 +771,7 @@ const pubsForPicker = (pubsRaw as Pub[])
           loadUploads();
           loadDeleteRequests();
           loadReading();
+          loadOrphans();
           loadSuggestions();
           loadMembers();
         } catch { setState("signed-out"); }

@@ -119,6 +119,8 @@ export default {
         resp = await handleReview(req, env);
       } else if (url.pathname === "/api/reading" && req.method === "GET") {
         resp = await handleReadingList(req, env);
+      } else if (url.pathname === "/api/admin/orphan-papers" && req.method === "GET") {
+        resp = await handleAdminOrphanPapers(req, env);
       } else if (url.pathname === "/api/admin/reading" && req.method === "POST") {
         resp = await handleAdminReading(req, env);
       } else if (url.pathname === "/api/reading/react" && req.method === "POST") {
@@ -906,6 +908,39 @@ async function handleReadingList(req: Request, env: Env): Promise<Response> {
   });
 
   return jsonResponse({ ok: true, picks: filtered });
+}
+
+/**
+ * Find approved paper PDFs at papers/pmid-{pmid}.{ext} that don't have a
+ * matching pick in reading.json — admin can then one-click create a pick
+ * for each to surface the PDF on /members/reading.
+ */
+async function handleAdminOrphanPapers(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+
+  const paperPdfs = await pmidToPaperPath(env);          // pmid → path
+  const { list: picks } = await fetchReading(env);
+  const pickPmids = new Set(picks.map((p) => p.pmid));
+
+  // Also look up any open / promoted suggestions so we can suggest a
+  // headline + commentary draft to the chair.
+  const { list: suggs } = await fetchSuggestions(env);
+
+  const orphans: Array<{ pmid: string; path: string; suggestedHeadline?: string; suggestedCommentary?: string }> = [];
+  for (const [pmid, path] of paperPdfs.entries()) {
+    if (pickPmids.has(pmid)) continue;
+    // Look for the suggestion that produced this pmid (resolvedPmid match)
+    const linked = suggs.find((s) => s.resolvedPmid === pmid);
+    orphans.push({
+      pmid,
+      path,
+      suggestedHeadline: linked?.title,
+      suggestedCommentary: linked?.reason,
+    });
+  }
+  return jsonResponse({ ok: true, orphans });
 }
 
 /** Walk papers/ and return a map of pmid → path for files named pmid-{pmid}.{ext}. */
