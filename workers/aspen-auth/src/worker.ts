@@ -702,6 +702,38 @@ async function handleReview(req: Request, env: Env): Promise<Response> {
       `Approve: ${dst} (from ${meta.uploader})`);
   }
 
+  // If this was a suggestion-attached reading PDF and there is no pick yet
+  // for the resolved pmid, auto-create the pick (using the suggestion's
+  // title as headline + reason as commentary) and mark the suggestion as
+  // promoted. This keeps the chair's approve-PDF flow to a single click.
+  if (meta.category === "reading" && meta.suggestionId && effectivePmid) {
+    const { list: picks, sha: picksSha } = await fetchReading(env);
+    const hasPick = picks.some((p) => p.pmid === effectivePmid);
+    if (!hasPick) {
+      const { list: suggs, sha: suggsSha } = await fetchSuggestions(env);
+      const sugg = suggs.find((s) => suggestionKey(s) === meta.suggestionId);
+      if (sugg) {
+        picks.unshift({
+          pmid:       effectivePmid,
+          pickedAt:   new Date().toISOString(),
+          pickedBy:   member.email,
+          headline:   sugg.title || `PMID ${effectivePmid}`,
+          commentary: sugg.reason || "",
+        });
+        await putJsonFile(env, "reading.json",
+          JSON.stringify(picks, null, 2) + "\n", picksSha,
+          `Auto-pick from suggestion PDF approval: pmid ${effectivePmid}`);
+        if (sugg.status === "open") {
+          sugg.status = "promoted";
+          sugg.resolvedPmid = effectivePmid;
+          await putJsonFile(env, "suggestions.json",
+            JSON.stringify(suggs, null, 2) + "\n", suggsSha,
+            `Promote suggestion ${meta.suggestionId} via PDF approval (pmid ${effectivePmid})`);
+        }
+      }
+    }
+  }
+
   // Delete all pending files (file + meta)
   for (const p of pendingPaths) {
     const f = await fetchFileWithSha(env, p);
