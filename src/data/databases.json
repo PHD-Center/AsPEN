@@ -105,7 +105,8 @@
     "since": 2005,
     "popM": 13.5,
     "lagMonths": 5,
-    "features": ["rx", "dx", "labs"]
+    "features": ["rx", "dx", "labs"],
+    "hidden": true
   },
   {
     "country": "Japan",
@@ -120,7 +121,8 @@
     "since": 2014,
     "popM": 9.3,
     "lagMonths": 5,
-    "features": ["rx", "dx", "labs"]
+    "features": ["rx", "dx", "labs"],
+    "hidden": true
   },
   {
     "country": "Japan",
@@ -135,7 +137,8 @@
     "since": 2008,
     "popM": 48,
     "lagMonths": 6,
-    "features": ["rx", "dx", "labs"]
+    "features": ["rx", "dx", "labs"],
+    "hidden": true
   },
   {
     "country": "Hong Kong",

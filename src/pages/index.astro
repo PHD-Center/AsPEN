@@ -3,10 +3,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
 import ChairCard from "../components/ChairCard.astro";
 import StatsBar from "../components/StatsBar.astro";
-import databases from "../data/databases.json";
+import databasesRaw from "../data/databases.json";
 import publications from "../data/publications.json";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+// Apply the same hidden-filter as /databases/ so counts agree across pages.
+const databases = databasesRaw.filter((d) => !(d as { hidden?: boolean }).hidden);
 
 // Derived stats for the StatsBar. Headline numbers focus on active Asian
 // sites only (TW, JP, KR, HK). External partner sites (UK, US, NL, FI, AU)
