@@ -12,8 +12,11 @@ const nav = [
 // Drop in a logo image at the listed `image` path (under public/images/) to
 // replace the text-only fallback; update `href` to the real upstream URL.
 const oss = [
-  { label: "Ocean",  href: "https://ocean-dev.phdcenter.org.tw", image: "open-source/ocean.svg"  },
-  { label: "GitHub", href: "https://github.com/",                image: "open-source/github.svg" },
+  // `heightClass` lets us balance visual weight: Ocean is a wide wordmark so
+  // h-7 already feels big; GitHub is a square mark so it needs more height
+  // to read at a similar size next to it.
+  { label: "Ocean",  href: "https://ocean-dev.phdcenter.org.tw", image: "open-source/ocean.svg",  heightClass: "h-7" },
+  { label: "GitHub", href: "https://github.com/",                image: "open-source/github.svg", heightClass: "h-9" },
 ];
 const path = Astro.url.pathname.replace(/\/$/, "");
 const membersHref = `${base}/members/`;
@@ -26,7 +29,7 @@ const isOnMembers = path.startsWith(`${base}/members`.replace(/\/$/, ""));
     {oss.map((s) => (
       <a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}
          class="inline-flex items-center gap-2 text-slate-600 hover:text-brand-700 transition">
-        <img src={`${base}/images/${s.image}`} alt={s.label} class="h-7 w-auto" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" />
+        <img src={`${base}/images/${s.image}`} alt={s.label} class:list={[s.heightClass, "w-auto"]} onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" />
         <span class="hidden text-sm font-semibold">{s.label}</span>
       </a>
     ))}
