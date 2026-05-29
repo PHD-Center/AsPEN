@@ -54,7 +54,17 @@ const designs = [
       <p class="text-sm text-slate-700">The protocol builder is currently restricted to AsPEN admins. Ask the chair if you need access.</p>
     </div>
 
-    <div data-state="ready" class="hidden">
+    <div data-state="ready" class="hidden space-y-6">
+      <div class="flex items-center gap-4 border border-slate-200 rounded-2xl bg-white p-4 sm:p-5 shadow-sm">
+        <a href="https://ocean-dev.phdcenter.org.tw" target="_blank" rel="noopener" class="shrink-0">
+          <img src={`${base}/images/open-source/ocean-mark.svg`} alt="OCEAN" class="h-16 w-16" />
+        </a>
+        <div class="text-sm leading-relaxed">
+          <p class="text-slate-700">These protocol templates — phenotype libraries, code sets, and design defaults — are curated from <a href="https://ocean-dev.phdcenter.org.tw" target="_blank" rel="noopener" class="text-brand-700 font-semibold hover:underline">OCEAN</a>, the Open Casual Effect Analysis Network operated by the Population Health Data Center (PHDc), National Cheng Kung University.</p>
+          <p class="mt-1 text-xs text-slate-500">Maintained by Daniel Tsai.</p>
+        </div>
+      </div>
+
       <div class="grid gap-5 md:grid-cols-3">
         {designs.map((d) => (
           <a href={`${base}/members/templates/${d.slug}`}
