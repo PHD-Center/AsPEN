@@ -260,7 +260,22 @@ const TIMELINE_PRESETS: Record<string, string> = {
         </details>
 
         <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
-          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">6 · Risk windows</summary>
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">6 · Design variant</summary>
+          <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
+            <label class="flex flex-col gap-1 sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">SCCS variant</span>
+              <select name="sccsVariant" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="standard" selected>Standard SCCS (Farrington 1995) — within-person exposed vs unexposed time</option>
+                <option value="extended-unexposed">SCCS extended with unexposed reference cases — augments within-person estimation with never-exposed cohort members (Whitaker et al, Stat Med 2006)</option>
+                <option value="active-comparator">Active-comparator within-person SCCS — case-time on the index drug compared with case-time on a comparator drug (no reliance on a 'no-drug' baseline)</option>
+              </select>
+              <span class="text-[11px] text-slate-500">Choose Standard when most cases have substantial unexposed time. Choose Extended when within-person unexposed time is sparse and you want to borrow strength from a never-exposed cohort. Choose Active-comparator when patients are continuously on some therapy of the same indication and the relevant question is 'drug A vs drug B'.</span>
+            </label>
+          </div>
+        </details>
+
+        <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">7 · Risk windows</summary>
           <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Pre-risk (pretreatment) window (days)</span>
@@ -290,7 +305,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
         </details>
 
         <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
-          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">7 · Observation period</summary>
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">8 · Observation period</summary>
           <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Period starts at</span>
@@ -318,7 +333,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
         </details>
 
         <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
-          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">8 · Time-varying confounders</summary>
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">9 · Time-varying confounders</summary>
           <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Age band width</span>
@@ -346,7 +361,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
         </details>
 
         <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
-          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">9 · Statistical analysis</summary>
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">10 · Statistical analysis</summary>
           <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
             <label class="flex flex-col gap-1 sm:col-span-2">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Primary model</span>
@@ -375,7 +390,7 @@ First-time vs repeat exposure</textarea>
         </details>
 
         <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
-          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">10 · Sensitivity analyses</summary>
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">11 · Sensitivity analyses</summary>
           <div class="px-5 pb-5 space-y-3">
             <div class="grid sm:grid-cols-2 gap-1.5">
               {SENSITIVITY.map((s, i) => (
@@ -393,7 +408,7 @@ First-time vs repeat exposure</textarea>
         </details>
 
         <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
-          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">11 · Execution &amp; timeline</summary>
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">12 · Execution &amp; timeline</summary>
           <div class="px-5 pb-5 space-y-3">
             <div class="grid sm:grid-cols-2 gap-3">
               <label class="flex flex-col gap-1">
@@ -420,7 +435,7 @@ First-time vs repeat exposure</textarea>
         </details>
 
         <details class="border border-slate-200 rounded-2xl bg-white shadow-sm">
-          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">12 · Ethics, dissemination, references (optional)</summary>
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">13 · Ethics, dissemination, references (optional)</summary>
           <div class="px-5 pb-5 space-y-3">
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Ethics</span>
@@ -557,6 +572,11 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
         const ageBand = ({ "6m": "6-month", "1m": "1-month", "3m": "3-month", "12m": "12-month" })[s.ageBands] || "6-month";
         const season = ({ month: "Calendar month (12-level)", season: "Season (4-level)", none: "Not adjusted" })[s.seasonAdj] || "Calendar month";
         const eventHandling = s.eventHandling === "first" ? "First event only per person" : "All events per person (recurrent events allowed)";
+        const sccsVariantText = ({
+          "standard":           "Standard SCCS (Farrington 1995) — within-person comparison of exposed vs unexposed time, with each case acting as their own control.",
+          "extended-unexposed": "SCCS extended with unexposed reference cases (Whitaker et al, Stat Med 2006) — within-person estimation augmented with never-exposed cohort members. Useful when within-person unexposed time is sparse.",
+          "active-comparator":  "Active-comparator within-person SCCS — case-time on the index drug compared with case-time on a comparator drug (no reliance on a 'no-drug' baseline). Best when patients of the same indication are continuously on some therapy.",
+        })[s.sccsVariant] || "Standard SCCS (Farrington 1995) — within-person comparison of exposed vs unexposed time.";
 
         const refsUser = (s.references || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const refs = (() => { const set = new Set(refsUser); for (const c of Object.values(pickedCitations)) if (c && c.trim()) set.add(c.trim()); return Array.from(set); })();
@@ -571,7 +591,7 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
 **Study ID:** ${orFb(s.shortId, "(short id)")}
 **Lead investigator(s):** ${orFb(s.leadInvestigator, "(lead)")}
 **Version:** ${orFb(s.version, "v0.1 draft · " + today)}
-**Design:** Multi-national self-controlled case series (SCCS)
+**Design:** Multi-national self-controlled case series (SCCS) — ${sccsVariantText}
 
 ---
 
@@ -605,7 +625,11 @@ ${sitesLine(s.sites, s.sitesOther)}
 | **Grace period** | ${s.grace || "14"} d |
 | **Exposure period rule** | ${orFb(s.exposurePeriodDef, "Continuous exposure inferred from sequential dispensings; gap > grace period ends the episode.")} |
 
-## 5. Risk windows
+## 5. Design variant
+
+${sccsVariantText}
+
+## 6. Risk windows
 
 | | |
 |---|---|
@@ -614,13 +638,13 @@ ${sitesLine(s.sites, s.sitesOther)}
 | **Post-risk window** | ${s.postRisk || "14"} days after exposure end (washout) |
 | **Baseline (control) period** | ${orFb(s.baselinePeriod, "All observation time NOT in pre-risk, risk, or post-risk windows.")} |
 
-## 6. Observation period
+## 7. Observation period
 
 - **Starts at:** ${({ "age-cohort": "Later of (a) calendar start of study period or (b) cohort entry age", "study-start": "Calendar start of study period", "age-onset": "Age at first eligibility (e.g., age 65)", enrolment: "Date of database registration" })[s.obsStart] || "calendar start of study period"}
 - **Ends at:** ${({ "earliest-of": "Earliest of: end of study period, death, disenrolment", "study-end": "Calendar end of study period", death: "Death", disenrol: "Disenrolment from database" })[s.obsEnd] || "earliest of end of period / death / disenrolment"}
 - **Study calendar period:** ${orFb(s.studyCalendar, "_(specify)_")}
 
-## 7. Time-varying confounders
+## 8. Time-varying confounders
 
 - **Age bands:** ${ageBand} bands
 - **Season:** ${season}
@@ -629,7 +653,7 @@ ${sitesLine(s.sites, s.sitesOther)}
 
 ${bullets(tvCovs)}
 
-## 8. Statistical analysis
+## 9. Statistical analysis
 
 - **Primary model:** ${orFb(s.primaryModel, "Conditional Poisson regression with offset for log person-time.")}
 - **Effect estimate:** ${orFb(s.effectMeasure, "Incidence rate ratio (IRR) with 95% CI.")}
@@ -643,7 +667,7 @@ ${bullets(subgroups)}
 
 ${bullets(sensitivity)}
 
-## 9. Execution and timeline
+## 10. Execution and timeline
 
 **Architecture.** ${arch}
 
@@ -651,13 +675,13 @@ ${bullets(sensitivity)}
 
 ${numbered(milestones)}
 
-## 10. Ethics, data sharing, dissemination
+## 11. Ethics, data sharing, dissemination
 
 **Ethics.** ${orFb(s.ethics, "Each participating site obtains local IRB / ethics approval before data extraction.")}
 
 **Dissemination.** ${orFb(s.dissemination, "Primary manuscript to a peer-reviewed pharmacoepidemiology journal.")}
 
-## 11. Key references
+## 12. Key references
 
 ${numbered(refs)}
 
@@ -778,6 +802,16 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
         const meta = ({ re: "Random-effects (DerSimonian-Laird) meta-analysis; report I² and τ²; forest plot per outcome.", "re-reml": "Random-effects (REML); report I² and τ²; forest plot per outcome.", fe: "Fixed-effects (inverse-variance) meta-analysis; forest plot per outcome." })[s.metaMethod] || "Random-effects meta-analysis";
         const arch = ({ federated: "Federated — each AsPEN site executes locally; only aggregate site-level estimates leave.", cdm: "Common Data Model — site transforms to agreed CDM, runs shared package.", centralised: "Centralised — pooled individual data under DUA." })[s.arch] || "Federated";
         const eventHandling = s.eventHandling === "first" ? "First event only per person" : "All events per person (recurrent events allowed)";
+        const sccsVariantText = ({
+          "standard":           "Standard SCCS (Farrington 1995) — within-person comparison of exposed vs unexposed time.",
+          "extended-unexposed": "SCCS extended with unexposed reference cases (Whitaker et al, Stat Med 2006) — augments within-person estimation with never-exposed cohort members.",
+          "active-comparator":  "Active-comparator within-person SCCS — case-time on the index drug compared with case-time on a comparator drug.",
+        })[s.sccsVariant] || "Standard SCCS";
+        const sccsVariantShort = ({
+          "standard":           "Standard SCCS",
+          "extended-unexposed": "SCCS extended with unexposed reference cases",
+          "active-comparator":  "Active-comparator within-person SCCS",
+        })[s.sccsVariant] || "Standard SCCS";
 
         const children = [];
         children.push(new D.Paragraph({ children: [text(s.title || "(Untitled multi-national SCCS study)", { bold: true, size: 32 })], spacing: { before: 0, after: 120 } }));
@@ -785,7 +819,7 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
           ["Study ID", s.shortId || ""],
           ["Lead investigator(s)", s.leadInvestigator || ""],
           ["Version", s.version || ("v0.1 draft · " + today)],
-          ["Design", "Multi-national self-controlled case series (SCCS)"],
+          ["Design", "Multi-national self-controlled case series (SCCS) — " + sccsVariantShort],
         ]));
 
         children.push(h1("1. Research question"));
@@ -808,7 +842,10 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
           ["Exposure period rule", s.exposurePeriodDef || "Continuous exposure inferred from sequential dispensings; gap > grace period ends the episode."],
         ]));
 
-        children.push(h1("5. Risk windows"));
+        children.push(h1("5. Design variant"));
+        children.push(para(sccsVariantText));
+
+        children.push(h1("6. Risk windows"));
         children.push(labelTable([
           ["Pre-risk window", (s.preRisk || "14") + " days before first exposure"],
           ["Risk window", riskWin],
@@ -816,19 +853,19 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
           ["Baseline (control) period", s.baselinePeriod || "All observation time NOT in pre-risk, risk, or post-risk windows"],
         ]));
 
-        children.push(h1("6. Observation period"));
+        children.push(h1("7. Observation period"));
         children.push(labelTable([
           ["Period starts at", ({ "age-cohort": "Later of (a) calendar start or (b) cohort entry age", "study-start": "Calendar start of study period", "age-onset": "Age at first eligibility", enrolment: "Date of database registration" })[s.obsStart] || "—"],
           ["Period ends at", ({ "earliest-of": "Earliest of: end of study period, death, disenrolment", "study-end": "Calendar end of study period", death: "Death", disenrol: "Disenrolment from database" })[s.obsEnd] || "—"],
           ["Study calendar period", s.studyCalendar || "—"],
         ]));
 
-        children.push(h1("7. Time-varying confounders"));
+        children.push(h1("8. Time-varying confounders"));
         children.push(labelTable([["Age bands", ageBand + " bands"], ["Season", season]]));
         children.push(h2("Other time-varying covariates"));
         tvCovs.length ? tvCovs.forEach((l) => children.push(bullet(l))) : children.push(para("(none specified)"));
 
-        children.push(h1("8. Statistical analysis"));
+        children.push(h1("9. Statistical analysis"));
         children.push(labelTable([
           ["Primary model", s.primaryModel || "Conditional Poisson regression with offset for log person-time"],
           ["Effect estimate", s.effectMeasure || "Incidence rate ratio (IRR) with 95% CI"],
@@ -839,16 +876,16 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
         children.push(h2("Sensitivity analyses"));
         sensitivity.length ? sensitivity.forEach((l) => children.push(bullet(l))) : children.push(para("(none specified)"));
 
-        children.push(h1("9. Execution and timeline"));
+        children.push(h1("10. Execution and timeline"));
         children.push(labelTable([["Architecture", arch]]));
         children.push(h2("Timeline milestones"));
         milestones.length ? milestones.forEach((l) => children.push(numItem(l))) : children.push(para("(none)"));
 
-        children.push(h1("10. Ethics, data sharing, dissemination"));
+        children.push(h1("11. Ethics, data sharing, dissemination"));
         children.push(p([text("Ethics. ", { bold: true }), text(s.ethics || "Each participating site obtains local IRB / ethics approval before data extraction.")]));
         children.push(p([text("Dissemination. ", { bold: true }), text(s.dissemination || "Primary manuscript to a peer-reviewed pharmacoepidemiology journal.")]));
 
-        children.push(h1("11. Key references"));
+        children.push(h1("12. Key references"));
         refs.length ? refs.forEach((l) => children.push(numItem(l))) : children.push(para("(none)"));
 
         children.push(p([new D.TextRun({ text: "Drafted with the AsPEN SCCS protocol builder (" + today + ").", font: FONT, size: 18, italics: true, color: "808080" })], { spacing: { before: 400 } }));
