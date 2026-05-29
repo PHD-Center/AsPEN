@@ -1,6 +1,5 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
-import PageHeader from "../../../components/PageHeader.astro";
 import { WORKER_URL } from "../../../data/site-config";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -37,11 +36,25 @@ const designs = [
   title="Protocol templates — AsPEN members"
   description="Multi-national protocol templates for AsPEN-relevant study designs."
 >
-  <PageHeader
-    eyebrow="Members → Templates"
-    title="Protocol templates"
-    description="Pick a study design to draft a multi-country protocol with the AsPEN library of validated phenotypes and shared defaults."
-  />
+  <header class="relative bg-gradient-to-br from-brand-50 via-white to-brand-100/40 border-b border-slate-200 overflow-hidden">
+    <div class="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-14 flex items-center gap-6">
+      <img src={`${base}/images/AsPenLogo.png`} alt="" class="hidden sm:block shrink-0 w-20 h-20 object-contain" aria-hidden="true" />
+      <div class="flex-1 min-w-0">
+        <p class="uppercase tracking-widest text-xs text-brand-600 font-semibold mb-2">Members → Templates</p>
+        <h1 class="text-4xl md:text-5xl font-bold text-slate-900">Protocol templates</h1>
+        <p class="mt-4 text-lg text-slate-600 max-w-3xl">Pick a study design to draft a multi-country protocol with the AsPEN library of validated phenotypes and shared defaults.</p>
+      </div>
+      <aside class="hidden lg:flex shrink-0 items-start gap-3 max-w-xs">
+        <a href="https://ocean-dev.phdcenter.org.tw" target="_blank" rel="noopener" class="shrink-0">
+          <img src={`${base}/images/open-source/ocean-mark.svg`} alt="OCEAN" class="h-14 w-14" />
+        </a>
+        <div class="text-[11px] leading-relaxed">
+          <p class="text-slate-700">These protocol templates are curated from <a href="https://ocean-dev.phdcenter.org.tw" target="_blank" rel="noopener" class="text-brand-700 font-semibold hover:underline">OCEAN</a>, the Open Casual Effect Analysis Network operated by the Population Health Data Center (PHDc), NCKU.</p>
+          <p class="mt-1 text-slate-500">Maintained by Daniel Tsai.</p>
+        </div>
+      </aside>
+    </div>
+  </header>
 
   <section class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-10 space-y-6">
     <a class="text-sm text-brand-700 hover:underline font-semibold" href={`${base}/members/`}>← Members area</a>
@@ -54,14 +67,15 @@ const designs = [
       <p class="text-sm text-slate-700">The protocol builder is currently restricted to AsPEN admins. Ask the chair if you need access.</p>
     </div>
 
-    <div data-state="ready" class="hidden space-y-6">
-      <div class="flex items-center gap-4 border border-slate-200 rounded-2xl bg-white p-4 sm:p-5 shadow-sm">
+    <div data-state="ready" class="hidden">
+      <!-- Mobile fallback: header-side attribution is hidden below lg; show it here -->
+      <div class="lg:hidden flex items-center gap-3 border border-slate-200 rounded-2xl bg-white p-4 shadow-sm mb-6">
         <a href="https://ocean-dev.phdcenter.org.tw" target="_blank" rel="noopener" class="shrink-0">
-          <img src={`${base}/images/open-source/ocean-mark.svg`} alt="OCEAN" class="h-16 w-16" />
+          <img src={`${base}/images/open-source/ocean-mark.svg`} alt="OCEAN" class="h-12 w-12" />
         </a>
-        <div class="text-sm leading-relaxed">
-          <p class="text-slate-700">These protocol templates — phenotype libraries, code sets, and design defaults — are curated from <a href="https://ocean-dev.phdcenter.org.tw" target="_blank" rel="noopener" class="text-brand-700 font-semibold hover:underline">OCEAN</a>, the Open Casual Effect Analysis Network operated by the Population Health Data Center (PHDc), National Cheng Kung University.</p>
-          <p class="mt-1 text-xs text-slate-500">Maintained by Daniel Tsai.</p>
+        <div class="text-xs leading-relaxed">
+          <p class="text-slate-700">These protocol templates are curated from <a href="https://ocean-dev.phdcenter.org.tw" target="_blank" rel="noopener" class="text-brand-700 font-semibold hover:underline">OCEAN</a> (PHDc, NCKU).</p>
+          <p class="mt-1 text-[11px] text-slate-500">Maintained by Daniel Tsai.</p>
         </div>
       </div>
 
