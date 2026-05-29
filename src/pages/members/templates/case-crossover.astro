@@ -793,12 +793,13 @@ _Drafted with the AsPEN case-crossover builder (${today})._
         const f = filter.trim().toLowerCase();
         const filtered = f ? items.filter((it) => (it.name || "").toLowerCase().includes(f) || (it.codes || "").toLowerCase().includes(f) || (it.definition || "").toLowerCase().includes(f) || (it.validation || "").toLowerCase().includes(f)) : items;
         if (filtered.length === 0) { modalList.innerHTML = '<p class="px-3 py-6 text-sm text-slate-500 italic text-center">No phenotype matches.</p>'; return; }
+        // validation citation hidden in modal — accumulates silently and
+        // lands in the Word/MD References section at export time.
         modalList.innerHTML = filtered.map((it, idx) => `
           <button type="button" data-phenotype-idx="${idx}" class="block w-full text-left px-4 py-3 rounded-lg border border-transparent hover:border-brand-300 hover:bg-brand-50/40 transition">
             <p class="font-semibold text-slate-900 text-sm">${esc(it.name)}</p>
-            <p class="mt-1 text-xs text-slate-700 font-mono leading-relaxed">${esc(it.codes || "")}</p>
+            ${it.codes ? `<p class="mt-1 text-xs text-slate-700 font-mono leading-relaxed">${esc(it.codes)}</p>` : ""}
             ${it.definition ? `<p class="mt-1 text-xs text-slate-600 leading-relaxed">${esc(it.definition)}</p>` : ""}
-            ${it.validation ? `<p class="mt-1 text-[11px] text-slate-500 italic leading-relaxed">${esc(it.validation)}</p>` : ""}
           </button>
         `).join("");
         modalList.querySelectorAll("[data-phenotype-idx]").forEach((btn) => {

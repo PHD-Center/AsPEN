@@ -121,22 +121,89 @@ const EXCLUSION = [
   "In-hospital at index date",
 ];
 
-// Twelve confounding-control approaches the user can pick from — covers
-// the standard pharmacoepi toolkit, including doubly-robust and HD-PS.
-const PS_METHODS: { value: string; label: string }[] = [
-  { value: "iptw",         label: "Stabilised IPTW with PS trimming (1st/99th percentile)" },
-  { value: "iptw-overlap", label: "Overlap weights (Li & Greene 2018) — downweights extreme PS" },
-  { value: "match-1to1",   label: "1:1 PS matching (nearest neighbour, caliper 0.2 × SD logit PS)" },
-  { value: "match-1ton",   label: "1:N variable-ratio PS matching (e.g., up to 1:4)" },
-  { value: "match-greedy", label: "Greedy PS matching with replacement" },
-  { value: "strat",        label: "PS stratification (deciles)" },
-  { value: "hdps",         label: "High-dimensional propensity score (HDPS, Schneeweiss 2009)" },
-  { value: "drs",          label: "Disease risk score (DRS) adjustment" },
-  { value: "tmle",         label: "Targeted maximum likelihood estimation (TMLE) — doubly robust" },
-  { value: "gformula",     label: "G-formula / parametric standardisation" },
-  { value: "msm",          label: "Marginal structural model (stabilised IPTW + Cox)" },
-  { value: "outcome-reg",  label: "Multivariable outcome regression (Cox PH with covariates)" },
-  { value: "iv",           label: "Instrumental variable (IV) analysis" },
+// Thirteen confounding-control approaches with operational definitions
+// and method citations. Picking from the library fills both the dropdown
+// and an editable 'Method operational details' textarea; the citation
+// auto-appends to the References section at export time.
+const PS_METHODS: { value: string; label: string; definition: string; validation: string }[] = [
+  {
+    value: "iptw",
+    label: "Stabilised IPTW with PS trimming",
+    definition: "Estimate the propensity score (PS) for treatment via multivariable logistic regression on all baseline covariates (Section 7). Compute stabilised inverse-probability-of-treatment weights and trim the weight distribution at the 1st and 99th percentile. Estimate the marginal hazard ratio in a weighted Cox proportional-hazards model.",
+    validation: "Robins JM, Hernán MA, Brumback B. Marginal structural models and causal inference in epidemiology. Epidemiology 2000;11(5):550-60. Cole SR, Hernán MA. Constructing inverse probability weights for marginal structural models. Am J Epidemiol 2008;168:656-64.",
+  },
+  {
+    value: "iptw-overlap",
+    label: "Overlap weights",
+    definition: "Estimate the PS; compute overlap weights as PS × (1 − PS), which down-weight units with extreme PS values. Apply weights in a marginal Cox model. Overlap weights guarantee exact mean balance on all measured covariates in the weighted population and are robust to extreme PS values.",
+    validation: "Li F, Morgan KL, Zaslavsky AM. Balancing covariates via propensity score weighting. J Am Stat Assoc 2018;113:390-400. Li F, Thomas LE, Li F. Addressing extreme propensity scores via the overlap weights. Am J Epidemiol 2019;188:250-7.",
+  },
+  {
+    value: "match-1to1",
+    label: "1:1 PS matching",
+    definition: "Estimate the PS via multivariable logistic regression. Match exposed and comparator users 1:1 using nearest-neighbour matching on the logit of the PS, with a caliper of 0.2 × SD of the logit PS, without replacement. Estimate the matched hazard ratio in a Cox model stratified on matched pair.",
+    validation: "Austin PC. Some methods of propensity-score matching had superior performance to others. Biom J 2009;51:171-84.",
+  },
+  {
+    value: "match-1ton",
+    label: "1:N variable-ratio PS matching",
+    definition: "Estimate the PS. Match each exposed user to up to N (typically 4) nearest-neighbour comparators on the logit PS with a 0.2 × SD logit-PS caliper, without replacement, allowing variable ratios. Analyse via a Cox model with cluster-robust variance.",
+    validation: "Ming K, Rosenbaum PR. Substantial gains in bias reduction from matching with a variable number of controls. Biometrics 2000;56:118-24.",
+  },
+  {
+    value: "match-greedy",
+    label: "Greedy PS matching with replacement",
+    definition: "Estimate the PS. Match each exposed user to the nearest-neighbour comparator on the PS within a 0.2 × SD logit-PS caliper, allowing comparators to be re-used. Analyse via Cox regression with cluster-robust variance to account for re-use.",
+    validation: "Rosenbaum PR, Rubin DB. The bias due to incomplete matching. Biometrics 1985;41:103-16.",
+  },
+  {
+    value: "strat",
+    label: "PS stratification (deciles)",
+    definition: "Estimate the PS and stratify the cohort into deciles. Estimate within-stratum hazard ratios using a Cox model stratified on PS decile; pool across strata via a stratified analysis.",
+    validation: "Rosenbaum PR, Rubin DB. Reducing bias in observational studies using subclassification on the propensity score. J Am Stat Assoc 1984;79:516-24.",
+  },
+  {
+    value: "hdps",
+    label: "High-dimensional propensity score (HDPS)",
+    definition: "Generate empirical covariates from claims (diagnoses, procedures, dispensings, healthcare utilisation in the look-back window). Prioritise covariates by their potential to confound using the Bross formula. Include top 200-500 empirical covariates plus pre-specified covariates in the PS model. Apply via IPTW or matching.",
+    validation: "Schneeweiss S, Rassen JA, Glynn RJ, Avorn J, Mogun H, Brookhart MA. High-dimensional propensity score adjustment in studies of treatment effects using health care claims data. Epidemiology 2009;20:512-22.",
+  },
+  {
+    value: "drs",
+    label: "Disease risk score (DRS) adjustment",
+    definition: "Model the outcome on baseline covariates in the unexposed (or full cohort) to derive each patient's predicted absolute risk (DRS). Match or stratify exposed vs unexposed users on DRS quantiles, or include DRS as a regression adjustment.",
+    validation: "Arbogast PG, Ray WA. Use of disease risk scores in pharmacoepidemiologic studies. Stat Methods Med Res 2009;18:67-80. Hansen BB. The prognostic analogue of the propensity score. Biometrika 2008;95:481-8.",
+  },
+  {
+    value: "tmle",
+    label: "Targeted maximum likelihood estimation (TMLE)",
+    definition: "Estimate the PS and the outcome regression flexibly (e.g., Super Learner with multiple algorithms). Apply a targeted update step to the outcome regression using the score equation derived from the PS. TMLE is doubly robust: consistent if either the PS or the outcome model is correct.",
+    validation: "van der Laan MJ, Rose S. Targeted Learning. Springer 2011. Schuler MS, Rose S. Targeted maximum likelihood estimation for causal inference in observational studies. Am J Epidemiol 2017;185:65-73.",
+  },
+  {
+    value: "gformula",
+    label: "G-formula / parametric standardisation",
+    definition: "Fit an outcome regression model on covariates and exposure. Predict counterfactual outcomes under exposure and non-exposure for each individual, holding covariates at their observed values, and average across the population to obtain the marginal hazard ratio or risk difference.",
+    validation: "Robins JM. A new approach to causal inference in mortality studies with sustained exposure periods. Math Modelling 1986;7:1393-512. Snowden JM, Rose S, Mortimer KM. Am J Epidemiol 2011;173:731-8.",
+  },
+  {
+    value: "msm",
+    label: "Marginal structural model (stabilised IPTW + Cox)",
+    definition: "Compute stabilised inverse-probability weights via PS modelling. Fit a marginal structural Cox model on the weighted population. Allows time-varying confounders affected by previous exposure; for ACNU with fixed treatment assignment typically reduces to standard IPTW Cox.",
+    validation: "Robins JM, Hernán MA, Brumback B. Marginal structural models and causal inference in epidemiology. Epidemiology 2000;11:550-60.",
+  },
+  {
+    value: "outcome-reg",
+    label: "Multivariable outcome regression",
+    definition: "Fit a multivariable Cox proportional-hazards regression directly, including the exposure indicator and all pre-specified baseline covariates (Section 7). No PS used. Best when the outcome model is correctly specified and covariate balance between groups is acceptable.",
+    validation: "Hernán MA, Robins JM. Causal Inference: What If. Chapman & Hall/CRC 2020.",
+  },
+  {
+    value: "iv",
+    label: "Instrumental variable (IV) analysis",
+    definition: "Use an instrument (e.g., physician's preference for exposure or geographic variation) that affects exposure but is independent of unmeasured confounders. Estimate the local average treatment effect via two-stage least squares (continuous outcome) or two-stage residual inclusion (time-to-event).",
+    validation: "Brookhart MA, Wang PS, Solomon DH, Schneeweiss S. Evaluating short-term drug effects using a physician-specific prescribing preference as an instrumental variable. Epidemiology 2006;17:268-75.",
+  },
 ];
 
 const PS_METHOD_DESCRIPTIONS: Record<string, string> = Object.fromEntries(PS_METHODS.map((m) => [m.value, m.label]));
@@ -734,6 +801,13 @@ const TIMELINE_PRESETS: Record<string, string> = {
             8 · Confounding control
           </summary>
           <div class="px-5 pb-5 space-y-4">
+            <div>
+              <button type="button" data-open-library data-category="confounding" data-target-value="psMethod" data-target-def="psMethodDetails"
+                      class="text-[10px] uppercase tracking-widest font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2 py-1 rounded transition">
+                📚 Pick confounding method from library
+              </button>
+              <span class="ml-2 text-[11px] text-slate-500">Auto-fills the method, its operational details, and adds the method citation to References on export.</span>
+            </div>
             <div class="grid sm:grid-cols-2 gap-3">
               <label class="flex flex-col gap-1">
                 <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Primary confounding-control method</span>
@@ -756,6 +830,11 @@ const TIMELINE_PRESETS: Record<string, string> = {
                 </div>
               </label>
             </div>
+            <label class="flex flex-col gap-1">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Method operational details</span>
+              <textarea name="psMethodDetails" rows="4" placeholder="Will be auto-filled when you pick from the library. Edit freely."
+                        class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+            </label>
             <div>
               <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Baseline covariates — tick those to adjust for</p>
               <div class="mt-2 space-y-3">
@@ -961,7 +1040,7 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
   <!-- docx library (UMD bundle) — used to generate Word files client-side -->
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js" is:inline></script>
 
-  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES, TIMELINE_PRESETS, PS_METHOD_DESCRIPTIONS, INDEX_DATE_OPTIONS, PHENOTYPES }}>
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES, TIMELINE_PRESETS, PS_METHODS, PS_METHOD_DESCRIPTIONS, INDEX_DATE_OPTIONS, PHENOTYPES }}>
     (() => {
       const setState = (name) => {
         document.querySelectorAll("[data-state]").forEach((el) => {
@@ -1177,6 +1256,7 @@ ${bullets(censoring)}
 - **Method:** ${psM}
 - **Covariate look-back window:** ${s.lookback || "365"} days prior to index date
 
+${s.psMethodDetails ? `**Method operational details.** ${s.psMethodDetails}\n` : ""}
 **Baseline covariates**
 
 ${bullets(covariates)}
@@ -1540,6 +1620,9 @@ _Drafted with the AsPEN protocol builder (${today})._
           ["Method", psM],
           ["Covariate look-back", (s.lookback || "365") + " days prior to index date"],
         ]));
+        if (s.psMethodDetails && s.psMethodDetails.trim()) {
+          children.push(p([text("Method operational details. ", { bold: true }), text(s.psMethodDetails)]));
+        }
         children.push(h2("Baseline covariates"));
         covariates.length ? covariates.forEach((l) => children.push(bullet(l))) : children.push(para("(none specified)"));
         children.push(para("PS model performance is assessed via standardised mean differences (SMDs) before/after weighting/matching (target < 0.1 across all covariates) and the c-statistic of the PS model."));
@@ -1626,27 +1709,32 @@ _Drafted with the AsPEN protocol builder (${today})._
       }[c]));
 
       const renderLibrary = (filter = "") => {
-        const items = PHENOTYPES[currentCategory] || [];
+        // Confounding library uses the PS_METHODS array (each has value + label
+        // + definition + validation). Phenotype categories use PHENOTYPES.
+        const items = currentCategory === "confounding"
+          ? PS_METHODS.map((m) => ({ name: m.label, value: m.value, definition: m.definition, validation: m.validation }))
+          : (PHENOTYPES[currentCategory] || []);
         const f = filter.trim().toLowerCase();
         const filtered = f
           ? items.filter((it) =>
               (it.name || "").toLowerCase().includes(f) ||
               (it.codes || "").toLowerCase().includes(f) ||
               (it.notes || "").toLowerCase().includes(f) ||
-              (it.definition || "").toLowerCase().includes(f) ||
-              (it.validation || "").toLowerCase().includes(f))
+              (it.definition || "").toLowerCase().includes(f))
           : items;
         if (filtered.length === 0) {
-          modalList.innerHTML = '<p class="px-3 py-6 text-sm text-slate-500 italic text-center">No phenotype matches.</p>';
+          modalList.innerHTML = '<p class="px-3 py-6 text-sm text-slate-500 italic text-center">No matches.</p>';
           return;
         }
+        // NOTE: validation citation is NOT shown in the modal — it accumulates
+        // silently on pick and lands in the Word/MD References section at the
+        // end of export. Modal stays focused on operational definitions.
         modalList.innerHTML = filtered.map((it, idx) => `
           <button type="button" data-phenotype-idx="${idx}"
                   class="block w-full text-left px-4 py-3 rounded-lg border border-transparent hover:border-brand-300 hover:bg-brand-50/40 transition">
             <p class="font-semibold text-slate-900 text-sm">${esc(it.name)}</p>
-            <p class="mt-1 text-xs text-slate-700 font-mono leading-relaxed">${esc(it.codes || "")}</p>
+            ${it.codes ? `<p class="mt-1 text-xs text-slate-700 font-mono leading-relaxed">${esc(it.codes)}</p>` : ""}
             ${it.definition ? `<p class="mt-1 text-xs text-slate-600 leading-relaxed">${esc(it.definition)}</p>` : ""}
-            ${it.validation ? `<p class="mt-1 text-[11px] text-slate-500 italic leading-relaxed">${esc(it.validation)}</p>` : ""}
             ${it.notes ? `<p class="mt-1 text-[11px] text-slate-500 leading-relaxed">${esc(it.notes)}</p>` : ""}
           </button>
         `).join("");
@@ -1664,7 +1752,11 @@ _Drafted with the AsPEN protocol builder (${today})._
             fill("name",  it.name);
             fill("codes", it.codes);
             fill("def",   it.definition);
-            // Also-fill: mirror the phenotype name into a PICO field
+            // For confounding picks: drop the value into the <select> (psMethod)
+            if (currentTargets.value && it.value !== undefined) {
+              const el = form.querySelector(`[name="${currentTargets.value}"]`);
+              if (el) el.value = it.value;
+            }
             if (currentTargets.alsoFill) {
               const el = form.querySelector(`[name="${currentTargets.alsoFill}"]`);
               if (el && it.name) el.value = it.name;
@@ -1686,8 +1778,9 @@ _Drafted with the AsPEN protocol builder (${today})._
         modalTitle.textContent = ({
           indications: "Pick an indication (cohort definition)",
           exposures:   "Pick a drug class (exposure or comparator)",
-          outcomes:    "Pick an outcome — fills definition, codes & validation",
-        })[category] || "Pick a phenotype";
+          outcomes:    "Pick an outcome — fills definition + codes",
+          confounding: "Pick a confounding-control method — fills the method + operational details",
+        })[category] || "Pick from library";
         modalSearch.value = "";
         renderLibrary("");
         modal.classList.remove("hidden");
@@ -1702,6 +1795,7 @@ _Drafted with the AsPEN protocol builder (${today})._
             name:     btn.dataset.targetName,
             codes:    btn.dataset.targetCodes,
             def:      btn.dataset.targetDef,
+            value:    btn.dataset.targetValue,
             alsoFill: btn.dataset.alsoFill,
           });
         });
