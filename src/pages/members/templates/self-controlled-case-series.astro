@@ -2,21 +2,48 @@
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PageHeader from "../../../components/PageHeader.astro";
 import { WORKER_URL } from "../../../data/site-config";
+import databasesRaw from "../../../data/databases.json";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-// Sites mirroring the active set on /databases/.
-const SITES = [
-  { code: "TW", name: "Taiwan (NHIRD / CGRD / TWB)" },
-  { code: "KR", name: "South Korea (HIRA / NHIS-NHID)" },
-  { code: "JP", name: "Japan (NDB / JMDC)" },
-  { code: "HK", name: "Hong Kong (CDARS)" },
-  { code: "GB", name: "United Kingdom (CPRD / THIN / UKB / ISD)" },
-  { code: "NL", name: "Netherlands (PHARMO)" },
-  { code: "FI", name: "Finland (FinReg)" },
-  { code: "AU", name: "Australia (PBS / VLHD)" },
-  { code: "US", name: "United States (Medicare / Medicaid)" },
+// Feature taxonomy + per-database site catalogue (mirrors ACNU template).
+const FEATURES = [
+  { id: "rx",        short: "Rx",   label: "Prescriptions" },
+  { id: "dx",        short: "Dx",   label: "Diagnoses" },
+  { id: "labs",      short: "Lab",  label: "Lab results" },
+  { id: "imaging",   short: "Img",  label: "Imaging" },
+  { id: "mortality", short: "Mor",  label: "Mortality linkage" },
+  { id: "cancer",    short: "Can",  label: "Cancer-registry linkage" },
+  { id: "pregnancy", short: "Preg", label: "Pregnancy / birth linkage" },
+  { id: "genomics",  short: "Gen",  label: "Genomics / biobank linkage" },
 ];
+const shortDbName = (full: string): string => {
+  const m = full.match(/\(([^)]+)\)$/);
+  return m ? m[1] : full;
+};
+const COUNTRY_ORDER = ["TW", "KR", "JP", "HK", "AU", "FI", "GB", "NL", "US"];
+type DbRow = typeof databasesRaw[number] & { hidden?: boolean; features?: string[] };
+const SITES_DB = (databasesRaw as DbRow[])
+  .filter((d) => !d.hidden && COUNTRY_ORDER.includes(d.code))
+  .map((d) => ({
+    id:       `${d.code}-${shortDbName(d.name).replace(/[^A-Za-z0-9]/g, "")}`,
+    country:  d.country,
+    code:     d.code,
+    short:    shortDbName(d.name),
+    features: (d.features ?? []) as string[],
+  }))
+  .sort((a, b) => {
+    const ai = COUNTRY_ORDER.indexOf(a.code);
+    const bi = COUNTRY_ORDER.indexOf(b.code);
+    if (ai !== bi) return ai - bi;
+    return a.short.localeCompare(b.short);
+  });
+const SITES_DETAIL_MAP: Record<string, { country: string; code: string; short: string; features: string[] }> =
+  Object.fromEntries(SITES_DB.map((d) => [d.id, d]));
+const SITES_BY_COUNTRY: Record<string, typeof SITES_DB> = SITES_DB.reduce((acc, d) => {
+  (acc[d.country] ??= []).push(d);
+  return acc;
+}, {} as Record<string, typeof SITES_DB>);
 
 // Shared phenotype library (subset — same shape as ACNU page).
 const PHENOTYPES = {
@@ -202,19 +229,48 @@ const TIMELINE_PRESETS: Record<string, string> = {
 
         <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
           <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">3 · Sites</summary>
-          <div class="px-5 pb-5 space-y-3">
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {SITES.map((s) => (
-                <label class="flex items-center gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
-                  <input type="checkbox" name="sites" value={s.code} class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
-                  <span><span class="font-semibold">{s.code}</span> · {s.name}</span>
-                </label>
+          <div class="px-5 pb-5 space-y-4">
+            <p class="text-xs text-slate-500">
+              Tick every <strong>database</strong> (not just country). Feature chips indicate what each database can support — only tick a site whose features cover what your case definition / exposure / time-varying covariates need.
+            </p>
+            <div class="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 border-y border-slate-100 py-2">
+              <span class="uppercase tracking-widest font-bold text-slate-600">Legend</span>
+              {FEATURES.map((f) => (
+                <span class="inline-flex items-center gap-1">
+                  <span class="text-[10px] bg-brand-50 text-brand-700 border border-brand-100 px-1.5 py-0.5 rounded font-mono font-semibold">{f.short}</span>
+                  <span>{f.label}</span>
+                </span>
               ))}
             </div>
-            <label class="flex flex-col gap-1 mt-2">
+            <div class="space-y-3">
+              {Object.entries(SITES_BY_COUNTRY).map(([country, dbs]) => (
+                <div>
+                  <p class="text-[11px] font-semibold text-slate-700">{country}</p>
+                  <div class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    {dbs.map((d) => (
+                      <label class="flex items-center gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                        <input type="checkbox" name="sites" value={d.id} class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+                        <span class="font-semibold text-slate-800 shrink-0">{d.short}</span>
+                        <span class="flex flex-wrap gap-1 ml-auto">
+                          {FEATURES.filter((f) => d.features.includes(f.id)).map((f) => (
+                            <span class="text-[10px] bg-brand-50 text-brand-700 border border-brand-100 px-1.5 py-0.5 rounded font-mono font-semibold" title={f.label}>{f.short}</span>
+                          ))}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <label class="flex flex-col gap-1">
               <span class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Others (one per line)</span>
               <textarea name="sitesOther" rows="2" placeholder="Sites beyond the active databases list" class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
             </label>
+            <div data-feasibility class="hidden bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs leading-relaxed">
+              <p class="font-bold text-amber-800 uppercase tracking-[0.2em] text-[10px]">⚠ Feasibility heads-up — not a blocker</p>
+              <p class="mt-1 text-amber-900">Your study question implies data features that some selected sites don't carry. Multi-country SCCS protocols often accommodate this; just be explicit in the per-site analytic plan.</p>
+              <ul data-feasibility-list class="mt-2 space-y-1 text-amber-900 list-disc list-inside"></ul>
+            </div>
           </div>
         </details>
 
@@ -518,7 +574,7 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
 
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js" is:inline></script>
 
-  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES, PHENOTYPES, TIMELINE_PRESETS }}>
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES_DETAIL_MAP, FEATURES, PHENOTYPES, TIMELINE_PRESETS }}>
     (() => {
       const setState = (name) => {
         document.querySelectorAll("[data-state]").forEach((el) => {
@@ -543,7 +599,78 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
       try { pickedCitations = JSON.parse(localStorage.getItem(STORAGE_CITATIONS_KEY) || "{}") || {}; } catch {}
       const savePickedCitations = () => { try { localStorage.setItem(STORAGE_CITATIONS_KEY, JSON.stringify(pickedCitations)); } catch {} };
 
-      const SITE_LABEL = Object.fromEntries(SITES.map((s) => [s.code, s.name]));
+      // Format a site id into "Country · Short [Rx Dx ...]".
+      const formatSiteFull = (id) => {
+        const d = SITES_DETAIL_MAP[id];
+        if (!d) return id;
+        const feats = (d.features || []).map((f) => (FEATURES.find((x) => x.id === f) || {}).short || f).join(" ");
+        return d.country + " · " + d.short + (feats ? " [" + feats + "]" : "");
+      };
+
+      // ── Feasibility detection ───────────────────────────────
+      // Map the chair's typed text → which data features are needed.
+      // Permissive regex so a heads-up appears even on a quick first draft.
+      // SCCS still leans on Rx (exposure) + Dx (outcome) almost universally;
+      // those two are added at the top.
+      const FEATURE_TRIGGERS = {
+        labs:      /\b(hba1c|egfr|creatinine|bmi|blood\s*pressure|systolic|diastolic|ldl|hdl|cholesterol|glucose|albumin|hemoglobin|haemoglobin|inr|tsh|lipid|biochemical|biochemist|labora?tor[yi]|lab[s]?\b)/i,
+        mortality: /\b(mortality|all-?cause death|cv death|cardiovascular death|cause of death|died|fatal|death|survival)\b/i,
+        cancer:    /\b(cancer|carcinom|malignan|neoplasm|tumou?r|sarcoma|leuk[ae]mia|lymphoma|registr[yi].*cancer|cancer.*registr[yi])\b/i,
+        pregnancy: /\b(pregnan|birth|neonatal|gestation|trimester|maternal|fetal|foetal|infant)\b/i,
+        imaging:   /\b(imaging|mri|ct\s*scan|x-?ray|ultrasound|echocardio|angio|radiolog)\b/i,
+        genomics:  /\b(genomic|snp|gwas|biobank|genotype|exome|gene(?:tic)?\b)\b/i,
+      };
+      const FEATURE_TEXT_FIELDS = [
+        "outcomeDef","outcomeCodes",
+        "picoP","picoI","picoO",
+        "exposureName","exposureCodes","exposurePeriodDef",
+        "baselinePeriod","tvCovariates",
+        "subgroupsCustom","sensitivityCustom",
+      ];
+      const FEATURE_MULTI_FIELDS = ["subgroupsPick","sensitivityPick"];
+
+      const computeRequiredFeatures = (state) => {
+        let blob = "";
+        for (const f of FEATURE_TEXT_FIELDS) blob += " " + (state[f] || "");
+        for (const f of FEATURE_MULTI_FIELDS) blob += " " + ((state[f] || []).join(" "));
+        const req = new Set(["rx","dx"]);    // SCCS in AsPEN: Rx exposure + Dx outcome are typical
+        for (const [feat, rx] of Object.entries(FEATURE_TRIGGERS)) {
+          if (rx.test(blob)) req.add(feat);
+        }
+        return req;
+      };
+
+      const renderFeasibility = (state) => {
+        const panel  = document.querySelector("[data-feasibility]");
+        const list   = document.querySelector("[data-feasibility-list]");
+        if (!panel || !list) return;
+        const required = computeRequiredFeatures(state);
+        const selected = state.sites || [];
+        if (selected.length === 0) { panel.classList.add("hidden"); return; }
+
+        const gaps = [];
+        for (const featId of required) {
+          if (featId === "rx" || featId === "dx") continue; // universal in claims/EHR
+          const featLabel = (FEATURES.find((f) => f.id === featId) || {}).label || featId;
+          const missing = [];
+          const have    = [];
+          for (const sid of selected) {
+            const d = SITES_DETAIL_MAP[sid];
+            if (!d) continue;
+            (d.features.includes(featId) ? have : missing).push(d.short);
+          }
+          if (missing.length > 0) {
+            gaps.push({ feature: featLabel, missing, have });
+          }
+        }
+
+        if (gaps.length === 0) { panel.classList.add("hidden"); return; }
+        list.innerHTML = gaps.map((g) =>
+          `<li><strong>${g.feature}</strong> — implied by your study text. Missing at: <strong>${g.missing.join(", ")}</strong>` +
+          (g.have.length > 0 ? `. Available at: ${g.have.join(", ")}.` : `.`) + `</li>`
+        ).join("");
+        panel.classList.remove("hidden");
+      };
 
       const readForm = () => {
         const data = new FormData(form);
@@ -572,11 +699,11 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
       const bullets = (arr) => arr.length === 0 ? "_(none specified)_" : arr.map((l) => "- " + l).join("\n");
       const numbered = (arr) => arr.length === 0 ? "_(none)_" : arr.map((l, i) => (i + 1) + ". " + l).join("\n");
       const orFb = (s, fb) => (s && s.trim()) ? s : fb;
-      const sitesLine = (codes, otherText) => {
-        const parts = (codes || []).map((c) => "**" + c + "** — " + (SITE_LABEL[c] || c));
+      const sitesLine = (ids, otherText) => {
+        const parts = (ids || []).map((c) => "- " + formatSiteFull(c));
         const others = (otherText || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         if (parts.length === 0 && others.length === 0) return "_(no sites selected)_";
-        let out = parts.join(" · ");
+        let out = parts.join("\n");
         if (others.length > 0) out += (out ? "\n\n**Other sites:**\n" : "**Other sites:**\n") + others.map((o) => "- " + o).join("\n");
         return out;
       };
@@ -716,6 +843,7 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
         const state = readForm();
         preview.textContent = buildMarkdown(state);
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+        renderFeasibility(state);
       };
       try { const saved = localStorage.getItem(STORAGE_KEY); if (saved) writeForm(JSON.parse(saved)); } catch {}
       const timelineTa = form.querySelector('[name="timeline"]');
@@ -814,7 +942,7 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
         const subgroups   = mergeList(s.subgroupsPick, s.subgroupsCustom);
         const tvCovs      = (s.tvCovariates || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const sensitivity = mergeList(s.sensitivityPick, s.sensitivityCustom);
-        const sitesPart = (s.sites && s.sites.length > 0) ? s.sites.map((c) => c + " — " + (SITE_LABEL[c] || c)).join("; ") : "";
+        const sitesPart = (s.sites && s.sites.length > 0) ? s.sites.map((c) => formatSiteFull(c)).join("; ") : "";
         const sitesOthersList = (s.sitesOther || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const sitesText = !sitesPart && sitesOthersList.length === 0 ? "(no sites selected)" : [sitesPart, sitesOthersList.length > 0 ? ("Others: " + sitesOthersList.join("; ")) : ""].filter(Boolean).join(" | ");
         const ageBand = ({ "6m": "6-month", "1m": "1-month", "3m": "3-month", "12m": "12-month" })[s.ageBands] || "6-month";
