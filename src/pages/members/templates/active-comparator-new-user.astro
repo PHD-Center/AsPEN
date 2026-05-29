@@ -639,6 +639,14 @@ const TIMELINE_PRESETS: Record<string, string> = {
               <textarea name="sitesOther" rows="2" placeholder="e.g.&#10;Vietnam — local single-site EHR&#10;Singapore — National Healthcare Group"
                         class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
             </label>
+            <!-- Feasibility heads-up — populated by JS based on form keywords vs site features -->
+            <div data-feasibility class="hidden bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs leading-relaxed">
+              <p class="font-bold text-amber-800 uppercase tracking-[0.2em] text-[10px]">⚠ Feasibility heads-up — not a blocker</p>
+              <p class="mt-1 text-amber-900">
+                Your study question implies data features that some selected sites don't carry. Multi-country protocols often accommodate this (other sites cover what some miss); just be explicit in the per-site analytic plan.
+              </p>
+              <ul data-feasibility-list class="mt-2 space-y-1 text-amber-900 list-disc list-inside"></ul>
+            </div>
           </div>
         </details>
 
@@ -1149,14 +1157,81 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
         actionMsg.classList.toggle("text-brand-700", !isError);
       };
 
-      // Format a site id into "Country · Short [Rx Dx ...]". Uses the
-      // database-level detail map so each picked database renders with its
-      // own feature row.
+      // Format a site id into "Country · Short [Rx Dx ...]".
       const formatSiteFull = (id) => {
         const d = SITES_DETAIL_MAP[id];
         if (!d) return id;
         const feats = (d.features || []).map((f) => (FEATURES.find((x) => x.id === f) || {}).short || f).join(" ");
         return d.country + " · " + d.short + (feats ? " [" + feats + "]" : "");
+      };
+
+      // ── Feasibility detection ───────────────────────────────
+      // Map the chair's typed text → which data features are needed.
+      // These regexes lean on common English / shorthand terms; they're
+      // intentionally permissive so a heads-up appears even on a quick
+      // first draft. Always-required features (Rx + Dx) are added at the
+      // top because this is an active-comparator pharmacoepi study.
+      const FEATURE_TRIGGERS = {
+        labs:      /\b(hba1c|egfr|creatinine|bmi|blood\s*pressure|systolic|diastolic|ldl|hdl|cholesterol|glucose|albumin|hemoglobin|haemoglobin|inr|tsh|lipid|biochemical|biochemist|labora?tor[yi]|lab[s]?\b)/i,
+        mortality: /\b(mortality|all-?cause death|cv death|cardiovascular death|cause of death|died|fatal|death|survival)\b/i,
+        cancer:    /\b(cancer|carcinom|malignan|neoplasm|tumou?r|sarcoma|leuk[ae]mia|lymphoma|registr[yi].*cancer|cancer.*registr[yi])\b/i,
+        pregnancy: /\b(pregnan|birth|neonatal|gestation|trimester|maternal|fetal|foetal|infant)\b/i,
+        imaging:   /\b(imaging|mri|ct\s*scan|x-?ray|ultrasound|echocardio|angio|radiolog)\b/i,
+        genomics:  /\b(genomic|snp|gwas|biobank|genotype|exome|gene(?:tic)?\b)\b/i,
+      };
+      const FEATURE_TEXT_FIELDS = [
+        "outcomeDef","outcomeCodes",
+        "covariatesCustom","inclusionCustom","exclusionCustom",
+        "picoP","picoI","picoO","secondaryOutcomesCustom",
+        "indication","exposureName","comparatorName","emulatedTrial",
+        "psMethodDetails","subgroupsCustom","sensitivityCustom",
+      ];
+      const FEATURE_MULTI_FIELDS = [
+        "covariatesPick","secondaryOutcomesPick","inclusionPick","exclusionPick",
+        "subgroupsPick","sensitivityPick","censoringPick",
+      ];
+
+      const computeRequiredFeatures = (state) => {
+        let blob = "";
+        for (const f of FEATURE_TEXT_FIELDS) blob += " " + (state[f] || "");
+        for (const f of FEATURE_MULTI_FIELDS) blob += " " + ((state[f] || []).join(" "));
+        const req = new Set(["rx","dx"]);    // ACNU always needs prescriptions + diagnoses
+        for (const [feat, rx] of Object.entries(FEATURE_TRIGGERS)) {
+          if (rx.test(blob)) req.add(feat);
+        }
+        return req;
+      };
+
+      const renderFeasibility = (state) => {
+        const panel  = document.querySelector("[data-feasibility]");
+        const list   = document.querySelector("[data-feasibility-list]");
+        if (!panel || !list) return;
+        const required = computeRequiredFeatures(state);
+        const selected = state.sites || [];
+        if (selected.length === 0) { panel.classList.add("hidden"); return; }
+
+        const gaps = [];
+        for (const featId of required) {
+          if (featId === "rx" || featId === "dx") continue; // these are universal in claims/EHR
+          const featLabel = (FEATURES.find((f) => f.id === featId) || {}).label || featId;
+          const missing = [];
+          const have    = [];
+          for (const sid of selected) {
+            const d = SITES_DETAIL_MAP[sid];
+            if (!d) continue;
+            (d.features.includes(featId) ? have : missing).push(d.short);
+          }
+          if (missing.length > 0) {
+            gaps.push({ feature: featLabel, missing, have });
+          }
+        }
+
+        if (gaps.length === 0) { panel.classList.add("hidden"); return; }
+        list.innerHTML = gaps.map((g) =>
+          `<li><strong>${g.feature}</strong> — implied by your study text. Missing at: <strong>${g.missing.join(", ")}</strong>` +
+          (g.have.length > 0 ? `. Available at: ${g.have.join(", ")}.` : `.`) + `</li>`
+        ).join("");
+        panel.classList.remove("hidden");
       };
 
       // ── Form state read / write ─────────────────────
@@ -1398,6 +1473,7 @@ _Drafted with the AsPEN protocol builder (${today})._
       const render = () => {
         const state = readForm();
         preview.textContent = buildMarkdown(state);
+        renderFeasibility(state);
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
       };
 
