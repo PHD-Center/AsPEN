@@ -2,6 +2,50 @@
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PageHeader from "../../../components/PageHeader.astro";
 import { WORKER_URL } from "../../../data/site-config";
+import databasesRaw from "../../../data/databases.json";
+
+// Feature taxonomy — same 8 dimensions as the /databases/ compare drawer.
+const FEATURES = [
+  { id: "rx",        short: "Rx",   label: "Prescriptions" },
+  { id: "dx",        short: "Dx",   label: "Diagnoses" },
+  { id: "labs",      short: "Lab",  label: "Lab results" },
+  { id: "imaging",   short: "Img",  label: "Imaging" },
+  { id: "mortality", short: "Mor",  label: "Mortality linkage" },
+  { id: "cancer",    short: "Can",  label: "Cancer-registry linkage" },
+  { id: "pregnancy", short: "Preg", label: "Pregnancy / birth linkage" },
+  { id: "genomics",  short: "Gen",  label: "Genomics / biobank linkage" },
+];
+
+// Pull the active databases (hidden flag respected). Extract a short label
+// from the parenthesised acronym in the canonical name. Build per-database
+// entries that the form can pick individually.
+const shortDbName = (full: string): string => {
+  const m = full.match(/\(([^)]+)\)$/);
+  return m ? m[1] : full;
+};
+const COUNTRY_ORDER = ["TW", "KR", "JP", "HK", "AU", "FI", "GB", "NL", "US"];
+type DbRow = typeof databasesRaw[number] & { hidden?: boolean; features?: string[] };
+const SITES_DB = (databasesRaw as DbRow[])
+  .filter((d) => !d.hidden && COUNTRY_ORDER.includes(d.code))
+  .map((d) => ({
+    id:       `${d.code}-${shortDbName(d.name).replace(/[^A-Za-z0-9]/g, "")}`,
+    country:  d.country,
+    code:     d.code,
+    short:    shortDbName(d.name),
+    features: (d.features ?? []) as string[],
+  }))
+  .sort((a, b) => {
+    const ai = COUNTRY_ORDER.indexOf(a.code);
+    const bi = COUNTRY_ORDER.indexOf(b.code);
+    if (ai !== bi) return ai - bi;
+    return a.short.localeCompare(b.short);
+  });
+const SITES_DETAIL_MAP: Record<string, { country: string; code: string; short: string; features: string[] }> =
+  Object.fromEntries(SITES_DB.map((d) => [d.id, d]));
+const SITES_BY_COUNTRY: Record<string, typeof SITES_DB> = SITES_DB.reduce((acc, d) => {
+  (acc[d.country] ??= []).push(d);
+  return acc;
+}, {} as Record<string, typeof SITES_DB>);
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -557,17 +601,40 @@ const TIMELINE_PRESETS: Record<string, string> = {
           <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">
             3 · Sites
           </summary>
-          <div class="px-5 pb-5 space-y-3">
-            <p class="text-xs text-slate-500">Tick every site whose data partner has agreed to run the common protocol locally. The list mirrors the active databases on the public Databases page. Anything beyond it goes in <em>Others</em>.</p>
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {SITES.map((s) => (
-                <label class="flex items-center gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
-                  <input type="checkbox" name="sites" value={s.code} class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
-                  <span><span class="font-semibold">{s.code}</span> · {s.name}</span>
-                </label>
+          <div class="px-5 pb-5 space-y-4">
+            <p class="text-xs text-slate-500">
+              Tick every <strong>database</strong> (not just country) you want to include. The feature chips next to each show what each database can support — only tick a site whose features cover what your outcome / exposure / covariates need (e.g., a lab-defined outcome needs <span class="font-mono">Lab</span>; an all-cause mortality endpoint needs <span class="font-mono">Mor</span>).
+            </p>
+            <div class="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 border-y border-slate-100 py-2">
+              <span class="uppercase tracking-widest font-bold text-slate-600">Legend</span>
+              {FEATURES.map((f) => (
+                <span class="inline-flex items-center gap-1">
+                  <span class="text-[10px] bg-brand-50 text-brand-700 border border-brand-100 px-1.5 py-0.5 rounded font-mono font-semibold">{f.short}</span>
+                  <span>{f.label}</span>
+                </span>
               ))}
             </div>
-            <label class="flex flex-col gap-1 mt-2">
+            <div class="space-y-3">
+              {Object.entries(SITES_BY_COUNTRY).map(([country, dbs]) => (
+                <div>
+                  <p class="text-[11px] font-semibold text-slate-700">{country}</p>
+                  <div class="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    {dbs.map((d) => (
+                      <label class="flex items-center gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
+                        <input type="checkbox" name="sites" value={d.id} class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+                        <span class="font-semibold text-slate-800 shrink-0">{d.short}</span>
+                        <span class="flex flex-wrap gap-1 ml-auto">
+                          {FEATURES.filter((f) => d.features.includes(f.id)).map((f) => (
+                            <span class="text-[10px] bg-brand-50 text-brand-700 border border-brand-100 px-1.5 py-0.5 rounded font-mono font-semibold" title={f.label}>{f.short}</span>
+                          ))}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <label class="flex flex-col gap-1">
               <span class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Others (one per line)</span>
               <textarea name="sitesOther" rows="2" placeholder="e.g.&#10;Vietnam — local single-site EHR&#10;Singapore — National Healthcare Group"
                         class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
@@ -1051,7 +1118,7 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
   <!-- docx library (UMD bundle) — used to generate Word files client-side -->
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js" is:inline></script>
 
-  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES, TIMELINE_PRESETS, PS_METHODS, PS_METHOD_DESCRIPTIONS, INDEX_DATE_OPTIONS, PHENOTYPES }}>
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES_DETAIL_MAP, FEATURES, TIMELINE_PRESETS, PS_METHODS, PS_METHOD_DESCRIPTIONS, INDEX_DATE_OPTIONS, PHENOTYPES }}>
     (() => {
       const setState = (name) => {
         document.querySelectorAll("[data-state]").forEach((el) => {
@@ -1082,7 +1149,15 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
         actionMsg.classList.toggle("text-brand-700", !isError);
       };
 
-      const SITE_LABEL = Object.fromEntries(SITES.map((s) => [s.code, s.name]));
+      // Format a site id into "Country · Short [Rx Dx ...]". Uses the
+      // database-level detail map so each picked database renders with its
+      // own feature row.
+      const formatSiteFull = (id) => {
+        const d = SITES_DETAIL_MAP[id];
+        if (!d) return id;
+        const feats = (d.features || []).map((f) => (FEATURES.find((x) => x.id === f) || {}).short || f).join(" ");
+        return d.country + " · " + d.short + (feats ? " [" + feats + "]" : "");
+      };
 
       // ── Form state read / write ─────────────────────
       const readForm = () => {
@@ -1124,11 +1199,11 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
         arr.length === 0 ? "_(none)_" : arr.map((l, i) => (i + 1) + ". " + l).join("\n");
 
       const orFb = (s, fb) => (s && s.trim()) ? s : fb;
-      const sitesLine = (codes, otherText) => {
-        const parts = (codes || []).map((c) => "**" + c + "** — " + (SITE_LABEL[c] || c));
+      const sitesLine = (ids, otherText) => {
+        const parts = (ids || []).map((c) => "- " + formatSiteFull(c));
         const others = (otherText || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         if (parts.length === 0 && others.length === 0) return "_(no sites selected)_";
-        let out = parts.join(" · ");
+        let out = parts.join("\n");
         if (others.length > 0) {
           out += (out ? "\n\n**Other sites:**\n" : "**Other sites:**\n");
           out += others.map((o) => "- " + o).join("\n");
@@ -1583,7 +1658,7 @@ _Drafted with the AsPEN protocol builder (${today})._
         })[s.arch] || "Federated";
 
         const sitesPart = (s.sites && s.sites.length > 0)
-          ? s.sites.map((c) => c + " — " + (SITE_LABEL[c] || c)).join("; ")
+          ? s.sites.map((c) => formatSiteFull(c)).join("; ")
           : "";
         const sitesOthersList = (s.sitesOther || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const sitesText = !sitesPart && sitesOthersList.length === 0
@@ -1796,9 +1871,8 @@ _Drafted with the AsPEN protocol builder (${today})._
         const psM   = PS_METHOD_DESCRIPTIONS[s.psMethod] || "PS-based adjustment";
         const eff   = ({ HR: "Hazard ratio (95% CI) from Cox PH models", RR: "Risk ratio (95% CI) from Poisson regression", RD: "Risk difference (95% CI)", IRR: "Incidence rate ratio (95% CI)" })[s.effectMeasure] || "Hazard ratio";
         const primAn= ({ ITT: "Intention-to-treat (ITT)", OT: "On-treatment (per-protocol)", both: "Both ITT and on-treatment" })[s.primaryAnalysisType] || "On-treatment";
-        const SITE_LABEL = Object.fromEntries(SITES.map((x) => [x.code, x.name]));
         const sitesPlain = (s.sites && s.sites.length > 0)
-          ? s.sites.map((c) => c + " — " + (SITE_LABEL[c] || c)).join("; ")
+          ? s.sites.map((c) => formatSiteFull(c)).join("; ")
           : "(no sites selected)";
         const sitesOthersList = (s.sitesOther || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const sitesAll = sitesOthersList.length > 0
