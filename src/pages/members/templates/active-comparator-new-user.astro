@@ -977,7 +977,8 @@ const TIMELINE_PRESETS: Record<string, string> = {
             </label>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Key references (one per line)</span>
-              <textarea name="references" rows="10" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Tsai DHT, Chuang ATM, Liu KH, Shao SC, Lai ECC. SGLT2 inhibitors and risk of CKD-mineral and bone disorders in patients with type 2 diabetes mellitus and stage 1-3 CKD. CMAJ 2025;197(7):E178-E189. PMID: 39993818. (AsPEN ACNU + target trial emulation exemplar.)
+              <textarea name="references" rows="11" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Cashin AG, Hansford HJ, Hernán MA, Swanson SA, Lee H, Jones MD, et al. Transparent Reporting of Observational Studies Emulating a Target Trial: The TARGET Statement. JAMA 2025. PMID: 40899949. (Reporting framework anchoring this protocol — see also https://target-guideline.org/)
+Tsai DHT, Chuang ATM, Liu KH, Shao SC, Lai ECC. SGLT2 inhibitors and risk of CKD-mineral and bone disorders in patients with type 2 diabetes mellitus and stage 1-3 CKD. CMAJ 2025;197(7):E178-E189. PMID: 39993818. (AsPEN ACNU + target trial emulation exemplar.)
 Hernán MA, Robins JM. Using big data to emulate a target trial when a randomized trial is not available. Am J Epidemiol 2016;183(8):758-64.
 Lund JL, Richardson DB, Stürmer T. The active comparator, new user study design in pharmacoepidemiology: historical foundations and contemporary application. Curr Epidemiol Rep 2015;2:221-8.
 Andersen M, Pratt N, Sanfélix-Gimeno G et al. Pharmacoepidemiol Drug Saf 2013 (AsPEN founding methods paper).
@@ -994,6 +995,9 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
         <div class="flex flex-wrap gap-3 pt-2 items-center">
           <button type="button" data-action="download-docx" class="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-2.5 rounded-lg transition text-sm">
             ⬇ Download Word (.docx)
+          </button>
+          <button type="button" data-action="download-target" class="bg-white border border-brand-700 text-brand-700 hover:bg-brand-50 font-semibold px-5 py-2.5 rounded-lg transition text-sm" title="Generate the TARGET checklist Word document (Cashin et al, JAMA 2025; target-guideline.org) mapped to the protocol fields.">
+            ⬇ TARGET checklist (.docx)
           </button>
           <button type="button" data-action="download-md" class="bg-white border border-brand-700 text-brand-700 hover:bg-brand-50 font-semibold px-5 py-2.5 rounded-lg transition text-sm">
             ⬇ Markdown (.md)
@@ -1424,6 +1428,30 @@ _Drafted with the AsPEN protocol builder (${today})._
         }
       });
 
+      // ── TARGET checklist download ─────────────────────
+      document.querySelector("[data-action='download-target']")?.addEventListener("click", async () => {
+        if (typeof docx === "undefined") {
+          setMsg("Word library failed to load — check your network and try again.", true);
+          return;
+        }
+        setMsg("Building TARGET checklist…");
+        try {
+          const blob = await buildTargetDocx(readForm());
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          const state = readForm();
+          const slug = (state.shortId || "aspen-protocol-acnu").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) || "aspen-protocol-acnu";
+          const today = new Date().toISOString().slice(0, 10);
+          a.href = url; a.download = slug + "-TARGET-checklist-" + today + ".docx";
+          document.body.appendChild(a); a.click(); a.remove();
+          URL.revokeObjectURL(url);
+          setMsg("Downloaded " + a.download);
+        } catch (e) {
+          console.error(e);
+          setMsg("Couldn't build the TARGET checklist: " + String(e), true);
+        }
+      });
+
       const buildDocx = async (s) => {
         const D = docx;
         const today = new Date().toISOString().slice(0, 10);
@@ -1706,6 +1734,280 @@ _Drafted with the AsPEN protocol builder (${today})._
           }],
         });
 
+        return await D.Packer.toBlob(doc);
+      };
+
+      // ── TARGET checklist document ────────────────────
+      // Produces a Word file mapping the protocol to the TARGET checklist
+      // (Cashin AG, Hansford HJ, Hernán MA, Swanson SA et al. JAMA 2025;
+      // PMID 40899949). Item 7 (target trial emulation) is the centrepiece —
+      // a 3-column table with rows a-h showing 'Target trial specification'
+      // vs 'Emulation in this study'. Items in Results / Discussion / Other
+      // are stubbed as placeholders to be completed at reporting time.
+      const buildTargetDocx = async (s) => {
+        const D = docx;
+        const FONT = "Times New Roman";
+        const today = new Date().toISOString().slice(0, 10);
+        const text = (str, opts = {}) => new D.TextRun({ text: String(str ?? ""), font: FONT, size: 22, ...opts });
+        const p = (children, opts = {}) => new D.Paragraph({
+          children: Array.isArray(children) ? children : [children],
+          spacing: { before: 60, after: 60, ...(opts.spacing || {}) },
+          ...opts,
+        });
+        const h1 = (str) => new D.Paragraph({
+          children: [text(str, { bold: true, size: 28 })],
+          spacing: { before: 240, after: 100 },
+          heading: D.HeadingLevel.HEADING_1,
+        });
+        const h2 = (str) => new D.Paragraph({
+          children: [text(str, { bold: true, size: 24 })],
+          spacing: { before: 180, after: 60 },
+          heading: D.HeadingLevel.HEADING_2,
+        });
+        const para = (str) => p([text(str)]);
+        const border = { style: D.BorderStyle.SINGLE, size: 4, color: "BBBBBB" };
+        const cellBorders = { top: border, bottom: border, left: border, right: border };
+        const tcell = (str, opts = {}) => new D.TableCell({
+          borders: cellBorders,
+          margins: { top: 80, bottom: 80, left: 120, right: 120 },
+          ...(opts.shading ? { shading: opts.shading } : {}),
+          width: opts.width,
+          children: (Array.isArray(str) ? str : [str]).map((x) =>
+            typeof x === "string" ? p([text(x, opts.runOpts || {})]) : x),
+        });
+        const HEADER_FILL = { fill: "21443E", type: D.ShadingType.CLEAR };
+
+        // Resolve fields the same way the main Word/MD generators do
+        const indexDateLabel = (val) => (INDEX_DATE_OPTIONS.find((o) => o.value === val) || {}).label || "";
+        const resolvedIndexDate = s.indexDateChoice === "custom"
+          ? (s.indexDateCustom || "Custom — see study-specific protocol")
+          : indexDateLabel(s.indexDateChoice) || indexDateLabel("after-washout");
+        const resolvedMaxFu = s.maxFollowupChoice === "custom"
+          ? (s.maxFollowupCustom || "Custom — see study-specific protocol")
+          : (s.maxFollowupChoice || "5 years per patient, or until censoring (whichever first)");
+        const resolvedAge = s.ageRangeChoice === "custom"
+          ? (s.ageRangeCustom || "(specify)")
+          : (s.ageRangeChoice || "≥18, no upper limit");
+        const inclusion  = mergeList(s.inclusionPick,  s.inclusionCustom);
+        const exclusion  = mergeList(s.exclusionPick,  s.exclusionCustom);
+        const censoring  = mergeList(s.censoringPick,  s.censoringCustom);
+        const covariates = mergeList(s.covariatesPick, s.covariatesCustom);
+        const sensitivity = mergeList(s.sensitivityPick, s.sensitivityCustom);
+        const psM   = PS_METHOD_DESCRIPTIONS[s.psMethod] || "PS-based adjustment";
+        const eff   = ({ HR: "Hazard ratio (95% CI) from Cox PH models", RR: "Risk ratio (95% CI) from Poisson regression", RD: "Risk difference (95% CI)", IRR: "Incidence rate ratio (95% CI)" })[s.effectMeasure] || "Hazard ratio";
+        const primAn= ({ ITT: "Intention-to-treat (ITT)", OT: "On-treatment (per-protocol)", both: "Both ITT and on-treatment" })[s.primaryAnalysisType] || "On-treatment";
+        const SITE_LABEL = Object.fromEntries(SITES.map((x) => [x.code, x.name]));
+        const sitesPlain = (s.sites && s.sites.length > 0)
+          ? s.sites.map((c) => c + " — " + (SITE_LABEL[c] || c)).join("; ")
+          : "(no sites selected)";
+        const sitesOthersList = (s.sitesOther || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const sitesAll = sitesOthersList.length > 0
+          ? sitesPlain + " | Others: " + sitesOthersList.join("; ")
+          : sitesPlain;
+        const bulletText = (arr) => arr.length === 0 ? "(none specified)" : arr.map((l) => "• " + l).join("\n");
+
+        const COL_W = [1700, 3563, 3763];   // sum ≈ 9026 (A4 minus 1" margins)
+        const headerCell = (str) => new D.TableCell({
+          borders: cellBorders,
+          shading: HEADER_FILL,
+          margins: { top: 80, bottom: 80, left: 120, right: 120 },
+          children: [p([text(str, { bold: true, color: "FFFFFF" })])],
+        });
+
+        const row7 = (label, spec, emul) => new D.TableRow({
+          children: [
+            new D.TableCell({ borders: cellBorders, margins: { top: 80, bottom: 80, left: 120, right: 120 },
+              shading: { fill: "F5F5F5", type: D.ShadingType.CLEAR },
+              width: { size: COL_W[0], type: D.WidthType.DXA },
+              children: [p([text(label, { bold: true })])] }),
+            new D.TableCell({ borders: cellBorders, margins: { top: 80, bottom: 80, left: 120, right: 120 },
+              width: { size: COL_W[1], type: D.WidthType.DXA },
+              children: [p([text(spec)])] }),
+            new D.TableCell({ borders: cellBorders, margins: { top: 80, bottom: 80, left: 120, right: 120 },
+              width: { size: COL_W[2], type: D.WidthType.DXA },
+              children: emul.split("\n").map((line) => p([text(line)])) }),
+          ],
+        });
+
+        const item7Table = new D.Table({
+          width: { size: 9026, type: D.WidthType.DXA },
+          columnWidths: COL_W,
+          rows: [
+            new D.TableRow({
+              tableHeader: true,
+              children: [
+                headerCell("Item 7 element"),
+                headerCell("Target trial specification"),
+                headerCell("Emulation with the observational data"),
+              ],
+            }),
+            row7("a. Eligibility criteria",
+              "Adults of the relevant indication; new users (no prior dispensing of exposure or comparator in the washout window).",
+              "Indication: " + (s.indication || "(specify)") + ". Age: " + resolvedAge + ". Sex: " +
+              (({ both: "both sexes", female: "female only", male: "male only" })[s.sex] || "both sexes") + ".\n" +
+              "Inclusion criteria:\n" + bulletText(inclusion) + "\n" +
+              "Exclusion criteria:\n" + bulletText(exclusion)),
+            row7("b. Treatment strategies",
+              "Initiate " + (s.picoI || s.exposureName || "(exposure)") + " vs initiate " + (s.picoC || s.comparatorName || "(active comparator)") + " — drugs of the same indication that compete for use.",
+              "Exposure: " + (s.exposureName || "(name)") + " (" + (s.exposureCodes || "codes TBD") + ").\n" +
+              "Active comparator: " + (s.comparatorName || "(name)") + " (" + (s.comparatorCodes || "codes TBD") + ").\n" +
+              "Washout for new-user status: " + (s.washout || "365") + " days."),
+            row7("c. Assignment procedures",
+              "Random assignment at the start of treatment.",
+              "Treatment assignment is determined by the first dispensing of either drug after the washout window. Baseline confounding addressed via " + psM + "."),
+            row7("d. Follow-up",
+              "Follow-up begins at the time of assignment to treatment strategies and ends at outcome, death, or end of study period.",
+              "Index date: " + resolvedIndexDate + ".\n" +
+              "Follow-up window: " + resolvedMaxFu + ".\n" +
+              "Censoring rules:\n" + bulletText(censoring) + ".\n" +
+              "Primary analysis: " + primAn + " (grace period " + (s.grace || "30") + " days)."),
+            row7("e. Outcomes",
+              "Primary outcome: " + (s.picoO || "(specify)") + ".",
+              "Operational definition: " + (s.outcomeDef || "(specify)") + "\n" +
+              "Code set: " + (s.outcomeCodes || "(specify)")),
+            row7("f. Causal contrasts",
+              "Effect of starting and following the assigned treatment strategy (per-protocol effect) and effect of being assigned the strategy (intention-to-treat-equivalent effect).",
+              "Effect estimate: " + eff + ".\n" +
+              "Site-specific estimates pooled via " +
+              ({ re: "random-effects (DerSimonian-Laird) meta-analysis with I² and τ²",
+                 "re-reml": "random-effects (REML) meta-analysis with I² and τ²",
+                 fe: "fixed-effects (inverse-variance) meta-analysis" })[s.metaMethod] || "random-effects meta-analysis" + "."),
+            row7("g. Identifying assumptions",
+              "Conditional exchangeability would hold by randomisation. No interference; consistency.",
+              "Conditional exchangeability assumed given baseline covariates listed below, addressed via " + psM + ". Covariate look-back: " + (s.lookback || "365") + " days. Sensitivity analyses for unmeasured confounding:\n" + bulletText(sensitivity.filter((l) => /negative control|trim|e-value|hdps|sensitivity/i.test(l))) + "\nBaseline covariates:\n" + bulletText(covariates.slice(0, 12)) + (covariates.length > 12 ? "\n…and " + (covariates.length - 12) + " more (see Section 7 of the protocol)." : "")),
+            row7("h. Data analysis plan",
+              "Statistical analysis estimates the causal contrasts under the identifying assumptions.",
+              "Primary: " + psM + ".\n" +
+              (s.psMethodDetails ? "Operational details: " + s.psMethodDetails + ".\n" : "") +
+              "Subgroup analyses:\n" + bulletText((s.subgroups || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean)) + "\nSensitivity analyses:\n" + bulletText(sensitivity)),
+          ],
+        });
+
+        const fullChecklist = [
+          ["Abstract", [
+            ["1a", "Identify that the study attempts to emulate a target trial using observational data; state objectives and briefly summarise the specified target trial.",
+              "This study emulates a target trial of " + (s.picoI || "(exposure)") + " vs " + (s.picoC || "(comparator)") + " among " + (s.picoP || "(population)") +
+              (s.emulatedTrial ? ", adapted from " + s.emulatedTrial + "" : "") + "."],
+            ["1b", "Report the data source(s) used for emulation.",
+              "Multi-national federated analysis using AsPEN sites: " + sitesAll + "."],
+            ["1c", "Summarise key assumptions, statistical methods, findings and conclusions.",
+              "[To be completed at the time of reporting.]"],
+          ]],
+          ["Introduction", [
+            ["2", "Background — scientific context and gap in knowledge.", "[Background paragraph from your protocol.]"],
+            ["3", "Causal question.",
+              "Among " + (s.picoP || "(population)") + ", does new use of " + (s.picoI || "(exposure)") + " versus " + (s.picoC || "(comparator)") + " change the incidence of " + (s.picoO || "(outcome)") + "?"],
+            ["4", "Rationale for emulating a target trial with the available data; cite informing RCTs.",
+              s.emulatedTrial ? "Target trial design adapted from: " + s.emulatedTrial + "." : "Target trial design specified de novo given absence / infeasibility of an RCT."],
+          ]],
+          ["Methods", [
+            ["5", "Data source(s): original purpose, type, geographic location(s), setting, time-period; data linkage if relevant.",
+              sitesAll + "."],
+            ["6", "Target trial specification.", "See Item 7 specification column below."],
+            ["7", "Target trial emulation (a-h).", "See the comparison table above."],
+          ]],
+          ["Results", [
+            ["8",  "Participant selection (flow diagram strongly recommended).", "[To be completed at the time of reporting.]"],
+            ["9",  "Baseline data by treatment strategy.", "[Table 1 of the manuscript.]"],
+            ["10", "Follow-up length and reasons for end of follow-up.", "[To be completed at the time of reporting.]"],
+            ["11", "Missing data, by treatment strategy.", "[To be completed at the time of reporting.]"],
+            ["12", "Outcome frequency / distribution, by treatment strategy.", "[To be completed at the time of reporting.]"],
+            ["13", "Effect estimates with measures of precision; absolute and relative.", "[To be completed at the time of reporting.]"],
+            ["14", "Sensitivity / additional analyses.", "[See sensitivity analyses pre-specified in the protocol Section 9.]"],
+          ]],
+          ["Discussion", [
+            ["15", "Interpretation of key findings.", "[To be completed at the time of reporting.]"],
+            ["16", "Limitations — differences between target trial and emulation; plausibility of assumptions.",
+              "Residual / unmeasured confounding cannot be excluded. Treatment switching during follow-up is censored per the on-treatment analysis. Misclassification of outcome possible."],
+          ]],
+          ["Other information", [
+            ["17", "Ethics approval and approval number(s).", s.ethics || "Each participating site obtains local IRB / ethics approval before data extraction."],
+            ["18", "Study protocol registration (where).", "[Register on ENCePP EU PAS Register and/or ClinicalTrials.gov where applicable.]"],
+            ["19", "Sharing of data, analytic code, materials.", "[To be specified.]"],
+            ["20", "Funding source(s).", "[To be specified.]"],
+            ["21", "Conflicts of interest.", "[To be specified for each author.]"],
+          ]],
+        ];
+
+        const checklistRows = [
+          new D.TableRow({ tableHeader: true, children: [
+            headerCell("#"), headerCell("Item"), headerCell("Where reported in this protocol"),
+          ]}),
+        ];
+        for (const [section, items] of fullChecklist) {
+          checklistRows.push(new D.TableRow({ children: [
+            new D.TableCell({ borders: cellBorders, columnSpan: 3,
+              shading: { fill: "E8F0EE", type: D.ShadingType.CLEAR },
+              margins: { top: 60, bottom: 60, left: 120, right: 120 },
+              children: [p([text(section, { bold: true, color: "21443E" })])] }),
+          ]}));
+          for (const [n, label, mapped] of items) {
+            checklistRows.push(new D.TableRow({ children: [
+              new D.TableCell({ borders: cellBorders, margins: { top: 60, bottom: 60, left: 120, right: 120 },
+                width: { size: 800, type: D.WidthType.DXA },
+                shading: { fill: "F5F5F5", type: D.ShadingType.CLEAR },
+                children: [p([text(n, { bold: true })])] }),
+              new D.TableCell({ borders: cellBorders, margins: { top: 60, bottom: 60, left: 120, right: 120 },
+                width: { size: 4113, type: D.WidthType.DXA },
+                children: [p([text(label)])] }),
+              new D.TableCell({ borders: cellBorders, margins: { top: 60, bottom: 60, left: 120, right: 120 },
+                width: { size: 4113, type: D.WidthType.DXA },
+                children: mapped.split("\n").map((l) => p([text(l)])) }),
+            ]}));
+          }
+        }
+        const fullChecklistTable = new D.Table({
+          width: { size: 9026, type: D.WidthType.DXA },
+          columnWidths: [800, 4113, 4113],
+          rows: checklistRows,
+        });
+
+        const children = [];
+        children.push(new D.Paragraph({
+          children: [text("TARGET checklist — " + (s.title || "(Untitled multi-national ACNU study)"), { bold: true, size: 32 })],
+          spacing: { before: 0, after: 120 },
+        }));
+        children.push(p([new D.TextRun({
+          text: "This document maps the protocol fields to the TARGET (TrAnsparent ReportinG of studies Emulating a Target trial) checklist as published in Cashin AG, Hansford HJ, Hernán MA, Swanson SA, Lee H, Jones MD, et al. JAMA 2025; PMID 40899949. The full checklist with elaboration is at target-guideline.org.",
+          font: FONT, size: 20, italics: true, color: "555555",
+        })]));
+        children.push(p([new D.TextRun({
+          text: "Generated " + today + " from the AsPEN ACNU protocol builder. Methods items 5-7 are pre-filled from your protocol; Results / Discussion / Other-information items are placeholders to be completed at the time of reporting.",
+          font: FONT, size: 18, italics: true, color: "777777",
+        })], { spacing: { after: 240 } }));
+
+        children.push(h1("Item 7 — Target trial specification vs emulation"));
+        children.push(p([text("Item 7 is the heart of TARGET. Rows a-h show what the target trial would specify and how this study emulates each piece in observational data.")]));
+        children.push(item7Table);
+
+        children.push(h1("Full TARGET checklist"));
+        children.push(p([text("All 21 reporting items with the protocol's current mapping. Replace bracketed placeholders at the manuscript stage.")]));
+        children.push(fullChecklistTable);
+
+        children.push(p([new D.TextRun({
+          text: "Citation for the framework: Cashin AG, Hansford HJ, Hernán MA, Swanson SA, et al. Transparent Reporting of Observational Studies Emulating a Target Trial: The TARGET Statement. JAMA 2025. PMID 40899949. License: CC BY-ND 4.0.",
+          font: FONT, size: 18, italics: true, color: "777777",
+        })], { spacing: { before: 400 } }));
+
+        const doc = new D.Document({
+          creator: "AsPEN protocol builder — TARGET checklist generator",
+          title: "TARGET checklist — " + (s.title || "ACNU protocol"),
+          styles: {
+            default: { document: { run: { font: FONT, size: 22 } } },
+            paragraphStyles: [
+              { id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
+                run: { size: 28, bold: true, font: FONT },
+                paragraph: { spacing: { before: 240, after: 100 }, outlineLevel: 0 } },
+              { id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
+                run: { size: 24, bold: true, font: FONT },
+                paragraph: { spacing: { before: 180, after: 60 }, outlineLevel: 1 } },
+            ],
+          },
+          sections: [{
+            properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } },
+            children,
+          }],
+        });
         return await D.Packer.toBlob(doc);
       };
 
