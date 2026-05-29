@@ -105,8 +105,7 @@
     "since": 2005,
     "popM": 13.5,
     "lagMonths": 5,
-    "features": ["rx", "dx", "labs"],
-    "hidden": true
+    "features": ["rx", "dx", "labs"]
   },
   {
     "country": "Japan",
