@@ -30,17 +30,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Astro site
+      # ──────────────────────────────────────────
+      # Build #1 — for the NAS (apex domain, base '/')
+      # ──────────────────────────────────────────
+      - name: Build for aspensig.asia (NAS)
         run: npm run build
 
-      - name: Upload artifact to GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./dist
-
-      # ==========================================
-      # 同步資料到PHDC中心
-      # ==========================================
       - name: Install Rclone
         run: sudo -v ; curl https://rclone.org/install.sh | sudo bash
       - name: Deploy to NCKU PHDc NAS via WebDAV
@@ -48,21 +43,32 @@ jobs:
           WEBDAV_PASS: ${{ secrets.NAS_PASSWORD }}
         run: |
           OBSCURED_PASS=$(rclone obscure "$WEBDAV_PASS")
-          # 同步指令
-          # --ignore-times: force re-upload every file regardless of size/mtime.
-          # The NAS WebDAV doesn't preserve modtimes and doesn't expose MD5
-          # checksums, so rclone falls back to size-only comparison, which
-          # silently skipped HTML files whose byte length happened to be
-          # unchanged but whose internal CSS hash refs differed (resulting in
-          # stale HTML pointing at deleted CSS files → broken pages). The
-          # bandwidth cost is trivial (~30 small files) and avoids the whole
-          # class of stale-asset bugs.
+          # --ignore-times forces re-upload every file: the NAS WebDAV
+          # doesn't preserve modtimes and doesn't expose MD5 checksums,
+          # so rclone falls back to size-only comparison and otherwise
+          # silently skips HTML whose byte length happens to be unchanged
+          # while its internal CSS hash refs differ → stale-asset 404s.
           rclone sync ./dist :webdav:/AsPEN.sig \
             --webdav-url="https://dev.aspensig.asia" \
             --webdav-user="aspen-git" \
             --webdav-pass="$OBSCURED_PASS" \
             --webdav-vendor="other" \
             --ignore-times
+
+      # ──────────────────────────────────────────
+      # Build #2 — for GitHub Pages mirror (subpath base '/AsPEN/')
+      # ──────────────────────────────────────────
+      - name: Build for GitHub Pages
+        env:
+          DEPLOY_TARGET: ghpages
+        run: |
+          rm -rf dist
+          npm run build
+
+      - name: Upload artifact to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
 
   deploy:
     needs: build
