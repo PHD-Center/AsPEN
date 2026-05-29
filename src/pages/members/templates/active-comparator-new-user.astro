@@ -5,25 +5,19 @@ import { WORKER_URL } from "../../../data/site-config";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-// AsPEN-relevant sites. Order: TW / KR / JP / HK first, then others A-Z.
+// Sites mirroring the active set on /databases/ (countries that have an
+// AsPEN-tracked database in databases.json). Anything beyond this list
+// goes in the "Others" free-text field below the grid.
 const SITES = [
-  { code: "TW", name: "Taiwan (NHIRD / CGRD)" },
+  { code: "TW", name: "Taiwan (NHIRD / CGRD / TWB)" },
   { code: "KR", name: "South Korea (HIRA / NHIS-NHID)" },
   { code: "JP", name: "Japan (NDB)" },
   { code: "HK", name: "Hong Kong (CDARS)" },
-  { code: "AU", name: "Australia (PBS / VLHD)" },
-  { code: "CN", name: "China" },
-  { code: "FI", name: "Finland (FinReg)" },
-  { code: "GB", name: "United Kingdom (CPRD / THIN)" },
-  { code: "ID", name: "Indonesia" },
-  { code: "IN", name: "India" },
-  { code: "MY", name: "Malaysia" },
+  { code: "GB", name: "United Kingdom (CPRD / THIN / UKB / ISD)" },
   { code: "NL", name: "Netherlands (PHARMO)" },
-  { code: "PH", name: "Philippines" },
-  { code: "SG", name: "Singapore" },
-  { code: "TH", name: "Thailand" },
-  { code: "US", name: "United States (Medicare / Medicaid / Sentinel)" },
-  { code: "VN", name: "Vietnam" },
+  { code: "FI", name: "Finland (FinReg)" },
+  { code: "AU", name: "Australia (PBS / VLHD)" },
+  { code: "US", name: "United States (Medicare / Medicaid)" },
 ];
 
 // Curated checkbox lists — keeps the form selectable; user can add custom
@@ -491,7 +485,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
             3 · Sites
           </summary>
           <div class="px-5 pb-5 space-y-3">
-            <p class="text-xs text-slate-500">Tick every site whose data partner has agreed to run the common protocol locally.</p>
+            <p class="text-xs text-slate-500">Tick every site whose data partner has agreed to run the common protocol locally. The list mirrors the active databases on the public Databases page. Anything beyond it goes in <em>Others</em>.</p>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {SITES.map((s) => (
                 <label class="flex items-center gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
@@ -500,6 +494,11 @@ const TIMELINE_PRESETS: Record<string, string> = {
                 </label>
               ))}
             </div>
+            <label class="flex flex-col gap-1 mt-2">
+              <span class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Others (one per line)</span>
+              <textarea name="sitesOther" rows="2" placeholder="e.g.&#10;Vietnam — local single-site EHR&#10;Singapore — National Healthcare Group"
+                        class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+            </label>
           </div>
         </details>
 
@@ -1035,9 +1034,16 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
         arr.length === 0 ? "_(none)_" : arr.map((l, i) => (i + 1) + ". " + l).join("\n");
 
       const orFb = (s, fb) => (s && s.trim()) ? s : fb;
-      const sitesLine = (codes) => {
-        if (!codes || codes.length === 0) return "_(no sites selected)_";
-        return codes.map((c) => "**" + c + "** — " + (SITE_LABEL[c] || c)).join(" · ");
+      const sitesLine = (codes, otherText) => {
+        const parts = (codes || []).map((c) => "**" + c + "** — " + (SITE_LABEL[c] || c));
+        const others = (otherText || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        if (parts.length === 0 && others.length === 0) return "_(no sites selected)_";
+        let out = parts.join(" · ");
+        if (others.length > 0) {
+          out += (out ? "\n\n**Other sites:**\n" : "**Other sites:**\n");
+          out += others.map((o) => "- " + o).join("\n");
+        }
+        return out;
       };
 
       // ── Markdown template ───────────────────────────
@@ -1120,7 +1126,7 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
 
 ## 2. Sites
 
-${sitesLine(s.sites)}
+${sitesLine(s.sites, s.sitesOther)}
 
 ## 3. Cohort definition
 
@@ -1459,9 +1465,13 @@ _Drafted with the AsPEN protocol builder (${today})._
           centralised: "Centralised — site-level individual data are pooled at the coordinating centre under appropriate data-sharing agreements.",
         })[s.arch] || "Federated";
 
-        const sitesText = (s.sites && s.sites.length > 0)
+        const sitesPart = (s.sites && s.sites.length > 0)
           ? s.sites.map((c) => c + " — " + (SITE_LABEL[c] || c)).join("; ")
-          : "(no sites selected)";
+          : "";
+        const sitesOthersList = (s.sitesOther || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const sitesText = !sitesPart && sitesOthersList.length === 0
+          ? "(no sites selected)"
+          : [sitesPart, sitesOthersList.length > 0 ? ("Others: " + sitesOthersList.join("; ")) : ""].filter(Boolean).join(" | ");
 
         const children = [];
 

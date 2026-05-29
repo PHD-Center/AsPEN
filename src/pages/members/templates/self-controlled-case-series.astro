@@ -5,24 +5,17 @@ import { WORKER_URL } from "../../../data/site-config";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+// Sites mirroring the active set on /databases/.
 const SITES = [
-  { code: "TW", name: "Taiwan (NHIRD / CGRD)" },
+  { code: "TW", name: "Taiwan (NHIRD / CGRD / TWB)" },
   { code: "KR", name: "South Korea (HIRA / NHIS-NHID)" },
   { code: "JP", name: "Japan (NDB)" },
   { code: "HK", name: "Hong Kong (CDARS)" },
-  { code: "AU", name: "Australia (PBS / VLHD)" },
-  { code: "CN", name: "China" },
-  { code: "FI", name: "Finland (FinReg)" },
-  { code: "GB", name: "United Kingdom (CPRD / THIN)" },
-  { code: "ID", name: "Indonesia" },
-  { code: "IN", name: "India" },
-  { code: "MY", name: "Malaysia" },
+  { code: "GB", name: "United Kingdom (CPRD / THIN / UKB / ISD)" },
   { code: "NL", name: "Netherlands (PHARMO)" },
-  { code: "PH", name: "Philippines" },
-  { code: "SG", name: "Singapore" },
-  { code: "TH", name: "Thailand" },
-  { code: "US", name: "United States (Medicare / Medicaid / Sentinel)" },
-  { code: "VN", name: "Vietnam" },
+  { code: "FI", name: "Finland (FinReg)" },
+  { code: "AU", name: "Australia (PBS / VLHD)" },
+  { code: "US", name: "United States (Medicare / Medicaid)" },
 ];
 
 // Shared phenotype library (subset — same shape as ACNU page).
@@ -205,6 +198,10 @@ const TIMELINE_PRESETS: Record<string, string> = {
                 </label>
               ))}
             </div>
+            <label class="flex flex-col gap-1 mt-2">
+              <span class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Others (one per line)</span>
+              <textarea name="sitesOther" rows="2" placeholder="Sites beyond the active databases list" class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+            </label>
           </div>
         </details>
 
@@ -539,7 +536,14 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
       const bullets = (arr) => arr.length === 0 ? "_(none specified)_" : arr.map((l) => "- " + l).join("\n");
       const numbered = (arr) => arr.length === 0 ? "_(none)_" : arr.map((l, i) => (i + 1) + ". " + l).join("\n");
       const orFb = (s, fb) => (s && s.trim()) ? s : fb;
-      const sitesLine = (codes) => !codes || codes.length === 0 ? "_(no sites selected)_" : codes.map((c) => "**" + c + "** — " + (SITE_LABEL[c] || c)).join(" · ");
+      const sitesLine = (codes, otherText) => {
+        const parts = (codes || []).map((c) => "**" + c + "** — " + (SITE_LABEL[c] || c));
+        const others = (otherText || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        if (parts.length === 0 && others.length === 0) return "_(no sites selected)_";
+        let out = parts.join(" · ");
+        if (others.length > 0) out += (out ? "\n\n**Other sites:**\n" : "**Other sites:**\n") + others.map((o) => "- " + o).join("\n");
+        return out;
+      };
 
       const buildMarkdown = (s) => {
         const today = new Date().toISOString().slice(0, 10);
@@ -581,7 +585,7 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
 
 ## 2. Sites
 
-${sitesLine(s.sites)}
+${sitesLine(s.sites, s.sitesOther)}
 
 ## 3. Case definition (outcome)
 
@@ -765,7 +769,9 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
         const subgroups   = (s.subgroups || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const tvCovs      = (s.tvCovariates || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const sensitivity = mergeList(s.sensitivityPick, s.sensitivityCustom);
-        const sitesText = (s.sites && s.sites.length > 0) ? s.sites.map((c) => c + " — " + (SITE_LABEL[c] || c)).join("; ") : "(no sites selected)";
+        const sitesPart = (s.sites && s.sites.length > 0) ? s.sites.map((c) => c + " — " + (SITE_LABEL[c] || c)).join("; ") : "";
+        const sitesOthersList = (s.sitesOther || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const sitesText = !sitesPart && sitesOthersList.length === 0 ? "(no sites selected)" : [sitesPart, sitesOthersList.length > 0 ? ("Others: " + sitesOthersList.join("; ")) : ""].filter(Boolean).join(" | ");
         const ageBand = ({ "6m": "6-month", "1m": "1-month", "3m": "3-month", "12m": "12-month" })[s.ageBands] || "6-month";
         const season  = ({ month: "Calendar month (12-level)", season: "Season (4-level)", none: "Not adjusted" })[s.seasonAdj] || "Calendar month";
         const riskWin = ({ entire: "Entire exposure episode", "0-30": "Days 0-30 after exposure start", "0-90": "Days 0-90 after exposure start", "0-180": "Days 0-180 after exposure start", "early-late": "Early (0-14 d) and Late (15+ d) split" })[s.riskWindowDef] || "Entire exposure episode";
