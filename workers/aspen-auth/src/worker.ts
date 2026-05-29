@@ -137,6 +137,12 @@ export default {
         resp = await handleAdminStudies(req, env);
       } else if (url.pathname === "/api/admin/studies/confirm-interest" && req.method === "POST") {
         resp = await handleAdminStudiesConfirmInterest(req, env);
+      } else if (url.pathname === "/api/studies/propose" && req.method === "POST") {
+        resp = await handleStudiesPropose(req, env);
+      } else if (url.pathname === "/api/admin/studies/proposals" && req.method === "GET") {
+        resp = await handleAdminStudiesProposals(req, env);
+      } else if (url.pathname === "/api/admin/studies/proposals/action" && req.method === "POST") {
+        resp = await handleAdminStudiesProposalsAction(req, env);
       } else if (url.pathname === "/" || url.pathname === "") {
         resp = new Response("aspen-auth worker — ok", { status: 200 });
       } else {
@@ -1024,6 +1030,199 @@ async function sendStudyInterestEmail(
   if (!r.ok) {
     const body = await r.text().catch(() => "");
     throw new Error(`resend study-interest ${r.status} ${body}`);
+  }
+}
+
+// ── Study proposals (members propose studies for chair to accept) ───────
+//
+// Proposals are stored separately from studies.json so the public Kanban
+// only shows chair-approved studies. Chair sees proposals in admin and
+// can Promote → pre-fills the New Study form → Create publishes it.
+
+interface StudyProposal {
+  id: string;
+  title: string;
+  design: StudyDesign;
+  leadCandidate: { name: string; email: string };
+  description: string;
+  sitesWanted: string[];
+  reason: string;
+  proposedBy: string;
+  proposedByName: string;
+  proposedAt: string;
+  status: "open" | "promoted" | "dismissed";
+  /** Set when promoted to point at the resulting study slug. */
+  resolvedSlug?: string;
+}
+
+async function fetchProposals(env: Env): Promise<{ list: StudyProposal[]; sha: string }> {
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/contents/study-proposals.json?ref=${env.MEMBERS_BRANCH}`;
+  const r = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${env.GITHUB_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+    },
+  });
+  if (!r.ok) {
+    if (r.status === 404) return { list: [], sha: "" };
+    throw new Error(`fetchProposals ${r.status}`);
+  }
+  const data = await r.json() as { content: string; sha: string };
+  const text = utf8FromBase64(data.content.replace(/\s+/g, ""));
+  let list: StudyProposal[] = [];
+  try { list = JSON.parse(text); } catch { list = []; }
+  if (!Array.isArray(list)) list = [];
+  return { list, sha: data.sha };
+}
+
+async function handleStudiesPropose(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  const body = await safeJson<{
+    title?: string;
+    design?: string;
+    leadName?: string;
+    leadEmail?: string;
+    description?: string;
+    sitesWanted?: string[];
+    reason?: string;
+  }>(req);
+  const title = String(body?.title || "").trim().slice(0, 300);
+  const design = (STUDY_DESIGNS.includes(body?.design as StudyDesign) ? body?.design : "Other") as StudyDesign;
+  const leadName  = String(body?.leadName  || "").trim().slice(0, 120);
+  const leadEmail = String(body?.leadEmail || "").trim().slice(0, 200);
+  const description = String(body?.description || "").trim().slice(0, 3000);
+  const sitesWanted = Array.isArray(body?.sitesWanted) ? body!.sitesWanted!.map(String).slice(0, 50) : [];
+  const reason = String(body?.reason || "").trim().slice(0, 2000);
+  if (!title)  return jsonResponse({ ok: false, error: "Title required." }, 400);
+  if (!reason) return jsonResponse({ ok: false, error: "Tell us why this study matters." }, 400);
+
+  const { list, sha } = await fetchProposals(env);
+  // Soft-dedupe: same proposer + same title (case-insensitive) + open → ignore
+  const already = list.find((p) =>
+    p.status === "open" &&
+    p.proposedBy.toLowerCase() === m.email.toLowerCase() &&
+    p.title.toLowerCase() === title.toLowerCase()
+  );
+  if (already) return jsonResponse({ ok: true, deduped: true, id: already.id });
+
+  const id = "p" + randSlug(10);
+  list.unshift({
+    id,
+    title,
+    design,
+    leadCandidate: { name: leadName, email: leadEmail },
+    description,
+    sitesWanted,
+    reason,
+    proposedBy: m.email.toLowerCase(),
+    proposedByName: m.name,
+    proposedAt: new Date().toISOString(),
+    status: "open",
+  });
+  await putJsonFile(env, "study-proposals.json",
+    JSON.stringify(list, null, 2) + "\n", sha,
+    `Study proposal: ${title.slice(0, 80)} by ${m.email}`);
+
+  // Notify chair (best-effort, swallow errors).
+  try {
+    await sendStudyProposalEmail(env, list[0]);
+  } catch (e) {
+    console.error("study proposal email failed", e);
+  }
+
+  return jsonResponse({ ok: true, id });
+}
+
+async function handleAdminStudiesProposals(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+  const { list } = await fetchProposals(env);
+  return jsonResponse({ ok: true, proposals: list });
+}
+
+async function handleAdminStudiesProposalsAction(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+  const body = await safeJson<{ id?: string; action?: "promote" | "dismiss"; resolvedSlug?: string }>(req);
+  const id = String(body?.id || "");
+  const action = body?.action;
+  const resolvedSlug = String(body?.resolvedSlug || "").trim();
+  if (!id || (action !== "promote" && action !== "dismiss")) {
+    return jsonResponse({ ok: false, error: "Invalid request." }, 400);
+  }
+  const { list, sha } = await fetchProposals(env);
+  const target = list.find((p) => p.id === id && p.status === "open");
+  if (!target) return jsonResponse({ ok: false, error: "Proposal not found." }, 404);
+  target.status = action === "promote" ? "promoted" : "dismissed";
+  if (action === "promote" && resolvedSlug) target.resolvedSlug = resolvedSlug;
+  await putJsonFile(env, "study-proposals.json",
+    JSON.stringify(list, null, 2) + "\n", sha,
+    `Study proposal ${id}: ${action} by ${m.email}`);
+  return jsonResponse({ ok: true });
+}
+
+async function sendStudyProposalEmail(env: Env, prop: StudyProposal): Promise<void> {
+  const fromHeader = env.SENDER_NAME
+    ? `${env.SENDER_NAME} <${env.SENDER_EMAIL}>`
+    : env.SENDER_EMAIL;
+  const chairEmail = (env.SUPERADMIN_EMAILS || "").split(",")[0]?.trim();
+  if (!chairEmail) return;
+  const subject = `[AsPEN study proposal] ${prop.proposedByName}: ${prop.title}`;
+  const text = [
+    `${prop.proposedByName} (${prop.proposedBy}) has proposed a new AsPEN study:`,
+    "",
+    `  ${prop.title}`,
+    `  Design: ${prop.design}`,
+    `  Proposed lead: ${prop.leadCandidate.name || "(unspecified)"}${prop.leadCandidate.email ? " <" + prop.leadCandidate.email + ">" : ""}`,
+    prop.sitesWanted.length ? `  Sites wanted: ${prop.sitesWanted.join(", ")}` : "",
+    "",
+    `Description:`,
+    `  ${prop.description || "(none given)"}`,
+    "",
+    `Reason:`,
+    `  ${prop.reason}`,
+    "",
+    `Review or promote in the AsPEN admin:`,
+    `  ${env.SITE_BASE_URL.replace(/\/$/, "")}/members/admin`,
+    "",
+    "— AsPEN",
+  ].filter(Boolean).join("\n");
+  const html = `
+<!doctype html>
+<html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#0f172a;max-width:560px;margin:0 auto;padding:24px;">
+  <p><strong>${escapeHtml(prop.proposedByName)}</strong> (${escapeHtml(prop.proposedBy)}) has proposed a new AsPEN study.</p>
+  <table style="border-collapse:collapse;font-size:14px;margin-top:8px;">
+    <tr><td style="color:#64748b;padding:4px 12px 4px 0;">Title</td><td><strong>${escapeHtml(prop.title)}</strong></td></tr>
+    <tr><td style="color:#64748b;padding:4px 12px 4px 0;">Design</td><td>${escapeHtml(prop.design)}</td></tr>
+    <tr><td style="color:#64748b;padding:4px 12px 4px 0;">Lead candidate</td><td>${escapeHtml(prop.leadCandidate.name || "—")}${prop.leadCandidate.email ? ` &lt;${escapeHtml(prop.leadCandidate.email)}&gt;` : ""}</td></tr>
+    ${prop.sitesWanted.length ? `<tr><td style="color:#64748b;padding:4px 12px 4px 0;">Sites wanted</td><td>${escapeHtml(prop.sitesWanted.join(", "))}</td></tr>` : ""}
+  </table>
+  ${prop.description ? `<p style="margin-top:16px;"><strong>Description:</strong></p><p style="white-space:pre-line;">${escapeHtml(prop.description)}</p>` : ""}
+  <p style="margin-top:16px;"><strong>Reason:</strong></p>
+  <p style="white-space:pre-line;">${escapeHtml(prop.reason)}</p>
+  <p style="margin:24px 0;">
+    <a href="${escapeAttr(env.SITE_BASE_URL.replace(/\/$/, "") + "/members/admin")}"
+       style="display:inline-block;background:#21443e;color:#fff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:8px;">
+      Open the AsPEN admin
+    </a>
+  </p>
+  <p style="font-size:12px;color:#64748b;">— AsPEN</p>
+</body></html>`;
+  const r = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ from: fromHeader, to: chairEmail, subject, text, html }),
+  });
+  if (!r.ok) {
+    const body = await r.text().catch(() => "");
+    throw new Error(`resend study-proposal ${r.status} ${body}`);
   }
 }
 

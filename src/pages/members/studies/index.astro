@@ -82,6 +82,71 @@ const DESIGN_TONES: Record<string, string> = {
     </div>
 
     <div data-state="ready" class="hidden space-y-5">
+      <!-- ── Propose a study (open to all members) ──────────── -->
+      <details class="border border-slate-200 rounded-lg bg-white">
+        <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-50/40 rounded-lg">
+          💡 Propose a study to the AsPEN office
+        </summary>
+        <form data-propose-form class="p-4 space-y-3 border-t border-slate-100">
+          <p class="text-xs text-slate-500 leading-relaxed">
+            Pitch a multi-country AsPEN study you'd like to see run. Goes to the chair's queue — no obligation to publish. The chair can promote it to the active Kanban with one click.
+          </p>
+          <label class="block">
+            <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Working title *</span>
+            <input type="text" name="title" required maxlength="300"
+                   placeholder="e.g. GLP-1 RAs and pancreatitis — an AsPEN multi-country ACNU study"
+                   class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+          </label>
+          <div class="grid sm:grid-cols-3 gap-3">
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Design</span>
+              <select name="design" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="ACNU">ACNU</option>
+                <option value="SCCS">SCCS</option>
+                <option value="CCO">Case-crossover</option>
+                <option value="Other" selected>Other</option>
+              </select>
+            </label>
+            <label class="block sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead candidate (often yourself)</span>
+              <div class="mt-1 grid grid-cols-2 gap-2">
+                <input type="text" name="leadName" maxlength="120" placeholder="Name" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+                <input type="email" name="leadEmail" maxlength="200" placeholder="Email" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              </div>
+              <label class="block mt-1 text-[11px] text-slate-500"><input type="checkbox" data-lead-self class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" /> I'd like to lead this study (auto-fill with my name + email)</label>
+            </label>
+          </div>
+          <label class="block">
+            <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Description</span>
+            <textarea name="description" rows="3" maxlength="3000"
+                      placeholder="A few sentences: population, exposure, outcome, what we'd compare across AsPEN sites."
+                      class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+          </label>
+          <label class="block">
+            <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Sites you'd hope to recruit (Ctrl/Cmd-click for multi)</span>
+            <select name="sitesWanted" multiple size="5" class="mt-1 w-full border border-slate-300 rounded px-2 py-1 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+              {Object.entries(SITES_BY_COUNTRY).map(([country, dbs]) => (
+                <optgroup label={country}>
+                  {dbs.map((d) => (<option value={d.id}>{d.short}</option>))}
+                </optgroup>
+              ))}
+            </select>
+          </label>
+          <label class="block">
+            <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Why this study? *</span>
+            <textarea name="reason" required rows="3" maxlength="2000"
+                      placeholder="What's the question, what's the evidence gap, and why is multi-country execution worth doing now?"
+                      class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+          </label>
+          <div class="flex items-center gap-3">
+            <button type="submit" class="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2 rounded text-sm transition">
+              Send proposal to chair
+            </button>
+            <p data-propose-msg class="text-xs"></p>
+          </div>
+        </form>
+      </details>
+
       <!-- Toolbar: search + design filter + show-only-mine toggle -->
       <div class="sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 bg-white/95 backdrop-blur border-b border-slate-200 flex flex-wrap items-center gap-3">
         <input type="search" data-filter-search placeholder="Search title, lead, site…"
@@ -385,6 +450,65 @@ const DESIGN_TONES: Record<string, string> = {
         } catch (err) {
           modalMsg.textContent = String(err.message || err);
           modalMsg.className = "text-xs text-rose-700";
+        }
+      });
+
+      // ── Propose-a-study form ──
+      const proposeForm    = document.querySelector("[data-propose-form]");
+      const proposeMsg     = document.querySelector("[data-propose-msg]");
+      const leadSelfToggle = document.querySelector("[data-lead-self]");
+
+      leadSelfToggle?.addEventListener("change", (e) => {
+        const checked = e.target.checked;
+        const nameInput  = proposeForm.querySelector("[name='leadName']");
+        const emailInput = proposeForm.querySelector("[name='leadEmail']");
+        if (checked && me) {
+          nameInput.value  = me.name  || "";
+          emailInput.value = me.email || "";
+        } else if (!checked) {
+          nameInput.value  = "";
+          emailInput.value = "";
+        }
+      });
+
+      proposeForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        proposeMsg.textContent = "Sending…";
+        proposeMsg.className = "text-xs text-slate-500 italic";
+        const fd = new FormData(proposeForm);
+        const sitesWanted = Array.from(proposeForm.querySelector("[name='sitesWanted']").selectedOptions).map((o) => o.value);
+        const body = {
+          title:       String(fd.get("title") || ""),
+          design:      String(fd.get("design") || "Other"),
+          leadName:    String(fd.get("leadName") || ""),
+          leadEmail:   String(fd.get("leadEmail") || ""),
+          description: String(fd.get("description") || ""),
+          sitesWanted,
+          reason:      String(fd.get("reason") || ""),
+        };
+        if (!body.title.trim() || !body.reason.trim()) {
+          proposeMsg.textContent = "Title and reason are required.";
+          proposeMsg.className = "text-xs text-rose-700";
+          return;
+        }
+        try {
+          const r = await fetch(`${WORKER_URL}/api/studies/propose`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok || !data.ok) throw new Error(data.error || "Couldn't send.");
+          proposeMsg.textContent = data.deduped
+            ? "Already proposed — the chair has it."
+            : "Sent — the chair has been emailed.";
+          proposeMsg.className = "text-xs text-brand-700";
+          proposeForm.reset();
+          if (leadSelfToggle) leadSelfToggle.checked = false;
+        } catch (err) {
+          proposeMsg.textContent = String(err.message || err);
+          proposeMsg.className = "text-xs text-rose-700";
         }
       });
 

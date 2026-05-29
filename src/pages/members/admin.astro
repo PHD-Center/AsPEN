@@ -112,6 +112,15 @@ const STAGES = [
 
       <!-- ── Pane: Studies (Active Studies Tracker) ──────────── -->
       <div data-pane="studies" class="hidden space-y-6">
+        <!-- Member-proposed studies (above the New Study form) -->
+        <div data-proposals-wrap class="hidden">
+          <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">
+            Member proposals · <span data-proposals-count>0</span>
+            <span class="ml-1 text-[10px] normal-case tracking-normal text-slate-500 font-normal">studies proposed by members — Promote pre-fills the New study form below.</span>
+          </p>
+          <div data-proposals class="space-y-2"></div>
+        </div>
+
         <details data-study-details class="border border-slate-200 rounded-lg bg-white">
           <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-50/40 rounded-lg">
             ＋ New study
@@ -550,6 +559,7 @@ const STAGES = [
       };
 
       cancelEdit?.addEventListener("click", () => {
+        delete studyForm.dataset.promotingProposalId;
         resetForm();
         if (studyDetails) studyDetails.open = false;
       });
@@ -700,6 +710,86 @@ const STAGES = [
         else { alert("Couldn't update stage."); loadStudies(); }
       });
 
+      // ── Member proposals (above the New Study form) ──
+      const proposalsWrap  = document.querySelector("[data-proposals-wrap]");
+      const proposalsRoot  = document.querySelector("[data-proposals]");
+      const proposalsCount = document.querySelector("[data-proposals-count]");
+
+      const renderProposals = (items) => {
+        const open = items.filter((p) => p.status === "open");
+        proposalsCount.textContent = open.length;
+        if (open.length === 0) { proposalsWrap.classList.add("hidden"); return; }
+        proposalsWrap.classList.remove("hidden");
+        proposalsRoot.innerHTML = open.map((p) => {
+          const sitesWanted = (p.sitesWanted || []).map((id) => `<span class="text-[10px] bg-slate-50 text-slate-500 border border-slate-200 px-1.5 py-0.5 rounded italic">want ${esc(siteLabel(id))}</span>`).join(" ");
+          return `
+            <article class="border border-brand-200 rounded-lg p-3 bg-brand-50/30">
+              <p class="text-sm font-semibold text-slate-900">${esc(p.title)}</p>
+              <p class="text-xs text-slate-500 mt-0.5">${esc(p.design || "Other")} · proposed by ${esc(p.proposedByName || p.proposedBy)} · ${esc(fmtDate(p.proposedAt))}${p.leadCandidate?.name ? ` · lead candidate: <strong>${esc(p.leadCandidate.name)}</strong>` : ""}</p>
+              ${p.description ? `<p class="text-sm text-slate-700 leading-relaxed mt-1 whitespace-pre-line">${esc(p.description)}</p>` : ""}
+              <p class="text-xs text-slate-700 leading-relaxed mt-1 whitespace-pre-line"><strong>Why:</strong> ${esc(p.reason)}</p>
+              ${sitesWanted ? `<div class="mt-1 flex flex-wrap gap-1">${sitesWanted}</div>` : ""}
+              <div class="mt-2 flex gap-2">
+                <button type="button" data-promote-pid="${esc(p.id)}" data-payload="${esc(JSON.stringify(p))}"
+                        class="text-xs font-semibold bg-brand-700 hover:bg-brand-800 text-white px-3 py-1.5 rounded transition">
+                  Use as new study →
+                </button>
+                <button type="button" data-dismiss-pid="${esc(p.id)}" class="text-xs font-semibold text-slate-500 hover:text-rose-600 hover:underline">Dismiss</button>
+              </div>
+            </article>
+          `;
+        }).join("");
+      };
+
+      const loadProposals = async () => {
+        try {
+          const r = await fetch(`${WORKER_URL}/api/admin/studies/proposals`, { credentials: "include" });
+          if (!r.ok) return;
+          const data = await r.json();
+          renderProposals(data.proposals || []);
+        } catch {}
+      };
+
+      proposalsRoot?.addEventListener("click", async (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLElement)) return;
+        if (t.dataset.dismissPid) {
+          if (!confirm("Dismiss this proposal?")) return;
+          await fetch(`${WORKER_URL}/api/admin/studies/proposals/action`, {
+            method: "POST", credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: t.dataset.dismissPid, action: "dismiss" }),
+          });
+          loadProposals();
+          return;
+        }
+        if (t.dataset.promotePid) {
+          let payload;
+          try { payload = JSON.parse(t.dataset.payload); } catch { return; }
+          // Pre-fill the New Study form with proposal contents.
+          studyForm.querySelector("[name='editingSlug']").value = "";
+          studyForm.querySelector("[name='title']").value = payload.title || "";
+          studyForm.querySelector("[name='design']").value = payload.design || "Other";
+          studyForm.querySelector("[name='stage']").value = "concept";
+          studyForm.querySelector("[name='slug']").value = "";
+          studyForm.querySelector("[name='leadName']").value  = payload.leadCandidate?.name  || "";
+          studyForm.querySelector("[name='leadEmail']").value = payload.leadCandidate?.email || "";
+          studyForm.querySelector("[name='description']").value = payload.description || "";
+          setMultiSelect(studyForm.querySelector("[name='sites']"), []);
+          setMultiSelect(studyForm.querySelector("[name='sitesWanted']"), payload.sitesWanted || []);
+          studyForm.querySelector("[name='milestones']").value = "";
+          studyForm.querySelector("[name='protocolUrl']").value = "";
+          studyForm.querySelector("[name='pmid']").value = "";
+          const paperEl = studyForm.querySelector("[data-paper-input]");
+          if (paperEl) paperEl.value = "";
+          if (submitLabel) submitLabel.textContent = "Create study from proposal";
+          cancelEdit?.classList.remove("hidden");
+          studyForm.dataset.promotingProposalId = t.dataset.promotePid;
+          if (studyDetails) studyDetails.open = true;
+          studyDetails?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+
       // ── Smart Paper input (for optional Published PMID) ──
       // Same helpers as before, repointed to the studies form.
       const paperInput  = studyForm?.querySelector("[data-paper-input]");
@@ -831,6 +921,20 @@ const STAGES = [
         });
         const d = await r.json().catch(() => ({}));
         if (r.ok && d.ok) {
+          // If this study was promoted from a member proposal, mark the
+          // proposal as promoted so it disappears from the queue.
+          const promotingId = studyForm.dataset.promotingProposalId;
+          if (promotingId && !editingSlug) {
+            const resolvedSlug = String(data.get("slug") || "").trim() || (payload.title || "")
+              .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+            await fetch(`${WORKER_URL}/api/admin/studies/proposals/action`, {
+              method: "POST", credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ id: promotingId, action: "promote", resolvedSlug }),
+            });
+            delete studyForm.dataset.promotingProposalId;
+            loadProposals();
+          }
           setStudyMsg(editingSlug ? "Updated." : "Created.");
           resetForm();
           if (studyDetails) studyDetails.open = false;
@@ -963,6 +1067,7 @@ const STAGES = [
           loadUploads();
           loadDeleteRequests();
           loadStudies();
+          loadProposals();
           loadMembers();
         } catch { setState("signed-out"); }
       })();
