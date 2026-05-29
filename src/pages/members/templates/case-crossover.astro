@@ -311,10 +311,11 @@ const TIMELINE_PRESETS: Record<string, string> = {
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Case-crossover variant</span>
               <select name="ccoVariant" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
                 <option value="standard" selected>Standard (Maclure 1991) — fixed offset(s) before event</option>
-                <option value="time-stratified">Time-stratified (Janes 2005) — controls drawn from same calendar stratum (e.g., same month-of-year, same weekday)</option>
+                <option value="time-stratified">Time-stratified (Janes 2005) — controls drawn from same calendar stratum</option>
                 <option value="symmetric">Symmetric bidirectional — controls before AND after event</option>
+                <option value="cctc">Case-case-time-control (CCTC) — pairs current-case crossover with a future-case control crossover to address both confounding by indication AND protopathic bias</option>
               </select>
-              <span class="text-[11px] text-slate-500">Time-stratified controls for secular trends in exposure prevalence; symmetric requires post-event exposure not to be influenced by the event.</span>
+              <span class="text-[11px] text-slate-500">Time-stratified controls for secular trends in exposure prevalence. Symmetric requires post-event exposure not to be influenced by the event. CCTC (Huang WC, Yang ASH, Tsai DHT, Shao SC, Lin SJ, Lai ECC. BMJ 2023;382:e076045; PMID 37758279) computes OR_CCTC = OR_Case / OR_Control where the control crossover uses future cases to subtract out time-trends in exposure — strong when reverse causality between symptoms and prescribing is a concern.</span>
             </label>
           </div>
         </details>
@@ -406,9 +407,11 @@ First-ever vs repeated exposure</textarea>
             </label>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Key references (one per line)</span>
-              <textarea name="references" rows="6" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Maclure M. The case-crossover design: a method for studying transient effects on the risk of acute events. Am J Epidemiol 1991;133(2):144-53.
+              <textarea name="references" rows="8" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Maclure M. The case-crossover design: a method for studying transient effects on the risk of acute events. Am J Epidemiol 1991;133(2):144-53.
 Mittleman MA, Maclure M, Robins JM. Control sampling strategies for the case-crossover design: an assessment of relative efficiency. Am J Epidemiol 1995;142(1):91-8.
 Janes H, Sheppard L, Lumley T. Case-crossover analyses of air pollution exposure data: referent selection strategies and their implications for bias. Epidemiology 2005;16(6):717-26.
+Huang WC, Yang ASH, Tsai DHT, Shao SC, Lin SJ, Lai ECC. Association between recently raised anticholinergic burden and risk of acute cardiovascular events: nationwide case-case-time-control study. BMJ 2023;382:e076045. PMID: 37758279. (AsPEN exemplar of the CCTC variant; hazard day -1 to -30, four 30-d reference periods in -61 to -180, 60-d washout.)
+Wang SV, Schneeweiss S. A general propensity score for signal identification using tree-based scan statistics. Am J Epidemiol 2018 (case-case-time-control discussion).
 Hsieh CY, Su CC, Shao SC, Sung SF, Lin SJ, Kao Yang YH, Lai EC. Taiwan's NHIRD: past and future. Clin Epidemiol 2019;11:349-358.
 Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Chang Gung Research Database. Pharmacoepidemiol Drug Saf 2019;28(5):593-600.</textarea>
             </label>
@@ -503,7 +506,7 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
         const today = new Date().toISOString().slice(0, 10);
         const title = orFb(s.title, "(Untitled multi-national case-crossover study)");
         const hazardEnd = s.hazardEnd === "day-0" ? "Day 0 (event day inclusive)" : "Day -1 (day before event)";
-        const variant = ({ standard: "Standard (Maclure 1991) — fixed offset(s) before event", "time-stratified": "Time-stratified (Janes 2005) — controls drawn from same calendar stratum", symmetric: "Symmetric bidirectional — controls before AND after event" })[s.ccoVariant] || "Standard";
+        const variant = ({ standard: "Standard (Maclure 1991) — fixed offset(s) before event", "time-stratified": "Time-stratified (Janes 2005) — controls drawn from same calendar stratum", symmetric: "Symmetric bidirectional — controls before AND after event", cctc: "Case-case-time-control (CCTC, Huang/Yang/Tsai BMJ 2023; PMID 37758279) — current-case crossover paired with a future-case control crossover; OR_CCTC = OR_Case / OR_Control" })[s.ccoVariant] || "Standard";
         const controlLenText = s.controlLen === "same" ? "Same as hazard window (matched)" : (s.controlLenCustom || "Custom (specify)");
         const meta = ({ re: "Random-effects (DerSimonian-Laird) meta-analysis pooling site-specific ORs; report I² and τ². Forest plot per outcome.", "re-reml": "Random-effects (REML) meta-analysis; report I² and τ²; forest plot per outcome.", fe: "Fixed-effects (inverse-variance) meta-analysis; forest plot per outcome." })[s.metaMethod] || "Random-effects meta-analysis.";
         const arch = ({ federated: "Federated — each AsPEN site executes a common analytic package locally and shares aggregate ORs.", cdm: "Common Data Model — each site transforms data into agreed CDM, runs shared package.", centralised: "Centralised — site-level individual data pooled under DUA." })[s.arch] || "Federated";
@@ -696,7 +699,7 @@ _Drafted with the AsPEN case-crossover builder (${today})._
         const sitesOthersList = (s.sitesOther || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const sitesText = !sitesPart && sitesOthersList.length === 0 ? "(no sites selected)" : [sitesPart, sitesOthersList.length > 0 ? ("Others: " + sitesOthersList.join("; ")) : ""].filter(Boolean).join(" | ");
         const hazardEnd = s.hazardEnd === "day-0" ? "Day 0 (event day inclusive)" : "Day -1 (day before event)";
-        const variant = ({ standard: "Standard (Maclure 1991)", "time-stratified": "Time-stratified (Janes 2005)", symmetric: "Symmetric bidirectional" })[s.ccoVariant] || "Standard";
+        const variant = ({ standard: "Standard (Maclure 1991)", "time-stratified": "Time-stratified (Janes 2005)", symmetric: "Symmetric bidirectional", cctc: "Case-case-time-control (Huang/Yang/Tsai BMJ 2023; PMID 37758279)" })[s.ccoVariant] || "Standard";
         const controlLenText = s.controlLen === "same" ? "Same as hazard window (matched)" : (s.controlLenCustom || "Custom");
         const meta = ({ re: "Random-effects (DerSimonian-Laird)", "re-reml": "Random-effects (REML)", fe: "Fixed-effects (inverse-variance)" })[s.metaMethod] || "Random-effects";
         const arch = ({ federated: "Federated — each AsPEN site executes locally; aggregate ORs leave.", cdm: "Common Data Model — transforms to OMOP/Sentinel, runs shared package.", centralised: "Centralised — pooled individual data under DUA." })[s.arch] || "Federated";

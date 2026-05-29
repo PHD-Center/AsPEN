@@ -124,7 +124,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
   <PageHeader
     eyebrow="Members → Templates → SCCS"
     title="Multi-national SCCS protocol builder"
-    description="Self-controlled case series. Within-person rate ratios across risk vs non-risk periods. Tick the boxes for the operational pieces; the protocol draft updates on the right."
+    description="Self-controlled case series. Each case acts as their own control; all time-invariant between-person confounding (genetics, lifelong habits) is automatically removed. AsPEN convention: separate a short pretreatment window (e.g., 14 days) before the first dispensing to absorb confounding by indication and benchmark the underlying-disease risk before therapy (see Wang GH et al BMJ 2021; PMID 34503972)."
   />
 
   <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -263,9 +263,9 @@ const TIMELINE_PRESETS: Record<string, string> = {
           <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">6 · Risk windows</summary>
           <div class="px-5 pb-5 grid sm:grid-cols-2 gap-3">
             <label class="flex flex-col gap-1">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Pre-risk window (days)</span>
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Pre-risk (pretreatment) window (days)</span>
               <input type="number" name="preRisk" value="14" min="0" step="1" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-              <span class="text-[11px] text-slate-500">Period immediately before first exposure, separated out to absorb event-dependent exposure (e.g., outcome triggers prescribing).</span>
+              <span class="text-[11px] text-slate-500">A short window immediately before first exposure, separated out to (a) absorb event-dependent exposure where the outcome itself triggers prescribing and (b) benchmark the underlying-disease risk just before therapy. AsPEN antipsychotic-falls SCCS used 14 days (Wang GH, BMJ 2021;PMID 34503972) and found the pretreatment IRR was higher than treatment IRRs — confirming underlying disease, not the drugs, drove much of the early risk.</span>
             </label>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Risk window definition</span>

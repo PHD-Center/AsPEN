@@ -467,7 +467,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
   <PageHeader
     eyebrow="Members → Templates"
     title="Multi-national ACNU protocol builder"
-    description="Active-comparator new-user design. Tick the boxes for the operational pieces; the protocol draft updates on the right. Export as Word (.docx) or Markdown."
+    description="Active-comparator new-user design under a target trial emulation framework. The active comparator behaves as an 'emulated placebo' from the same therapeutic context — minimising confounding by indication and addressing immortal-time / prevalent-user bias. Tick the boxes for the operational pieces; export as Word (.docx) or Markdown."
   />
 
   <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -543,6 +543,12 @@ const TIMELINE_PRESETS: Record<string, string> = {
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Primary outcome</span>
               <input type="text" name="picoO" placeholder="3-point MACE (CV death, MI, stroke)"
                      class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="flex flex-col gap-1 sm:col-span-2">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Emulated target trial (optional)</span>
+              <input type="text" name="emulatedTrial" placeholder="e.g., adapted from CREDENCE / DAPA-CKD / EMPA-KIDNEY"
+                     class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              <span class="text-[11px] text-slate-500">If this ACNU study emulates a specific RCT, name it here. The methods section then opens with the target-trial framing.</span>
             </label>
           </div>
         </details>
@@ -971,14 +977,15 @@ const TIMELINE_PRESETS: Record<string, string> = {
             </label>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Key references (one per line)</span>
-              <textarea name="references" rows="8" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Andersen M, Pratt N, Sanfélix-Gimeno G et al. Pharmacoepidemiol Drug Saf. 2013 (AsPEN founding methods paper; PSSA on antipsychotics and acute hyperglycaemia).
-Lai EC, Man KK, Chaiyakunapruk N et al. Epidemiology 2015 (AsPEN database survey of Asia-Pacific population-level data sources).
+              <textarea name="references" rows="10" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Tsai DHT, Chuang ATM, Liu KH, Shao SC, Lai ECC. SGLT2 inhibitors and risk of CKD-mineral and bone disorders in patients with type 2 diabetes mellitus and stage 1-3 CKD. CMAJ 2025;197(7):E178-E189. PMID: 39993818. (AsPEN ACNU + target trial emulation exemplar.)
+Hernán MA, Robins JM. Using big data to emulate a target trial when a randomized trial is not available. Am J Epidemiol 2016;183(8):758-64.
+Lund JL, Richardson DB, Stürmer T. The active comparator, new user study design in pharmacoepidemiology: historical foundations and contemporary application. Curr Epidemiol Rep 2015;2:221-8.
+Andersen M, Pratt N, Sanfélix-Gimeno G et al. Pharmacoepidemiol Drug Saf 2013 (AsPEN founding methods paper).
+Lai EC, Man KK, Chaiyakunapruk N et al. Epidemiology 2015 (AsPEN database survey).
 Pratt NL, Mack CD, Meyer AM et al. Pharmacoepidemiol Drug Saf 2018 (AsPEN common data model framework).
 Hsieh CY, Su CC, Shao SC, Sung SF, Lin SJ, Kao Yang YH, Lai EC. Taiwan's NHIRD: past and future. Clin Epidemiol 2019;11:349-358.
 Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Chang Gung Research Database (CGRD). Pharmacoepidemiol Drug Saf 2019;28(5):593-600.
-Tsai DHT, Wong ICK, Pratt N et al. Clin Epidemiol 2023 (NeuroGEN multi-database infrastructure for CNS drug research).
-Lund JL et al. Pharmacoepidemiol Drug Saf 2015 (active comparator design).
-Hernán MA, Robins JM. JAMA 2008 (new-user design; target trial).
+Tsai DHT, Wong ICK, Pratt N et al. Clin Epidemiol 2023 (NeuroGEN multi-database infrastructure).
 Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</textarea>
             </label>
           </div>
@@ -1190,7 +1197,9 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
 **Study ID:** ${shortId}
 **Lead investigator(s):** ${lead}
 **Version:** ${version}
-**Design:** Multi-national active-comparator new-user (ACNU) cohort study
+**Design:** Multi-national active-comparator new-user (ACNU) cohort study under a target trial emulation framework${s.emulatedTrial ? ` (emulating ${s.emulatedTrial})` : ""}.
+
+The active comparator is used as an emulated placebo arm — a drug class with similar indication, similar temporal trends in use, and no known a priori association with the outcome of interest. This minimises confounding by indication and addresses immortal-time / prevalent-user bias by anchoring follow-up at the moment of treatment commencement, similar to randomisation in a target RCT (Hernán & Robins 2016).
 
 ---
 
@@ -1564,8 +1573,12 @@ _Drafted with the AsPEN protocol builder (${today})._
           ["Study ID", s.shortId || ""],
           ["Lead investigator(s)", s.leadInvestigator || ""],
           ["Version", s.version || ("v0.1 draft · " + today)],
-          ["Design", "Multi-national active-comparator new-user (ACNU) cohort study"],
+          ["Design", "Multi-national ACNU cohort study under a target trial emulation framework"
+                       + (s.emulatedTrial ? " (emulating " + s.emulatedTrial + ")" : "")],
         ]));
+        children.push(p([text(
+          "The active comparator is used as an emulated placebo arm — a drug class with similar indication, similar temporal trends in use, and no known a priori association with the outcome of interest. This minimises confounding by indication and addresses immortal-time / prevalent-user bias by anchoring follow-up at the moment of treatment commencement, similar to randomisation in a target RCT (Hernán & Robins 2016)."
+        )]));
 
         children.push(h1("1. Research question"));
         children.push(labelTable([
