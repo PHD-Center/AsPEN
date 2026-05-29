@@ -1,0 +1,419 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PageHeader from "../../../components/PageHeader.astro";
+import { WORKER_URL } from "../../../data/site-config";
+import databasesRaw from "../../../data/databases.json";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+// ── Site catalogue (mirrors the templates) ──────────────────────────
+// Each site id is "<countryCode>-<DbShortNoSymbols>", same shape as
+// the protocol templates so cross-references stay consistent.
+const shortDbName = (full: string): string => {
+  const m = full.match(/\(([^)]+)\)$/);
+  return m ? m[1] : full;
+};
+const COUNTRY_ORDER = ["TW", "KR", "JP", "HK", "AU", "FI", "GB", "NL", "US"];
+type DbRow = typeof databasesRaw[number] & { hidden?: boolean; features?: string[] };
+const SITES_DB = (databasesRaw as DbRow[])
+  .filter((d) => !d.hidden && COUNTRY_ORDER.includes(d.code))
+  .map((d) => ({
+    id:       `${d.code}-${shortDbName(d.name).replace(/[^A-Za-z0-9]/g, "")}`,
+    country:  d.country,
+    code:     d.code,
+    short:    shortDbName(d.name),
+  }))
+  .sort((a, b) => {
+    const ai = COUNTRY_ORDER.indexOf(a.code);
+    const bi = COUNTRY_ORDER.indexOf(b.code);
+    if (ai !== bi) return ai - bi;
+    return a.short.localeCompare(b.short);
+  });
+const SITES_LABEL_MAP: Record<string, { country: string; code: string; short: string }> =
+  Object.fromEntries(SITES_DB.map((d) => [d.id, d]));
+const SITES_BY_COUNTRY: Record<string, typeof SITES_DB> = SITES_DB.reduce((acc, d) => {
+  (acc[d.country] ??= []).push(d);
+  return acc;
+}, {} as Record<string, typeof SITES_DB>);
+
+// Stages — must match worker STUDY_STAGES order.
+const STAGES: Array<{ id: string; label: string; tone: string }> = [
+  { id: "concept",    label: "Concept",      tone: "bg-slate-50  border-slate-200  text-slate-700" },
+  { id: "protocol",   label: "Protocol",     tone: "bg-amber-50  border-amber-200  text-amber-800" },
+  { id: "site-irb",   label: "Site IRB",     tone: "bg-orange-50 border-orange-200 text-orange-800" },
+  { id: "extraction", label: "Extraction",   tone: "bg-sky-50    border-sky-200    text-sky-800" },
+  { id: "analysis",   label: "Analysis",     tone: "bg-indigo-50 border-indigo-200 text-indigo-800" },
+  { id: "drafting",   label: "Drafting",     tone: "bg-violet-50 border-violet-200 text-violet-800" },
+  { id: "published",  label: "Published",    tone: "bg-emerald-50 border-emerald-200 text-emerald-800" },
+];
+
+const FLAGS: Record<string, string> = {
+  TW: "🇹🇼", KR: "🇰🇷", JP: "🇯🇵", HK: "🇭🇰",
+  AU: "🇦🇺", FI: "🇫🇮", GB: "🇬🇧", NL: "🇳🇱", US: "🇺🇸",
+};
+
+const DESIGN_TONES: Record<string, string> = {
+  ACNU:  "bg-brand-100 text-brand-800 border-brand-200",
+  SCCS:  "bg-violet-100 text-violet-800 border-violet-200",
+  CCO:   "bg-amber-100 text-amber-800 border-amber-200",
+  Other: "bg-slate-100 text-slate-700 border-slate-200",
+};
+---
+
+<BaseLayout
+  title="Active studies — AsPEN members"
+  description="Multi-country AsPEN studies currently in flight. See which stage each is at, who's leading, which sites are in, and request to join."
+>
+  <PageHeader
+    eyebrow="Members → Active studies"
+    title="Active AsPEN studies"
+    description="Multi-country studies currently in flight, organised by stage. Click a card for details. If you'd like to bring a site, request to join from the card."
+  />
+
+  <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-5">
+    <a class="text-sm text-brand-700 hover:underline font-semibold" href={`${base}/members/`}>← Members area</a>
+
+    <div data-state="loading" class="text-sm text-slate-600 italic">Loading…</div>
+    <div data-state="signed-out" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm text-slate-700">You're not signed in. <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Sign in →</a></p>
+    </div>
+    <div data-state="error" class="hidden border border-rose-300 bg-rose-50 rounded-lg p-6">
+      <p class="text-sm text-rose-800" data-error-msg></p>
+    </div>
+
+    <div data-state="ready" class="hidden space-y-5">
+      <!-- Toolbar: search + design filter + show-only-mine toggle -->
+      <div class="sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 bg-white/95 backdrop-blur border-b border-slate-200 flex flex-wrap items-center gap-3">
+        <input type="search" data-filter-search placeholder="Search title, lead, site…"
+               class="flex-1 min-w-[160px] border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+        <select data-filter-design class="border border-slate-300 rounded px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+          <option value="">All designs</option>
+          <option value="ACNU">ACNU</option>
+          <option value="SCCS">SCCS</option>
+          <option value="CCO">Case-crossover</option>
+          <option value="Other">Other</option>
+        </select>
+        <label class="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer">
+          <input type="checkbox" data-filter-mine class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+          <span>Show only studies I'm in</span>
+        </label>
+      </div>
+
+      <div data-empty class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+        <p class="text-sm text-slate-700">No active studies yet. Check back soon — the AsPEN office adds new studies here.</p>
+      </div>
+
+      <!-- Kanban: 7 columns on desktop, vertical accordion on mobile. -->
+      <div data-kanban class="hidden lg:grid grid-cols-7 gap-3 items-start">
+        {STAGES.map((s) => (
+          <div class={`rounded-lg border ${s.tone} min-h-[120px]`} data-stage-col={s.id}>
+            <header class="px-3 py-2 border-b border-current/10 flex items-center justify-between gap-2">
+              <p class="text-[11px] uppercase tracking-widest font-bold">{s.label}</p>
+              <span class="text-[10px] font-mono opacity-70" data-stage-count={s.id}>0</span>
+            </header>
+            <div class="p-2 space-y-2" data-stage-list={s.id}></div>
+          </div>
+        ))}
+      </div>
+
+      <!-- Mobile accordion -->
+      <div data-mobile class="lg:hidden space-y-2">
+        {STAGES.map((s) => (
+          <details open={s.id === "protocol" || s.id === "site-irb" || s.id === "extraction" || s.id === "analysis"}
+                   class={`rounded-lg border ${s.tone}`} data-stage-mob={s.id}>
+            <summary class="px-3 py-2 cursor-pointer flex items-center justify-between gap-2 font-semibold text-sm">
+              <span class="uppercase tracking-widest text-[11px]">{s.label}</span>
+              <span class="text-[10px] font-mono opacity-70" data-stage-count-mob={s.id}>0</span>
+            </summary>
+            <div class="p-2 space-y-2" data-stage-list-mob={s.id}></div>
+          </details>
+        ))}
+      </div>
+    </div>
+
+    <!-- Express-interest modal -->
+    <div data-interest-modal class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-start justify-center p-4 sm:p-8 overflow-y-auto">
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl w-full max-w-lg my-8">
+        <header class="flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-100">
+          <div>
+            <p class="text-xs uppercase tracking-widest text-brand-700 font-bold">Express interest</p>
+            <h3 class="text-base font-bold text-slate-900 mt-0.5" data-interest-title>Join this study</h3>
+          </div>
+          <button type="button" data-interest-close class="text-slate-400 hover:text-slate-700 text-2xl leading-none">×</button>
+        </header>
+        <form data-interest-form class="px-5 py-4 space-y-3">
+          <input type="hidden" name="slug" />
+          <label class="block">
+            <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Which site would you bring?</span>
+            <select name="site" required
+                    class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+              <option value="">— Select a site —</option>
+              {Object.entries(SITES_BY_COUNTRY).map(([country, dbs]) => (
+                <optgroup label={country}>
+                  {dbs.map((d) => (<option value={d.id}>{d.short}</option>))}
+                </optgroup>
+              ))}
+            </select>
+          </label>
+          <label class="block">
+            <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Note for the chair (optional)</span>
+            <textarea name="note" rows="3" maxlength="1000"
+                      placeholder="e.g. We have CV outcomes linked through 2024 and IRB capacity in Q3."
+                      class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+          </label>
+          <div class="flex items-center gap-3">
+            <button type="submit" class="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2 rounded text-sm transition">
+              Send to the chair
+            </button>
+            <p data-interest-msg class="text-xs"></p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, STAGES, SITES_LABEL_MAP, FLAGS, DESIGN_TONES }}>
+    (() => {
+      const setState = (name) => {
+        document.querySelectorAll("[data-state]").forEach((el) => {
+          el.classList.toggle("hidden", el.dataset.state !== name);
+        });
+      };
+      if (!WORKER_URL) return setState("signed-out");
+
+      const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+      let me = null;
+      let studies = [];
+      let filterSearch = "";
+      let filterDesign = "";
+      let filterMine   = false;
+
+      const siteChip = (siteId, wanted = false) => {
+        const d = SITES_LABEL_MAP[siteId];
+        const flag = d ? (FLAGS[d.code] || "") : "";
+        const short = d ? d.short : siteId;
+        const cls = wanted
+          ? "text-[10px] bg-slate-50 text-slate-500 border border-slate-200 px-1.5 py-0.5 rounded inline-flex items-center gap-1 italic"
+          : "text-[10px] bg-brand-50 text-brand-700 border border-brand-100 px-1.5 py-0.5 rounded inline-flex items-center gap-1";
+        return `<span class="${cls}" title="${esc(d ? (d.country + ' · ' + d.short) : siteId)}">${flag ? esc(flag) + " " : ""}${esc(short)}</span>`;
+      };
+
+      const designBadge = (design) => {
+        const tone = DESIGN_TONES[design] || DESIGN_TONES.Other;
+        return `<span class="text-[10px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded border ${tone}">${esc(design)}</span>`;
+      };
+
+      const latestMilestone = (study) => {
+        if (!study.milestones || study.milestones.length === 0) return null;
+        return [...study.milestones].sort((a, b) => (a.date < b.date ? 1 : -1))[0];
+      };
+
+      const isMine = (study) => {
+        if (!me) return false;
+        const email = (me.email || "").toLowerCase();
+        if ((study.lead?.email || "").toLowerCase() === email) return true;
+        // Heuristic: if any site I'd plausibly bring is confirmed and I've
+        // already shown interest, count it. Without per-member site map,
+        // we treat any interested entry from me as "mine".
+        if ((study.interested || []).some((i) => i.email.toLowerCase() === email)) return true;
+        return false;
+      };
+
+      const studyMatchesFilter = (study) => {
+        if (filterDesign && study.design !== filterDesign) return false;
+        if (filterMine && !isMine(study)) return false;
+        if (filterSearch) {
+          const q = filterSearch.toLowerCase();
+          const blob = [
+            study.title,
+            study.lead?.name,
+            study.lead?.email,
+            study.description,
+            ...(study.sites || []).map((s) => SITES_LABEL_MAP[s]?.short || s),
+            ...(study.sitesWanted || []).map((s) => SITES_LABEL_MAP[s]?.short || s),
+          ].join(" ").toLowerCase();
+          if (!blob.includes(q)) return false;
+        }
+        return true;
+      };
+
+      const cardHtml = (study) => {
+        const lm = latestMilestone(study);
+        const confirmed = (study.sites || []).map((s) => siteChip(s, false)).join(" ");
+        const wanted    = (study.sitesWanted || []).map((s) => siteChip(s, true)).join(" ");
+        const milestonesHtml = (study.milestones || [])
+          .slice()
+          .sort((a, b) => (a.date < b.date ? 1 : -1))
+          .map((m) => `<li class="text-xs"><span class="font-mono text-slate-500 mr-2">${esc(m.date)}</span>${esc(m.note)}</li>`)
+          .join("");
+        const interestedHtml = (study.interested || []).map((i) => `
+          <li class="text-xs flex items-start gap-1.5">
+            <span class="text-slate-500">·</span>
+            <span><strong>${esc(i.name)}</strong> · ${esc(SITES_LABEL_MAP[i.site]?.short || i.site)}${i.note ? ` <span class="text-slate-500">— ${esc(i.note)}</span>` : ""}</span>
+          </li>`).join("");
+        const pdfLink = study.protocolUrl
+          ? `<a href="${WORKER_URL}/api/content/${esc(study.protocolUrl)}" target="_blank" rel="noopener"
+                class="text-[11px] text-brand-700 hover:underline font-semibold">📄 Protocol PDF →</a>`
+          : "";
+        const pmidLink = study.pmid
+          ? `<a href="https://pubmed.ncbi.nlm.nih.gov/${esc(study.pmid)}" target="_blank" rel="noopener"
+                class="text-[11px] text-brand-700 hover:underline font-semibold">📚 PubMed ${esc(study.pmid)} →</a>`
+          : "";
+        const mine = isMine(study);
+        return `
+          <article class="bg-white border border-slate-200 rounded-lg shadow-sm hover:shadow transition" data-study-slug="${esc(study.slug)}">
+            <header class="px-3 py-2.5 border-b border-slate-100">
+              <div class="flex items-start gap-2 flex-wrap">
+                ${designBadge(study.design)}
+                ${mine ? `<span class="text-[10px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">You're in</span>` : ""}
+              </div>
+              <h3 class="mt-1.5 text-sm font-bold text-slate-900 leading-snug">${esc(study.title)}</h3>
+              <p class="mt-0.5 text-[11px] text-slate-500">Lead: <strong class="text-slate-700">${esc(study.lead?.name || "—")}</strong></p>
+            </header>
+            <div class="px-3 py-2 space-y-2">
+              ${confirmed || wanted ? `<div class="flex flex-wrap gap-1">${confirmed}${wanted ? (confirmed ? " " : "") + wanted : ""}</div>` : ""}
+              ${lm ? `<p class="text-[11px] text-slate-600"><span class="font-mono text-slate-500 mr-1">${esc(lm.date)}</span>${esc(lm.note)}</p>` : ""}
+            </div>
+            <details class="border-t border-slate-100">
+              <summary class="px-3 py-1.5 cursor-pointer text-[11px] text-brand-700 hover:bg-brand-50/40 font-semibold">Details</summary>
+              <div class="px-3 py-2 space-y-3 border-t border-slate-100">
+                ${study.description ? `<p class="text-xs text-slate-700 leading-relaxed whitespace-pre-line">${esc(study.description)}</p>` : ""}
+                ${(pdfLink || pmidLink) ? `<div class="flex flex-wrap gap-3">${pdfLink}${pmidLink}</div>` : ""}
+                ${milestonesHtml ? `<div><p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Milestones</p><ul class="space-y-0.5 list-none pl-0">${milestonesHtml}</ul></div>` : ""}
+                ${interestedHtml ? `<div><p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Interested</p><ul class="space-y-0.5 list-none pl-0">${interestedHtml}</ul></div>` : ""}
+                <div>
+                  <button type="button" data-interest-open="${esc(study.slug)}"
+                          class="text-xs font-semibold bg-brand-700 hover:bg-brand-800 text-white px-3 py-1.5 rounded transition">
+                    Express interest in joining →
+                  </button>
+                </div>
+              </div>
+            </details>
+          </article>`;
+      };
+
+      const render = () => {
+        // Each stage: build list, render in both desktop kanban + mobile accordion.
+        for (const stage of STAGES) {
+          const inStage = studies
+            .filter((s) => s.stage === stage.id)
+            .filter(studyMatchesFilter);
+          const html = inStage.length > 0
+            ? inStage.map(cardHtml).join("")
+            : '<p class="text-[11px] text-slate-400 italic px-1 py-2">—</p>';
+          const desk = document.querySelector(`[data-stage-list="${stage.id}"]`);
+          const mob  = document.querySelector(`[data-stage-list-mob="${stage.id}"]`);
+          if (desk) desk.innerHTML = html;
+          if (mob)  mob.innerHTML  = html;
+          const cd = document.querySelector(`[data-stage-count="${stage.id}"]`);
+          const cm = document.querySelector(`[data-stage-count-mob="${stage.id}"]`);
+          if (cd) cd.textContent = String(inStage.length);
+          if (cm) cm.textContent = String(inStage.length);
+        }
+        const totalVisible = studies.filter(studyMatchesFilter).length;
+        const emptyEl = document.querySelector("[data-empty]");
+        if (emptyEl) emptyEl.classList.toggle("hidden", totalVisible > 0);
+      };
+
+      // ── Toolbar wiring ──
+      document.querySelector("[data-filter-search]")?.addEventListener("input", (e) => {
+        filterSearch = e.target.value.trim();
+        render();
+      });
+      document.querySelector("[data-filter-design]")?.addEventListener("change", (e) => {
+        filterDesign = e.target.value;
+        render();
+      });
+      document.querySelector("[data-filter-mine]")?.addEventListener("change", (e) => {
+        filterMine = e.target.checked;
+        render();
+      });
+
+      // ── Interest modal ──
+      const modal     = document.querySelector("[data-interest-modal]");
+      const modalForm = document.querySelector("[data-interest-form]");
+      const modalTitle= document.querySelector("[data-interest-title]");
+      const modalMsg  = document.querySelector("[data-interest-msg]");
+      const closeModal = () => modal.classList.add("hidden");
+      document.querySelector("[data-interest-close]")?.addEventListener("click", closeModal);
+      modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+      document.addEventListener("click", (e) => {
+        const btn = e.target?.closest?.("[data-interest-open]");
+        if (!btn) return;
+        const slug = btn.dataset.interestOpen;
+        const study = studies.find((s) => s.slug === slug);
+        if (!study) return;
+        modalForm.querySelector("[name='slug']").value = slug;
+        modalForm.querySelector("[name='note']").value = "";
+        modalForm.querySelector("[name='site']").value = "";
+        modalTitle.textContent = study.title;
+        modalMsg.textContent = "";
+        modal.classList.remove("hidden");
+      });
+
+      modalForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        modalMsg.textContent = "Sending…";
+        modalMsg.className = "text-xs text-slate-500 italic";
+        const fd = new FormData(modalForm);
+        const body = {
+          slug: String(fd.get("slug") || ""),
+          site: String(fd.get("site") || ""),
+          note: String(fd.get("note") || ""),
+        };
+        if (!body.site) {
+          modalMsg.textContent = "Please choose a site.";
+          modalMsg.className = "text-xs text-rose-700";
+          return;
+        }
+        try {
+          const r = await fetch(`${WORKER_URL}/api/studies/express-interest`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok || !data.ok) throw new Error(data.error || "Couldn't send.");
+          modalMsg.textContent = "Sent — the chair has been emailed.";
+          modalMsg.className = "text-xs text-brand-700";
+          await load();
+          setTimeout(closeModal, 1400);
+        } catch (err) {
+          modalMsg.textContent = String(err.message || err);
+          modalMsg.className = "text-xs text-rose-700";
+        }
+      });
+
+      // ── Bootstrap ──
+      const load = async () => {
+        try {
+          const r = await fetch(`${WORKER_URL}/api/studies`, { credentials: "include" });
+          if (r.status === 401) { setState("signed-out"); return; }
+          if (!r.ok) throw new Error("Couldn't load studies (" + r.status + ").");
+          const data = await r.json();
+          if (!data.ok) throw new Error(data.error || "Couldn't load studies.");
+          studies = data.studies || [];
+          setState("ready");
+          render();
+        } catch (e) {
+          const msg = document.querySelector("[data-error-msg]");
+          if (msg) msg.textContent = String(e.message || e);
+          setState("error");
+        }
+      };
+
+      fetch(`${WORKER_URL}/api/me`, { credentials: "include" })
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => {
+          if (!data || !data.ok) return setState("signed-out");
+          me = data.member;
+          return load();
+        })
+        .catch(() => setState("signed-out"));
+    })();
+  </script>
+</BaseLayout>

@@ -117,24 +117,6 @@ export default {
         resp = await handlePending(req, env);
       } else if (url.pathname === "/api/review" && req.method === "POST") {
         resp = await handleReview(req, env);
-      } else if (url.pathname === "/api/reading" && req.method === "GET") {
-        resp = await handleReadingList(req, env);
-      } else if (url.pathname === "/api/admin/orphan-papers" && req.method === "GET") {
-        resp = await handleAdminOrphanPapers(req, env);
-      } else if (url.pathname === "/api/admin/reading" && req.method === "POST") {
-        resp = await handleAdminReading(req, env);
-      } else if (url.pathname === "/api/reading/react" && req.method === "POST") {
-        resp = await handleReadingReact(req, env);
-      } else if (url.pathname === "/api/reading/take" && req.method === "POST") {
-        resp = await handleReadingTake(req, env);
-      } else if (url.pathname === "/api/reading/comment" && req.method === "POST") {
-        resp = await handleReadingComment(req, env);
-      } else if (url.pathname === "/api/reading/suggest" && req.method === "POST") {
-        resp = await handleReadingSuggest(req, env);
-      } else if (url.pathname === "/api/reading/suggestions" && req.method === "GET") {
-        resp = await handleReadingSuggestions(req, env);
-      } else if (url.pathname === "/api/admin/reading/promote-suggestion" && req.method === "POST") {
-        resp = await handleAdminPromoteSuggestion(req, env);
       } else if (url.pathname === "/api/admin/delete-file" && req.method === "POST") {
         resp = await handleAdminDeleteFile(req, env);
       } else if (url.pathname === "/api/request-delete" && req.method === "POST") {
@@ -147,6 +129,14 @@ export default {
         resp = await handleAdminMembersList(req, env);
       } else if (url.pathname === "/api/admin/members" && req.method === "POST") {
         resp = await handleAdminMembersUpsert(req, env);
+      } else if (url.pathname === "/api/studies" && req.method === "GET") {
+        resp = await handleStudiesList(req, env);
+      } else if (url.pathname === "/api/studies/express-interest" && req.method === "POST") {
+        resp = await handleStudiesExpressInterest(req, env);
+      } else if (url.pathname === "/api/admin/studies" && req.method === "POST") {
+        resp = await handleAdminStudies(req, env);
+      } else if (url.pathname === "/api/admin/studies/confirm-interest" && req.method === "POST") {
+        resp = await handleAdminStudiesConfirmInterest(req, env);
       } else if (url.pathname === "/" || url.pathname === "") {
         resp = new Response("aspen-auth worker — ok", { status: 200 });
       } else {
@@ -368,53 +358,21 @@ async function handleUpdateOwnProfile(req: Request, env: Env): Promise<Response>
   // logged so the chair can audit via git history if anything goes wrong.
   if (wantsEmailChange) {
     try {
-      const { list: picks, sha: picksSha } = await fetchReading(env);
+      const { list: studies, sha: studiesSha } = await fetchStudies(env);
       let changed = false;
-      for (const p of picks) {
-        if (p.pickedBy?.toLowerCase() === oldEmail) { p.pickedBy = newEmailLc; changed = true; }
-        if (p.reactions) {
-          for (const k of Object.keys(p.reactions)) {
-            if (k.toLowerCase() === oldEmail) {
-              p.reactions[newEmailLc] = p.reactions[k];
-              if (k !== newEmailLc) delete p.reactions[k];
-              changed = true;
-            }
-          }
-        }
-        if (p.takes) {
-          for (const k of Object.keys(p.takes)) {
-            if (k.toLowerCase() === oldEmail) {
-              p.takes[newEmailLc] = p.takes[k];
-              if (k !== newEmailLc) delete p.takes[k];
-              changed = true;
-            }
-          }
-        }
-        if (p.comments) {
-          for (const c of p.comments) {
-            if (c.author?.toLowerCase() === oldEmail) { c.author = newEmailLc; changed = true; }
-          }
+      for (const s of studies) {
+        if (s.lead?.email?.toLowerCase() === oldEmail) { s.lead.email = newEmailLc; changed = true; }
+        if (s.createdBy?.toLowerCase() === oldEmail) { s.createdBy = newEmailLc; changed = true; }
+        for (const i of s.interested || []) {
+          if (i.email?.toLowerCase() === oldEmail) { i.email = newEmailLc; changed = true; }
         }
       }
       if (changed) {
-        await putJsonFile(env, "reading.json",
-          JSON.stringify(picks, null, 2) + "\n", picksSha,
-          `Email change cascade: ${oldEmail} → ${newEmailLc} (reading.json)`);
+        await putJsonFile(env, "studies.json",
+          JSON.stringify(studies, null, 2) + "\n", studiesSha,
+          `Email change cascade: ${oldEmail} → ${newEmailLc} (studies.json)`);
       }
-    } catch (e) { console.error("cascade reading", e); }
-
-    try {
-      const { list: suggs, sha: suggsSha } = await fetchSuggestions(env);
-      let changed = false;
-      for (const s of suggs) {
-        if (s.suggestedBy?.toLowerCase() === oldEmail) { s.suggestedBy = newEmailLc; changed = true; }
-      }
-      if (changed) {
-        await putJsonFile(env, "suggestions.json",
-          JSON.stringify(suggs, null, 2) + "\n", suggsSha,
-          `Email change cascade: ${oldEmail} → ${newEmailLc} (suggestions.json)`);
-      }
-    } catch (e) { console.error("cascade suggestions", e); }
+    } catch (e) { console.error("cascade studies", e); }
 
     try {
       const { list: dreqs, sha: dreqsSha } = await fetchDeleteRequests(env);
@@ -503,18 +461,10 @@ interface PendingMeta {
   uploadedAt: string;
   originalName: string;
   description?: string;
-  /** "papers" or "materials" or "reading" (per-pick paper PDF) */
-  category: "papers" | "materials" | "reading";
+  /** "papers" or "materials" */
+  category: "papers" | "materials";
   /** Subfolder under materials/ (protocols, slides, code, ...) — materials only */
   subfolder?: string;
-  /** PMID this upload is attached to — reading category only (per-pick) */
-  pmid?: string;
-  /** Suggestion id this upload is attached to — reading category only
-      (when uploaded together with a Suggest a paper submission). */
-  suggestionId?: string;
-  /** Title at suggestion time — helps the admin reviewer recognise the
-      paper before its pmid is known. */
-  suggestionTitle?: string;
 }
 
 async function handleUpload(req: Request, env: Env): Promise<Response> {
@@ -546,45 +496,12 @@ async function handleUpload(req: Request, env: Env): Promise<Response> {
   }
 
   const category = String(form.get("category") || "");
-  if (category !== "papers" && category !== "materials" && category !== "reading") {
+  if (category !== "papers" && category !== "materials") {
     return jsonResponse({ ok: false, error: "Invalid category." }, 400);
   }
   const subfolder = String(form.get("subfolder") || "").trim().toLowerCase();
   if (category === "materials" && subfolder && !/^[a-z0-9-]+$/.test(subfolder)) {
     return jsonResponse({ ok: false, error: "Invalid subfolder name." }, 400);
-  }
-  // Reading-attached paper uploads come in two shapes:
-  //   (a) per-pick — caller sends `pmid`, must match an existing pick
-  //   (b) suggestion-attached — caller sends `suggestionId`, must match an
-  //       open suggestion (the chair will resolve the destination pmid
-  //       when approving the upload)
-  let pmid: string | undefined;
-  let suggestionId: string | undefined;
-  let suggestionTitle: string | undefined;
-  if (category === "reading") {
-    pmid = String(form.get("pmid") || "").trim() || undefined;
-    suggestionId = String(form.get("suggestionId") || "").trim() || undefined;
-    if (!pmid && !suggestionId) {
-      return jsonResponse({ ok: false, error: "pmid or suggestionId required." }, 400);
-    }
-    if (pmid && !/^\d{6,9}$/.test(pmid)) {
-      return jsonResponse({ ok: false, error: "Invalid pmid." }, 400);
-    }
-    if (pmid) {
-      const { list: picks } = await fetchReading(env);
-      if (!picks.some((p) => p.pmid === pmid)) {
-        return jsonResponse({ ok: false, error: "Pick not found for that PMID." }, 404);
-      }
-    } else if (suggestionId) {
-      const { list: suggs } = await fetchSuggestions(env);
-      const s = suggs.find((s) =>
-        s.status === "open" && suggestionKey(s) === suggestionId
-      );
-      if (!s) {
-        return jsonResponse({ ok: false, error: "No open suggestion with that id." }, 404);
-      }
-      suggestionTitle = s.title || s.pmid || "";
-    }
   }
   const description = String(form.get("description") || "").trim().slice(0, 2000);
 
@@ -592,15 +509,10 @@ async function handleUpload(req: Request, env: Env): Promise<Response> {
   const originalName = sanitiseFilename(fileEntry.name || "upload.bin");
   if (!originalName) return jsonResponse({ ok: false, error: "Invalid filename." }, 400);
 
-  // Build unique pending dir: pending/<category>/<iso>-<rand>/  (reading
-  // prefixes with pmid or sugg-{id} for legibility)
+  // Build unique pending dir: pending/<category>/<iso>-<rand>/
   const stamp = new Date().toISOString().replace(/[:.]/g, "-").replace(/Z$/, "Z");
   const rand = randSlug(6);
-  const dirPath = category === "reading"
-    ? (pmid
-        ? `pending/reading/${pmid}-${stamp}-${rand}`
-        : `pending/reading/${suggestionId}-${stamp}-${rand}`)
-    : `pending/${category}/${stamp}-${rand}`;
+  const dirPath = `pending/${category}/${stamp}-${rand}`;
 
   // Upload the file
   const bytes = new Uint8Array(await fileEntry.arrayBuffer());
@@ -617,9 +529,6 @@ async function handleUpload(req: Request, env: Env): Promise<Response> {
     description: description || undefined,
     category: category as PendingMeta["category"],
     subfolder: category === "materials" ? (subfolder || undefined) : undefined,
-    pmid: category === "reading" ? pmid : undefined,
-    suggestionId: category === "reading" ? suggestionId : undefined,
-    suggestionTitle: category === "reading" ? suggestionTitle : undefined,
   };
   const metaB64 = base64FromUtf8(JSON.stringify(meta, null, 2) + "\n");
   await putBinaryFile(env, `${dirPath}/meta.json`, metaB64,
@@ -654,7 +563,7 @@ async function handlePending(req: Request, env: Env): Promise<Response> {
   for (const it of data.tree) {
     if (it.type !== "blob") continue;
     if (!it.path.startsWith("pending/")) continue;
-    const m = it.path.match(/^(pending\/(?:papers|materials|reading)\/[^/]+)\/(.+)$/);
+    const m = it.path.match(/^(pending\/(?:papers|materials)\/[^/]+)\/(.+)$/);
     if (!m) continue;
     const dir = m[1];
     const name = m[2];
@@ -696,7 +605,7 @@ async function handleReview(req: Request, env: Env): Promise<Response> {
   const action = body?.action;
   const rename = (body?.rename || "").trim();
 
-  if (!id.match(/^pending\/(papers|materials|reading)\/[^/]+$/)) {
+  if (!id.match(/^pending\/(papers|materials)\/[^/]+$/)) {
     return jsonResponse({ ok: false, error: "Invalid id." }, 400);
   }
   if (action !== "approve" && action !== "reject") {
@@ -748,47 +657,11 @@ async function handleReview(req: Request, env: Env): Promise<Response> {
   // Determine destination filename: prefer admin's rename if provided, else originalName
   // (rename only applies when there's a single file in the pending; for multi-file
   // uploads we keep their basenames as-is.)
-  //
-  // Special-case: reading-attached PDFs always land at papers/pmid-{pmid}.{ext}
-  // so the listing endpoint can match them back to the right pick.
-  //
-  // For suggestion-attached uploads, the chair already supplied the PMID
-  // when promoting the suggestion to a pick (recorded as resolvedPmid on
-  // the suggestion). So look that up automatically — no second entry
-  // needed. The rename field is only consulted as a last resort if the
-  // suggestion hasn't been promoted yet.
   const destinations: Array<{ src: string; dst: string }> = [];
-  let effectivePmid: string | undefined;
-  if (meta.category === "reading") {
-    if (meta.pmid) {
-      effectivePmid = meta.pmid;
-    } else if (meta.suggestionId) {
-      // Look up the resolvedPmid stored on the suggestion when it was promoted.
-      const { list: suggs } = await fetchSuggestions(env);
-      const sugg = suggs.find((s) => suggestionKey(s) === meta.suggestionId);
-      if (sugg?.resolvedPmid && /^\d{6,9}$/.test(sugg.resolvedPmid)) {
-        effectivePmid = sugg.resolvedPmid;
-      } else {
-        // Fallback: admin can still override / supply PMID via rename
-        const digits = rename.replace(/\D+/g, "");
-        if (/^\d{6,9}$/.test(digits)) {
-          effectivePmid = digits;
-        } else {
-          return jsonResponse({
-            ok: false,
-            error: "Promote the linked suggestion to a pick first (so a PMID is recorded), or type the destination PMID in the rename field, before approving this PDF.",
-          }, 400);
-        }
-      }
-    }
-  }
   for (const src of filesToCopy) {
     const srcBasename = src.split("/").pop()!;
     let dstName = srcBasename;
-    if (meta.category === "reading" && effectivePmid) {
-      const ext = (srcBasename.match(/\.([a-zA-Z0-9]+)$/)?.[1] || "pdf").toLowerCase();
-      dstName = `pmid-${effectivePmid}.${ext}`;
-    } else if (filesToCopy.length === 1 && rename) {
+    if (filesToCopy.length === 1 && rename) {
       dstName = sanitiseFilename(rename) || srcBasename;
     }
     destinations.push({ src, dst: `${destBase}/${dstName}` });
@@ -813,38 +686,6 @@ async function handleReview(req: Request, env: Env): Promise<Response> {
       `Approve: ${dst} (from ${meta.uploader})`);
   }
 
-  // If this was a suggestion-attached reading PDF and there is no pick yet
-  // for the resolved pmid, auto-create the pick (using the suggestion's
-  // title as headline + reason as commentary) and mark the suggestion as
-  // promoted. This keeps the chair's approve-PDF flow to a single click.
-  if (meta.category === "reading" && meta.suggestionId && effectivePmid) {
-    const { list: picks, sha: picksSha } = await fetchReading(env);
-    const hasPick = picks.some((p) => p.pmid === effectivePmid);
-    if (!hasPick) {
-      const { list: suggs, sha: suggsSha } = await fetchSuggestions(env);
-      const sugg = suggs.find((s) => suggestionKey(s) === meta.suggestionId);
-      if (sugg) {
-        picks.unshift({
-          pmid:       effectivePmid,
-          pickedAt:   new Date().toISOString(),
-          pickedBy:   member.email,
-          headline:   sugg.title || `PMID ${effectivePmid}`,
-          commentary: sugg.reason || "",
-        });
-        await putJsonFile(env, "reading.json",
-          JSON.stringify(picks, null, 2) + "\n", picksSha,
-          `Auto-pick from suggestion PDF approval: pmid ${effectivePmid}`);
-        if (sugg.status === "open") {
-          sugg.status = "promoted";
-          sugg.resolvedPmid = effectivePmid;
-          await putJsonFile(env, "suggestions.json",
-            JSON.stringify(suggs, null, 2) + "\n", suggsSha,
-            `Promote suggestion ${meta.suggestionId} via PDF approval (pmid ${effectivePmid})`);
-        }
-      }
-    }
-  }
-
   // Delete all pending files (file + meta)
   for (const p of pendingPaths) {
     const f = await fetchFileWithSha(env, p);
@@ -854,266 +695,57 @@ async function handleReview(req: Request, env: Env): Promise<Response> {
   return jsonResponse({ ok: true, action: "approved", destinations: destinations.map((d) => d.dst) });
 }
 
-// ── Reading group ──────────────────────────────────────────────────────
 
-interface ReadingComment {
-  author: string;     // email (lowercased)
-  name: string;       // display name at time of posting
-  body: string;
-  postedAt: string;
+// ── Active Studies Tracker ─────────────────────────────────────────────
+//
+// studies.json holds a flat list of multi-country AsPEN studies the chair
+// (and other admins) want to surface in /members/studies. Each study lives
+// in one of 7 stages and can collect "express interest" entries from any
+// signed-in member; the chair confirms an interest by moving the member's
+// site into the study's confirmed `sites[]` list.
+
+const STUDY_STAGES = [
+  "concept", "protocol", "site-irb", "extraction", "analysis", "drafting", "published",
+] as const;
+type StudyStage = (typeof STUDY_STAGES)[number];
+const STUDY_DESIGNS = ["ACNU", "SCCS", "CCO", "Other"] as const;
+type StudyDesign = (typeof STUDY_DESIGNS)[number];
+
+interface StudyMilestone {
+  date: string;
+  note: string;
 }
-
-interface ReadingTake {
-  text: string;
-  share: boolean;     // false = private to that member
+interface StudyInterest {
+  email: string;
+  name: string;
+  site: string;      // site id, e.g. "TW-NHIRD"
+  note: string;
+  expressedAt: string;
+}
+interface Study {
+  slug: string;
+  title: string;
+  design: StudyDesign;
+  stage: StudyStage;
+  lead: { name: string; email: string };
+  description: string;
+  /** Confirmed participating sites (chair-confirmed, ids like "TW-NHIRD"). */
+  sites: string[];
+  /** Sites the chair would still like to recruit. */
+  sitesWanted: string[];
+  /** Optional path inside papers/ to the protocol PDF. */
+  protocolUrl?: string;
+  /** Optional published-paper PMID. */
+  pmid?: string;
+  milestones: StudyMilestone[];
+  interested: StudyInterest[];
+  createdAt: string;
+  createdBy: string;
   updatedAt: string;
 }
 
-interface ReadingPick {
-  pmid: string;
-  pickedAt: string;
-  pickedBy: string;
-  headline: string;
-  commentary: string;
-  /** email → list of emojis the member has reacted with */
-  reactions?: Record<string, string[]>;
-  /** email → that member's "My take" */
-  takes?: Record<string, ReadingTake>;
-  /** chronological list of public comments */
-  comments?: ReadingComment[];
-}
-
-const ALLOWED_EMOJIS = ["👍", "🤔", "📌", "⭐"] as const;
-
-async function handleReadingList(req: Request, env: Env): Promise<Response> {
-  // Any signed-in active member can read the reading list.
-  const m = await sessionMember(req, env);
-  if (!m) return jsonResponse({ ok: false }, 401);
-  const { list } = await fetchReading(env);
-  const me = m.email.toLowerCase();
-
-  // One-shot walk of papers/ to discover which pmids have an attached PDF
-  // (filename pattern: pmid-{pmid}.{ext}). This is one extra GitHub call
-  // per /api/reading hit, which keeps the listing endpoint fast.
-  const paperPdfs = await pmidToPaperPath(env);
-
-  // For each pick: strip other members' private takes (keep only mine + shared).
-  // Reactions and comments are public.
-  const filtered = list.map((p) => {
-    const takes: Record<string, ReadingTake> = {};
-    for (const [email, t] of Object.entries(p.takes ?? {})) {
-      if (t.share || email.toLowerCase() === me) takes[email] = t;
-    }
-    return { ...p, takes, paperPdf: paperPdfs.get(p.pmid) };
-  });
-
-  return jsonResponse({ ok: true, picks: filtered });
-}
-
-/**
- * Find approved paper PDFs at papers/pmid-{pmid}.{ext} that don't have a
- * matching pick in reading.json — admin can then one-click create a pick
- * for each to surface the PDF on /members/reading.
- */
-async function handleAdminOrphanPapers(req: Request, env: Env): Promise<Response> {
-  const m = await sessionMember(req, env);
-  if (!m) return jsonResponse({ ok: false }, 401);
-  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
-
-  const paperPdfs = await pmidToPaperPath(env);          // pmid → path
-  const { list: picks } = await fetchReading(env);
-  const pickPmids = new Set(picks.map((p) => p.pmid));
-
-  // Also look up any open / promoted suggestions so we can suggest a
-  // headline + commentary draft to the chair.
-  const { list: suggs } = await fetchSuggestions(env);
-
-  const orphans: Array<{ pmid: string; path: string; suggestedHeadline?: string; suggestedCommentary?: string }> = [];
-  for (const [pmid, path] of paperPdfs.entries()) {
-    if (pickPmids.has(pmid)) continue;
-    // Look for the suggestion that produced this pmid (resolvedPmid match)
-    const linked = suggs.find((s) => s.resolvedPmid === pmid);
-    orphans.push({
-      pmid,
-      path,
-      suggestedHeadline: linked?.title,
-      suggestedCommentary: linked?.reason,
-    });
-  }
-  return jsonResponse({ ok: true, orphans });
-}
-
-/** Walk papers/ and return a map of pmid → path for files named pmid-{pmid}.{ext}. */
-async function pmidToPaperPath(env: Env): Promise<Map<string, string>> {
-  const out = new Map<string, string>();
-  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/git/trees/${env.MEMBERS_BRANCH}?recursive=1`;
-  const r = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${env.GITHUB_PAT}`,
-      "User-Agent": "aspen-auth-worker",
-      Accept: "application/vnd.github+json",
-    },
-  });
-  if (!r.ok) return out;
-  const data = await r.json() as { tree: Array<{ path: string; type: string }> };
-  for (const it of data.tree) {
-    if (it.type !== "blob") continue;
-    const m = it.path.match(/^papers\/pmid-(\d{6,9})\.[a-zA-Z0-9]+$/);
-    if (m) out.set(m[1], it.path);
-  }
-  return out;
-}
-
-async function handleAdminReading(req: Request, env: Env): Promise<Response> {
-  const m = await sessionMember(req, env);
-  if (!m) return jsonResponse({ ok: false }, 401);
-  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
-
-  const body = await safeJson<{
-    action?: string;
-    pmid?: string;
-    headline?: string;
-    commentary?: string;
-  }>(req);
-  const action = body?.action;
-  const pmid = String(body?.pmid || "").trim();
-  if (!pmid) return jsonResponse({ ok: false, error: "Missing pmid." }, 400);
-  if (action !== "add" && action !== "remove") {
-    return jsonResponse({ ok: false, error: "Invalid action." }, 400);
-  }
-
-  const { list, sha } = await fetchReading(env);
-  let next = list.filter((p) => p.pmid !== pmid);
-
-  if (action === "add") {
-    const headline = String(body?.headline || "").trim();
-    const commentary = String(body?.commentary || "").trim();
-    if (!headline) return jsonResponse({ ok: false, error: "Headline required." }, 400);
-    next.unshift({
-      pmid,
-      pickedAt: new Date().toISOString(),
-      pickedBy: m.email,
-      headline,
-      commentary,
-    });
-  }
-
-  await putJsonFile(env, "reading.json", JSON.stringify(next, null, 2) + "\n", sha,
-    `Reading: ${action} ${pmid} by ${m.email}`);
-
-  return jsonResponse({ ok: true });
-}
-
-// ── Per-pick engagement: react / take / comment ────────────────────────
-
-async function withReadingPick<T>(
-  env: Env,
-  pmid: string,
-  fn: (pick: ReadingPick) => void,
-  commitMsg: string,
-): Promise<{ ok: boolean; error?: string }> {
-  const { list, sha } = await fetchReading(env);
-  const pick = list.find((p) => p.pmid === pmid);
-  if (!pick) return { ok: false, error: "Pick not found." };
-  fn(pick);
-  await putJsonFile(env, "reading.json",
-    JSON.stringify(list, null, 2) + "\n", sha, commitMsg);
-  return { ok: true };
-}
-
-async function handleReadingReact(req: Request, env: Env): Promise<Response> {
-  const m = await sessionMember(req, env);
-  if (!m) return jsonResponse({ ok: false }, 401);
-  const body = await safeJson<{ pmid?: string; emoji?: string }>(req);
-  const pmid = String(body?.pmid || "");
-  const emoji = String(body?.emoji || "");
-  if (!pmid || !ALLOWED_EMOJIS.includes(emoji as (typeof ALLOWED_EMOJIS)[number])) {
-    return jsonResponse({ ok: false, error: "Invalid request." }, 400);
-  }
-  const email = m.email.toLowerCase();
-  const r = await withReadingPick(env, pmid, (pick) => {
-    pick.reactions ??= {};
-    const list = new Set(pick.reactions[email] ?? []);
-    if (list.has(emoji)) list.delete(emoji);
-    else list.add(emoji);
-    if (list.size === 0) delete pick.reactions[email];
-    else pick.reactions[email] = Array.from(list);
-  }, `Reading react ${pmid} ${emoji} by ${email}`);
-  if (!r.ok) return jsonResponse(r, 400);
-  return jsonResponse({ ok: true });
-}
-
-async function handleReadingTake(req: Request, env: Env): Promise<Response> {
-  const m = await sessionMember(req, env);
-  if (!m) return jsonResponse({ ok: false }, 401);
-  const body = await safeJson<{ pmid?: string; text?: string; share?: boolean }>(req);
-  const pmid = String(body?.pmid || "");
-  const text = String(body?.text || "").trim().slice(0, 2000);
-  const share = Boolean(body?.share);
-  if (!pmid) return jsonResponse({ ok: false, error: "Missing pmid." }, 400);
-
-  const email = m.email.toLowerCase();
-  const r = await withReadingPick(env, pmid, (pick) => {
-    pick.takes ??= {};
-    if (!text) {
-      delete pick.takes[email];     // empty text → remove the take entirely
-    } else {
-      pick.takes[email] = { text, share, updatedAt: new Date().toISOString() };
-    }
-  }, `Reading take ${pmid} by ${email}`);
-  if (!r.ok) return jsonResponse(r, 400);
-  return jsonResponse({ ok: true });
-}
-
-async function handleReadingComment(req: Request, env: Env): Promise<Response> {
-  const m = await sessionMember(req, env);
-  if (!m) return jsonResponse({ ok: false }, 401);
-  const body = await safeJson<{ pmid?: string; body?: string }>(req);
-  const pmid = String(body?.pmid || "");
-  const text = String(body?.body || "").trim().slice(0, 3000);
-  if (!pmid || !text) return jsonResponse({ ok: false, error: "Missing fields." }, 400);
-
-  const email = m.email.toLowerCase();
-  const r = await withReadingPick(env, pmid, (pick) => {
-    pick.comments ??= [];
-    pick.comments.push({
-      author: email,
-      name: m.name,
-      body: text,
-      postedAt: new Date().toISOString(),
-    });
-  }, `Reading comment ${pmid} by ${email}`);
-  if (!r.ok) return jsonResponse(r, 400);
-  return jsonResponse({ ok: true });
-}
-
-// ── Suggestions ────────────────────────────────────────────────────────
-
-interface ReadingSuggestion {
-  /** Random slug — primary key for new suggestions. Legacy records may
-      lack this and fall back to pmid for identification. */
-  id?: string;
-  /** Free-text title (new flow). Legacy records have only pmid + reason. */
-  title?: string;
-  /** Optional — known if the suggester or chair has the PubMed id. */
-  pmid?: string;
-  reason: string;
-  suggestedBy: string;
-  suggestedByName: string;
-  suggestedAt: string;
-  status: "open" | "promoted" | "dismissed";
-  /** Set once admin promotes the suggestion to a pick — records the pmid
-      of the resulting pick so uploaded PDFs can be routed there. */
-  resolvedPmid?: string;
-}
-
-/** Stable identifier for a suggestion — id for new records, pmid for legacy. */
-function suggestionKey(s: ReadingSuggestion): string {
-  return s.id || s.pmid || "";
-}
-
-async function fetchSuggestions(env: Env): Promise<{ list: ReadingSuggestion[]; sha: string }> {
-  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/contents/suggestions.json?ref=${env.MEMBERS_BRANCH}`;
+async function fetchStudies(env: Env): Promise<{ list: Study[]; sha: string }> {
+  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/contents/studies.json?ref=${env.MEMBERS_BRANCH}`;
   const r = await fetch(url, {
     headers: {
       Authorization: `Bearer ${env.GITHUB_PAT}`,
@@ -1123,94 +755,276 @@ async function fetchSuggestions(env: Env): Promise<{ list: ReadingSuggestion[]; 
   });
   if (!r.ok) {
     if (r.status === 404) return { list: [], sha: "" };
-    throw new Error(`fetchSuggestions ${r.status}`);
+    throw new Error(`fetchStudies ${r.status}`);
   }
   const data = await r.json() as { content: string; sha: string };
   const text = utf8FromBase64(data.content.replace(/\s+/g, ""));
-  let list: ReadingSuggestion[] = [];
+  let list: Study[] = [];
   try { list = JSON.parse(text); } catch { list = []; }
   if (!Array.isArray(list)) list = [];
   return { list, sha: data.sha };
 }
 
-async function handleReadingSuggest(req: Request, env: Env): Promise<Response> {
-  const m = await sessionMember(req, env);
-  if (!m) return jsonResponse({ ok: false }, 401);
-  const body = await safeJson<{ title?: string; pmid?: string; reason?: string }>(req);
-  const title = String(body?.title || "").trim().slice(0, 500);
-  const pmid = String(body?.pmid || "").trim();
-  const reason = String(body?.reason || "").trim().slice(0, 1500);
-  if (!title) return jsonResponse({ ok: false, error: "Title required." }, 400);
-  if (!reason) return jsonResponse({ ok: false, error: "Tell us why." }, 400);
-  if (pmid && !/^\d{6,9}$/.test(pmid)) {
-    return jsonResponse({ ok: false, error: "PMID, if given, should be 6–9 digits." }, 400);
-  }
-
-  const { list, sha } = await fetchSuggestions(env);
-  // Dedupe: same email + (title or pmid) + open → ignore
-  const already = list.find((s) =>
-    s.status === "open" &&
-    s.suggestedBy.toLowerCase() === m.email.toLowerCase() &&
-    ((s.title && s.title.toLowerCase() === title.toLowerCase()) ||
-     (pmid && s.pmid === pmid))
-  );
-  if (already) return jsonResponse({ ok: true, deduped: true, id: suggestionKey(already) });
-
-  const id = "s" + randSlug(10);
-  list.unshift({
-    id,
-    title,
-    pmid: pmid || undefined,
-    reason,
-    suggestedBy: m.email.toLowerCase(),
-    suggestedByName: m.name,
-    suggestedAt: new Date().toISOString(),
-    status: "open",
-  });
-  await putJsonFile(env, "suggestions.json",
-    JSON.stringify(list, null, 2) + "\n", sha,
-    `Suggestion: ${title.slice(0, 80)} by ${m.email}`);
-  return jsonResponse({ ok: true, id });
+function makeSlug(title: string): string {
+  return (title || "study")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60) || "study";
 }
 
-async function handleReadingSuggestions(req: Request, env: Env): Promise<Response> {
+async function handleStudiesList(req: Request, env: Env): Promise<Response> {
   const m = await sessionMember(req, env);
   if (!m) return jsonResponse({ ok: false }, 401);
-  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
-  const { list } = await fetchSuggestions(env);
-  return jsonResponse({ ok: true, suggestions: list });
+  const { list } = await fetchStudies(env);
+  return jsonResponse({ ok: true, studies: list, stages: STUDY_STAGES });
 }
 
-async function handleAdminPromoteSuggestion(req: Request, env: Env): Promise<Response> {
+async function handleStudiesExpressInterest(req: Request, env: Env): Promise<Response> {
   const m = await sessionMember(req, env);
   if (!m) return jsonResponse({ ok: false }, 401);
-  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
-  const body = await safeJson<{
-    id?: string; pmid?: string; resolvedPmid?: string;
-    action?: "promote" | "dismiss";
-  }>(req);
-  const id = String(body?.id || "");
-  const pmid = String(body?.pmid || "");
-  const resolvedPmid = String(body?.resolvedPmid || "");
-  const action = body?.action;
-  if ((!id && !pmid) || (action !== "promote" && action !== "dismiss")) {
-    return jsonResponse({ ok: false, error: "Invalid request." }, 400);
+  const body = await safeJson<{ slug?: string; site?: string; note?: string }>(req);
+  const slug = String(body?.slug || "").trim();
+  const site = String(body?.site || "").trim().slice(0, 80);
+  const note = String(body?.note || "").trim().slice(0, 1000);
+  if (!slug || !site) return jsonResponse({ ok: false, error: "Missing fields." }, 400);
+
+  const { list, sha } = await fetchStudies(env);
+  const study = list.find((s) => s.slug === slug);
+  if (!study) return jsonResponse({ ok: false, error: "Study not found." }, 404);
+
+  const email = m.email.toLowerCase();
+  study.interested ??= [];
+  // Dedupe by email + site
+  const already = study.interested.find((i) => i.email.toLowerCase() === email && i.site === site);
+  if (already) {
+    already.note = note;
+    already.expressedAt = new Date().toISOString();
+  } else {
+    study.interested.unshift({
+      email,
+      name: m.name,
+      site,
+      note,
+      expressedAt: new Date().toISOString(),
+    });
   }
-  const { list, sha } = await fetchSuggestions(env);
-  // Match by id first, then fall back to legacy pmid
-  const target = list.find((s) =>
-    s.status === "open" && ((id && suggestionKey(s) === id) || (!id && pmid && s.pmid === pmid))
-  );
-  if (!target) return jsonResponse({ ok: false, error: "Suggestion not found." }, 404);
-  target.status = action === "promote" ? "promoted" : "dismissed";
-  if (action === "promote" && resolvedPmid && /^\d{6,9}$/.test(resolvedPmid)) {
-    target.resolvedPmid = resolvedPmid;
-  }
-  const key = suggestionKey(target);
-  await putJsonFile(env, "suggestions.json",
+  study.updatedAt = new Date().toISOString();
+  await putJsonFile(env, "studies.json",
     JSON.stringify(list, null, 2) + "\n", sha,
-    `Suggestion ${key}: ${action} by ${m.email}`);
+    `Study ${slug}: interest from ${email} (${site})`);
+
+  // Notify chair — swallow errors to keep UX consistent with magic-link.
+  try {
+    await sendStudyInterestEmail(env, study, m.name, email, site, note);
+  } catch (e) {
+    console.error("study interest email failed", e);
+  }
+
   return jsonResponse({ ok: true });
+}
+
+async function handleAdminStudies(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+
+  const body = await safeJson<{
+    action?: string;
+    slug?: string;
+    payload?: Partial<Study> & { stage?: string };
+  }>(req);
+  const action = body?.action;
+  const slug = String(body?.slug || "").trim();
+  if (action !== "create" && action !== "update" && action !== "delete" && action !== "move-stage") {
+    return jsonResponse({ ok: false, error: "Invalid action." }, 400);
+  }
+
+  const { list, sha } = await fetchStudies(env);
+  const now = new Date().toISOString();
+  let commitMsg = "";
+
+  if (action === "create") {
+    const p = body?.payload || {};
+    const title = String(p.title || "").trim().slice(0, 300);
+    if (!title) return jsonResponse({ ok: false, error: "Title required." }, 400);
+    const newSlug = slug ? makeSlug(slug) : makeSlug(title);
+    if (list.some((s) => s.slug === newSlug)) {
+      return jsonResponse({ ok: false, error: "A study with that slug already exists." }, 409);
+    }
+    const study: Study = {
+      slug: newSlug,
+      title,
+      design: (STUDY_DESIGNS.includes(p.design as StudyDesign) ? p.design : "Other") as StudyDesign,
+      stage: (STUDY_STAGES.includes(p.stage as StudyStage) ? p.stage : "concept") as StudyStage,
+      lead: {
+        name: String(p.lead?.name || "").slice(0, 120),
+        email: String(p.lead?.email || "").slice(0, 200),
+      },
+      description: String(p.description || "").slice(0, 3000),
+      sites: Array.isArray(p.sites) ? p.sites.map(String).slice(0, 50) : [],
+      sitesWanted: Array.isArray(p.sitesWanted) ? p.sitesWanted.map(String).slice(0, 50) : [],
+      protocolUrl: p.protocolUrl ? String(p.protocolUrl).slice(0, 300) : undefined,
+      pmid: p.pmid ? String(p.pmid).slice(0, 20) : undefined,
+      milestones: Array.isArray(p.milestones) ? p.milestones.slice(0, 50) : [],
+      interested: [],
+      createdAt: now,
+      createdBy: m.email.toLowerCase(),
+      updatedAt: now,
+    };
+    list.unshift(study);
+    commitMsg = `Study ${newSlug}: create by ${m.email}`;
+  } else if (action === "delete") {
+    const idx = list.findIndex((s) => s.slug === slug);
+    if (idx < 0) return jsonResponse({ ok: false, error: "Study not found." }, 404);
+    list.splice(idx, 1);
+    commitMsg = `Study ${slug}: delete by ${m.email}`;
+  } else if (action === "move-stage") {
+    const study = list.find((s) => s.slug === slug);
+    if (!study) return jsonResponse({ ok: false, error: "Study not found." }, 404);
+    const newStage = String(body?.payload?.stage || "") as StudyStage;
+    if (!STUDY_STAGES.includes(newStage)) {
+      return jsonResponse({ ok: false, error: "Invalid stage." }, 400);
+    }
+    study.stage = newStage;
+    study.updatedAt = now;
+    commitMsg = `Study ${slug}: stage → ${newStage} by ${m.email}`;
+  } else {
+    // update
+    const study = list.find((s) => s.slug === slug);
+    if (!study) return jsonResponse({ ok: false, error: "Study not found." }, 404);
+    const p = body?.payload || {};
+    if (p.title !== undefined) study.title = String(p.title).slice(0, 300);
+    if (p.design !== undefined && STUDY_DESIGNS.includes(p.design as StudyDesign)) study.design = p.design as StudyDesign;
+    if (p.stage !== undefined && STUDY_STAGES.includes(p.stage as StudyStage)) study.stage = p.stage as StudyStage;
+    if (p.lead !== undefined) study.lead = {
+      name: String(p.lead?.name || "").slice(0, 120),
+      email: String(p.lead?.email || "").slice(0, 200),
+    };
+    if (p.description !== undefined) study.description = String(p.description).slice(0, 3000);
+    if (Array.isArray(p.sites)) study.sites = p.sites.map(String).slice(0, 50);
+    if (Array.isArray(p.sitesWanted)) study.sitesWanted = p.sitesWanted.map(String).slice(0, 50);
+    if (p.protocolUrl !== undefined) study.protocolUrl = p.protocolUrl ? String(p.protocolUrl).slice(0, 300) : undefined;
+    if (p.pmid !== undefined) study.pmid = p.pmid ? String(p.pmid).slice(0, 20) : undefined;
+    if (Array.isArray(p.milestones)) study.milestones = p.milestones.slice(0, 50);
+    study.updatedAt = now;
+    commitMsg = `Study ${slug}: update by ${m.email}`;
+  }
+
+  await putJsonFile(env, "studies.json",
+    JSON.stringify(list, null, 2) + "\n", sha, commitMsg);
+  return jsonResponse({ ok: true });
+}
+
+async function handleAdminStudiesConfirmInterest(req: Request, env: Env): Promise<Response> {
+  const m = await sessionMember(req, env);
+  if (!m) return jsonResponse({ ok: false }, 401);
+  if (!m.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+
+  const body = await safeJson<{
+    slug?: string;
+    interestedEmail?: string;
+    site?: string;
+    action?: "confirm" | "reject";
+  }>(req);
+  const slug = String(body?.slug || "").trim();
+  const interestedEmail = String(body?.interestedEmail || "").toLowerCase();
+  const site = String(body?.site || "").trim();
+  const action = body?.action === "reject" ? "reject" : "confirm";
+  if (!slug || !interestedEmail || !site) {
+    return jsonResponse({ ok: false, error: "Missing fields." }, 400);
+  }
+
+  const { list, sha } = await fetchStudies(env);
+  const study = list.find((s) => s.slug === slug);
+  if (!study) return jsonResponse({ ok: false, error: "Study not found." }, 404);
+
+  study.interested ??= [];
+  const idx = study.interested.findIndex((i) => i.email.toLowerCase() === interestedEmail && i.site === site);
+  if (idx < 0) return jsonResponse({ ok: false, error: "Interest not found." }, 404);
+  study.interested.splice(idx, 1);
+
+  if (action === "confirm") {
+    study.sites ??= [];
+    if (!study.sites.includes(site)) study.sites.push(site);
+    // Also remove from sitesWanted if it was being recruited.
+    study.sitesWanted = (study.sitesWanted || []).filter((s) => s !== site);
+  }
+  study.updatedAt = new Date().toISOString();
+
+  await putJsonFile(env, "studies.json",
+    JSON.stringify(list, null, 2) + "\n", sha,
+    `Study ${slug}: ${action} interest from ${interestedEmail} (${site}) by ${m.email}`);
+  return jsonResponse({ ok: true });
+}
+
+async function sendStudyInterestEmail(
+  env: Env,
+  study: Study,
+  name: string,
+  email: string,
+  site: string,
+  note: string,
+): Promise<void> {
+  const fromHeader = env.SENDER_NAME
+    ? `${env.SENDER_NAME} <${env.SENDER_EMAIL}>`
+    : env.SENDER_EMAIL;
+  const chairEmail = study.lead?.email || "";
+  if (!chairEmail) return;
+
+  const subject = `[AsPEN study] ${name} wants to join: ${study.title}`;
+  const text = [
+    `${name} (${email}) has expressed interest in joining the AsPEN study:`,
+    "",
+    `  ${study.title}`,
+    `  Stage: ${study.stage}`,
+    `  Proposed site: ${site}`,
+    "",
+    note ? `Note from ${name}:` : "",
+    note ? `  ${note}` : "",
+    "",
+    `Confirm or reject in the AsPEN admin:`,
+    `  ${env.SITE_BASE_URL.replace(/\/$/, "")}/members/admin`,
+    "",
+    "— AsPEN",
+  ].filter(Boolean).join("\n");
+  const html = `
+<!doctype html>
+<html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#0f172a;max-width:520px;margin:0 auto;padding:24px;">
+  <p><strong>${escapeHtml(name)}</strong> (${escapeHtml(email)}) wants to join an AsPEN study.</p>
+  <table style="border-collapse:collapse;font-size:14px;">
+    <tr><td style="color:#64748b;padding:4px 12px 4px 0;">Study</td><td><strong>${escapeHtml(study.title)}</strong></td></tr>
+    <tr><td style="color:#64748b;padding:4px 12px 4px 0;">Stage</td><td>${escapeHtml(study.stage)}</td></tr>
+    <tr><td style="color:#64748b;padding:4px 12px 4px 0;">Proposed site</td><td>${escapeHtml(site)}</td></tr>
+  </table>
+  ${note ? `<p style="margin-top:16px;"><em>${escapeHtml(note)}</em></p>` : ""}
+  <p style="margin:24px 0;">
+    <a href="${escapeAttr(env.SITE_BASE_URL.replace(/\/$/, "") + "/members/admin")}"
+       style="display:inline-block;background:#21443e;color:#fff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:8px;">
+      Open the AsPEN admin
+    </a>
+  </p>
+  <p style="font-size:12px;color:#64748b;">— AsPEN</p>
+</body></html>`;
+
+  const r = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: fromHeader,
+      to: chairEmail,
+      subject,
+      text,
+      html,
+    }),
+  });
+  if (!r.ok) {
+    const body = await r.text().catch(() => "");
+    throw new Error(`resend study-interest ${r.status} ${body}`);
+  }
 }
 
 // ── File delete + delete-requests ──────────────────────────────────────
@@ -1356,28 +1170,7 @@ async function fetchDeleteRequests(env: Env): Promise<{ list: DeleteRequest[]; s
   return { list, sha: data.sha };
 }
 
-async function fetchReading(env: Env): Promise<{ list: ReadingPick[]; sha: string }> {
-  const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/contents/reading.json?ref=${env.MEMBERS_BRANCH}`;
-  const r = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${env.GITHUB_PAT}`,
-      "User-Agent": "aspen-auth-worker",
-      Accept: "application/vnd.github+json",
-    },
-  });
-  if (!r.ok) {
-    if (r.status === 404) return { list: [], sha: "" };
-    throw new Error(`fetchReading ${r.status}`);
-  }
-  const data = await r.json() as { content: string; sha: string };
-  const text = utf8FromBase64(data.content.replace(/\s+/g, ""));
-  let list: ReadingPick[] = [];
-  try { list = JSON.parse(text); } catch { list = []; }
-  if (!Array.isArray(list)) list = [];
-  return { list, sha: data.sha };
-}
-
-// Generalised JSON-file PUT (used by reading.json now; members.json has its own).
+// Generalised JSON-file PUT (used by studies.json, etc.; members.json has its own).
 async function putJsonFile(
   env: Env,
   path: string,

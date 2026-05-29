@@ -2,25 +2,57 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PageHeader from "../../components/PageHeader.astro";
 import { WORKER_URL } from "../../data/site-config";
-import pubsRaw from "../../data/publications.json";
+import databasesRaw from "../../data/databases.json";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-type Pub = (typeof pubsRaw)[number];
-const pubsForPicker = (pubsRaw as Pub[])
-  .filter((p) => p.pmid)
-  .sort((a, b) => b.year - a.year)
-  .map((p) => ({ pmid: p.pmid!, label: `${p.year} · ${p.authors.split(",")[0].trim()} et al. — ${p.title.slice(0, 75)}${p.title.length > 75 ? "…" : ""}` }));
+// Site catalogue for the Studies admin tab (mirrors templates + studies page).
+const shortDbName = (full: string): string => {
+  const m = full.match(/\(([^)]+)\)$/);
+  return m ? m[1] : full;
+};
+const COUNTRY_ORDER = ["TW", "KR", "JP", "HK", "AU", "FI", "GB", "NL", "US"];
+type DbRow = typeof databasesRaw[number] & { hidden?: boolean; features?: string[] };
+const SITES_DB = (databasesRaw as DbRow[])
+  .filter((d) => !d.hidden && COUNTRY_ORDER.includes(d.code))
+  .map((d) => ({
+    id:      `${d.code}-${shortDbName(d.name).replace(/[^A-Za-z0-9]/g, "")}`,
+    country: d.country,
+    code:    d.code,
+    short:   shortDbName(d.name),
+  }))
+  .sort((a, b) => {
+    const ai = COUNTRY_ORDER.indexOf(a.code);
+    const bi = COUNTRY_ORDER.indexOf(b.code);
+    if (ai !== bi) return ai - bi;
+    return a.short.localeCompare(b.short);
+  });
+const SITES_LABEL_MAP: Record<string, { country: string; code: string; short: string }> =
+  Object.fromEntries(SITES_DB.map((d) => [d.id, d]));
+const SITES_BY_COUNTRY: Record<string, typeof SITES_DB> = SITES_DB.reduce((acc, d) => {
+  (acc[d.country] ??= []).push(d);
+  return acc;
+}, {} as Record<string, typeof SITES_DB>);
+
+const STAGES = [
+  { id: "concept",    label: "Concept" },
+  { id: "protocol",   label: "Protocol" },
+  { id: "site-irb",   label: "Site IRB" },
+  { id: "extraction", label: "Extraction" },
+  { id: "analysis",   label: "Analysis" },
+  { id: "drafting",   label: "Drafting" },
+  { id: "published",  label: "Published" },
+];
 ---
 
 <BaseLayout
   title="Admin — AsPEN members"
-  description="AsPEN office admin tools: review uploads, manage reading group, manage members."
+  description="AsPEN office admin tools: review uploads, manage active studies, manage members."
 >
   <PageHeader
     eyebrow="Members → Admin"
     title="Office admin"
-    description="Review uploads, curate the reading group, and manage members."
+    description="Review uploads, curate the active-studies tracker, and manage members."
   />
 
   <section class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10 space-y-6">
@@ -49,9 +81,9 @@ const pubsForPicker = (pubsRaw as Pub[])
                 class="flex-1 px-3 py-2 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
           Review queue <span data-uploads-count class="hidden ml-1 bg-brand-700 text-white text-[10px] rounded-full px-1.5 py-0.5 tabular-nums"></span>
         </button>
-        <button type="button" role="tab" data-tab="reading" aria-selected="false"
+        <button type="button" role="tab" data-tab="studies" aria-selected="false"
                 class="flex-1 px-3 py-2 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
-          Reading group
+          Studies <span data-studies-count class="hidden ml-1 bg-brand-700 text-white text-[10px] rounded-full px-1.5 py-0.5 tabular-nums"></span>
         </button>
         <button type="button" role="tab" data-tab="members" aria-selected="false"
                 class="flex-1 px-3 py-2 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
@@ -78,64 +110,110 @@ const pubsForPicker = (pubsRaw as Pub[])
         </div>
       </div>
 
-      <!-- ── Pane: Reading group ─────────────────────────────── -->
-      <div data-pane="reading" class="hidden space-y-6">
-        <!-- Orphan papers — PDFs in papers/ with no matching pick (= won't show on the magazine page) -->
-        <div data-orphans-wrap class="hidden">
-          <p class="text-xs uppercase tracking-widest text-rose-700 font-semibold mb-2">
-            Orphan PDFs · <span data-orphans-count>0</span>
-            <span class="ml-1 text-[10px] normal-case tracking-normal text-slate-500 font-normal">approved PDFs that don't have a matching reading-group pick yet — they're invisible to members until you add a pick.</span>
-          </p>
-          <div data-orphans class="space-y-2"></div>
-        </div>
-
-        <!-- Member-suggested papers -->
-        <div data-suggestions-wrap class="hidden">
-          <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">
-            Member suggestions · <span data-suggestions-count>0</span>
-          </p>
-          <div data-suggestions class="space-y-2"></div>
-        </div>
-
-        <details data-pick-details class="border border-slate-200 rounded-lg bg-white">
+      <!-- ── Pane: Studies (Active Studies Tracker) ──────────── -->
+      <div data-pane="studies" class="hidden space-y-6">
+        <details data-study-details class="border border-slate-200 rounded-lg bg-white">
           <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-50/40 rounded-lg">
-            ＋ Add a reading-group pick
+            ＋ New study
           </summary>
-          <form data-pick-form class="p-4 space-y-3 border-t border-slate-100">
+          <form data-study-form class="p-4 space-y-3 border-t border-slate-100">
+            <input type="hidden" name="editingSlug" />
             <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Paper</span>
-              <input type="text" data-paper-input
-                     placeholder="Paste a PubMed URL, DOI, PMID, or type the title to search…"
-                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-              <input type="hidden" name="pmid" required />
-              <div data-paper-state class="mt-2 text-xs"></div>
-            </label>
-            <details class="text-xs">
-              <summary class="cursor-pointer text-brand-700 font-semibold hover:underline select-none">Or browse {pubsForPicker.length} AsPEN publications…</summary>
-              <select data-pub-browser class="mt-2 w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
-                <option value="">Click to pick one from publications.json</option>
-                {pubsForPicker.map((p) => <option value={p.pmid}>{p.label}</option>)}
-              </select>
-            </details>
-            <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Headline</span>
-              <input type="text" name="headline" required maxlength="120" placeholder="A one-line take, e.g. 'Where AsPEN began'"
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Title *</span>
+              <input type="text" name="title" required maxlength="300"
+                     placeholder="e.g. SGLT2 inhibitors vs DPP-4 and MACE — an AsPEN multi-country ACNU study"
                      class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
+            <div class="grid sm:grid-cols-3 gap-3">
+              <label class="block">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Design</span>
+                <select name="design" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                  <option value="ACNU">ACNU</option>
+                  <option value="SCCS">SCCS</option>
+                  <option value="CCO">Case-crossover</option>
+                  <option value="Other" selected>Other</option>
+                </select>
+              </label>
+              <label class="block">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Stage</span>
+                <select name="stage" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                  {STAGES.map((s) => (<option value={s.id}>{s.label}</option>))}
+                </select>
+              </label>
+              <label class="block">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Slug (auto)</span>
+                <input type="text" name="slug" maxlength="80" placeholder="e.g. sglt2-mace-acnu-2026"
+                       class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              </label>
+            </div>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <label class="block">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead — name</span>
+                <input type="text" name="leadName" maxlength="120" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              </label>
+              <label class="block">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead — email</span>
+                <input type="email" name="leadEmail" maxlength="200" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              </label>
+            </div>
             <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Commentary</span>
-              <textarea name="commentary" rows="4" maxlength="3000"
-                        placeholder="Why this paper is worth reading. Plain text; line breaks preserved."
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Description</span>
+              <textarea name="description" rows="3" maxlength="3000"
+                        placeholder="A few sentences for members. Plain text; line breaks preserved."
                         class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
             </label>
-            <button type="submit" class="inline-flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2 rounded text-sm transition disabled:opacity-60">
-              Pick this paper
-            </button>
-            <p data-pick-msg class="hidden text-sm bg-slate-50 border border-slate-200 rounded p-3" role="status" aria-live="polite"></p>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <label class="block">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Sites confirmed (Ctrl/Cmd-click for multi)</span>
+                <select name="sites" multiple size="6" class="mt-1 w-full border border-slate-300 rounded px-2 py-1 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                  {Object.entries(SITES_BY_COUNTRY).map(([country, dbs]) => (
+                    <optgroup label={country}>
+                      {dbs.map((d) => (<option value={d.id}>{d.short}</option>))}
+                    </optgroup>
+                  ))}
+                </select>
+              </label>
+              <label class="block">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Sites wanted (recruiting)</span>
+                <select name="sitesWanted" multiple size="6" class="mt-1 w-full border border-slate-300 rounded px-2 py-1 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                  {Object.entries(SITES_BY_COUNTRY).map(([country, dbs]) => (
+                    <optgroup label={country}>
+                      {dbs.map((d) => (<option value={d.id}>{d.short}</option>))}
+                    </optgroup>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <label class="block">
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Milestones (one per line; YYYY-MM-DD: note)</span>
+              <textarea name="milestones" rows="3" placeholder="2026-03-15: Protocol v0.3 circulated for site comment&#10;2026-05-01: First site IRB submission (TW)"
+                        class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 font-mono"></textarea>
+            </label>
+            <div class="grid sm:grid-cols-2 gap-3">
+              <label class="block">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Protocol PDF path (optional)</span>
+                <input type="text" name="protocolUrl" maxlength="300" placeholder="papers/sglt2-mace-protocol-v0.3.pdf"
+                       class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 font-mono" />
+              </label>
+              <label class="block">
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Published PMID (optional)</span>
+                <input type="text" data-paper-input placeholder="Paste PMID, DOI, PubMed URL or title…"
+                       class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+                <input type="hidden" name="pmid" />
+                <div data-paper-state class="mt-2 text-xs"></div>
+              </label>
+            </div>
+            <div class="flex flex-wrap gap-2 items-center">
+              <button type="submit" class="inline-flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2 rounded text-sm transition disabled:opacity-60">
+                <span data-submit-label>Create study</span>
+              </button>
+              <button type="button" data-study-cancel-edit class="hidden text-xs text-slate-500 hover:text-rose-600 hover:underline font-semibold">Cancel edit</button>
+              <p data-study-msg class="basis-full text-xs hidden bg-slate-50 border border-slate-200 rounded p-2" role="status" aria-live="polite"></p>
+            </div>
           </form>
         </details>
 
-        <div data-reading-list class="space-y-3"></div>
+        <div data-study-list class="space-y-3"></div>
       </div>
 
       <!-- ── Pane: Members ───────────────────────────────────── -->
@@ -207,7 +285,7 @@ const pubsForPicker = (pubsRaw as Pub[])
             </label>
             <label class="flex items-center gap-2 sm:col-span-2 text-xs text-slate-700">
               <input type="checkbox" name="admin" class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
-              Admin (can review uploads, manage members, curate reading group)
+              Admin (can review uploads, manage members, curate active studies)
             </label>
             <div class="sm:col-span-2">
               <button type="submit" class="inline-flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2 rounded text-sm transition disabled:opacity-60">
@@ -228,7 +306,7 @@ const pubsForPicker = (pubsRaw as Pub[])
     </div>
   </section>
 
-  <script is:inline define:vars={{ WORKER_URL, BASE: base, pubsForPicker }}>
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES_LABEL_MAP, STAGES }}>
     (() => {
       const setState = (name) => {
         document.querySelectorAll("[data-state]").forEach((el) => {
@@ -266,24 +344,12 @@ const pubsForPicker = (pubsRaw as Pub[])
             const meta = it.meta || {};
             const files = it.files || [];
             const subfolderLabel = meta.subfolder ? ` / ${esc(meta.subfolder)}` : "";
-            const pmidLabel = meta.category === "reading" && meta.pmid
-              ? ` · PMID ${esc(meta.pmid)}`
-              : "";
-            const sugLabel = meta.category === "reading" && meta.suggestionId
-              ? ` · suggestion`
-              : "";
-            const sugTitleLine = meta.category === "reading" && meta.suggestionId && meta.suggestionTitle
-              ? `<p class="mt-1 text-xs text-slate-600 italic">For suggestion: "${esc(meta.suggestionTitle)}"</p>`
-              : "";
-            const renamePlaceholder = (meta.category === "reading" && meta.suggestionId)
-              ? "Destination PMID (digits only)"
-              : "Optional rename (single file only)";
+            const renamePlaceholder = "Optional rename (single file only)";
             return `
               <article class="border border-slate-200 rounded-2xl bg-white shadow-sm p-5 space-y-3">
                 <header class="flex items-start justify-between gap-3">
                   <div>
-                    <p class="text-[10px] uppercase tracking-widest text-brand-700 font-bold">${esc(meta.category || "?")}${subfolderLabel}${pmidLabel}${sugLabel}</p>
-                    ${sugTitleLine}
+                    <p class="text-[10px] uppercase tracking-widest text-brand-700 font-bold">${esc(meta.category || "?")}${subfolderLabel}</p>
                     <p class="mt-1 text-sm font-semibold text-slate-900">${esc(meta.uploaderName || meta.uploader || "Unknown uploader")}</p>
                     <p class="text-xs text-slate-500">${esc(meta.uploader || "")} · ${esc(fmtDate(meta.uploadedAt))}</p>
                   </div>
@@ -424,210 +490,227 @@ const pubsForPicker = (pubsRaw as Pub[])
         }
       });
 
-      // ── Reading group ──
-      const readingRoot = document.querySelector("[data-reading-list]");
-      const pubLabel = (pmid) => (pubsForPicker.find((p) => p.pmid === pmid) || {}).label || `PMID ${pmid}`;
+      // ── Studies (Active Studies Tracker) ─────────────────
+      const studyForm    = document.querySelector("[data-study-form]");
+      const studyDetails = document.querySelector("[data-study-details]");
+      const studyMsg     = document.querySelector("[data-study-msg]");
+      const studyListEl  = document.querySelector("[data-study-list]");
+      const submitLabel  = studyForm?.querySelector("[data-submit-label]");
+      const cancelEdit   = document.querySelector("[data-study-cancel-edit]");
 
-      const renderReading = (picks) => {
-        if (picks.length === 0) {
-          readingRoot.innerHTML = '<p class="text-sm text-slate-500 italic text-center py-6 border border-slate-200 rounded-lg bg-white">No picks yet.</p>';
-        } else {
-          readingRoot.innerHTML = picks.map((p) => `
-            <article class="border border-slate-200 rounded-lg bg-white p-4 flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <p class="font-semibold text-slate-900 text-sm">${esc(p.headline)}</p>
-                <p class="text-xs text-slate-500 mt-0.5 truncate">${esc(pubLabel(p.pmid))}</p>
-                <p class="text-[10px] text-slate-400 mt-0.5">Picked ${esc(fmtDate(p.pickedAt))} by ${esc(p.pickedBy || "")}</p>
-              </div>
-              <button type="button" data-remove-pmid="${esc(p.pmid)}" class="shrink-0 text-xs font-semibold text-slate-500 hover:text-rose-600 hover:underline">Remove</button>
-            </article>
-          `).join("");
-        }
+      const setStudyMsg = (msg, isError = false) => {
+        if (!studyMsg) return;
+        studyMsg.textContent = msg;
+        studyMsg.classList.remove("hidden");
+        studyMsg.classList.toggle("text-rose-700", isError);
+        studyMsg.classList.toggle("text-brand-700", !isError);
       };
 
-      const loadReading = async () => {
-        try {
-          const r = await fetch(`${WORKER_URL}/api/reading`, { credentials: "include" });
-          if (!r.ok) return;
-          const data = await r.json();
-          renderReading(data.picks || []);
-        } catch {}
+      const siteLabel = (id) => {
+        const d = SITES_LABEL_MAP[id];
+        return d ? d.short : id;
       };
 
-      readingRoot.addEventListener("click", async (e) => {
-        const t = e.target;
-        if (!(t instanceof HTMLElement) || !t.dataset.removePmid) return;
-        if (!confirm("Remove this pick from the reading group?")) return;
-        const r = await fetch(`${WORKER_URL}/api/admin/reading`, {
-          method: "POST", credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "remove", pmid: t.dataset.removePmid }),
+      const stageLabel = (id) => (STAGES.find((s) => s.id === id) || { label: id }).label;
+
+      const parseMilestones = (text) => {
+        return (text || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean).map((l) => {
+          const m = l.match(/^(\d{4}-\d{2}-\d{2})\s*[:|]\s*(.+)$/);
+          if (m) return { date: m[1], note: m[2] };
+          return { date: "", note: l };
         });
-        if (r.ok) loadReading();
-      });
-
-      // ── Orphan papers sub-section ──
-      const orphansWrap  = document.querySelector("[data-orphans-wrap]");
-      const orphansRoot  = document.querySelector("[data-orphans]");
-      const orphansCount = document.querySelector("[data-orphans-count]");
-
-      const renderOrphans = (items) => {
-        orphansCount.textContent = String(items.length);
-        if (items.length === 0) {
-          orphansWrap.classList.add("hidden");
-          return;
-        }
-        orphansWrap.classList.remove("hidden");
-        orphansRoot.innerHTML = items.map((o) => `
-          <article class="border border-rose-200 rounded-lg p-3 bg-rose-50/30">
-            <p class="text-xs text-slate-500">
-              <a href="https://pubmed.ncbi.nlm.nih.gov/${esc(o.pmid)}/" target="_blank" rel="noopener" class="text-brand-700 hover:underline font-semibold">PMID ${esc(o.pmid)}</a>
-              · <span class="font-mono text-[10px]">${esc(o.path)}</span>
-            </p>
-            ${o.suggestedHeadline ? `<p class="text-sm font-semibold text-slate-900 mt-1">${esc(o.suggestedHeadline)}</p>` : ""}
-            ${o.suggestedCommentary ? `<p class="text-sm text-slate-700 leading-relaxed mt-1 whitespace-pre-line">${esc(o.suggestedCommentary)}</p>` : ""}
-            <div class="mt-2">
-              <button type="button" data-orphan-pmid="${esc(o.pmid)}" data-headline="${esc(o.suggestedHeadline || "")}" data-commentary="${esc(o.suggestedCommentary || "")}"
-                      class="text-xs font-semibold bg-brand-700 hover:bg-brand-800 text-white px-3 py-1.5 rounded transition">
-                Create matching pick →
-              </button>
-            </div>
-          </article>
-        `).join("");
       };
 
-      const loadOrphans = async () => {
-        try {
-          const r = await fetch(`${WORKER_URL}/api/admin/orphan-papers`, { credentials: "include" });
-          if (!r.ok) return;
-          const data = await r.json();
-          renderOrphans(data.orphans || []);
-        } catch {}
+      const milestonesToText = (arr) => {
+        return (arr || []).map((m) => (m.date ? m.date + ": " : "") + m.note).join("\n");
       };
 
-      // Click "Create matching pick" — pre-fills the Add-pick form (same
-      // flow as promoting a suggestion) so admin just confirms.
-      orphansRoot?.addEventListener("click", (e) => {
-        const t = e.target;
-        if (!(t instanceof HTMLElement)) return;
-        const pmid = t.dataset.orphanPmid;
-        if (!pmid) return;
-        const form = document.querySelector("[data-pick-form]");
-        const details = document.querySelector("[data-pick-details]");
-        if (form) {
-          const paperEl       = form.querySelector('[data-paper-input]');
-          const pmidEl        = form.querySelector('input[name="pmid"]');
-          const headlineInput = form.querySelector('input[name="headline"]');
-          const commentaryArea= form.querySelector('textarea[name="commentary"]');
-          if (paperEl) { paperEl.value = pmid; paperEl.dispatchEvent(new Event("input", { bubbles: true })); }
-          else if (pmidEl) pmidEl.value = pmid;
-          if (headlineInput) headlineInput.value = t.dataset.headline || "";
-          if (commentaryArea) commentaryArea.value = t.dataset.commentary || "";
-          if (headlineInput && !headlineInput.value) headlineInput.focus();
-        }
-        if (details) details.open = true;
-        details?.scrollIntoView({ behavior: "smooth", block: "start" });
+      const setMultiSelect = (selectEl, values) => {
+        if (!selectEl) return;
+        const set = new Set(values || []);
+        for (const opt of selectEl.options) opt.selected = set.has(opt.value);
+      };
+
+      const getMultiSelect = (selectEl) => {
+        if (!selectEl) return [];
+        return Array.from(selectEl.selectedOptions).map((o) => o.value);
+      };
+
+      const resetForm = () => {
+        if (!studyForm) return;
+        studyForm.reset();
+        studyForm.querySelector("[name='editingSlug']").value = "";
+        studyForm.querySelector("[name='pmid']").value = "";
+        const ps = studyForm.querySelector("[data-paper-state]");
+        if (ps) ps.innerHTML = "";
+        if (submitLabel) submitLabel.textContent = "Create study";
+        cancelEdit?.classList.add("hidden");
+        setStudyMsg("");
+        studyMsg?.classList.add("hidden");
+      };
+
+      cancelEdit?.addEventListener("click", () => {
+        resetForm();
+        if (studyDetails) studyDetails.open = false;
       });
 
-      // Suggestions sub-section
-      const suggestionsWrap = document.querySelector("[data-suggestions-wrap]");
-      const suggestionsRoot = document.querySelector("[data-suggestions]");
-      const suggestionsCount = document.querySelector("[data-suggestions-count]");
+      let studies = [];
 
-      const renderSuggestions = (items) => {
-        const open = items.filter((s) => s.status === "open");
-        suggestionsCount.textContent = open.length;
-        if (open.length === 0) {
-          suggestionsWrap.classList.add("hidden");
+      const renderStudies = () => {
+        const badge = document.querySelector("[data-studies-count]");
+        if (badge) {
+          if (studies.length > 0) { badge.textContent = String(studies.length); badge.classList.remove("hidden"); }
+          else badge.classList.add("hidden");
+        }
+        if (studies.length === 0) {
+          studyListEl.innerHTML = '<p class="text-sm text-slate-500 italic text-center py-6 border border-slate-200 rounded-lg bg-white">No studies yet. Use "+ New study" above to create one.</p>';
           return;
         }
-        suggestionsWrap.classList.remove("hidden");
-        suggestionsRoot.innerHTML = open.map((s) => {
-          const sid = s.id || s.pmid || "";
-          const titleLine = s.title
-            ? `<p class="text-sm font-semibold text-slate-900">${esc(s.title)}</p>`
-            : "";
-          const pmidLink = s.pmid
-            ? `<a href="https://pubmed.ncbi.nlm.nih.gov/${esc(s.pmid)}/" target="_blank" rel="noopener" class="text-brand-700 hover:underline">PMID ${esc(s.pmid)}</a> · `
-            : "";
-          const searchLink = !s.pmid && s.title
-            ? `<a href="https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(s.title)}" target="_blank" rel="noopener" class="text-brand-700 hover:underline">Look up on PubMed</a> · `
-            : "";
+        studyListEl.innerHTML = studies.map((s) => {
+          const confirmed = (s.sites || []).map((id) => `<span class="text-[10px] bg-brand-50 text-brand-700 border border-brand-100 px-1.5 py-0.5 rounded">${esc(siteLabel(id))}</span>`).join(" ");
+          const wanted    = (s.sitesWanted || []).map((id) => `<span class="text-[10px] bg-slate-50 text-slate-500 border border-slate-200 px-1.5 py-0.5 rounded italic">want ${esc(siteLabel(id))}</span>`).join(" ");
+          const interested = (s.interested || []).map((i) => `
+            <li class="text-xs flex items-start gap-2 py-1.5 border-b border-slate-100 last:border-b-0">
+              <div class="flex-1 min-w-0">
+                <p class="font-semibold text-slate-800">${esc(i.name)} <span class="text-slate-400 font-normal">· ${esc(i.email)}</span></p>
+                <p class="text-slate-600">Site: <strong>${esc(siteLabel(i.site))}</strong></p>
+                ${i.note ? `<p class="text-slate-500 italic mt-0.5">${esc(i.note)}</p>` : ""}
+              </div>
+              <div class="flex items-center gap-1 shrink-0">
+                <button type="button" data-interest-confirm data-slug="${esc(s.slug)}" data-email="${esc(i.email)}" data-site="${esc(i.site)}"
+                        class="text-[10px] font-semibold bg-brand-700 hover:bg-brand-800 text-white px-2 py-1 rounded">Confirm</button>
+                <button type="button" data-interest-reject data-slug="${esc(s.slug)}" data-email="${esc(i.email)}" data-site="${esc(i.site)}"
+                        class="text-[10px] font-semibold text-slate-500 hover:text-rose-600 hover:underline">Reject</button>
+              </div>
+            </li>
+          `).join("");
+          const stageOptions = STAGES.map((st) => `<option value="${st.id}" ${st.id === s.stage ? "selected" : ""}>${esc(st.label)}</option>`).join("");
           return `
-            <article class="border border-slate-200 rounded-lg p-3 bg-white">
-              ${titleLine}
-              <p class="text-xs text-slate-500">${pmidLink}${searchLink}suggested by ${esc(s.suggestedByName || s.suggestedBy)} · ${esc(fmtDate(s.suggestedAt))}</p>
-              <p class="text-sm text-slate-700 leading-relaxed mt-1 whitespace-pre-line">${esc(s.reason)}</p>
-              <div class="mt-2 flex gap-2">
-                <button type="button" data-promote-sid="${esc(sid)}" data-promote-pmid="${esc(s.pmid || "")}" data-title="${esc(s.title || "")}" data-reason="${esc(s.reason)}" class="text-xs font-semibold bg-brand-700 hover:bg-brand-800 text-white px-3 py-1.5 rounded transition">Use as a pick →</button>
-                <button type="button" data-dismiss-sid="${esc(sid)}" class="text-xs font-semibold text-slate-500 hover:text-rose-600 hover:underline">Dismiss</button>
+            <article class="border border-slate-200 rounded-lg bg-white" data-study-row data-slug="${esc(s.slug)}">
+              <header class="px-4 py-3 flex items-start justify-between gap-3 border-b border-slate-100">
+                <div class="min-w-0">
+                  <p class="font-semibold text-slate-900 text-sm leading-snug">${esc(s.title)}</p>
+                  <p class="text-xs text-slate-500 mt-0.5">${esc(s.design)} · Lead: ${esc(s.lead?.name || "—")} · ${(s.sites||[]).length} confirmed · ${(s.interested||[]).length} interested</p>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <select data-stage-select data-slug="${esc(s.slug)}" class="text-xs border border-slate-300 rounded px-2 py-1 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                    ${stageOptions}
+                  </select>
+                </div>
+              </header>
+              <div class="px-4 py-3 space-y-2">
+                <div class="flex flex-wrap gap-1">${confirmed}${confirmed && wanted ? " " : ""}${wanted}</div>
+                ${s.description ? `<p class="text-xs text-slate-700 whitespace-pre-line">${esc(s.description)}</p>` : ""}
+              </div>
+              <div class="px-4 py-2 border-t border-slate-100 flex items-center gap-3">
+                <button type="button" data-edit-slug="${esc(s.slug)}" class="text-xs font-semibold text-brand-700 hover:underline">Edit</button>
+                <button type="button" data-delete-slug="${esc(s.slug)}" class="text-xs font-semibold text-slate-500 hover:text-rose-600 hover:underline">Delete</button>
+                ${(s.interested||[]).length > 0
+                  ? `<details class="ml-auto"><summary class="cursor-pointer text-xs font-semibold text-amber-700 hover:underline">Manage interest (${(s.interested||[]).length})</summary>
+                       <ul class="mt-2 list-none pl-0">${interested}</ul></details>`
+                  : ""}
               </div>
             </article>
           `;
         }).join("");
       };
 
-      const loadSuggestions = async () => {
+      const loadStudies = async () => {
         try {
-          const r = await fetch(`${WORKER_URL}/api/reading/suggestions`, { credentials: "include" });
+          const r = await fetch(`${WORKER_URL}/api/studies`, { credentials: "include" });
           if (!r.ok) return;
           const data = await r.json();
-          renderSuggestions(data.suggestions || []);
+          studies = data.studies || [];
+          renderStudies();
         } catch {}
       };
 
-      suggestionsRoot?.addEventListener("click", async (e) => {
+      // Click-delegated handlers on the study list
+      studyListEl?.addEventListener("click", async (e) => {
         const t = e.target;
         if (!(t instanceof HTMLElement)) return;
-        if (t.dataset.dismissSid) {
-          if (!confirm("Dismiss this suggestion?")) return;
-          await fetch(`${WORKER_URL}/api/admin/reading/promote-suggestion`, {
+
+        if (t.dataset.editSlug) {
+          const s = studies.find((x) => x.slug === t.dataset.editSlug);
+          if (!s) return;
+          studyForm.querySelector("[name='editingSlug']").value = s.slug;
+          studyForm.querySelector("[name='title']").value = s.title || "";
+          studyForm.querySelector("[name='design']").value = s.design || "Other";
+          studyForm.querySelector("[name='stage']").value = s.stage || "concept";
+          studyForm.querySelector("[name='slug']").value = s.slug || "";
+          studyForm.querySelector("[name='leadName']").value = s.lead?.name || "";
+          studyForm.querySelector("[name='leadEmail']").value = s.lead?.email || "";
+          studyForm.querySelector("[name='description']").value = s.description || "";
+          setMultiSelect(studyForm.querySelector("[name='sites']"), s.sites);
+          setMultiSelect(studyForm.querySelector("[name='sitesWanted']"), s.sitesWanted);
+          studyForm.querySelector("[name='milestones']").value = milestonesToText(s.milestones);
+          studyForm.querySelector("[name='protocolUrl']").value = s.protocolUrl || "";
+          studyForm.querySelector("[name='pmid']").value = s.pmid || "";
+          const paperEl = studyForm.querySelector("[data-paper-input]");
+          if (paperEl) paperEl.value = s.pmid || "";
+          if (submitLabel) submitLabel.textContent = "Save changes";
+          cancelEdit?.classList.remove("hidden");
+          if (studyDetails) studyDetails.open = true;
+          studyDetails?.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+
+        if (t.dataset.deleteSlug) {
+          if (!confirm("Delete this study? This cannot be undone.")) return;
+          const r = await fetch(`${WORKER_URL}/api/admin/studies`, {
             method: "POST", credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: t.dataset.dismissSid, action: "dismiss" }),
+            body: JSON.stringify({ action: "delete", slug: t.dataset.deleteSlug }),
           });
-          loadSuggestions();
-        } else if (t.dataset.promoteSid !== undefined) {
-          // Pre-fill the pick form, scroll to it, open it
-          const form = document.querySelector("[data-pick-form]");
-          const details = document.querySelector("[data-pick-details]");
-          if (form) {
-            const paperEl       = form.querySelector('[data-paper-input]');
-            const headlineInput = form.querySelector('input[name="headline"]');
-            const commentaryArea = form.querySelector('textarea[name="commentary"]');
-            // Pre-fill paper field with PMID if suggestion had one; otherwise
-            // pre-fill with the suggestion's title so PubMed lookup fires.
-            if (paperEl) {
-              paperEl.value = t.dataset.promotePmid || t.dataset.title || "";
-              paperEl.dispatchEvent(new Event("input", { bubbles: true }));
-            }
-            if (headlineInput && t.dataset.title) headlineInput.value = t.dataset.title;
-            if (commentaryArea && t.dataset.reason) commentaryArea.value = t.dataset.reason;
-            if (paperEl && !paperEl.value) paperEl.focus();
-            else if (headlineInput) headlineInput.focus();
-            form.dataset.promotingSid = t.dataset.promoteSid;
-          }
-          if (details) details.open = true;
-          details?.scrollIntoView({ behavior: "smooth", block: "start" });
+          if (r.ok) loadStudies();
+          else alert("Couldn't delete.");
+          return;
+        }
+
+        if (t.hasAttribute("data-interest-confirm") || t.hasAttribute("data-interest-reject")) {
+          const action = t.hasAttribute("data-interest-confirm") ? "confirm" : "reject";
+          const r = await fetch(`${WORKER_URL}/api/admin/studies/confirm-interest`, {
+            method: "POST", credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              slug: t.dataset.slug,
+              interestedEmail: t.dataset.email,
+              site: t.dataset.site,
+              action,
+            }),
+          });
+          if (r.ok) loadStudies();
+          else alert("Couldn't update interest.");
         }
       });
 
-      const pickForm = document.querySelector("[data-pick-form]");
+      studyListEl?.addEventListener("change", async (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLSelectElement) || !t.dataset.stageSelect) return;
+        const r = await fetch(`${WORKER_URL}/api/admin/studies`, {
+          method: "POST", credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "move-stage",
+            slug: t.dataset.slug,
+            payload: { stage: t.value },
+          }),
+        });
+        if (r.ok) loadStudies();
+        else { alert("Couldn't update stage."); loadStudies(); }
+      });
 
-      // ── Smart Paper input ──────────────────────────────
-      // Accept anything — PMID, DOI, PubMed URL, or title — and resolve
-      // to a canonical PMID + display title/authors confirmation.
-      const paperInput  = pickForm?.querySelector("[data-paper-input]");
-      const pmidHidden  = pickForm?.querySelector('input[name="pmid"]');
-      const paperState  = pickForm?.querySelector("[data-paper-state]");
+      // ── Smart Paper input (for optional Published PMID) ──
+      // Same helpers as before, repointed to the studies form.
+      const paperInput  = studyForm?.querySelector("[data-paper-input]");
+      const pmidHidden  = studyForm?.querySelector('input[name="pmid"]');
+      const paperState  = studyForm?.querySelector("[data-paper-state]");
 
       const setPaperState = (html, cls = "text-slate-500") => {
         if (!paperState) return;
         paperState.className = "mt-2 text-xs " + cls;
         paperState.innerHTML = html;
       };
-
-      // Show a paper as the "selected" state
       const showSelectedPaper = (pmid, title, authors, journal, year) => {
         if (pmidHidden) pmidHidden.value = pmid;
         setPaperState(
@@ -640,7 +723,6 @@ const pubsForPicker = (pubsRaw as Pub[])
           "mt-2 text-xs"
         );
       };
-
       const fetchSummary = async (pmid) => {
         try {
           const r = await fetch(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${pmid}&retmode=json`);
@@ -657,7 +739,6 @@ const pubsForPicker = (pubsRaw as Pub[])
           };
         } catch { return null; }
       };
-
       const searchByTerm = async (term) => {
         const url = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(term)}&retmode=json&retmax=5`;
         const r = await fetch(url);
@@ -665,25 +746,16 @@ const pubsForPicker = (pubsRaw as Pub[])
         const d = await r.json();
         return d?.esearchresult?.idlist || [];
       };
-
-      // Pure helper — extract a PMID from various input shapes.
       const parsePaperInput = (raw) => {
         const s = (raw || "").trim();
         if (!s) return { kind: "empty" };
-        // PubMed URL: pubmed.ncbi.nlm.nih.gov/123456
         const urlM = s.match(/pubmed\.ncbi\.nlm\.nih\.gov\/(\d{6,9})/i);
         if (urlM) return { kind: "pmid", pmid: urlM[1] };
-        // PMC URL — only use if it's of the form /articles/PMC\d+ — but we
-        // need PMID, so fall through to title search if we see a PMCID
-        // Bare PMID
         if (/^\d{6,9}$/.test(s)) return { kind: "pmid", pmid: s };
-        // DOI
         const doiM = s.match(/10\.\d{4,9}\/\S+/);
         if (doiM) return { kind: "doi", doi: doiM[0] };
-        // Anything else — treat as a title to search
         return { kind: "title", query: s };
       };
-
       const resolvePaper = async (raw) => {
         const parsed = parsePaperInput(raw);
         if (parsed.kind === "empty") {
@@ -712,7 +784,6 @@ const pubsForPicker = (pubsRaw as Pub[])
           if (meta) {
             showSelectedPaper(pmid, meta.title, meta.authors, meta.journal, meta.year);
           } else {
-            // Couldn't get metadata but PMID is good
             if (pmidHidden) pmidHidden.value = pmid;
             setPaperState(`PMID ${pmid} · selected (couldn't fetch title from PubMed)`, "mt-2 text-xs text-brand-700");
           }
@@ -721,74 +792,51 @@ const pubsForPicker = (pubsRaw as Pub[])
           setPaperState("PubMed lookup failed (network?). Try again or paste a PMID directly.", "mt-2 text-xs text-rose-700");
         }
       };
-
-      // Debounced lookup as the chair types/pastes
       let resolveTimer = null;
       paperInput?.addEventListener("input", () => {
         if (resolveTimer) clearTimeout(resolveTimer);
         resolveTimer = setTimeout(() => resolvePaper(paperInput.value), 400);
       });
 
-      // Browse-publications helper still works — picking fills the input
-      // with the selected PMID and triggers resolution.
-      const pubBrowser = pickForm?.querySelector("[data-pub-browser]");
-      pubBrowser?.addEventListener("change", (e) => {
-        const target = e.target;
-        if (!(target instanceof HTMLSelectElement)) return;
-        const pmid = target.value;
-        if (!pmid) return;
-        if (paperInput) paperInput.value = pmid;
-        resolvePaper(pmid);
-        target.value = "";
-      });
-
-      const pickMsg = pickForm?.querySelector("[data-pick-msg]");
-      const setPickMsg = (msg, isError = false) => {
-        if (!pickMsg) return;
-        pickMsg.textContent = msg;
-        pickMsg.classList.remove("hidden");
-        pickMsg.classList.toggle("text-rose-700", isError);
-      };
-      pickForm?.addEventListener("submit", async (e) => {
+      // ── Create / update study ──
+      studyForm?.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const data = new FormData(pickForm);
-        const body = {
-          action: "add",
-          pmid: String(data.get("pmid") || ""),
-          headline: String(data.get("headline") || ""),
-          commentary: String(data.get("commentary") || ""),
+        const data = new FormData(studyForm);
+        const editingSlug = String(data.get("editingSlug") || "").trim();
+        const payload = {
+          title: String(data.get("title") || ""),
+          design: String(data.get("design") || "Other"),
+          stage: String(data.get("stage") || "concept"),
+          lead: {
+            name:  String(data.get("leadName") || ""),
+            email: String(data.get("leadEmail") || ""),
+          },
+          description: String(data.get("description") || ""),
+          sites:       getMultiSelect(studyForm.querySelector("[name='sites']")),
+          sitesWanted: getMultiSelect(studyForm.querySelector("[name='sitesWanted']")),
+          milestones:  parseMilestones(String(data.get("milestones") || "")),
+          protocolUrl: String(data.get("protocolUrl") || "").trim() || undefined,
+          pmid:        String(data.get("pmid") || "").trim() || undefined,
         };
-        const btn = pickForm.querySelector("button[type='submit']");
+        const body = editingSlug
+          ? { action: "update", slug: editingSlug, payload }
+          : { action: "create", slug: String(data.get("slug") || "").trim(), payload };
+        const btn = studyForm.querySelector("button[type='submit']");
         btn.disabled = true;
-        setPickMsg("Saving…");
-        const r = await fetch(`${WORKER_URL}/api/admin/reading`, {
+        setStudyMsg("Saving…");
+        const r = await fetch(`${WORKER_URL}/api/admin/studies`, {
           method: "POST", credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
         const d = await r.json().catch(() => ({}));
         if (r.ok && d.ok) {
-          setPickMsg("Added.");
-          // If this pick was promoted from a suggestion, mark the suggestion
-          // as promoted and record the resolved pmid so attached PDFs route
-          // to the right destination.
-          const promotingSid = pickForm.dataset.promotingSid;
-          if (promotingSid) {
-            await fetch(`${WORKER_URL}/api/admin/reading/promote-suggestion`, {
-              method: "POST", credentials: "include",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id: promotingSid, action: "promote", resolvedPmid: body.pmid }),
-            });
-            delete pickForm.dataset.promotingSid;
-            loadSuggestions();
-          }
-          pickForm.reset();
-          if (paperInput) paperInput.value = "";
-          if (paperState) paperState.innerHTML = "";
-          loadReading();
-          loadOrphans();
+          setStudyMsg(editingSlug ? "Updated." : "Created.");
+          resetForm();
+          if (studyDetails) studyDetails.open = false;
+          loadStudies();
         } else {
-          setPickMsg(d.error || "Failed.", true);
+          setStudyMsg(d.error || "Failed.", true);
         }
         btn.disabled = false;
       });
@@ -914,9 +962,7 @@ const pubsForPicker = (pubsRaw as Pub[])
           setState("ready");
           loadUploads();
           loadDeleteRequests();
-          loadReading();
-          loadOrphans();
-          loadSuggestions();
+          loadStudies();
           loadMembers();
         } catch { setState("signed-out"); }
       })();
