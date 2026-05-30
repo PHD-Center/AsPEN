@@ -1979,7 +1979,12 @@ function corsHeaders(origin: string, env: Env): Record<string, string> {
   return {
     "Access-Control-Allow-Origin": allow,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    // Authorization must be listed because the site's Bearer-token
+    // fallback (for browsers that drop the SameSite=None cookie)
+    // sends `Authorization: Bearer <jwt>`. Browsers treat that as a
+    // non-simple header and run a preflight; without this allow-list
+    // the preflight fails and the actual request never reaches us.
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Credentials": "true",
     Vary: "Origin",
   };
