@@ -12,4 +12,9 @@
 // Set to empty string while undeployed — the /members/* pages will
 // render an "auth not yet configured" notice instead of attempting
 // network calls.
-export const WORKER_URL: string = "https://auth.aspensig.asia";
+// TEMP: pointed at workers.dev until auth.aspensig.asia is bound in the
+// Cloudflare dashboard (Workers & Pages → aspen-auth → Settings →
+// Domains → Add Custom Domain → auth.aspensig.asia). Once bound,
+// flip this back to https://auth.aspensig.asia so iOS Safari's
+// third-party-cookie block stops killing mobile login.
+export const WORKER_URL: string = "https://aspen-auth.danielhttsai.workers.dev";
