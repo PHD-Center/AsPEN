@@ -29,6 +29,14 @@ const designs = [
     example: "Triggers of acute MI in the 24 hours before onset",
     strengths: "Each case is their own control across time; matched analysis automatically removes time-invariant within-person confounding (genetics, lifelong habits, persistent comorbidities).",
   },
+  {
+    slug: "descriptive-analysis",
+    short: "DESC",
+    title: "Descriptive analysis",
+    when: "When you want to characterise a population — how common a disease is, how a drug is used, who dies — rather than test a causal hypothesis. The standard output for multi-country comparisons.",
+    example: "DDD/1000/day for anticonvulsants across 14 AsPEN sites, 2010–2023, with joinpoint break detection",
+    strengths: "Provides the denominator AsPEN's causal studies depend on. Covers incidence / prevalence / mortality / drug-utilisation / switching with age-standardisation + joinpoint trend analysis built in.",
+  },
 ];
 ---
 
@@ -56,7 +64,7 @@ const designs = [
     </div>
   </header>
 
-  <section class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 space-y-6">
     <a class="text-sm text-brand-700 hover:underline font-semibold" href={`${base}/members/`}>← Members area</a>
 
     <div data-state="loading" class="text-sm text-slate-600 italic">Checking your session…</div>
@@ -79,7 +87,7 @@ const designs = [
         </div>
       </div>
 
-      <div class="grid gap-5 md:grid-cols-3">
+      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {designs.map((d) => (
           <a href={`${base}/members/templates/${d.slug}`}
              class="group flex flex-col border border-slate-200 rounded-2xl p-6 bg-white hover:shadow-md hover:border-brand-400 transition">
