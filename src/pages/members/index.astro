@@ -314,10 +314,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
             // Refresh the form state so the "Current password" field shows up next time
             wireForm(true);
           } else {
-            setPwdMsg(data.error || "Couldn't save password.", true);
+            // Surface HTTP status so it's diagnosable when the worker
+            // returns an opaque failure (e.g. 401 → session expired,
+            // 400 → password rules, 5xx → GitHub write failure).
+            setPwdMsg((data.error || "Couldn't save password.") + " (HTTP " + r.status + ")", true);
           }
-        } catch {
-          setPwdMsg("Couldn't reach the sign-in service — try again in a moment.", true);
+        } catch (err) {
+          console.error("set-password failed", err);
+          setPwdMsg("Couldn't reach the sign-in service: " + String((err && err.message) || err), true);
         } finally {
           btn.disabled = false;
         }
