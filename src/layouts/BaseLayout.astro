@@ -39,6 +39,77 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       // Expose the auth worker URL globally so the Header (and any other
       // page-level script) can call /api/me to detect a member session.
       window.__ASPEN_WORKER_URL__ = WORKER_URL || "";
+
+      // ── Bearer-token fallback for browsers that block 3p cookies ──
+      // The worker sets a SameSite=None+Secure cookie, which iOS Safari
+      // and other 3p-cookie-blocking browsers refuse to send back. To
+      // keep mobile login working without putting the worker on the
+      // same registrable domain, the worker ALSO returns the JWT in
+      // two places:
+      //   1. magic-link verify   → 302 Location: /members/#t=<jwt>
+      //   2. password login JSON → { ok: true, token: <jwt> }
+      // The site grabs whichever it sees, stashes it in localStorage,
+      // and sends it as `Authorization: Bearer <jwt>` on every call
+      // to the worker.
+      (function () {
+        var KEY = "aspen.session.token";
+        var WORKER = WORKER_URL || "";
+
+        // (1) On every page load, if the URL fragment carries #t=<jwt>
+        //     left by the magic-link verify redirect, peel it off, save
+        //     it in localStorage, and strip the fragment without
+        //     adding a history entry.
+        try {
+          var h = window.location.hash || "";
+          if (h.indexOf("#t=") === 0) {
+            var t = decodeURIComponent(h.slice(3));
+            if (t) {
+              try { localStorage.setItem(KEY, t); } catch (e) {}
+              try {
+                history.replaceState(null, "",
+                  window.location.pathname + window.location.search);
+              } catch (e) {}
+            }
+          }
+        } catch (e) {}
+
+        // (2) Monkey-patch fetch so any call to the worker carries
+        //     Authorization: Bearer <jwt> (if we have one) in addition
+        //     to credentials:include. Both paths validate the same
+        //     server-side, so whichever the browser allows wins.
+        if (WORKER && typeof window.fetch === "function") {
+          var nativeFetch = window.fetch.bind(window);
+          window.fetch = function (input, init) {
+            var url = typeof input === "string"
+              ? input
+              : (input && input.url) || "";
+            if (url.indexOf(WORKER) === 0) {
+              var token = "";
+              try { token = localStorage.getItem(KEY) || ""; } catch (e) {}
+              if (token) {
+                init = init || {};
+                var hdrs = new Headers(init.headers || {});
+                if (!hdrs.has("Authorization")) {
+                  hdrs.set("Authorization", "Bearer " + token);
+                }
+                init.headers = hdrs;
+              }
+            }
+            return nativeFetch(input, init);
+          };
+        }
+
+        // Expose a tiny helper so login.astro and logout handlers can
+        // sync localStorage with the cookie/JSON token flow.
+        window.__aspenAuth = {
+          setToken: function (t) {
+            try { if (t) localStorage.setItem(KEY, t); } catch (e) {}
+          },
+          clearToken: function () {
+            try { localStorage.removeItem(KEY); } catch (e) {}
+          },
+        };
+      })();
     </script>
   </head>
   <body class:list={["text-slate-800 antialiased", tint ? "home-tint" : "bg-white"]}>

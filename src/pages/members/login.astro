@@ -128,6 +128,16 @@ const workerConfigured = WORKER_URL.length > 0;
             credentials: "include",
           });
           if (r.ok) {
+            // Stash the JWT in localStorage so iOS Safari (which drops
+            // the SameSite=None cookie) can still authenticate via
+            // Authorization: Bearer on subsequent /api/ calls. The
+            // wrapper in BaseLayout reads this key.
+            try {
+              const data = await r.clone().json();
+              if (data && data.token && window.__aspenAuth) {
+                window.__aspenAuth.setToken(data.token);
+              }
+            } catch {}
             setStatus(pwdStatus, "Signed in. Redirecting…");
             location.href = `${BASE}/members/`;
             return;

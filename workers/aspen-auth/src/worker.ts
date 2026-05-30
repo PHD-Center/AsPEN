@@ -225,7 +225,15 @@ async function handleVerify(req: Request, env: Env): Promise<Response> {
     days * 24 * 60 * 60,
   );
 
-  const target = `${env.SITE_BASE_URL.replace(/\/$/, "")}/members/`;
+  // Belt-and-suspenders auth handover:
+  //   · Set-Cookie for browsers that accept cross-site cookies
+  //   · #t=<jwt> fragment for browsers that don't (iOS Safari etc.)
+  // Fragments are NOT sent over the network in subsequent requests, so
+  // putting the JWT there is safer than ?t=… (which would land in
+  // server logs, Referer headers, history, etc.). The site's
+  // BaseLayout grabs the fragment, stores it in localStorage, and
+  // strips the URL.
+  const target = `${env.SITE_BASE_URL.replace(/\/$/, "")}/members/#t=${encodeURIComponent(session)}`;
   const headers = new Headers({ Location: target });
   headers.set("Set-Cookie", buildSessionCookie(session, days));
   return new Response(null, { status: 302, headers });
@@ -1627,7 +1635,12 @@ async function handleContent(req: Request, env: Env, path: string): Promise<Resp
   return fetchMemberFile(env, path);
 }
 
-// Shared: issue a session cookie response for a logged-in email.
+// Shared: issue a session for a logged-in email. Returns both:
+//   · Set-Cookie  — for cookie-friendly browsers
+//   · token in JSON body — so the site can ALSO stash it in
+//                          localStorage and send as Authorization: Bearer
+//                          (needed on iOS Safari and any browser that
+//                          blocks third-party cookies).
 async function issueSessionResponse(email: string, env: Env): Promise<Response> {
   const days = parseInt(env.SESSION_DAYS, 10) || 30;
   const session = await signJwt(
@@ -1637,7 +1650,7 @@ async function issueSessionResponse(email: string, env: Env): Promise<Response> 
   );
   const headers = new Headers();
   headers.set("Set-Cookie", buildSessionCookie(session, days));
-  return jsonResponse({ ok: true }, 200, headers);
+  return jsonResponse({ ok: true, token: session }, 200, headers);
 }
 
 // ─── GitHub API ────────────────────────────────────────────────────────
@@ -1851,6 +1864,20 @@ function buildSessionCookie(jwt: string, days: number): string {
 }
 
 async function sessionEmail(req: Request, env: Env): Promise<string | null> {
+  // Auth fallback chain:
+  //   1. Authorization: Bearer <jwt>   — used by iOS Safari / any browser
+  //      that blocks third-party cookies. The site stores the JWT in
+  //      localStorage on login / magic-link verify and sends it here.
+  //   2. Cookie aspen_session=<jwt>    — preferred on browsers that allow
+  //      cross-site cookies (HttpOnly, can't be exfiltrated by XSS).
+  // Either path validates the same session JWT, so handlers don't care
+  // which one the client used.
+  const auth = req.headers.get("Authorization") ?? "";
+  const bearer = auth.match(/^Bearer\s+(\S+)$/i);
+  if (bearer) {
+    const payload = await verifyJwt(bearer[1], env.JWT_SECRET);
+    if (payload && payload.purpose === "session") return payload.sub;
+  }
   const cookie = req.headers.get("Cookie") ?? "";
   const match = cookie.match(new RegExp(`${SESSION_COOKIE}=([^;]+)`));
   if (!match) return null;
