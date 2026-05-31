@@ -129,6 +129,12 @@ export default {
         resp = await handleAdminMembersList(req, env);
       } else if (url.pathname === "/api/admin/members" && req.method === "POST") {
         resp = await handleAdminMembersUpsert(req, env);
+      } else if (url.pathname === "/api/admin/members/delete" && req.method === "POST") {
+        resp = await handleAdminMembersDelete(req, env);
+      } else if (url.pathname === "/api/admin/members/reset-password" && req.method === "POST") {
+        resp = await handleAdminMembersResetPassword(req, env);
+      } else if (url.pathname === "/api/admin/members/resend-invite" && req.method === "POST") {
+        resp = await handleAdminMembersResendInvite(req, env);
       } else if (url.pathname === "/api/studies" && req.method === "GET") {
         resp = await handleStudiesList(req, env);
       } else if (url.pathname === "/api/studies/express-interest" && req.method === "POST") {
@@ -1503,6 +1509,110 @@ async function handleAdminMembersUpsert(req: Request, env: Env): Promise<Respons
     `Admin ${acting.email}: ${existing ? "update" : "add"} ${email}`);
 
   return jsonResponse({ ok: true, member: { ...next, hasPassword: Boolean(next.passwordHash) } });
+}
+
+// Hard-delete a member from members.json. Replaces the old soft-delete
+// (status="removed") flow for chair workflows that just want the row
+// gone. Super-admins are pinned in env config so can't be deleted, and
+// admins can't delete themselves (would lock them out instantly).
+async function handleAdminMembersDelete(req: Request, env: Env): Promise<Response> {
+  const acting = await sessionMember(req, env);
+  if (!acting) return jsonResponse({ ok: false }, 401);
+  if (!acting.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+
+  const body = await safeJson<{ email?: string }>(req);
+  const email = String(body?.email || "").trim().toLowerCase();
+  if (!isLikelyEmail(email)) return jsonResponse({ ok: false, error: "Invalid email." }, 400);
+
+  if (email === acting.email.toLowerCase()) {
+    return jsonResponse({ ok: false, error: "You can't delete yourself." }, 400);
+  }
+  if (isSuperAdmin(email, env)) {
+    return jsonResponse({ ok: false, error: "Can't delete a super admin (pinned via SUPERADMIN_EMAILS)." }, 400);
+  }
+
+  const { members, sha } = await fetchMembersJson(env);
+  const idx = members.findIndex((m) => m.email.toLowerCase() === email);
+  if (idx < 0) return jsonResponse({ ok: false, error: "Member not found." }, 404);
+
+  members.splice(idx, 1);
+  await putMembersJson(env, members, sha, `Admin ${acting.email}: delete ${email}`);
+  return jsonResponse({ ok: true });
+}
+
+// Clear a member's passwordHash. They keep their row (and all other
+// access) but the next login MUST go through magic-link, after which
+// they can set a fresh password from /members/. Useful when a member
+// forgot their password (especially on mobile where the cookie path
+// is blocked and they can't always reset themselves cleanly).
+async function handleAdminMembersResetPassword(req: Request, env: Env): Promise<Response> {
+  const acting = await sessionMember(req, env);
+  if (!acting) return jsonResponse({ ok: false }, 401);
+  if (!acting.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+
+  const body = await safeJson<{ email?: string }>(req);
+  const email = String(body?.email || "").trim().toLowerCase();
+  if (!isLikelyEmail(email)) return jsonResponse({ ok: false, error: "Invalid email." }, 400);
+
+  if (email === acting.email.toLowerCase()) {
+    return jsonResponse({ ok: false, error: "You can't reset your own password from the admin tab. Use Account settings on /members/." }, 400);
+  }
+  if (isSuperAdmin(email, env)) {
+    return jsonResponse({ ok: false, error: "Can't reset a super admin's password from here." }, 400);
+  }
+
+  const { members, sha } = await fetchMembersJson(env);
+  const idx = members.findIndex((m) => m.email.toLowerCase() === email);
+  if (idx < 0) return jsonResponse({ ok: false, error: "Member not found." }, 404);
+
+  if (!members[idx].passwordHash) {
+    // No-op but report success — caller's intent is "this member has no
+    // password" which is already the state.
+    return jsonResponse({ ok: true, alreadyCleared: true });
+  }
+
+  delete members[idx].passwordHash;
+  await putMembersJson(env, members, sha, `Admin ${acting.email}: clear passwordHash for ${email}`);
+  return jsonResponse({ ok: true });
+}
+
+// Send the target member a fresh magic-link, on the admin's behalf.
+// Unlike /api/request-login (which does enumeration-masking and always
+// returns ok:true so casual callers can't probe whether an email is on
+// the list), this admin-only path returns the real success/fail so the
+// chair knows whether the email actually went out.
+async function handleAdminMembersResendInvite(req: Request, env: Env): Promise<Response> {
+  const acting = await sessionMember(req, env);
+  if (!acting) return jsonResponse({ ok: false }, 401);
+  if (!acting.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+
+  const body = await safeJson<{ email?: string }>(req);
+  const email = String(body?.email || "").trim().toLowerCase();
+  if (!isLikelyEmail(email)) return jsonResponse({ ok: false, error: "Invalid email." }, 400);
+
+  const { members } = await fetchMembersJson(env);
+  const target = members.find((m) => m.email.toLowerCase() === email);
+  if (!target) return jsonResponse({ ok: false, error: "Member not found." }, 404);
+  if (target.status === "removed") {
+    return jsonResponse({ ok: false, error: "Member status is 'removed' — restore them first." }, 400);
+  }
+
+  const minutes = parseInt(env.MAGIC_LINK_MINUTES, 10) || 15;
+  const token = await signJwt(
+    { sub: email, purpose: "magic" },
+    env.JWT_SECRET,
+    minutes * 60,
+  );
+  const link = `${env.SITE_BASE_URL.replace(/\/$/, "")}/members/verify?t=${encodeURIComponent(token)}`;
+
+  try {
+    await sendMagicLinkEmail(env, email, target.name, link, minutes);
+  } catch (e) {
+    console.error("admin resend-invite send failed for", email, e);
+    return jsonResponse({ ok: false, error: "Email service rejected the send. Check wrangler tail." }, 502);
+  }
+
+  return jsonResponse({ ok: true });
 }
 
 // ── Helpers used by the new routes ─────────────────────────────────────

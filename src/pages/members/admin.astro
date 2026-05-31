@@ -1017,20 +1017,25 @@ const STAGES = [
                     <p class="text-sm font-semibold text-slate-900 truncate">${esc(m.name || m.email)}${badge}</p>
                     <p class="text-xs text-slate-600 truncate">${esc(m.email)}${m.affiliation ? " · " + esc(m.affiliation) : ""}${m.country ? " · " + esc(m.country) : ""}${m.role ? " · " + esc(m.role) : ""}</p>
                   </div>
-                  <div class="flex items-center gap-3 shrink-0">
+                  <div class="flex items-center gap-2 shrink-0">
                     <label class="inline-flex items-center gap-1 text-xs text-slate-600 cursor-pointer ${m.superAdmin ? "opacity-50 cursor-not-allowed" : ""}" onclick="event.stopPropagation()">
                       <input type="checkbox" data-admin-email="${esc(m.email)}"${m.admin ? " checked" : ""}${sa}
                              class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
                       admin
                     </label>
-                    <select data-status-pmid="${esc(m.email)}"${sa} onclick="event.stopPropagation()"
-                            class="text-xs border border-slate-300 rounded px-2 py-1 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${m.superAdmin ? "opacity-50" : ""}">
-                      <option value="active"  ${m.status === "active"  ? "selected" : ""}>active</option>
-                      <option value="removed" ${m.status === "removed" ? "selected" : ""}>removed</option>
-                      ${m.status === "invited" ? '<option value="invited" selected>invited (legacy)</option>' : ""}
-                    </select>
                     ${m.hasPassword ? '<span class="text-[10px] text-slate-500 italic" title="Has set a password">pwd</span>' : ""}
-                    <span class="text-slate-400 text-xs select-none" aria-hidden="true">▾</span>
+                    <button type="button" data-resend-email="${esc(m.email)}" title="Resend sign-in link to ${esc(m.email)}"
+                            onclick="event.stopPropagation()"
+                            class="text-base leading-none px-1.5 py-1 rounded hover:bg-brand-50 text-slate-400 hover:text-brand-700 transition">✉</button>
+                    <button type="button" data-reset-pwd-email="${esc(m.email)}" title="Reset this member's password (they'll need to magic-link in and set a new one)"
+                            onclick="event.stopPropagation()"
+                            ${m.superAdmin ? 'disabled' : ''}
+                            class="text-base leading-none px-1.5 py-1 rounded hover:bg-amber-50 text-slate-400 hover:text-amber-700 transition${m.superAdmin ? " opacity-30 cursor-not-allowed hover:bg-transparent hover:text-slate-400" : ""}">🔑</button>
+                    <button type="button" data-delete-email="${esc(m.email)}" title="Permanently remove this member"
+                            onclick="event.stopPropagation()"
+                            ${m.superAdmin ? 'disabled' : ''}
+                            class="text-base leading-none px-1.5 py-1 rounded hover:bg-rose-50 text-slate-400 hover:text-rose-700 transition${m.superAdmin ? " opacity-30 cursor-not-allowed hover:bg-transparent hover:text-slate-400" : ""}">🗑</button>
+                    <span class="text-slate-400 text-xs select-none ml-1" aria-hidden="true">▾</span>
                   </div>
                 </summary>
                 <form data-edit-form data-email="${esc(m.email)}" class="px-4 pb-4 pt-1 grid sm:grid-cols-2 gap-3 bg-slate-50 border-t border-slate-100">
@@ -1081,16 +1086,12 @@ const STAGES = [
         } catch {}
       };
 
+      // Admin checkbox toggles (the only quick-control left on the row
+      // summary after the status dropdown was retired).
       memberRows.addEventListener("change", async (e) => {
         const t = e.target;
-        if (!(t instanceof HTMLElement)) return;
-        let body = null;
-        if (t instanceof HTMLSelectElement && t.dataset.statusPmid) {
-          body = { email: t.dataset.statusPmid, status: t.value };
-        } else if (t instanceof HTMLInputElement && t.dataset.adminEmail) {
-          body = { email: t.dataset.adminEmail, admin: t.checked };
-        }
-        if (!body) return;
+        if (!(t instanceof HTMLInputElement) || !t.dataset.adminEmail) return;
+        const body = { email: t.dataset.adminEmail, admin: t.checked };
         const r = await fetch(`${WORKER_URL}/api/admin/members`, {
           method: "POST", credentials: "include",
           headers: { "Content-Type": "application/json" },
@@ -1149,13 +1150,90 @@ const STAGES = [
         }
       });
 
-      // Cancel-edit collapses the row's details.
-      memberRows.addEventListener("click", (e) => {
+      // Row click delegation:
+      //   · Cancel button inside the edit form  → close the <details>
+      //   · ✉ Resend invite                     → admin re-send magic-link
+      //   · 🔑 Reset password                   → clear member.passwordHash
+      //   · 🗑 Delete                            → hard-remove from members.json
+      memberRows.addEventListener("click", async (e) => {
         const t = e.target;
         if (!(t instanceof HTMLElement)) return;
+
         if (t.hasAttribute("data-cancel-edit")) {
           const det = t.closest("details");
           if (det) det.open = false;
+          return;
+        }
+
+        if (t.dataset.resendEmail) {
+          const email = t.dataset.resendEmail;
+          if (!confirm(`Send a fresh magic-link to ${email}?`)) return;
+          t.disabled = true;
+          try {
+            const r = await fetch(`${WORKER_URL}/api/admin/members/resend-invite`, {
+              method: "POST", credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email }),
+            });
+            const d = await r.json().catch(() => ({}));
+            if (r.ok && d.ok) alert(`Sent — magic-link is on its way to ${email}.`);
+            else alert((d.error || "Couldn't send invite.") + " (HTTP " + r.status + ")");
+          } catch (err) {
+            alert("Network error: " + String((err && err.message) || err));
+          } finally {
+            t.disabled = false;
+          }
+          return;
+        }
+
+        if (t.dataset.resetPwdEmail) {
+          const email = t.dataset.resetPwdEmail;
+          if (!confirm(`Clear ${email}'s password?\n\nThey'll need to sign in via magic-link and set a new one. (No effect if they never set one.)`)) return;
+          t.disabled = true;
+          try {
+            const r = await fetch(`${WORKER_URL}/api/admin/members/reset-password`, {
+              method: "POST", credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email }),
+            });
+            const d = await r.json().catch(() => ({}));
+            if (r.ok && d.ok) {
+              alert(d.alreadyCleared ? `${email} already had no password — nothing to reset.` : `Password cleared for ${email}.`);
+              loadMembers();
+            } else {
+              alert((d.error || "Couldn't reset password.") + " (HTTP " + r.status + ")");
+            }
+          } catch (err) {
+            alert("Network error: " + String((err && err.message) || err));
+          } finally {
+            t.disabled = false;
+          }
+          return;
+        }
+
+        if (t.dataset.deleteEmail) {
+          const email = t.dataset.deleteEmail;
+          if (!confirm(`Permanently remove ${email} from AsPEN members?\n\nThis can't be undone. Studies / template drafts they created stay, but they lose all access.`)) return;
+          t.disabled = true;
+          try {
+            const r = await fetch(`${WORKER_URL}/api/admin/members/delete`, {
+              method: "POST", credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email }),
+            });
+            const d = await r.json().catch(() => ({}));
+            if (r.ok && d.ok) loadMembers();
+            else {
+              alert((d.error || "Couldn't delete member.") + " (HTTP " + r.status + ")");
+              t.disabled = false;
+            }
+          } catch (err) {
+            alert("Network error: " + String((err && err.message) || err));
+            t.disabled = false;
+          }
+          // intentionally no `t.disabled = false` on success — loadMembers
+          // re-renders the row tree and the button reference is gone.
+          return;
         }
       });
 
