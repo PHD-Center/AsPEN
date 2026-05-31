@@ -112,18 +112,25 @@ const STAGES = [
 
       <!-- ── Pane: Studies (Active Studies Tracker) ──────────── -->
       <div data-pane="studies" class="hidden space-y-6">
-        <!-- Member-proposed studies (above the New Study form) -->
+        <p class="text-xs text-slate-500 leading-relaxed bg-slate-50 border border-slate-200 rounded p-3">
+          <strong class="text-slate-700">Studies are created via the protocol-template builders.</strong>
+          Open <a href={`${base}/members/templates/`} class="text-brand-700 hover:underline font-semibold">a template</a> → fill in → click <strong>📤 Send to AsPEN office</strong>.
+          Admins land studies directly on the Kanban; member submissions show up as proposals below for promotion.
+        </p>
+
+        <!-- Member-proposed studies -->
         <div data-proposals-wrap class="hidden">
           <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">
             Member proposals · <span data-proposals-count>0</span>
-            <span class="ml-1 text-[10px] normal-case tracking-normal text-slate-500 font-normal">studies proposed by members — Promote pre-fills the New study form below.</span>
+            <span class="ml-1 text-[10px] normal-case tracking-normal text-slate-500 font-normal">studies proposed by members — Promote pre-fills the edit form below.</span>
           </p>
           <div data-proposals class="space-y-2"></div>
         </div>
 
-        <details data-study-details class="border border-slate-200 rounded-lg bg-white">
+        <!-- Edit form: only shown when Edit or Promote opens it. -->
+        <details data-study-details class="hidden border border-slate-200 rounded-lg bg-white" open>
           <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-50/40 rounded-lg">
-            ＋ New study
+            ✎ Edit study
           </summary>
           <form data-study-form class="p-4 space-y-3 border-t border-slate-100">
             <input type="hidden" name="editingSlug" />
@@ -140,6 +147,7 @@ const STAGES = [
                   <option value="ACNU">ACNU</option>
                   <option value="SCCS">SCCS</option>
                   <option value="CCO">Case-crossover</option>
+                  <option value="DESC">Descriptive</option>
                   <option value="Other" selected>Other</option>
                 </select>
               </label>
@@ -552,16 +560,30 @@ const STAGES = [
         studyForm.querySelector("[name='pmid']").value = "";
         const ps = studyForm.querySelector("[data-paper-state]");
         if (ps) ps.innerHTML = "";
-        if (submitLabel) submitLabel.textContent = "Create study";
+        if (submitLabel) submitLabel.textContent = "Save changes";
         cancelEdit?.classList.add("hidden");
         setStudyMsg("");
         studyMsg?.classList.add("hidden");
       };
 
+      // Show / hide the edit form details. Default state is hidden — it
+      // only appears when Edit on a row or Promote on a proposal opens it.
+      const showStudyForm = () => {
+        if (!studyDetails) return;
+        studyDetails.classList.remove("hidden");
+        studyDetails.open = true;
+        studyDetails.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+      const hideStudyForm = () => {
+        if (!studyDetails) return;
+        studyDetails.classList.add("hidden");
+        studyDetails.open = false;
+      };
+
       cancelEdit?.addEventListener("click", () => {
         delete studyForm.dataset.promotingProposalId;
         resetForm();
-        if (studyDetails) studyDetails.open = false;
+        hideStudyForm();
       });
 
       let studies = [];
@@ -573,7 +595,7 @@ const STAGES = [
           else badge.classList.add("hidden");
         }
         if (studies.length === 0) {
-          studyListEl.innerHTML = '<p class="text-sm text-slate-500 italic text-center py-6 border border-slate-200 rounded-lg bg-white">No studies yet. Use "+ New study" above to create one.</p>';
+          studyListEl.innerHTML = '<p class="text-sm text-slate-500 italic text-center py-6 border border-slate-200 rounded-lg bg-white">No studies yet. Create one by sending a protocol from a <a class="text-brand-700 hover:underline font-semibold" href="' + BASE + '/members/templates/">template builder</a>.</p>';
           return;
         }
         studyListEl.innerHTML = studies.map((s) => {
@@ -660,8 +682,7 @@ const STAGES = [
           if (paperEl) paperEl.value = s.pmid || "";
           if (submitLabel) submitLabel.textContent = "Save changes";
           cancelEdit?.classList.remove("hidden");
-          if (studyDetails) studyDetails.open = true;
-          studyDetails?.scrollIntoView({ behavior: "smooth", block: "start" });
+          showStudyForm();
           return;
         }
 
@@ -785,8 +806,7 @@ const STAGES = [
           if (submitLabel) submitLabel.textContent = "Create study from proposal";
           cancelEdit?.classList.remove("hidden");
           studyForm.dataset.promotingProposalId = t.dataset.promotePid;
-          if (studyDetails) studyDetails.open = true;
-          studyDetails?.scrollIntoView({ behavior: "smooth", block: "start" });
+          showStudyForm();
         }
       });
 
@@ -937,7 +957,7 @@ const STAGES = [
           }
           setStudyMsg(editingSlug ? "Updated." : "Created.");
           resetForm();
-          if (studyDetails) studyDetails.open = false;
+          hideStudyForm();
           loadStudies();
         } else {
           setStudyMsg(d.error || "Failed.", true);
