@@ -56,7 +56,7 @@ const DESIGN_TONES: Record<string, string> = {
   ACNU:  "bg-brand-100 text-brand-800 border-brand-200",
   SCCS:  "bg-violet-100 text-violet-800 border-violet-200",
   CCO:   "bg-amber-100 text-amber-800 border-amber-200",
-  DESC:  "bg-emerald-100 text-emerald-800 border-emerald-200",
+  DA:    "bg-emerald-100 text-emerald-800 border-emerald-200",
   Other: "bg-slate-100 text-slate-700 border-slate-200",
 };
 ---
@@ -99,7 +99,7 @@ const DESIGN_TONES: Record<string, string> = {
             Open a protocol-template builder, fill in what you have, then click <strong>📤 Send to AsPEN office</strong>. Goes to the chair's queue if you're a member; admins land it directly on the Kanban.
           </p>
           <p class="mt-2">
-            <a href={`${base}/members/templates/`} class="text-xs font-semibold text-brand-700 hover:underline">Browse templates (ACNU · SCCS · CCO · DESC) →</a>
+            <a href={`${base}/members/templates/`} class="text-xs font-semibold text-brand-700 hover:underline">Browse templates (ACNU · SCCS · CCO · DA) →</a>
           </p>
         </div>
       </div>
@@ -113,7 +113,7 @@ const DESIGN_TONES: Record<string, string> = {
           <option value="ACNU">ACNU</option>
           <option value="SCCS">SCCS</option>
           <option value="CCO">Case-crossover</option>
-          <option value="DESC">Descriptive</option>
+          <option value="DA">Descriptive</option>
           <option value="Other">Other</option>
         </select>
         <label class="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer">

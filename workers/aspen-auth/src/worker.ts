@@ -728,7 +728,7 @@ const STUDY_STAGES = [
   "concept", "protocol", "site-irb", "extraction", "analysis", "drafting", "published",
 ] as const;
 type StudyStage = (typeof STUDY_STAGES)[number];
-const STUDY_DESIGNS = ["ACNU", "SCCS", "CCO", "DESC", "Other"] as const;
+const STUDY_DESIGNS = ["ACNU", "SCCS", "CCO", "DA", "Other"] as const;
 type StudyDesign = (typeof STUDY_DESIGNS)[number];
 
 interface StudyMilestone {

@@ -284,7 +284,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
   description="Guided form for drafting a multi-country descriptive epidemiology protocol (incidence, prevalence, mortality, drug utilisation, switching, age-standardisation, joinpoint trends)."
 >
   <PageHeader
-    eyebrow="Members → Templates → DESC"
+    eyebrow="Members → Templates → DA"
     title="Multi-national descriptive analysis builder"
     description="Characterise a population — how common a disease is, how a drug is used, who dies — across AsPEN sites. Standard output for Policy & Utilisation theme work and the denominator on which causal studies depend."
   />
@@ -318,7 +318,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
             </label>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Short ID</span>
-              <input type="text" name="shortId" placeholder="AsPEN-ANTISEIZ-DESC-2026" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+              <input type="text" name="shortId" placeholder="AsPEN-ANTISEIZ-DA-2026" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Version · Date</span>
@@ -1460,11 +1460,11 @@ _Drafted with the AsPEN Descriptive Analysis protocol builder (${today})._
       document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLibrary(); });
       modalSearch.addEventListener("input", () => renderLibrary(modalSearch.value));
 
-      // ── Send-to-AsPEN modal (DESC) ────────────────────────
-      // Maps DESC-template fields (picoP / picoMeasure / picoWindow) to
-      // the studies proposal schema; design code is DESC (worker side
+      // ── Send-to-AsPEN modal (DA — Descriptive Analysis) ──
+      // Maps DA-template fields (picoP / picoMeasure / picoWindow) to
+      // the studies proposal schema; design code is DA (worker side
       // accepts this after the enum extension).
-      const DESIGN_CODE = "DESC";
+      const DESIGN_CODE = "DA";
       const buildAspenSummary = (s) => {
         const sites = (s.sites || []).map((id) => {
           const d = SITES_DETAIL_MAP[id];
