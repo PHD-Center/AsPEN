@@ -1015,7 +1015,7 @@ const STAGES = [
                 <summary class="cursor-pointer list-none px-4 py-3 flex items-center justify-between gap-3">
                   <div class="min-w-0">
                     <p class="text-sm font-semibold text-slate-900 truncate">${esc(m.name || m.email)}${badge}</p>
-                    <p class="text-xs text-slate-600 truncate">${esc(m.email)}${m.affiliation ? " · " + esc(m.affiliation) : ""}${m.country ? " · " + esc(m.country) : ""}${m.role ? " · " + esc(m.role) : ""}</p>
+                    <p class="text-xs text-slate-600 truncate">${[m.affiliation, m.country, m.role].filter(Boolean).map(esc).join(" · ") || esc(m.email)}</p>
                   </div>
                   <div class="flex items-center gap-2 shrink-0">
                     <label class="inline-flex items-center gap-1 text-xs text-slate-600 cursor-pointer ${m.superAdmin ? "opacity-50 cursor-not-allowed" : ""}" onclick="event.stopPropagation()">
@@ -1035,6 +1035,10 @@ const STAGES = [
                   </div>
                 </summary>
                 <form data-edit-form data-email="${esc(m.email)}" class="px-4 pb-4 pt-1 grid sm:grid-cols-2 gap-3 bg-slate-50 border-t border-slate-100">
+                  <p class="sm:col-span-2 text-[11px] text-slate-500">
+                    <span class="uppercase tracking-widest font-semibold text-slate-600">Email</span>
+                    <span class="ml-2 font-mono text-slate-700 break-all">${esc(m.email)}</span>
+                  </p>
                   <label class="block sm:col-span-2">
                     <span class="text-[11px] uppercase tracking-widest text-brand-700 font-semibold">Name</span>
                     <input type="text" name="name" value="${esc(m.name || "")}" required
