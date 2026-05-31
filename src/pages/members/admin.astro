@@ -947,7 +947,19 @@ const STAGES = [
 
       // ── Members ──
       const memberRows = document.querySelector("[data-member-rows]");
-      const renderMembers = (members) => {
+      // Sort order: super admins first, then plain admins, then everyone
+      // else; within each tier alphabetical by display name (fallback to
+      // email) so the list scans like a phone book.
+      const memberRank = (m) => m.superAdmin ? 0 : (m.admin ? 1 : 2);
+      const sortMembers = (arr) => [...arr].sort((a, b) => {
+        const r = memberRank(a) - memberRank(b);
+        if (r !== 0) return r;
+        const an = (a.name || a.email || "").toLowerCase();
+        const bn = (b.name || b.email || "").toLowerCase();
+        return an.localeCompare(bn);
+      });
+      const renderMembers = (membersRaw) => {
+        const members = sortMembers(membersRaw);
         document.querySelector("[data-member-count]").textContent = members.length;
         memberRows.innerHTML = members.map((m) => {
           // Badges: SUPER ADMIN (= super admin, enforced server-side, can't
