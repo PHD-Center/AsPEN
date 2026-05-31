@@ -958,6 +958,42 @@ const STAGES = [
         const bn = (b.name || b.email || "").toLowerCase();
         return an.localeCompare(bn);
       });
+      // Country dropdown options — same set as the "Add a member" form
+      // above. Inlined here as a string template so each row can stamp it
+      // with the current member's country pre-selected.
+      const COUNTRY_OPTS = [
+        { v: "",    l: "— select —" },
+        { v: "TW",  l: "Taiwan (TW)" },
+        { v: "KR",  l: "South Korea (KR)" },
+        { v: "JP",  l: "Japan (JP)" },
+        { v: "HK",  l: "Hong Kong (HK)" },
+        { v: "AU",  l: "Australia (AU)" },
+        { v: "CN",  l: "China (CN)" },
+        { v: "DE",  l: "Germany (DE)" },
+        { v: "FI",  l: "Finland (FI)" },
+        { v: "FR",  l: "France (FR)" },
+        { v: "GB",  l: "United Kingdom (GB)" },
+        { v: "ID",  l: "Indonesia (ID)" },
+        { v: "IN",  l: "India (IN)" },
+        { v: "IT",  l: "Italy (IT)" },
+        { v: "MO",  l: "Macau (MO)" },
+        { v: "MY",  l: "Malaysia (MY)" },
+        { v: "NL",  l: "Netherlands (NL)" },
+        { v: "PH",  l: "Philippines (PH)" },
+        { v: "SE",  l: "Sweden (SE)" },
+        { v: "SG",  l: "Singapore (SG)" },
+        { v: "TH",  l: "Thailand (TH)" },
+        { v: "US",  l: "United States (US)" },
+        { v: "VN",  l: "Vietnam (VN)" },
+        { v: "OTHER", l: "Other" },
+      ];
+      const ROLE_OPTS = ["academic", "industry", "regulator", "clinician", "student", "other"];
+      const countryOptionsFor = (current) =>
+        COUNTRY_OPTS.map((o) => `<option value="${esc(o.v)}"${(current || "") === o.v ? " selected" : ""}>${esc(o.l)}</option>`).join("");
+      const roleOptionsFor = (current) =>
+        `<option value=""${!current ? " selected" : ""}>— select —</option>` +
+        ROLE_OPTS.map((r) => `<option value="${r}"${(current || "") === r ? " selected" : ""}>${r}</option>`).join("");
+
       const renderMembers = (membersRaw) => {
         const members = sortMembers(membersRaw);
         document.querySelector("[data-member-count]").textContent = members.length;
@@ -974,25 +1010,63 @@ const STAGES = [
           // accidentally demote them in the UI) — just no visible label.
           const sa = m.superAdmin ? " disabled title=\"Cannot be modified\"" : "";
           return `
-            <li class="px-4 py-3 flex items-center justify-between gap-3 hover:bg-slate-50">
-              <div class="min-w-0">
-                <p class="text-sm font-semibold text-slate-900 truncate">${esc(m.name || m.email)}${badge}</p>
-                <p class="text-xs text-slate-600 truncate">${esc(m.email)}${m.affiliation ? " · " + esc(m.affiliation) : ""}${m.country ? " · " + esc(m.country) : ""}</p>
-              </div>
-              <div class="flex items-center gap-3 shrink-0">
-                <label class="inline-flex items-center gap-1 text-xs text-slate-600 cursor-pointer ${m.superAdmin ? "opacity-50 cursor-not-allowed" : ""}">
-                  <input type="checkbox" data-admin-email="${esc(m.email)}"${m.admin ? " checked" : ""}${sa}
-                         class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
-                  admin
-                </label>
-                <select data-status-pmid="${esc(m.email)}"${sa}
-                        class="text-xs border border-slate-300 rounded px-2 py-1 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${m.superAdmin ? "opacity-50" : ""}">
-                  <option value="active"  ${m.status === "active"  ? "selected" : ""}>active</option>
-                  <option value="removed" ${m.status === "removed" ? "selected" : ""}>removed</option>
-                  ${m.status === "invited" ? '<option value="invited" selected>invited (legacy)</option>' : ""}
-                </select>
-                ${m.hasPassword ? '<span class="text-[10px] text-slate-500 italic" title="Has set a password">pwd</span>' : ""}
-              </div>
+            <li class="hover:bg-slate-50">
+              <details data-member-row data-email="${esc(m.email)}">
+                <summary class="cursor-pointer list-none px-4 py-3 flex items-center justify-between gap-3">
+                  <div class="min-w-0">
+                    <p class="text-sm font-semibold text-slate-900 truncate">${esc(m.name || m.email)}${badge}</p>
+                    <p class="text-xs text-slate-600 truncate">${esc(m.email)}${m.affiliation ? " · " + esc(m.affiliation) : ""}${m.country ? " · " + esc(m.country) : ""}${m.role ? " · " + esc(m.role) : ""}</p>
+                  </div>
+                  <div class="flex items-center gap-3 shrink-0">
+                    <label class="inline-flex items-center gap-1 text-xs text-slate-600 cursor-pointer ${m.superAdmin ? "opacity-50 cursor-not-allowed" : ""}" onclick="event.stopPropagation()">
+                      <input type="checkbox" data-admin-email="${esc(m.email)}"${m.admin ? " checked" : ""}${sa}
+                             class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
+                      admin
+                    </label>
+                    <select data-status-pmid="${esc(m.email)}"${sa} onclick="event.stopPropagation()"
+                            class="text-xs border border-slate-300 rounded px-2 py-1 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${m.superAdmin ? "opacity-50" : ""}">
+                      <option value="active"  ${m.status === "active"  ? "selected" : ""}>active</option>
+                      <option value="removed" ${m.status === "removed" ? "selected" : ""}>removed</option>
+                      ${m.status === "invited" ? '<option value="invited" selected>invited (legacy)</option>' : ""}
+                    </select>
+                    ${m.hasPassword ? '<span class="text-[10px] text-slate-500 italic" title="Has set a password">pwd</span>' : ""}
+                    <span class="text-slate-400 text-xs select-none" aria-hidden="true">▾</span>
+                  </div>
+                </summary>
+                <form data-edit-form data-email="${esc(m.email)}" class="px-4 pb-4 pt-1 grid sm:grid-cols-2 gap-3 bg-slate-50 border-t border-slate-100">
+                  <label class="block sm:col-span-2">
+                    <span class="text-[11px] uppercase tracking-widest text-brand-700 font-semibold">Name</span>
+                    <input type="text" name="name" value="${esc(m.name || "")}" required
+                           class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+                  </label>
+                  <label class="block sm:col-span-2">
+                    <span class="text-[11px] uppercase tracking-widest text-brand-700 font-semibold">Affiliation</span>
+                    <input type="text" name="affiliation" value="${esc(m.affiliation || "")}"
+                           class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+                  </label>
+                  <label class="block">
+                    <span class="text-[11px] uppercase tracking-widest text-brand-700 font-semibold">Country</span>
+                    <select name="country" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                      ${countryOptionsFor(m.country)}
+                    </select>
+                  </label>
+                  <label class="block">
+                    <span class="text-[11px] uppercase tracking-widest text-brand-700 font-semibold">Role</span>
+                    <select name="role" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                      ${roleOptionsFor(m.role)}
+                    </select>
+                  </label>
+                  <div class="sm:col-span-2 flex items-center gap-3">
+                    <button type="submit" class="inline-flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-3 py-1.5 rounded text-xs transition">
+                      Save changes
+                    </button>
+                    <button type="button" data-cancel-edit class="text-xs font-semibold text-slate-500 hover:text-rose-600 hover:underline">
+                      Cancel
+                    </button>
+                    <p data-edit-msg class="text-xs"></p>
+                  </div>
+                </form>
+              </details>
             </li>
           `;
         }).join("");
@@ -1026,6 +1100,62 @@ const STAGES = [
           const d = await r.json().catch(() => ({}));
           alert(d.error || "Couldn't update.");
           loadMembers(); // revert UI
+        }
+      });
+
+      // Per-row Edit form: name / affiliation / country / role inline
+      // patch on any member. Worker accepts partial updates so we only
+      // send what the form contains (admin flag + status are still
+      // changed via the always-visible row controls above).
+      memberRows.addEventListener("submit", async (e) => {
+        const f = e.target;
+        if (!(f instanceof HTMLFormElement) || !f.dataset.email) return;
+        e.preventDefault();
+        const data = new FormData(f);
+        const body = {
+          email:       f.dataset.email,
+          name:        String(data.get("name") || "").trim(),
+          affiliation: String(data.get("affiliation") || "").trim(),
+          country:     String(data.get("country") || "").trim().toUpperCase(),
+          role:        String(data.get("role") || "").trim(),
+        };
+        if (!body.name) {
+          const msg = f.querySelector("[data-edit-msg]");
+          if (msg) { msg.textContent = "Name required."; msg.className = "text-xs text-rose-700"; }
+          return;
+        }
+        const btn = f.querySelector("button[type='submit']");
+        btn.disabled = true;
+        const msg = f.querySelector("[data-edit-msg]");
+        if (msg) { msg.textContent = "Saving…"; msg.className = "text-xs text-slate-500 italic"; }
+        try {
+          const r = await fetch(`${WORKER_URL}/api/admin/members`, {
+            method: "POST", credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.ok && d.ok) {
+            if (msg) { msg.textContent = "Saved."; msg.className = "text-xs text-brand-700"; }
+            // Reload to reflect new sort position + summary text.
+            setTimeout(loadMembers, 350);
+          } else {
+            if (msg) { msg.textContent = (d.error || "Couldn't save") + " (HTTP " + r.status + ")"; msg.className = "text-xs text-rose-700"; }
+          }
+        } catch (err) {
+          if (msg) { msg.textContent = "Network error: " + String((err && err.message) || err); msg.className = "text-xs text-rose-700"; }
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      // Cancel-edit collapses the row's details.
+      memberRows.addEventListener("click", (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLElement)) return;
+        if (t.hasAttribute("data-cancel-edit")) {
+          const det = t.closest("details");
+          if (det) det.open = false;
         }
       });
 
