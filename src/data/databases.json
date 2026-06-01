@@ -101,7 +101,7 @@
     "name": "JMDC Claims Database",
     "type": "Claims",
     "coverage": "~13.5M members · ~9.4% of Japan, working-age skew · since 2005",
-    "notes": "Operated by JMDC Inc.; receipts, health-checkup results, and enrolment records pooled from ~179 health insurance societies. Excellent longitudinal traceability (up to 17 years).",
+    "notes": "Operated by JMDC Inc.; receipts, health-checkup results, and enrolment records pooled from ~380 health insurance societies. Excellent longitudinal traceability (up to 20 years). Source: JSPE / 健康・医療データ部会.",
     "since": 2005,
     "popM": 13.5,
     "lagMonths": 5,
