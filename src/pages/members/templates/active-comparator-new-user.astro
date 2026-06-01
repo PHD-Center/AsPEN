@@ -2445,13 +2445,12 @@ _Drafted with the AsPEN protocol builder (${today})._
         }
       });
 
-      // ── Auth gate (any signed-in member) ──────────────
-      // Submit-to-AsPEN routes by role: members → proposal queue,
-      // admins → directly onto the active-studies Kanban.
+      // ── Auth gate (admin only) ────────────────────────
       fetch(`${WORKER_URL}/api/me`, { credentials: "include" })
         .then((r) => r.ok ? r.json() : null)
         .then((data) => {
           if (!data || !data.ok) return setState("signed-out");
+          if (!data.member?.isAdmin) return setState("forbidden");
           window.__aspenMe = data.member;
           setState("ready");
         })

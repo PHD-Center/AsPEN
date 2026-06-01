@@ -78,6 +78,9 @@ const DESIGN_TONES: Record<string, string> = {
     <div data-state="signed-out" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
       <p class="text-sm text-slate-700">You're not signed in. <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Sign in →</a></p>
     </div>
+    <div data-state="forbidden" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm text-slate-700">The active studies tracker is currently restricted to AsPEN admins. Ask the chair if you need access.</p>
+    </div>
     <div data-state="error" class="hidden border border-rose-300 bg-rose-50 rounded-lg p-6">
       <p class="text-sm text-rose-800" data-error-msg></p>
     </div>
@@ -437,6 +440,7 @@ const DESIGN_TONES: Record<string, string> = {
         .then((r) => r.ok ? r.json() : null)
         .then((data) => {
           if (!data || !data.ok) return setState("signed-out");
+          if (!data.member?.isAdmin) return setState("forbidden");
           me = data.member;
           return load();
         })

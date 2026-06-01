@@ -1603,6 +1603,7 @@ _Drafted with the AsPEN Descriptive Analysis protocol builder (${today})._
         .then((r) => r.ok ? r.json() : null)
         .then((data) => {
           if (!data || !data.ok) return setState("signed-out");
+          if (!data.member?.isAdmin) return setState("forbidden");
           window.__aspenMe = data.member;
           setState("ready");
         })
