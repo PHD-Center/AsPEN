@@ -77,6 +77,29 @@ content:
             - { value: infection,              label: "Infection & Vaccine" }
             - { value: utilisation,            label: "Policy & Utilisation" }
 
+  - name: events
+    label: Events (calendar)
+    type: file
+    path: src/data/events.json
+    list: true
+    fields:
+      - { name: date,        label: "Start date (YYYY-MM-DD)", type: date, required: true }
+      - { name: endDate,     label: "End date (multi-day events only)", type: date }
+      - { name: title,       label: Title,                     type: text, required: true }
+      - name: type
+        label: Type
+        type: select
+        options:
+          values:
+            - { value: conference, label: "Conference" }
+            - { value: deadline,   label: "Deadline / submission" }
+            - { value: webinar,    label: "Webinar / teleconference" }
+            - { value: training,   label: "Training / workshop" }
+            - { value: other,      label: "Other" }
+      - { name: location,    label: Location,                  type: string }
+      - { name: url,         label: "URL (registration / info)", type: string }
+      - { name: description, label: Description,               type: text }
+
   # ────────────────────────────────────────────────────────────────
   # Markdown collections — each entry is one .md file
   # ────────────────────────────────────────────────────────────────

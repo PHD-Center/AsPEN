@@ -38,6 +38,13 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         </button>
       </div>
 
+      <!-- ── Member-visible card (everyone signed-in sees this) ──── -->
+      <a href={`${base}/members/events/`} class="group block border border-slate-200 rounded-lg p-5 bg-white hover:shadow-md hover:border-brand-400 transition">
+        <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold">Calendar</p>
+        <h3 class="mt-2 font-bold text-slate-900 group-hover:text-brand-700 transition">Upcoming AsPEN events</h3>
+        <p class="mt-1 text-sm text-slate-600">ICPE, ISPE Asian, AsPEN teleconferences, abstract deadlines — subscribe in Google Calendar / Outlook.</p>
+      </a>
+
       <!-- ── What's in here ────────────────────────────────── -->
       <!-- Studies tracker + Protocol templates are admin-only — both are
            internal coordination tools for the chair, not member-facing
