@@ -40,6 +40,17 @@ export interface Env {
       demoted or removed and are always treated as admin regardless of
       what members.json says. */
   SUPERADMIN_EMAILS: string;
+  /** PAT scoped to the *public* main site repo (PHD-Center/AsPEN) with
+      Contents: Read & write. Used only by the events writer — it commits
+      a new entry to src/data/events.json so GH Actions rebuilds the
+      site (and /events.ics) without anyone touching PagesCMS or GitHub
+      directly. May be empty: handleAdminEvents will then return a
+      friendly error telling the chair the feature isn't configured. */
+  MAIN_REPO_PAT: string;
+  /** "PHD-Center/AsPEN" — set in wrangler.toml [vars] */
+  MAIN_REPO: string;
+  /** "main" — set in wrangler.toml [vars] */
+  MAIN_REPO_BRANCH: string;
 }
 
 function isSuperAdmin(email: string, env: Env): boolean {
@@ -135,6 +146,8 @@ export default {
         resp = await handleAdminMembersResetPassword(req, env);
       } else if (url.pathname === "/api/admin/members/resend-invite" && req.method === "POST") {
         resp = await handleAdminMembersResendInvite(req, env);
+      } else if (url.pathname === "/api/admin/events" && req.method === "POST") {
+        resp = await handleAdminEvents(req, env);
       } else if (url.pathname === "/api/studies" && req.method === "GET") {
         resp = await handleStudiesList(req, env);
       } else if (url.pathname === "/api/studies/express-interest" && req.method === "POST") {
@@ -1045,6 +1058,131 @@ async function sendStudyInterestEmail(
     const body = await r.text().catch(() => "");
     throw new Error(`resend study-interest ${r.status} ${body}`);
   }
+}
+
+// ── Events writer (chair-add via /members/events form) ────────────────
+//
+// Different from every other write in this worker: the destination repo
+// is the *public* main site repo (PHD-Center/AsPEN), not the private
+// aspen-members one. Reason: events.json is part of the static site
+// build and PagesCMS also edits it there, so keeping it there means the
+// site auto-rebuilds via GH Actions whenever a chair adds an event.
+// A separate fine-grained PAT (env.MAIN_REPO_PAT) is required.
+
+interface EventEntry {
+  date: string;
+  endDate?: string;
+  title: string;
+  type?: "conference" | "deadline" | "webinar" | "training" | "other";
+  location?: string;
+  url?: string;
+  description?: string;
+}
+
+const EVENTS_PATH = "src/data/events.json";
+
+async function fetchMainRepoEvents(env: Env): Promise<{ list: EventEntry[]; sha: string }> {
+  const url = `https://api.github.com/repos/${env.MAIN_REPO}/contents/${EVENTS_PATH}?ref=${env.MAIN_REPO_BRANCH}`;
+  const r = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${env.MAIN_REPO_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+    },
+  });
+  if (!r.ok) {
+    if (r.status === 404) return { list: [], sha: "" };
+    throw new Error(`fetchMainRepoEvents ${r.status}`);
+  }
+  const data = await r.json() as { content: string; sha: string };
+  const text = utf8FromBase64(data.content.replace(/\s+/g, ""));
+  let list: EventEntry[] = [];
+  try { list = JSON.parse(text); } catch { list = []; }
+  if (!Array.isArray(list)) list = [];
+  return { list, sha: data.sha };
+}
+
+async function putMainRepoEvents(env: Env, list: EventEntry[], sha: string, message: string): Promise<void> {
+  const contentB64 = base64FromUtf8(JSON.stringify(list, null, 2) + "\n");
+  const url = `https://api.github.com/repos/${env.MAIN_REPO}/contents/${EVENTS_PATH}`;
+  const body: Record<string, unknown> = {
+    message,
+    content: contentB64,
+    branch: env.MAIN_REPO_BRANCH,
+  };
+  if (sha) body.sha = sha;
+  const r = await fetch(url, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${env.MAIN_REPO_PAT}`,
+      "User-Agent": "aspen-auth-worker",
+      Accept: "application/vnd.github+json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) {
+    const txt = await r.text().catch(() => "");
+    console.error("putMainRepoEvents failed", r.status, txt);
+    throw new Error(`putMainRepoEvents ${r.status}`);
+  }
+}
+
+async function handleAdminEvents(req: Request, env: Env): Promise<Response> {
+  const acting = await sessionMember(req, env);
+  if (!acting) return jsonResponse({ ok: false }, 401);
+  if (!acting.admin) return jsonResponse({ ok: false, error: "Admin only." }, 403);
+  if (!env.MAIN_REPO_PAT) {
+    return jsonResponse({
+      ok: false,
+      error: "MAIN_REPO_PAT is not set on the worker. Ask the deployer to `wrangler secret put MAIN_REPO_PAT` with a fine-grained token that has Contents: Read & write on " + (env.MAIN_REPO || "PHD-Center/AsPEN") + ".",
+    }, 500);
+  }
+
+  const body = await safeJson<{
+    action?: "create" | "update" | "delete";
+    index?: number;
+    payload?: Partial<EventEntry>;
+  }>(req);
+  const action = body?.action ?? "create";
+
+  if (action === "create") {
+    const p = body?.payload ?? {};
+    const date  = String(p.date  ?? "").trim().slice(0, 10);
+    const title = String(p.title ?? "").trim().slice(0, 300);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return jsonResponse({ ok: false, error: "Date must be YYYY-MM-DD." }, 400);
+    }
+    if (!title) return jsonResponse({ ok: false, error: "Title required." }, 400);
+    const entry: EventEntry = { date, title };
+    if (p.endDate     && /^\d{4}-\d{2}-\d{2}$/.test(String(p.endDate))) entry.endDate     = String(p.endDate);
+    if (p.type)        entry.type        = String(p.type).trim() as EventEntry["type"];
+    if (p.location)    entry.location    = String(p.location).slice(0, 300);
+    if (p.url)         entry.url         = String(p.url).slice(0, 500);
+    if (p.description) entry.description = String(p.description).slice(0, 2000);
+
+    const { list, sha } = await fetchMainRepoEvents(env);
+    list.push(entry);
+    // Keep the file sorted by date so PagesCMS-side editors see a sane order.
+    list.sort((a, b) => a.date.localeCompare(b.date));
+    await putMainRepoEvents(env, list, sha,
+      `Events: add ${date} ${title.slice(0, 60)} by ${acting.email}`);
+    return jsonResponse({ ok: true, message: "Saved. Site rebuild ~2 minutes." });
+  }
+
+  if (action === "delete" && typeof body?.index === "number") {
+    const { list, sha } = await fetchMainRepoEvents(env);
+    const idx = body.index;
+    if (idx < 0 || idx >= list.length) {
+      return jsonResponse({ ok: false, error: "Index out of range." }, 400);
+    }
+    const removed = list.splice(idx, 1)[0];
+    await putMainRepoEvents(env, list, sha,
+      `Events: delete ${removed?.date} ${removed?.title?.slice(0, 60)} by ${acting.email}`);
+    return jsonResponse({ ok: true, message: "Deleted. Site rebuild ~2 minutes." });
+  }
+
+  return jsonResponse({ ok: false, error: "Unsupported action." }, 400);
 }
 
 // ── Study proposals (members propose studies for chair to accept) ───────

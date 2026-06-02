@@ -101,6 +101,66 @@ const ICS_URL = `${SITE_BASE}/events.ics`;
 
     <div data-state="ready" class="hidden space-y-8">
 
+      <!-- ── Admin-only "+ Add event" form ───────────────────── -->
+      <!-- Revealed by JS when /api/me reports isAdmin. Worker writes
+           the new entry to events.json in the main repo; GH Actions
+           rebuilds the site (~2 min) and the page below + /events.ics
+           pick up the change. -->
+      <details data-admin-only class="hidden border border-brand-200 bg-brand-50/40 rounded-lg">
+        <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-100/40 rounded-lg flex items-center gap-2">
+          ＋ Add event
+        </summary>
+        <form data-add-event-form class="px-4 pb-4 pt-1 space-y-3 border-t border-brand-100">
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Adds a new entry to <code class="font-mono text-[10px] bg-white border border-slate-200 rounded px-1 py-0.5">events.json</code>. GH Actions rebuilds the site within about 2 minutes; the event then appears below and in the .ics feed.
+          </p>
+          <div class="grid sm:grid-cols-2 gap-3">
+            <label class="block">
+              <span class="text-[11px] uppercase tracking-widest text-brand-700 font-semibold">Date *</span>
+              <input type="date" name="date" required class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+            <label class="block">
+              <span class="text-[11px] uppercase tracking-widest text-brand-700 font-semibold">End date (multi-day only)</span>
+              <input type="date" name="endDate" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+          </div>
+          <label class="block">
+            <span class="text-[11px] uppercase tracking-widest text-brand-700 font-semibold">Title *</span>
+            <input type="text" name="title" required maxlength="300" placeholder="e.g. ICPE 2027 Annual Meeting" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+          </label>
+          <div class="grid sm:grid-cols-2 gap-3">
+            <label class="block">
+              <span class="text-[11px] uppercase tracking-widest text-brand-700 font-semibold">Type</span>
+              <select name="type" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <option value="conference">Conference</option>
+                <option value="deadline">Deadline / submission</option>
+                <option value="webinar">Webinar / teleconference</option>
+                <option value="training">Training / workshop</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            <label class="block">
+              <span class="text-[11px] uppercase tracking-widest text-brand-700 font-semibold">Location</span>
+              <input type="text" name="location" maxlength="300" placeholder="e.g. Tokyo, Japan / Zoom" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+            </label>
+          </div>
+          <label class="block">
+            <span class="text-[11px] uppercase tracking-widest text-brand-700 font-semibold">URL</span>
+            <input type="url" name="url" maxlength="500" placeholder="https://..." class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+          </label>
+          <label class="block">
+            <span class="text-[11px] uppercase tracking-widest text-brand-700 font-semibold">Description</span>
+            <textarea name="description" rows="2" maxlength="2000" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
+          </label>
+          <div class="flex items-center gap-3">
+            <button type="submit" class="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2 rounded text-sm transition">
+              Save event
+            </button>
+            <p data-add-event-msg class="text-xs"></p>
+          </div>
+        </form>
+      </details>
+
       <!-- ── Subscribe panel ─────────────────────────────────── -->
       <details class="border border-brand-200 bg-brand-50/40 rounded-lg">
         <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-100/40 rounded-lg flex items-center gap-2">
@@ -231,11 +291,61 @@ const ICS_URL = `${SITE_BASE}/events.ics`;
         }
       });
 
-      // Auth gate — any signed-in member can view (no admin check).
+      // ── + Add event form (admin only) ───────────────────────
+      // Posts to /api/admin/events. Worker writes to events.json in the
+      // main repo via MAIN_REPO_PAT; GH Actions then auto-rebuilds the
+      // site and the new event shows up here + in /events.ics about
+      // two minutes later.
+      const addForm = document.querySelector("[data-add-event-form]");
+      const addMsg  = document.querySelector("[data-add-event-msg]");
+      addForm?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const fd = new FormData(addForm);
+        const payload = {
+          date:        String(fd.get("date") || ""),
+          endDate:     String(fd.get("endDate") || "") || undefined,
+          title:       String(fd.get("title") || ""),
+          type:        String(fd.get("type") || "other"),
+          location:    String(fd.get("location") || "") || undefined,
+          url:         String(fd.get("url") || "") || undefined,
+          description: String(fd.get("description") || "") || undefined,
+        };
+        if (!payload.date || !payload.title) {
+          if (addMsg) { addMsg.textContent = "Date and title are required."; addMsg.className = "text-xs text-rose-700"; }
+          return;
+        }
+        const btn = addForm.querySelector("button[type='submit']");
+        if (btn) btn.disabled = true;
+        if (addMsg) { addMsg.textContent = "Saving…"; addMsg.className = "text-xs text-slate-500 italic"; }
+        try {
+          const r = await fetch(`${WORKER_URL}/api/admin/events`, {
+            method: "POST", credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "create", payload }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (r.ok && d.ok) {
+            if (addMsg) { addMsg.textContent = d.message || "Saved. Site rebuild ~2 minutes."; addMsg.className = "text-xs text-brand-700"; }
+            addForm.reset();
+          } else {
+            if (addMsg) { addMsg.textContent = (d.error || "Couldn't save event.") + " (HTTP " + r.status + ")"; addMsg.className = "text-xs text-rose-700"; }
+          }
+        } catch (err) {
+          if (addMsg) { addMsg.textContent = "Network error: " + String((err && err.message) || err); addMsg.className = "text-xs text-rose-700"; }
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      });
+
+      // Auth gate — any signed-in member can view. Admins also get the
+      // "+ Add event" details revealed.
       fetch(`${WORKER_URL}/api/me`, { credentials: "include" })
         .then((r) => r.ok ? r.json() : null)
         .then((data) => {
           if (!data || !data.ok) return setState("signed-out");
+          if (data.member?.isAdmin) {
+            document.querySelector("[data-admin-only]")?.classList.remove("hidden");
+          }
           setState("ready");
         })
         .catch(() => setState("signed-out"));

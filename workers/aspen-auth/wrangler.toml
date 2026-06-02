@@ -14,6 +14,14 @@ MEMBERS_REPO = "PHD-Center/aspen-members"
 # The branch in that repo to read from.
 MEMBERS_BRANCH = "main"
 
+# Public main-site repo (where events.json lives). The worker writes
+# events here so GH Actions auto-rebuilds the static site + /events.ics
+# whenever an admin uses the "+ Add event" form on /members/events.
+# Needs a separate PAT: `wrangler secret put MAIN_REPO_PAT` with a
+# fine-grained token scoped Contents: Read & write on this repo.
+MAIN_REPO = "PHD-Center/AsPEN"
+MAIN_REPO_BRANCH = "main"
+
 # The base URL of the AsPEN site. Used to build the magic-link URL that
 # goes in the email body and as the post-verify redirect target.
 SITE_BASE_URL = "https://www.aspensig.asia"
