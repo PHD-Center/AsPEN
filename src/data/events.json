@@ -1,34 +1,16 @@
 [
   {
-    "date": "2026-08-24",
-    "endDate": "2026-08-27",
+    "date": "2026-06-12",
+    "title": "ACPE 2026 abstract submission deadline",
+    "type": "deadline",
+    "url": "https://www.asianpharmacoepi.org/abstracts/"
+  },
+  {
+    "date": "2026-08-29",
+    "endDate": "2026-09-02",
     "title": "ICPE 2026 Annual Meeting",
     "type": "conference",
-    "location": "Berlin, Germany",
-    "url": "https://www.pharmacoepi.org/meetings/icpe/",
-    "description": "International Conference on Pharmacoepidemiology and Therapeutic Risk Management. AsPEN holds its annual face-to-face meeting in the days surrounding ICPE."
-  },
-  {
-    "date": "2026-06-15",
-    "title": "ICPE 2026 abstract submission deadline",
-    "type": "deadline",
-    "url": "https://www.pharmacoepi.org/meetings/icpe/",
-    "description": "Late-breaker deadlines typically open separately in July."
-  },
-  {
-    "date": "2026-09-25",
-    "endDate": "2026-09-26",
-    "title": "ISPE Asian Conference on Pharmacoepidemiology (ACPE) 2026",
-    "type": "conference",
-    "location": "Singapore",
-    "url": "https://www.pharmacoepi.org/meetings/asian-conference/",
-    "description": "ISPE's biennial Asia-Pacific regional conference. Primary face-to-face venue for AsPEN members in Asia."
-  },
-  {
-    "date": "2026-07-10",
-    "title": "AsPEN quarterly teleconference (Q3 2026)",
-    "type": "webinar",
-    "location": "Zoom (link circulated by the Academic & Education office)",
-    "description": "Standing AsPEN coordination call — brief site reports, ongoing-study updates, methodological discussion. Open to all members."
+    "location": "Allianz Milan Convention Center, Milan, Italy",
+    "url": "https://ispe2026.eventscribe.net/aaStatic.asp?SFP=TFRMUktaRU1AMjQ5MDc"
   }
 ]
