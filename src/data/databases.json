@@ -131,13 +131,12 @@
     "lng": 139.6503,
     "name": "Medical Data Vision (MDV) Database",
     "type": "Hospital-based EHR + DPC claims",
-    "coverage": "~48M patients · ~29% of Japan's acute-hospital admissions (519 DPC hospitals) · since 2008",
-    "notes": "Operated by Medical Data Vision Co., Ltd.; inpatient and outpatient DPC claims plus laboratory results — strong for in-hospital exposure, severity, and outcomes research.",
+    "coverage": "~48M patients · ~8% of Japan · 519 DPC hospitals · since 2008",
+    "notes": "Operated by Medical Data Vision Co., Ltd.; inpatient and outpatient DPC claims with EMR (laboratory results) from ~519 acute / advanced-treatment hospitals — strong for in-hospital exposure, severity, and outcomes research.",
     "since": 2008,
     "popM": 48,
-    "lagMonths": 6,
-    "features": ["rx", "dx", "labs"],
-    "hidden": true
+    "lagMonths": 1,
+    "features": ["rx", "dx", "labs"]
   },
   {
     "country": "Hong Kong",
