@@ -132,7 +132,7 @@
     "name": "Medical Data Vision (MDV) Database",
     "type": "Hospital-based EHR + DPC claims",
     "coverage": "~52.93M cumulative · ~12.94M annual (~10.5% of Japan) · 572 hospitals · 2008–2025",
-    "notes": "Operated by Medical Data Vision Co., Ltd.; ~52.93M cumulative unique patient identifiers since 2008, with ~12.94M patients in the most recent annual survey period, from 572 hospitals in Japan. Includes both inpatient and outpatient claims plus administrative hospital data — strong for in-hospital exposure, severity, and outcomes research.",
+    "notes": "~52.93M cumulative unique patient identifiers since 2008, with ~12.94M patients in the most recent annual survey period, from 572 hospitals in Japan. Includes both inpatient and outpatient claims plus administrative hospital data — strong for in-hospital exposure, severity, and outcomes research.",
     "since": 2008,
     "popM": 52.93,
     "lagMonths": 1,
