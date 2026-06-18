@@ -143,6 +143,7 @@ export const SATELLITES: Registry[] = [
     name: "NIIS",
     meta: "Vaccine",
     description: "National Immunization Information System — centralised individual-level vaccination records (childhood, adult, travel, COVID-19).",
+    link: "https://www.phdcenter.org.tw/national-immunization-information-system-niis/",
     tone: "pink",
     area: "left3",
     bbox: { top: "62.9%", left: "2.9%", width: "12.1%", height: "14.4%" },
