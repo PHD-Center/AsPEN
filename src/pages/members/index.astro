@@ -46,10 +46,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       </a>
 
       <!-- ── What's in here ────────────────────────────────── -->
-      <!-- Studies tracker + Protocol templates are admin-only — both are
-           internal coordination tools for the chair, not member-facing
-           features. JS in refresh() reveals them only when isAdmin. -->
-      <div data-admin-only class="hidden grid gap-4 sm:grid-cols-2">
+      <!-- Studies tracker + Protocol templates are super-admin-only for
+           the launch — internal coordination tools for the chair, not
+           ready for general member access yet. JS in refresh() reveals
+           them only when isSuperAdmin. -->
+      <div data-superadmin-only class="hidden grid gap-4 sm:grid-cols-2">
         <a href={`${base}/members/studies/`} class="group block border border-slate-200 rounded-lg p-5 bg-white hover:shadow-md hover:border-brand-400 transition">
           <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold">Active studies</p>
           <h3 class="mt-2 font-bold text-slate-900 group-hover:text-brand-700 transition">Multi-country studies in flight</h3>
@@ -262,10 +263,14 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
               wireForm(Boolean(data.member.hasPassword));
               setState("signed-in");
 
-              // Admin-only sections (Studies + Templates cards, the
-              // Review queue card, the pending-count badge).
+              // Super-admin-only sections (Studies + Templates cards) —
+              // gated tighter than admin for the launch.
+              if (data.member.isSuperAdmin) {
+                document.querySelector("[data-superadmin-only]")?.classList.remove("hidden");
+              }
+
+              // Admin sections (Admin panel card, pending-count badge).
               if (data.member.isAdmin) {
-                document.querySelector("[data-admin-only]")?.classList.remove("hidden");
                 document.querySelector("[data-admin-card]")?.classList.remove("hidden");
                 try {
                   const pr = await fetch(`${WORKER_URL}/api/pending`, { credentials: "include" });

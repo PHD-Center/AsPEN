@@ -440,7 +440,7 @@ const DESIGN_TONES: Record<string, string> = {
         .then((r) => r.ok ? r.json() : null)
         .then((data) => {
           if (!data || !data.ok) return setState("signed-out");
-          if (!data.member?.isAdmin) return setState("forbidden");
+          if (!data.member?.isSuperAdmin) return setState("forbidden");
           me = data.member;
           return load();
         })
