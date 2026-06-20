@@ -36,7 +36,7 @@ const SITES_BY_COUNTRY: Record<string, typeof SITES_DB> = SITES_DB.reduce((acc, 
   return acc;
 }, {} as Record<string, typeof SITES_DB>);
 
-// Stages — must match worker STUDY_STAGES order.
+// Stages; must match worker STUDY_STAGES order.
 const STAGES: Array<{ id: string; label: string; tone: string }> = [
   { id: "concept",    label: "Concept",      tone: "bg-slate-50  border-slate-200  text-slate-700" },
   { id: "protocol",   label: "Protocol",     tone: "bg-amber-50  border-amber-200  text-amber-800" },
@@ -62,7 +62,7 @@ const DESIGN_TONES: Record<string, string> = {
 ---
 
 <BaseLayout
-  title="Active studies — AsPEN members"
+  title="Active studies · AsPEN members"
   description="Multi-country AsPEN studies currently in flight. See which stage each is at, who's leading, which sites are in, and request to join."
 >
   <PageHeader
@@ -126,7 +126,7 @@ const DESIGN_TONES: Record<string, string> = {
       </div>
 
       <div data-empty class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
-        <p class="text-sm text-slate-700">No active studies yet. Check back soon — the AsPEN office adds new studies here.</p>
+        <p class="text-sm text-slate-700">No active studies yet. Check back soon; the AsPEN office adds new studies here.</p>
       </div>
 
       <!-- Kanban: 7 columns on desktop, vertical accordion on mobile. -->
@@ -173,7 +173,7 @@ const DESIGN_TONES: Record<string, string> = {
             <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Which site would you bring?</span>
             <select name="site" required
                     class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
-              <option value="">— Select a site —</option>
+              <option value="">- Select a site -</option>
               {Object.entries(SITES_BY_COUNTRY).map(([country, dbs]) => (
                 <optgroup label={country}>
                   {dbs.map((d) => (<option value={d.id}>{d.short}</option>))}
@@ -276,7 +276,7 @@ const DESIGN_TONES: Record<string, string> = {
         const interestedHtml = (study.interested || []).map((i) => `
           <li class="text-xs flex items-start gap-1.5">
             <span class="text-slate-500">·</span>
-            <span><strong>${esc(i.name)}</strong> · ${esc(SITES_LABEL_MAP[i.site]?.short || i.site)}${i.note ? ` <span class="text-slate-500">— ${esc(i.note)}</span>` : ""}</span>
+            <span><strong>${esc(i.name)}</strong> · ${esc(SITES_LABEL_MAP[i.site]?.short || i.site)}${i.note ? ` <span class="text-slate-500">- ${esc(i.note)}</span>` : ""}</span>
           </li>`).join("");
         const pdfLink = study.protocolUrl
           ? `<a href="${WORKER_URL}/api/content/${esc(study.protocolUrl)}" target="_blank" rel="noopener"
@@ -295,7 +295,7 @@ const DESIGN_TONES: Record<string, string> = {
                 ${mine ? `<span class="text-[10px] uppercase tracking-widest font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">You're in</span>` : ""}
               </div>
               <h3 class="mt-1.5 text-sm font-bold text-slate-900 leading-snug">${esc(study.title)}</h3>
-              <p class="mt-0.5 text-[11px] text-slate-500">Lead: <strong class="text-slate-700">${esc(study.lead?.name || "—")}</strong></p>
+              <p class="mt-0.5 text-[11px] text-slate-500">Lead: <strong class="text-slate-700">${esc(study.lead?.name || "-")}</strong></p>
             </header>
             <div class="px-3 py-2 space-y-2">
               ${confirmed || wanted ? `<div class="flex flex-wrap gap-1">${confirmed}${wanted ? (confirmed ? " " : "") + wanted : ""}</div>` : ""}
@@ -327,7 +327,7 @@ const DESIGN_TONES: Record<string, string> = {
             .filter(studyMatchesFilter);
           const html = inStage.length > 0
             ? inStage.map(cardHtml).join("")
-            : '<p class="text-[11px] text-slate-400 italic px-1 py-2">—</p>';
+            : '<p class="text-[11px] text-slate-400 italic px-1 py-2">-</p>';
           const desk = document.querySelector(`[data-stage-list="${stage.id}"]`);
           const mob  = document.querySelector(`[data-stage-list-mob="${stage.id}"]`);
           if (desk) desk.innerHTML = html;
@@ -404,7 +404,7 @@ const DESIGN_TONES: Record<string, string> = {
           });
           const data = await r.json().catch(() => ({}));
           if (!r.ok || !data.ok) throw new Error(data.error || "Couldn't send.");
-          modalMsg.textContent = "Sent — the chair has been emailed.";
+          modalMsg.textContent = "Sent; the chair has been emailed.";
           modalMsg.className = "text-xs text-brand-700";
           await load();
           setTimeout(closeModal, 1400);
@@ -414,7 +414,7 @@ const DESIGN_TONES: Record<string, string> = {
         }
       });
 
-      // Standalone propose form removed — members now propose via a
+      // Standalone propose form removed; members now propose via a
       // protocol-template builder + Send-to-AsPEN button. The studies
       // page just renders the Kanban + Express-interest modal.
 

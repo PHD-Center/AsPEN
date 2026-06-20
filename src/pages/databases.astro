@@ -6,7 +6,7 @@ import databasesRaw from "../data/databases.json";
 
 const siteBase = import.meta.env.BASE_URL.replace(/\/?$/, "/"); // ensure trailing slash
 
-// Filter out databases flagged `hidden: true` — used to temporarily withhold
+// Filter out databases flagged `hidden: true`; used to temporarily withhold
 // data partners that are mid-negotiation (e.g. some Japan commercial DBs as
 // of 2026-05). Records stay in databases.json so we can restore them quickly.
 const databases = databasesRaw.filter((d) => !(d as { hidden?: boolean }).hidden);
@@ -40,7 +40,7 @@ const grouped = Array.from(groupedMap.entries());
 const asianGroups = grouped.filter(([c]) => countryMeta[c]?.region === "asia");
 const externalGroups = grouped.filter(([c]) => countryMeta[c]?.region === "external");
 
-// Separate grouping for the MAP — allows mapAs override so e.g. Scotland gets its
+// Separate grouping for the MAP; allows mapAs override so e.g. Scotland gets its
 // own flag marker even though the ISD database is listed under United Kingdom.
 const mapGroupedMap = new Map<string, typeof databases>();
 for (const d of databases) {
@@ -64,7 +64,7 @@ const mapGroups = Array.from(mapGroupedMap.entries()).map(([key, dbs]) => {
   };
 });
 
-// Singapore + Thailand — appear on the map (no anchor since they live in the prose section)
+// Singapore + Thailand; appear on the map (no anchor since they live in the prose section)
 // Inline rather than in databases.json because they're "other sites", not active.
 const otherMapEntries: Record<string, { name: string; type: string; coverage?: string }[]> = {
   Singapore: [
@@ -72,7 +72,7 @@ const otherMapEntries: Record<string, { name: string; type: string; coverage?: s
   ],
   Thailand: [
     { name: "Buddhachinaraj Hospital Database (BHD)", type: "Single-hospital EHR" },
-    { name: "Hospital Information (HI) — Ubon Ratchathani", type: "Multi-hospital EHR" },
+    { name: "Hospital Information (HI); Ubon Ratchathani", type: "Multi-hospital EHR" },
   ],
 };
 for (const [country, items] of Object.entries(otherMapEntries)) {
@@ -95,7 +95,7 @@ const typeColor: Record<string, string> = {
   Biobank: "bg-amber-50 text-amber-700 border-amber-200",
 };
 
-// Comparison data — keyed by database name. Used by the comparison drawer
+// Comparison data; keyed by database name. Used by the comparison drawer
 // and serialised via define:vars to the inline script.
 // `since` / `popM` / `lagMonths` come straight from databases.json (editable
 // via PagesCMS). Most values are sourced from Figure 1 of the NeuroGEN paper
@@ -133,16 +133,16 @@ for (const d of databases) {
 }
 
 // Other sites listed in the 2015 AsPEN database survey (Lai ECC et al., Epidemiology 2015)
-// that are not part of the current active network. Reference only — not on the map.
+// that are not part of the current active network. Reference only; not on the map.
 const otherSites = [
   { country: "Singapore", flag: "🇸🇬", name: "National Electronic Health Record (NEHR)",     note: "Singapore's national EHR; listed in the 2015 AsPEN survey." },
   { country: "Thailand",  flag: "🇹🇭", name: "Buddhachinaraj Hospital Database (BHD)",       note: "Tertiary referral hospital EHR." },
-  { country: "Thailand",  flag: "🇹🇭", name: "Hospital Information (HI) — Ubon Ratchathani", note: "21-community-hospital EHR network." },
+  { country: "Thailand",  flag: "🇹🇭", name: "Hospital Information (HI); Ubon Ratchathani", note: "21-community-hospital EHR network." },
 ];
 ---
 
 <BaseLayout
-  title="Databases — AsPEN"
+  title="Databases · AsPEN"
   description="Healthcare databases accessible to AsPEN collaborators across East Asia, plus an external control."
 >
   <PageHeader
@@ -234,7 +234,7 @@ const otherSites = [
       <div class="mt-16">
         <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">International partner sites</h2>
         <p class="text-sm text-slate-600 max-w-3xl mb-6">
-          AsPEN collaborators draw on data partners outside East Asia for benchmarking and methodological comparison — including UK, US, European, and Australian sites linked through the NeuroGEN data initiative.
+          AsPEN collaborators draw on data partners outside East Asia for benchmarking and methodological comparison; including UK, US, European, and Australian sites linked through the NeuroGEN data initiative.
         </p>
         <div class="space-y-8">
           {externalGroups.map(([country, dbs]) => {
@@ -289,7 +289,7 @@ const otherSites = [
          Default (mobile / tablet): sits inline below cards, normal flow.
          lg+: becomes a fixed drawer pinned to the right edge of the viewport,
          hidden off-screen until opened via the tab handle (rendered below).
-         Single element used in both modes — JS toggles the `data-open`
+         Single element used in both modes; JS toggles the `data-open`
          attribute on the lg+ drawer. -->
     <section
       id="compare"
@@ -352,7 +352,7 @@ const otherSites = [
         const tabCount = tab?.querySelector("[data-compare-tab-count]");
         if (!tray || !dropzone || !grid) return;
 
-        // Drawer open/close (lg+ only — on smaller screens the tray is inline)
+        // Drawer open/close (lg+ only; on smaller screens the tray is inline)
         const isDrawerMode = () => window.matchMedia("(min-width: 1024px)").matches;
         const openDrawer = () => {
           tray.setAttribute("data-open", "");
@@ -467,7 +467,7 @@ const otherSites = [
           `;
         };
 
-        // Compact details panel below the chart (Coverage only — Notes removed)
+        // Compact details panel below the chart (Coverage only; Notes removed)
         const buildDetailsHtml = (items) => `
           <section class="px-1 pt-3 mt-3 border-t border-brand-100">
             <h3 class="text-[10px] uppercase tracking-widest text-brand-600 font-bold mb-1">Details</h3>
@@ -476,15 +476,15 @@ const otherSites = [
                 <div class="flex items-baseline gap-1.5">
                   <span class="text-sm leading-none" aria-hidden="true">${esc(d.flag)}</span>
                   <span class="font-semibold text-slate-800 text-xs">${esc(shortName(d.name))}</span>
-                  <span class="text-[10px] text-slate-500 ml-auto tabular-nums">${typeof d.since === "number" ? d.since + "–" : "—"} · ${d.popM > 0 ? d.popM + "M" : "—"}</span>
+                  <span class="text-[10px] text-slate-500 ml-auto tabular-nums">${typeof d.since === "number" ? d.since + "–" : "-"} · ${d.popM > 0 ? d.popM + "M" : "-"}</span>
                 </div>
-                <p class="text-[11px] text-slate-700 leading-snug mt-1">${esc(d.coverage || "—")}</p>
+                <p class="text-[11px] text-slate-700 leading-snug mt-1">${esc(d.coverage || "-")}</p>
               </div>
             `).join("")}
           </section>
         `;
 
-        // ── Chart 1: Coverage timeline (Gantt — start year → today; uniform bar
+        // ── Chart 1: Coverage timeline (Gantt; start year → today; uniform bar
         // height so the rows don't get visually noisy. Population already has
         // its own tab and a numeric label on the right; type is the bar colour.)
         const buildTimelineChart = (items) => {
@@ -506,8 +506,8 @@ const otherSites = [
             const hasYear = typeof d.since === "number";
             const offset = hasYear ? ((d.since - minYear) / yearSpan) * 100 : 0;
             const width  = hasYear ? Math.max(2, 100 - offset) : 100;
-            const popLabel = d.popM > 0 ? d.popM + "M" : "—";
-            const sinceLabel = hasYear ? d.since : "—";
+            const popLabel = d.popM > 0 ? d.popM + "M" : "-";
+            const sinceLabel = hasYear ? d.since : "-";
             return `
               <div class="grid grid-cols-[28px_minmax(0,1fr)_84px] items-center gap-2 py-1.5 hover:bg-brand-50/40 rounded transition">
                 <span class="tabular-nums text-[10px] text-slate-500 text-right">${sinceLabel}</span>
@@ -553,7 +553,7 @@ const otherSites = [
           `;
         };
 
-        // ── Chart 2: Population — ranked horizontal bars (length ∝ population).
+        // ── Chart 2: Population; ranked horizontal bars (length ∝ population).
         // Bars are far easier to compare at a glance than circle areas.
         // Sorted largest first; the longest bar fills the row width and others
         // scale linearly off it. Value sits inside long bars or to the right
@@ -579,7 +579,7 @@ const otherSites = [
             const pop = d.popM || 0;
             const w = pop > 0 ? Math.max(1.5, (pop / axisMax) * 100) : 0;
             const inside = w > 22; // wide enough to fit the label inside the bar
-            const label = pop > 0 ? `${fmt(pop)} M` : "—";
+            const label = pop > 0 ? `${fmt(pop)} M` : "-";
             return `
               <div class="grid grid-cols-[minmax(0,108px)_minmax(0,1fr)] items-center gap-2 py-1 hover:bg-brand-50/40 rounded transition">
                 <a href="#${esc(d.anchor)}" class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-800 hover:text-brand-700 hover:underline truncate" title="${esc(d.name)}">
@@ -629,7 +629,7 @@ const otherSites = [
           `;
         };
 
-        // ── Chart 3: Data scope — what kinds of data each DB actually carries.
+        // ── Chart 3: Data scope; what kinds of data each DB actually carries.
         // Matrix: rows = selected DBs (sorted by feature richness, most-loaded
         // on top), columns = the 8 FEATURES (Rx / Dx / Lab / Img / Mor / Can /
         // Preg / Gen). Each cell is a filled (●) or empty (○) circle indicating
@@ -677,7 +677,7 @@ const otherSites = [
 
           return `
             <h3 class="text-[10px] uppercase tracking-widest text-brand-600 font-bold mb-1">Data scope</h3>
-            <p class="text-[10px] text-slate-500 mb-3 leading-snug">Which clinical data types and registry linkages each database carries — the practical answer to "can I study X here?"</p>
+            <p class="text-[10px] text-slate-500 mb-3 leading-snug">Which clinical data types and registry linkages each database carries; the practical answer to "can I study X here?"</p>
             <div>${headerRow}${rows}</div>
             ${buildLegendHtml(items)}
           `;
@@ -874,7 +874,7 @@ const otherSites = [
     <div class="mt-12" id="other-sites">
       <h2 class="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2 scroll-mt-24">Other sites</h2>
       <p class="text-sm text-slate-600 max-w-3xl leading-relaxed">
-        Additional data sources documented that are not part of the current active network include Singapore's <strong>National Electronic Health Record (NEHR)</strong>, and two Thai sites — <strong>Buddhachinaraj Hospital Database (BHD)</strong> (a tertiary referral hospital EHR) and the <strong>Hospital Information network</strong> across 21 community hospitals in Ubon Ratchathani.
+        Additional data sources documented that are not part of the current active network include Singapore's <strong>National Electronic Health Record (NEHR)</strong>, and two Thai sites, <strong>Buddhachinaraj Hospital Database (BHD)</strong> (a tertiary referral hospital EHR) and the <strong>Hospital Information network</strong> across 21 community hospitals in Ubon Ratchathani.
       </p>
     </div>
 

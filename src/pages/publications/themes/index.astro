@@ -12,7 +12,7 @@ const pubs: Pub[] = pubsRaw as Pub[];
 type Aff = Record<string, { countries: string[] }>;
 const aff = affiliations as Aff;
 
-// Compute per-theme dataset. Mutually exclusive — each publication has
+// Compute per-theme dataset. Mutually exclusive; each publication has
 // exactly one primary theme (the `theme` field on publications.json).
 // Highlight = explicit `highlightPmid` override when set on the theme,
 // otherwise featured > blurbed > most-recent.
@@ -49,8 +49,8 @@ const orphanPubs = pubs.filter((p) => !themeIds.has((p as { theme?: string }).th
 ---
 
 <BaseLayout
-  title="Research themes — AsPEN"
-  description="All seven AsPEN research themes on a single page — clinical areas and methodological strands."
+  title="Research themes · AsPEN"
+  description="All seven AsPEN research themes on a single page: clinical areas and methodological strands."
 >
   <PageHeader
     eyebrow="Publications → Theme"

@@ -46,7 +46,7 @@ const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
 >
   const init = () => {
     const map = L.map(mapId, { scrollWheelZoom: false }).setView(initialCenter, initialZoom);
-    // CARTO Voyager — light, English/romanised labels, only major cities at low zoom
+    // CARTO Voyager; light, English/romanised labels, only major cities at low zoom
     L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png", {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',

@@ -9,7 +9,7 @@
 // AsPEN member-auth Worker (Cloudflare). After running `wrangler deploy`
 // from workers/aspen-auth/, paste the printed URL here.
 //
-// Set to empty string while undeployed — the /members/* pages will
+// Set to empty string while undeployed; the /members/* pages will
 // render an "auth not yet configured" notice instead of attempting
 // network calls.
 // TEMP: pointed at workers.dev until auth.aspensig.asia is bound in the

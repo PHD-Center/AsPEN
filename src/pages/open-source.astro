@@ -5,13 +5,13 @@ import PageHeader from "../components/PageHeader.astro";
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 // Open-source friendship links. Add another entry to extend.
-// Per-item heightClass — Ocean has a tagline baked into the SVG so it eats
+// Per-item heightClass; Ocean has a tagline baked into the SVG so it eats
 // extra vertical space; GitHub is single-line so it needs more height to
 // read at a similar visual scale.
 const oss = [
   {
     name: "Ocean",
-    tagline: "Open Casual Effect Analysis Network — PHDc's open ecology search and visualisation portal.",
+    tagline: "Open Casual Effect Analysis Network; PHDc's open ecology search and visualisation portal.",
     href: "https://ocean-dev.phdcenter.org.tw",
     image: "open-source/ocean.svg",
     heightClass: "h-16",
@@ -27,7 +27,7 @@ const oss = [
 ---
 
 <BaseLayout
-  title="Open source — AsPEN"
+  title="Open source · AsPEN"
   description="Open-source projects AsPEN works alongside and the GitHub home of this site."
 >
   <PageHeader

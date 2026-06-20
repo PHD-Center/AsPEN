@@ -7,7 +7,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 
 <BaseLayout
-  title="Verifying sign-in — AsPEN"
+  title="Verifying sign-in · AsPEN"
   description="Verifying your AsPEN magic-link…"
 >
   <PageHeader
@@ -36,13 +36,13 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         return;
       }
       if (!WORKER_URL) {
-        status.textContent = "Login isn't enabled yet — the worker URL hasn't been set.";
+        status.textContent = "Login isn't enabled yet; the worker URL hasn't been set.";
         return;
       }
       // The worker handles /api/verify with a 302 redirect to /members/.
       // The browser will follow it automatically because we navigate
       // there directly (the response sets the session cookie via
-      // Set-Cookie on the worker domain — and we read /api/me from
+      // Set-Cookie on the worker domain; and we read /api/me from
       // /members/ which uses the same cookie via credentials: include).
       location.replace(`${WORKER_URL}/api/verify?t=${encodeURIComponent(token)}`);
     })();

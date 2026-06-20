@@ -45,7 +45,7 @@ const SITES_BY_COUNTRY: Record<string, typeof SITES_DB> = SITES_DB.reduce((acc, 
   return acc;
 }, {} as Record<string, typeof SITES_DB>);
 
-// Phenotype library — four categories for descriptive epi:
+// Phenotype library; four categories for descriptive epi:
 //   · populations   denominator cohorts (the people we count over)
 //   · exposures     drug classes (numerator of drug-utilisation metrics)
 //   · outcomes      diagnoses (numerator of incidence / prevalence)
@@ -62,7 +62,7 @@ const PHENOTYPES = {
       name: "Adults ≥65 y (older-adult cohort)",
       codes: "Age ≥65 at observation start; continuous enrolment ≥365 d.",
       definition: "Denominator for geriatric polypharmacy, falls, dementia-medication studies.",
-      validation: "AsPEN polypharmacy work — Tan EC et al, Pharmacoepidemiol Drug Saf 2023 (PMID 36821644).",
+      validation: "AsPEN polypharmacy work; Tan EC et al, Pharmacoepidemiol Drug Saf 2023 (PMID 36821644).",
     },
     {
       name: "Diabetes mellitus (any type)",
@@ -73,7 +73,7 @@ const PHENOTYPES = {
     {
       name: "Type 2 diabetes (T2DM specifically)",
       codes: "ICD-10 E11.*; require ≥1 oral antidiabetic dispensing (ATC A10B*) before insulin (A10A).",
-      definition: "T2DM-only cohort excluding T1 — for comparative drug-utilisation across SGLT2 / DPP-4 / GLP-1 RAs etc.",
+      definition: "T2DM-only cohort excluding T1; for comparative drug-utilisation across SGLT2 / DPP-4 / GLP-1 RAs etc.",
       validation: "Standard NHIRD / NHIS-NHID T2DM definition; cite Wong MCS et al where applicable.",
     },
     {
@@ -110,7 +110,7 @@ const PHENOTYPES = {
       name: "All-cause mortality denominator",
       codes: "All cohort members contributing person-time until death / censoring (DB end / disenrolment).",
       definition: "Generic denominator structure for mortality-rate computation; cause-specific causes pulled from mortality library.",
-      validation: "Requires mortality linkage — see /databases feature matrix for sites with `mortality` flag.",
+      validation: "Requires mortality linkage; see /databases feature matrix for sites with `mortality` flag.",
     },
   ],
   exposures: [
@@ -120,19 +120,19 @@ const PHENOTYPES = {
     { name: "Metformin",                   codes: "ATC A10BA02" },
     { name: "Sulphonylureas",              codes: "ATC A10BB*" },
     { name: "Insulins (any)",              codes: "ATC A10A*" },
-    { name: "Antipsychotics (any)",        codes: "ATC N05A* — Atypicals N05AH/N05AL/N05AX; typicals N05AA-N05AG" },
+    { name: "Antipsychotics (any)",        codes: "ATC N05A*; Atypicals N05AH/N05AL/N05AX; typicals N05AA-N05AG" },
     { name: "Antidepressants (any)",       codes: "ATC N06A*" },
     { name: "Benzodiazepines / z-drugs",   codes: "ATC N05BA*, N05CD*, N05CF*" },
-    { name: "ADHD stimulants",             codes: "ATC N06BA — methylphenidate N06BA04, amphetamine N06BA01, lisdexamfetamine N06BA12" },
+    { name: "ADHD stimulants",             codes: "ATC N06BA; methylphenidate N06BA04, amphetamine N06BA01, lisdexamfetamine N06BA12" },
     { name: "Opioid analgesics",           codes: "ATC N02A* (excluding diamorphine where required)" },
     { name: "NSAIDs",                      codes: "ATC M01A* (excluding M01AX)" },
     { name: "Gabapentinoids",              codes: "ATC N03AX12 (gabapentin), N03AX16 (pregabalin)" },
     { name: "Anticonvulsants (any)",       codes: "ATC N03A*" },
     { name: "Statins",                     codes: "ATC C10AA*" },
     { name: "Bisphosphonates",             codes: "ATC M05BA* / M05BB*" },
-    { name: "Anticoagulants — DOACs",      codes: "ATC B01AE07 (dabigatran), B01AF01 (rivaroxaban), B01AF02 (apixaban), B01AF03 (edoxaban)" },
-    { name: "Anticoagulants — warfarin",   codes: "ATC B01AA03" },
-    { name: "Cholinesterase inhibitors",   codes: "ATC N06DA — donepezil N06DA02, galantamine N06DA04, rivastigmine N06DA03; plus memantine N06DX01" },
+    { name: "Anticoagulants; DOACs",      codes: "ATC B01AE07 (dabigatran), B01AF01 (rivaroxaban), B01AF02 (apixaban), B01AF03 (edoxaban)" },
+    { name: "Anticoagulants; warfarin",   codes: "ATC B01AA03" },
+    { name: "Cholinesterase inhibitors",   codes: "ATC N06DA; donepezil N06DA02, galantamine N06DA04, rivastigmine N06DA03; plus memantine N06DX01" },
   ],
   outcomes: [
     {
@@ -151,7 +151,7 @@ const PHENOTYPES = {
       name: "Hip fracture",
       codes: "ICD-10 S72.0, S72.1, S72.2 (primary discharge diagnosis) paired with surgical-fixation procedure code.",
       definition: "First hospitalisation with primary discharge hip-fracture diagnosis.",
-      validation: "AsPEN hip-fracture multi-country work — Lai EC et al, BMJ Open 2021/2023.",
+      validation: "AsPEN hip-fracture multi-country work; Lai EC et al, BMJ Open 2021/2023.",
     },
     {
       name: "Acute kidney injury (AKI)",
@@ -163,7 +163,7 @@ const PHENOTYPES = {
       name: "Dementia (any cause)",
       codes: "ICD-10 F00.*, F01.*, F02.*, F03, G30.*, G31.0, G31.1.",
       definition: "First record of dementia diagnosis in the observation period.",
-      validation: "Used in AsPEN NeuroGEN dementia infrastructure — Tsai DHT et al, Clin Epidemiol 2023 (PMID 38146486).",
+      validation: "Used in AsPEN NeuroGEN dementia infrastructure; Tsai DHT et al, Clin Epidemiol 2023 (PMID 38146486).",
     },
     {
       name: "Suicide / self-harm",
@@ -194,7 +194,7 @@ const PHENOTYPES = {
     {
       name: "External causes (injury / suicide / accident)",
       codes: "ICD-10 V01–Y89 as underlying cause.",
-      definition: "Death from external causes — important denominator for excess-mortality calculations.",
+      definition: "Death from external causes; important denominator for excess-mortality calculations.",
       validation: "WHO standard.",
     },
     {
@@ -212,7 +212,7 @@ const PHENOTYPES = {
     {
       name: "Cerebrovascular death (stroke)",
       codes: "ICD-10 I60–I69 as underlying cause.",
-      definition: "Death from cerebrovascular disease — narrower than 'CV death'.",
+      definition: "Death from cerebrovascular disease; narrower than 'CV death'.",
       validation: "WHO standard.",
     },
   ],
@@ -224,7 +224,7 @@ const OUTPUT_METRICS = [
   { id: "periodPrev",      group: "Occurrence",   label: "Period prevalence",              unit: "% of cohort in window",          hint: "Cases ÷ cohort, over a calendar window." },
   { id: "pointPrev",       group: "Occurrence",   label: "Point prevalence",               unit: "% at index date",                hint: "Cases ÷ cohort on a single calendar date (annual / mid-year typical)." },
   { id: "mortAll",         group: "Mortality",    label: "All-cause mortality rate",       unit: "deaths / 1000 person-years",     hint: "Requires mortality linkage at the site." },
-  { id: "mortCause",       group: "Mortality",    label: "Cause-specific mortality",       unit: "deaths / 1000 person-years",     hint: "Uses cause-of-death codes — see library." },
+  { id: "mortCause",       group: "Mortality",    label: "Cause-specific mortality",       unit: "deaths / 1000 person-years",     hint: "Uses cause-of-death codes; see library." },
   { id: "ddd",             group: "Utilisation",  label: "DDD / 1000 inhabitants / day",   unit: "DDD/1000/d",                     hint: "WHO ATC/DDD index dose; classic drug-utilisation metric." },
   { id: "initiation",      group: "Utilisation",  label: "Initiation rate",                unit: "new users / 1000 person-years",  hint: "Incident drug exposure rate." },
   { id: "persistence",     group: "Utilisation",  label: "Persistence / discontinuation",  unit: "median days; % at 1 y",          hint: "Time-to-discontinuation (Kaplan-Meier description)." },
@@ -232,7 +232,7 @@ const OUTPUT_METRICS = [
   { id: "concomitant",     group: "Utilisation",  label: "Concomitant use",                unit: "% on ≥2 classes",                hint: "Proportion using multiple drug classes within a window." },
   { id: "ageStandardised", group: "Adjustment",   label: "Age-standardised rates",         unit: "per 1000 (standardised)",        hint: "Direct or indirect standardisation to a reference population." },
   { id: "joinpoint",       group: "Trends",       label: "Joinpoint / segmented trend",    unit: "APC / AAPC",                     hint: "Annual percent change with break-point detection (Kim 2000)." },
-  { id: "trendInTrend",    group: "Trends",       label: "Trend-in-trend (Ji 2017)",       unit: "RR via trend correlation",       hint: "Advanced variant — exploits cross-region trend covariance. May spin off into its own template." },
+  { id: "trendInTrend",    group: "Trends",       label: "Trend-in-trend (Ji 2017)",       unit: "RR via trend correlation",       hint: "Advanced variant; exploits cross-region trend covariance. May spin off into its own template." },
 ];
 
 const STRATIFICATION = [
@@ -253,7 +253,7 @@ const SENSITIVITY = [
   "Alternative time-window length (calendar-year vs fiscal-year vs rolling 12-month)",
   "Restrict to incident users only (vs all users)",
   "Restrict to ≥1 year of baseline observation",
-  "Negative-control outcome — should show null / flat trend",
+  "Negative-control outcome; should show null / flat trend",
   "Exclude index-year transition (washout 30 / 60 / 90 d)",
   "Alternative case-finding rule (≥1 inpatient vs ≥2 outpatient vs algorithm)",
   "Sub-divide by data-source quality (full vs partial linkage)",
@@ -280,13 +280,13 @@ const TIMELINE_PRESETS: Record<string, string> = {
 ---
 
 <BaseLayout
-  title="Protocol template · Descriptive analysis — AsPEN members"
+  title="Protocol template · Descriptive analysis · AsPEN members"
   description="Guided form for drafting a multi-country descriptive epidemiology protocol (incidence, prevalence, mortality, drug utilisation, switching, age-standardisation, joinpoint trends)."
 >
   <PageHeader
     eyebrow="Members → Templates → DA"
     title="Multi-national descriptive analysis builder"
-    description="Characterise a population — how common a disease is, how a drug is used, who dies — across AsPEN sites. Standard output for Policy & Utilisation theme work and the denominator on which causal studies depend."
+    description="Characterise a population; how common a disease is, how a drug is used, who dies; across AsPEN sites. Standard output for Policy & Utilisation theme work and the denominator on which causal studies depend."
   />
 
   <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -353,7 +353,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
           <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">3 · Sites</summary>
           <div class="px-5 pb-5 space-y-4">
             <p class="text-xs text-slate-500">
-              Tick every <strong>database</strong> (not just country). Feature chips show what each carries — for a descriptive protocol the denominator + the metric features need to match (e.g. cause-specific mortality needs <strong>Mortality</strong> linkage; DDD needs <strong>Rx</strong>; cancer-survivor cohorts need <strong>Cancer</strong>).
+              Tick every <strong>database</strong> (not just country). Feature chips show what each carries; for a descriptive protocol the denominator + the metric features need to match (e.g. cause-specific mortality needs <strong>Mortality</strong> linkage; DDD needs <strong>Rx</strong>; cancer-survivor cohorts need <strong>Cancer</strong>).
             </p>
             <div class="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 border-y border-slate-100 py-2">
               <span class="uppercase tracking-widest font-bold text-slate-600">Legend</span>
@@ -389,8 +389,8 @@ const TIMELINE_PRESETS: Record<string, string> = {
               <textarea name="sitesOther" rows="2" placeholder="Sites beyond the active databases list" class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
             </label>
             <div data-feasibility class="hidden bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs leading-relaxed">
-              <p class="font-bold text-amber-800 uppercase tracking-[0.2em] text-[10px]">⚠ Feasibility heads-up — not a blocker</p>
-              <p class="mt-1 text-amber-900">Your chosen metrics or text imply data features that some selected sites don't carry. Cross-country descriptive studies often accommodate this by reporting which sites contribute to which metric — make that explicit in the per-site analytic plan.</p>
+              <p class="font-bold text-amber-800 uppercase tracking-[0.2em] text-[10px]">⚠ Feasibility heads-up; not a blocker</p>
+              <p class="mt-1 text-amber-900">Your chosen metrics or text imply data features that some selected sites don't carry. Cross-country descriptive studies often accommodate this by reporting which sites contribute to which metric; make that explicit in the per-site analytic plan.</p>
               <ul data-feasibility-list class="mt-2 space-y-1 text-amber-900 list-disc list-inside"></ul>
             </div>
           </div>
@@ -404,7 +404,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
               <span class="ml-2 text-[11px] text-slate-500">Validation citation auto-appends to References on export.</span>
             </div>
             <label class="flex flex-col gap-1">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Population — name</span>
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Population; name</span>
               <input type="text" name="populationName" placeholder="Adults ≥18 y continuously enrolled, 2010-2023" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
             <label class="flex flex-col gap-1">
@@ -437,7 +437,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
         <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
           <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">5 · Numerator phenotypes</summary>
           <div class="px-5 pb-5 space-y-3">
-            <p class="text-xs text-slate-500">What you are counting in the numerator. Pick from each library as relevant — drug exposures for utilisation metrics, outcomes for incidence / prevalence, mortality causes for cause-specific mortality. Free-text fields below for codes not in the libraries.</p>
+            <p class="text-xs text-slate-500">What you are counting in the numerator. Pick from each library as relevant; drug exposures for utilisation metrics, outcomes for incidence / prevalence, mortality causes for cause-specific mortality. Free-text fields below for codes not in the libraries.</p>
             <div class="grid sm:grid-cols-3 gap-2">
               <button type="button" data-open-library data-category="exposures" data-target-name="exposureName" data-target-codes="exposureCodes" class="text-[10px] uppercase tracking-widest font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2 py-1 rounded transition">📚 Pick exposure</button>
               <button type="button" data-open-library data-category="outcomes" data-target-name="outcomeName" data-target-codes="outcomeCodes" data-target-def="outcomeDef" class="text-[10px] uppercase tracking-widest font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2 py-1 rounded transition">📚 Pick outcome</button>
@@ -445,31 +445,31 @@ const TIMELINE_PRESETS: Record<string, string> = {
             </div>
             <div class="grid sm:grid-cols-2 gap-3 pt-2">
               <label class="flex flex-col gap-1">
-                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Drug exposure — name</span>
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Drug exposure; name</span>
                 <input type="text" name="exposureName" placeholder="Anticonvulsants" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
               </label>
               <label class="flex flex-col gap-1">
-                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Drug exposure — code set</span>
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Drug exposure; code set</span>
                 <input type="text" name="exposureCodes" placeholder="ATC N03A*" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
               </label>
               <label class="flex flex-col gap-1">
-                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Outcome — name</span>
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Outcome; name</span>
                 <input type="text" name="outcomeName" placeholder="Incident dementia" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
               </label>
               <label class="flex flex-col gap-1">
-                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Outcome — code set</span>
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Outcome; code set</span>
                 <input type="text" name="outcomeCodes" placeholder="ICD-10 F00.*–F03, G30.*" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
               </label>
               <label class="flex flex-col gap-1 sm:col-span-2">
-                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Outcome — operational definition</span>
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Outcome; operational definition</span>
                 <textarea name="outcomeDef" rows="2" placeholder="First record (inpatient or outpatient) of qualifying ICD-10 code during the observation period." class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
               </label>
               <label class="flex flex-col gap-1">
-                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Cause of death — name</span>
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Cause of death; name</span>
                 <input type="text" name="mortCauseName" placeholder="Cardiovascular death" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
               </label>
               <label class="flex flex-col gap-1">
-                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Cause of death — code set</span>
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Cause of death; code set</span>
                 <input type="text" name="mortCauseCodes" placeholder="ICD-10 I00–I99 underlying cause" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
               </label>
             </div>
@@ -477,9 +477,9 @@ const TIMELINE_PRESETS: Record<string, string> = {
         </details>
 
         <details open class="border border-slate-200 rounded-2xl bg-white shadow-sm">
-          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">6 · Output metrics — what to report</summary>
+          <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">6 · Output metrics; what to report</summary>
           <div class="px-5 pb-5 space-y-4">
-            <p class="text-xs text-slate-500">Tick every metric to report. Each ticked metric gets its own section in the protocol output (Markdown + Word), with operational definition, formula, and unit. Mix-and-match freely — most descriptive AsPEN papers report 3-6 metrics.</p>
+            <p class="text-xs text-slate-500">Tick every metric to report. Each ticked metric gets its own section in the protocol output (Markdown + Word), with operational definition, formula, and unit. Mix-and-match freely; most descriptive AsPEN papers report 3-6 metrics.</p>
             {(["Occurrence", "Mortality", "Utilisation", "Adjustment", "Trends"] as const).map((group) => (
               <div>
                 <p class="text-[11px] uppercase tracking-widest text-slate-600 font-bold">{group}</p>
@@ -540,7 +540,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Method</span>
               <select name="ageStdMethod" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
                 <option value="direct" selected>Direct (apply site age-specific rates to reference structure)</option>
-                <option value="indirect">Indirect (Standardised Mortality / Incidence Ratio — SMR / SIR)</option>
+                <option value="indirect">Indirect (Standardised Mortality / Incidence Ratio; SMR / SIR)</option>
                 <option value="both">Both direct and indirect</option>
               </select>
             </label>
@@ -584,7 +584,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
               </select>
             </label>
             <p class="sm:col-span-2 text-[11px] text-slate-500 leading-relaxed bg-slate-50 border border-slate-200 rounded p-2">
-              <strong>Trend-in-trend variant</strong> (Ji ECC et al, <em>Pharmacoepidemiol Drug Saf</em> 2017) is an advanced extension that exploits cross-region covariance between exposure-trend and outcome-trend — useful when a policy interruption affects exposure unevenly across AsPEN sites. If you ticked "Trend-in-trend" in Section 6 above, the protocol will include a methods stub describing this design; consider spinning it off into its own protocol if the trend-in-trend logic is the central analytic question.
+              <strong>Trend-in-trend variant</strong> (Ji ECC et al, <em>Pharmacoepidemiol Drug Saf</em> 2017) is an advanced extension that exploits cross-region covariance between exposure-trend and outcome-trend; useful when a policy interruption affects exposure unevenly across AsPEN sites. If you ticked "Trend-in-trend" in Section 6 above, the protocol will include a methods stub describing this design; consider spinning it off into its own protocol if the trend-in-trend logic is the central analytic question.
             </p>
           </div>
         </details>
@@ -603,7 +603,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Cross-site comparison</span>
               <select name="metaMethod" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
-                <option value="descriptive" selected>Descriptive only — side-by-side tables, ranked figures</option>
+                <option value="descriptive" selected>Descriptive only; side-by-side tables, ranked figures</option>
                 <option value="re">Random-effects pooled estimate (DerSimonian-Laird)</option>
                 <option value="re-reml">Random-effects (REML)</option>
               </select>
@@ -749,11 +749,11 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
           </label>
           <div class="grid sm:grid-cols-2 gap-3">
             <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead — name</span>
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead; name</span>
               <input type="text" name="leadName" maxlength="120" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
             <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead — email</span>
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead; email</span>
               <input type="email" name="leadEmail" maxlength="200" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
           </div>
@@ -874,7 +874,7 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
 
         if (gaps.length === 0) { panel.classList.add("hidden"); return; }
         list.innerHTML = gaps.map((g) =>
-          `<li><strong>${g.feature}</strong> — implied by your study text / chosen metrics. Missing at: <strong>${g.missing.join(", ")}</strong>` +
+          `<li><strong>${g.feature}</strong>; implied by your study text / chosen metrics. Missing at: <strong>${g.missing.join(", ")}</strong>` +
           (g.have.length > 0 ? `. Available at: ${g.have.join(", ")}.` : `.`) + `</li>`
         ).join("");
         panel.classList.remove("hidden");
@@ -1015,7 +1015,7 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
             name: m.label, unit: m.unit,
             numerator: "Outcome trend in high-exposure stratum",
             denominator: "Outcome trend in low-exposure stratum (stratification by site-level exposure prevalence)",
-            formula: "Trend-in-trend (Ji ECC et al 2017): exploits cross-stratum covariance between exposure-trend and outcome-trend to identify causal contribution. **Advanced variant — if this is your central analytic question, consider a dedicated Trend-in-trend protocol.**",
+            formula: "Trend-in-trend (Ji ECC et al 2017): exploits cross-stratum covariance between exposure-trend and outcome-trend to identify causal contribution. **Advanced variant; if this is your central analytic question, consider a dedicated Trend-in-trend protocol.**",
             stratifyBy: strataLine,
           };
           default: return null;
@@ -1028,15 +1028,15 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
         const meta = ({
           re: "Random-effects (DerSimonian-Laird) pooled estimates across sites; report I² and τ². Forest plot.",
           "re-reml": "Random-effects (REML) pooled estimates across sites; report I² and τ². Forest plot.",
-          descriptive: "Descriptive only — side-by-side tables and ranked figures; no pooled estimate.",
+          descriptive: "Descriptive only; side-by-side tables and ranked figures; no pooled estimate.",
         })[s.metaMethod] || "Descriptive comparison across sites.";
         const arch = ({
-          federated: "Federated — each AsPEN site executes the common analytic package locally and shares aggregate counts + person-time only.",
-          cdm: "Common Data Model — each site transforms data into an agreed CDM, runs the shared package.",
-          centralised: "Centralised — site-level individual data pooled under DUA.",
+          federated: "Federated; each AsPEN site executes the common analytic package locally and shares aggregate counts + person-time only.",
+          cdm: "Common Data Model; each site transforms data into an agreed CDM, runs the shared package.",
+          centralised: "Centralised; site-level individual data pooled under DUA.",
         })[s.arch] || "Federated";
         const ciMethod = ({
-          "poisson-exact": "Exact Poisson (rates) and Wilson score (proportions) — preferred for sparse cells",
+          "poisson-exact": "Exact Poisson (rates) and Wilson score (proportions); preferred for sparse cells",
           "normal": "Normal approximation (only valid for cells with ≥10 events)",
           "bootstrap": "Non-parametric bootstrap (1000 resamples)",
         })[s.ciMethod] || "Exact Poisson / Wilson";
@@ -1065,7 +1065,7 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
             `| **Stratify by** | ${block.stratifyBy} |\n`;
           n++;
         }
-        if (!metricSection) metricSection = "\n## 7. Output metrics\n\n_(none selected — tick at least one in Section 6 of the form)_\n";
+        if (!metricSection) metricSection = "\n## 7. Output metrics\n\n_(none selected; tick at least one in Section 6 of the form)_\n";
 
         return `# ${title}
 
@@ -1112,15 +1112,15 @@ ${bullets(exclusion)}
 
 | | Value |
 |---|---|
-| **Drug exposure — name** | ${orFb(s.exposureName, "_(n/a)_")} |
-| **Drug exposure — codes** | ${orFb(s.exposureCodes, "_(n/a)_")} |
-| **Outcome — name** | ${orFb(s.outcomeName, "_(n/a)_")} |
-| **Outcome — codes** | ${orFb(s.outcomeCodes, "_(n/a)_")} |
-| **Outcome — operational definition** | ${orFb(s.outcomeDef, "_(n/a)_")} |
-| **Cause of death — name** | ${orFb(s.mortCauseName, "_(n/a)_")} |
-| **Cause of death — codes** | ${orFb(s.mortCauseCodes, "_(n/a)_")} |
+| **Drug exposure; name** | ${orFb(s.exposureName, "_(n/a)_")} |
+| **Drug exposure; codes** | ${orFb(s.exposureCodes, "_(n/a)_")} |
+| **Outcome; name** | ${orFb(s.outcomeName, "_(n/a)_")} |
+| **Outcome; codes** | ${orFb(s.outcomeCodes, "_(n/a)_")} |
+| **Outcome; operational definition** | ${orFb(s.outcomeDef, "_(n/a)_")} |
+| **Cause of death; name** | ${orFb(s.mortCauseName, "_(n/a)_")} |
+| **Cause of death; codes** | ${orFb(s.mortCauseCodes, "_(n/a)_")} |
 
-## 5. Output metrics — selected
+## 5. Output metrics; selected
 
 ${ticked.length > 0 ? ticked.map((id, i) => "- " + ((OUTPUT_METRICS.find((m) => m.id === id) || {}).label || id)).join("\n") : "_(none selected)_"}
 
@@ -1204,7 +1204,7 @@ _Drafted with the AsPEN Descriptive Analysis protocol builder (${today})._
 
       document.querySelector("[data-action='copy']")?.addEventListener("click", async () => {
         try { await navigator.clipboard.writeText(preview.textContent || ""); setMsg("Copied to clipboard."); }
-        catch { setMsg("Couldn't copy — your browser may block clipboard access.", true); }
+        catch { setMsg("Couldn't copy; your browser may block clipboard access.", true); }
       });
 
       const doReset = () => {
@@ -1256,7 +1256,7 @@ _Drafted with the AsPEN Descriptive Analysis protocol builder (${today})._
           rows: rows.map(([l, v]) => new D.TableRow({
             children: [
               new D.TableCell({ borders: cellBorders, width: { size: 3000, type: D.WidthType.DXA }, margins: { top: 60, bottom: 60, left: 100, right: 100 }, shading: { fill: "F5F5F5", type: D.ShadingType.CLEAR }, children: [p([text(l, { bold: true })])] }),
-              new D.TableCell({ borders: cellBorders, width: { size: 6026, type: D.WidthType.DXA }, margins: { top: 60, bottom: 60, left: 100, right: 100 }, children: [p([text(v || "—")])] }),
+              new D.TableCell({ borders: cellBorders, width: { size: 6026, type: D.WidthType.DXA }, margins: { top: 60, bottom: 60, left: 100, right: 100 }, children: [p([text(v || "-")])] }),
             ],
           })),
         });
@@ -1274,12 +1274,12 @@ _Drafted with the AsPEN Descriptive Analysis protocol builder (${today})._
         const meta = ({
           re: "Random-effects (DerSimonian-Laird) pooled estimates; report I² and τ²; forest plot.",
           "re-reml": "Random-effects (REML); report I² and τ²; forest plot.",
-          descriptive: "Descriptive only — side-by-side tables and ranked figures.",
+          descriptive: "Descriptive only; side-by-side tables and ranked figures.",
         })[s.metaMethod] || "Descriptive across sites";
         const arch = ({
-          federated: "Federated — each AsPEN site executes locally; aggregate counts + person-time leave the site.",
-          cdm: "Common Data Model — site transforms to agreed CDM, runs shared package.",
-          centralised: "Centralised — pooled individual data under DUA.",
+          federated: "Federated; each AsPEN site executes locally; aggregate counts + person-time leave the site.",
+          cdm: "Common Data Model; site transforms to agreed CDM, runs shared package.",
+          centralised: "Centralised; pooled individual data under DUA.",
         })[s.arch] || "Federated";
         const ciMethod = ({
           "poisson-exact": "Exact Poisson / Wilson score",
@@ -1320,16 +1320,16 @@ _Drafted with the AsPEN Descriptive Analysis protocol builder (${today})._
 
         children.push(h1("4. Numerator phenotypes"));
         children.push(labelTable([
-          ["Drug exposure — name", s.exposureName || ""],
-          ["Drug exposure — codes", s.exposureCodes || ""],
-          ["Outcome — name", s.outcomeName || ""],
-          ["Outcome — codes", s.outcomeCodes || ""],
-          ["Outcome — operational definition", s.outcomeDef || ""],
-          ["Cause of death — name", s.mortCauseName || ""],
-          ["Cause of death — codes", s.mortCauseCodes || ""],
+          ["Drug exposure; name", s.exposureName || ""],
+          ["Drug exposure; codes", s.exposureCodes || ""],
+          ["Outcome; name", s.outcomeName || ""],
+          ["Outcome; codes", s.outcomeCodes || ""],
+          ["Outcome; operational definition", s.outcomeDef || ""],
+          ["Cause of death; name", s.mortCauseName || ""],
+          ["Cause of death; codes", s.mortCauseCodes || ""],
         ]));
 
-        children.push(h1("5. Output metrics — selected"));
+        children.push(h1("5. Output metrics; selected"));
         if (ticked.length === 0) children.push(para("(none selected)"));
         else ticked.forEach((id) => {
           const m = OUTPUT_METRICS.find((x) => x.id === id);
@@ -1460,7 +1460,7 @@ _Drafted with the AsPEN Descriptive Analysis protocol builder (${today})._
       document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLibrary(); });
       modalSearch.addEventListener("input", () => renderLibrary(modalSearch.value));
 
-      // ── Send-to-AsPEN modal (DA — Descriptive Analysis) ──
+      // ── Send-to-AsPEN modal (DA; Descriptive Analysis) ──
       // Maps DA-template fields (picoP / picoMeasure / picoWindow) to
       // the studies proposal schema; design code is DA (worker side
       // accepts this after the enum extension).
@@ -1506,16 +1506,16 @@ _Drafted with the AsPEN Descriptive Analysis protocol builder (${today})._
         aspenForm.querySelector("[name='description']").value = summary.description;
         aspenSites.textContent = summary.sites.length
           ? "Sites in your draft: " + summary.sites.join(", ")
-          : "No sites selected in your draft yet — chair will see this as an open recruit.";
+          : "No sites selected in your draft yet; chair will see this as an open recruit.";
         if (isAdmin) {
           aspenEyebrow.textContent = "Add to Active Studies tracker";
           aspenTitle.textContent   = "Publish this draft to the Kanban";
-          aspenHelp.textContent    = "As admin, this goes directly to /members/studies/ Kanban at stage 'protocol' — bypassing the proposal queue.";
+          aspenHelp.textContent    = "As admin, this goes directly to /members/studies/ Kanban at stage 'protocol'; bypassing the proposal queue.";
           aspenSubmit.textContent  = "Add to Studies tracker";
         } else {
           aspenEyebrow.textContent = "Send proposal to AsPEN chair";
           aspenTitle.textContent   = "Pitch this draft for chair review";
-          aspenHelp.textContent    = "Goes to the chair's queue — no obligation to publish. They can promote it onto the active Kanban with one click.";
+          aspenHelp.textContent    = "Goes to the chair's queue; no obligation to publish. They can promote it onto the active Kanban with one click.";
           aspenSubmit.textContent  = "Send to AsPEN office";
         }
         aspenMsg.textContent = "";
@@ -1578,8 +1578,8 @@ _Drafted with the AsPEN Descriptive Analysis protocol builder (${today})._
           d = await r.json().catch(() => ({}));
           if (r.ok && d.ok) {
             aspenMsg.textContent = isAdmin
-              ? "Added to Active Studies tracker — see /members/studies/."
-              : (d.deduped ? "Already proposed — chair has it." : "Sent — the chair has been notified.");
+              ? "Added to Active Studies tracker; see /members/studies/."
+              : (d.deduped ? "Already proposed; chair has it." : "Sent; the chair has been notified.");
             aspenMsg.className = "text-xs text-brand-700";
             setTimeout(closeAspen, 1500);
           } else {

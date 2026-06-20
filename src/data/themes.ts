@@ -14,7 +14,7 @@ export interface Theme {
   /** Two-digit display number, e.g. "01". */
   number: string;
   name: string;
-  /** Short editorial story — 1–3 sentences, the lede of the spread. */
+  /** Short editorial story; 1–3 sentences, the lede of the spread. */
   story: string;
   /**
    * 3–5 word pull-quote shown on the magazine cover as the main headline.
@@ -33,8 +33,8 @@ export interface Theme {
   highlightPmid?: string;
   /**
    * Abstract visual rendered on the editorial cover when no `cover` image
-   * is supplied. Each key maps to a distinct inline SVG illustration —
-   * network, wave, rings, dots, bars, target, or cluster — keeping the
+   * is supplied. Each key maps to a distinct inline SVG illustration -
+   * network, wave, rings, dots, bars, target, or cluster; keeping the
    * cover graphic without resorting to figurative or playful imagery.
    */
   coverVisual?: "network" | "wave" | "rings" | "dots" | "bars" | "target" | "cluster";
@@ -48,7 +48,7 @@ export const THEMES: Theme[] = [
     number: "01",
     name: "Infrastructure",
     headline: "15 databases · 4 continents",
-    story: "The methodological scaffolding every AsPEN study sits on — PSSA, SCCS, target-trial emulation, common data models, and the NeuroGEN platform that now spans 15 databases on four continents.",
+    story: "The methodological scaffolding every AsPEN study sits on; PSSA, SCCS, target-trial emulation, common data models, and the NeuroGEN platform that now spans 15 databases on four continents.",
     coverVisual: "network",
     tags: ["sequence symmetry", "PSSA", "sccs", "target trial emulation", "CDM", "NeuroGEN", "infrastructure", "databases", "data sources", "distributed network", "methodology", "drug safety", "overview", "review", "accessibility"],
   },
@@ -57,7 +57,7 @@ export const THEMES: Theme[] = [
     number: "02",
     name: "Neuropsychiatry",
     headline: "Antipsychotics, falls, fractures",
-    story: "Medication safety in older and vulnerable populations. The 2021 BMJ self-controlled case series on antipsychotics, cholinesterase inhibitors, and the risk of falls and fractures typifies AsPEN's approach in this area — anchored by the 2013 PSSA on antipsychotics and acute hyperglycaemia, the thread now spans dementia survival trajectories, ADHD / methylphenidate utilisation, and post-COVID neuropsychiatric sequelae.",
+    story: "Medication safety in older and vulnerable populations. The 2021 BMJ self-controlled case series on antipsychotics, cholinesterase inhibitors, and the risk of falls and fractures typifies AsPEN's approach in this area; anchored by the 2013 PSSA on antipsychotics and acute hyperglycaemia, the thread now spans dementia survival trajectories, ADHD / methylphenidate utilisation, and post-COVID neuropsychiatric sequelae.",
     highlightPmid: "34503972",
     coverVisual: "wave",
     tags: ["antipsychotics", "psychotropic", "psychiatry", "mental health", "neurology", "dementia", "ADHD", "methylphenidate", "depression", "anxiety", "antiseizure", "epilepsy", "cholinesterase", "lithium"],
@@ -67,7 +67,7 @@ export const THEMES: Theme[] = [
     number: "03",
     name: "Diabetes",
     headline: "Diabetes drugs in Asia",
-    story: "Real-world safety and utilisation of diabetes drugs in Asian populations — from the second PSSA on thiazolidinediones through current GLP-1 and 5α-reductase × T2DM studies where the underlying epidemiology often differs from Western trial cohorts.",
+    story: "Real-world safety and utilisation of diabetes drugs in Asian populations; from the second PSSA on thiazolidinediones through current GLP-1 and 5α-reductase × T2DM studies where the underlying epidemiology often differs from Western trial cohorts.",
     coverVisual: "rings",
     tags: ["diabetes", "antidiabetic", "GLP 1", "thiazolidinediones", "metabolic"],
   },
@@ -86,7 +86,7 @@ export const THEMES: Theme[] = [
     number: "05",
     name: "Pain & Opioids",
     headline: "Opioids across health systems",
-    story: "Comparative drug utilisation across health systems with very different prescribing cultures — opioids, gabapentinoids, NSAIDs, and the downstream gastrointestinal effects (PPIs, C. difficile) that follow.",
+    story: "Comparative drug utilisation across health systems with very different prescribing cultures; opioids, gabapentinoids, NSAIDs, and the downstream gastrointestinal effects (PPIs, C. difficile) that follow.",
     coverVisual: "bars",
     tags: ["opioid", "gabapentinoid", "NSAIDs", "PPI", "gastrointestinal", "C. difficile"],
   },
@@ -95,7 +95,7 @@ export const THEMES: Theme[] = [
     number: "06",
     name: "Oncology",
     headline: "Real-world cancer safety",
-    story: "Long-tail safety questions in cancer and endocrine therapy where AsPEN's claims data captures real-world prescribing patterns that single-trial datasets miss — androgen deprivation, biologics, GLP-1–thyroid associations, and bone-targeting agents.",
+    story: "Long-tail safety questions in cancer and endocrine therapy where AsPEN's claims data captures real-world prescribing patterns that single-trial datasets miss; androgen deprivation, biologics, GLP-1–thyroid associations, and bone-targeting agents.",
     coverVisual: "target",
     tags: ["oncology", "thyroid cancer", "prostate cancer", "androgen deprivation", "biologics", "bone targeting"],
   },
@@ -104,7 +104,7 @@ export const THEMES: Theme[] = [
     number: "07",
     name: "Older adults",
     headline: "Polypharmacy at scale",
-    story: "Polypharmacy, falls, and hip fracture — questions where Asian healthcare systems with universal coverage offer some of the cleanest population-level evidence anywhere.",
+    story: "Polypharmacy, falls, and hip fracture; questions where Asian healthcare systems with universal coverage offer some of the cleanest population-level evidence anywhere.",
     coverVisual: "cluster",
     tags: ["older adults", "polypharmacy", "falls", "hip fracture"],
   },
@@ -113,7 +113,7 @@ export const THEMES: Theme[] = [
     number: "08",
     name: "Cardiovascular diseases",
     headline: "Drugs and the heart",
-    story: "Cardiovascular safety as a downstream outcome — heart failure, myocardial infarction, and broader cardiometabolic risk associated with psychotropics, ADHD medications, and antidiabetic drugs studied across AsPEN sites.",
+    story: "Cardiovascular safety as a downstream outcome; heart failure, myocardial infarction, and broader cardiometabolic risk associated with psychotropics, ADHD medications, and antidiabetic drugs studied across AsPEN sites.",
     highlightPmid: "34751642",
     coverVisual: "wave",
     tags: ["cardiovascular", "heart failure", "myocardial infarction"],
@@ -123,7 +123,7 @@ export const THEMES: Theme[] = [
     number: "09",
     name: "Infection & Vaccine",
     headline: "Pandemic-era surveillance",
-    story: "AsPEN's pandemic work — vaccine-safety surveillance across 19 Asia-Pacific countries (2021), multi-organ COVID-19 outcomes, and post-acute sequelae studies that needed multi-country denominators to be statistically tractable.",
+    story: "AsPEN's pandemic work; vaccine-safety surveillance across 19 Asia-Pacific countries (2021), multi-organ COVID-19 outcomes, and post-acute sequelae studies that needed multi-country denominators to be statistically tractable.",
     coverVisual: "target",
     tags: ["COVID 19", "vaccine safety", "post acute sequelae"],
   },
@@ -132,7 +132,7 @@ export const THEMES: Theme[] = [
     number: "10",
     name: "Policy & Utilisation",
     headline: "Prescribing across borders",
-    story: "International prescribing-trend comparisons — opioids, gabapentinoids, antipsychotics, dementia medications, antiseizure drugs, antidiabetics and ADHD medications across 60+ countries and regions, often co-led with the WHO Collaborating Centre framework.",
+    story: "International prescribing-trend comparisons; opioids, gabapentinoids, antipsychotics, dementia medications, antiseizure drugs, antidiabetics and ADHD medications across 60+ countries and regions, often co-led with the WHO Collaborating Centre framework.",
     coverVisual: "bars",
     tags: ["drug utilization"],
   },

@@ -4,7 +4,7 @@ import PageHeader from "../components/PageHeader.astro";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-// Same routing as /contact/ — to the Chair + Academic & Education office.
+// Same routing as /contact/; to the Chair + Academic & Education office.
 // Email address stays in mailto only (not rendered as text).
 const danielEmail = "danielhttsai@gmail.com";
 const edEmail = "";
@@ -17,7 +17,7 @@ I'd like to apply for AsPEN membership.
   · Affiliation:
   · Country / region:
   · Role (academic / regulator / industry / student):
-  · ISPE member? (yes / no — ISPE membership is encouraged but not required for a first conversation)
+  · ISPE member? (yes / no; ISPE membership is encouraged but not required for a first conversation)
   · Brief background and research interests:
   · How you found AsPEN:
 
@@ -26,13 +26,13 @@ const mailtoHref = `mailto:${danielEmail}${edEmail ? `?cc=${encodeURIComponent(e
 ---
 
 <BaseLayout
-  title="Membership — AsPEN"
-  description="How to join AsPEN as a member — application, vetting, and what membership unlocks."
+  title="Membership · AsPEN"
+  description="How to join AsPEN as a member: application, vetting, and what membership unlocks."
 >
   <PageHeader
     eyebrow="Get involved"
     title="AsPEN membership"
-    description="AsPEN runs as an ISPE Special Interest Group, but the working network is broader — and we're opening it up to vetted self-signup."
+    description="AsPEN runs as an ISPE Special Interest Group, but the working network is broader, and we're opening it up to vetted self-signup."
   />
 
   <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12 space-y-12">
@@ -40,7 +40,7 @@ const mailtoHref = `mailto:${danielEmail}${edEmail ? `?cc=${encodeURIComponent(e
     <div class="grid md:grid-cols-[2fr_1fr] gap-8 items-start">
       <div class="prose prose-slate max-w-none">
         <h2 class="text-xl font-semibold text-slate-900">Who can join</h2>
-        <p>Academic investigators, regulators, industry researchers, clinicians, and graduate students working — or interested — in pharmacoepidemiology in the Asia-Pacific region. ISPE membership is encouraged but not required for a first conversation.</p>
+        <p>Academic investigators, regulators, industry researchers, clinicians, and graduate students working; or interested; in pharmacoepidemiology in the Asia-Pacific region. ISPE membership is encouraged but not required for a first conversation.</p>
 
         <h2 class="text-xl font-semibold text-slate-900 mt-8">What membership unlocks</h2>
         <p class="text-sm text-slate-600 italic mb-3">Available today, on the public site:</p>
@@ -48,20 +48,20 @@ const mailtoHref = `mailto:${danielEmail}${edEmail ? `?cc=${encodeURIComponent(e
           <li>The full <a href={`${base}/databases/`}>Databases</a>, <a href={`${base}/activities/`}>Activities</a>, and <a href={`${base}/publications/themes/`}>thematic publications</a> sections.</li>
         </ul>
 
-        <p class="text-sm text-slate-600 italic mt-6 mb-3">Phase 2 — coming when AsPEN moves to its new server:</p>
+        <p class="text-sm text-slate-600 italic mt-6 mb-3">Phase 2; coming when AsPEN moves to its new server:</p>
         <ul class="text-sm">
           <li>A dedicated <code>/members/</code> area gated by a member login (email magic-link).</li>
           <li>Study protocols, analysis code, slide decks, and other internal materials.</li>
           <li>Member directory with research interests + national contact persons.</li>
         </ul>
         <p class="text-xs text-slate-500 mt-3">
-          We do not and will not host publisher PDFs of paywalled papers — that breaches copyright even behind a login. The Phase 2 library will only include materials AsPEN holds explicit author or publisher permission to share.
+          We do not and will not host publisher PDFs of paywalled papers; that breaches copyright even behind a login. The Phase 2 library will only include materials AsPEN holds explicit author or publisher permission to share.
         </p>
 
         <h2 class="text-xl font-semibold text-slate-900 mt-8">How vetting works</h2>
         <ol class="text-sm">
           <li>You send the application email below.</li>
-          <li>The Chair / Academic &amp; Education office reviews — typically within two weeks.</li>
+          <li>The Chair / Academic &amp; Education office reviews; typically within two weeks.</li>
           <li>Once approved, your name appears in the member list (Phase 2) and you receive the welcome email with onboarding details.</li>
         </ol>
       </div>

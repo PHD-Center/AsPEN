@@ -16,7 +16,7 @@ const isOnMembers = path.startsWith(`${base}/members`.replace(/\/$/, ""));
 
 <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
   <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-    <a href={`${base}/`} class="flex items-center gap-3" aria-label="AsPEN — Asian Pharmacoepidemiology Network">
+    <a href={`${base}/`} class="flex items-center gap-3" aria-label="AsPEN; Asian Pharmacoepidemiology Network">
       <img src={`${base}/images/AsPenLogo.png`} alt="" class="h-10 w-auto shrink-0" width="36" height="40" />
       <span class="hidden lg:inline text-sm font-bold text-brand-700 leading-tight whitespace-nowrap">
         Asian Pharmacoepidemiology Network
@@ -68,10 +68,10 @@ const isOnMembers = path.startsWith(`${base}/members`.replace(/\/$/, ""));
 <!-- Swap "Sign in" → "Members" once the session cookie is present. -->
 <script is:inline>
   (() => {
-    // Use the WORKER_URL from site-config — fetch it client-side via a tiny
+    // Use the WORKER_URL from site-config; fetch it client-side via a tiny
     // module-style import via window.__WORKER_URL set by a global script? No.
     // Simpler: read it from a meta tag injected by BaseLayout, OR just hardcode
-    // the check pattern. For now, do a fetch to /api/me — if the worker URL
+    // the check pattern. For now, do a fetch to /api/me; if the worker URL
     // hasn't been wired the call quietly fails and we stay on "Sign in".
     const url = (window.__ASPEN_WORKER_URL__ || "").replace(/\/$/, "");
     if (!url) return;
@@ -84,6 +84,6 @@ const isOnMembers = path.startsWith(`${base}/members`.replace(/\/$/, ""));
           });
         }
       })
-      .catch(() => { /* offline / cors / no session — ignore */ });
+      .catch(() => { /* offline / cors / no session; ignore */ });
   })();
 </script>

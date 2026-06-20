@@ -9,7 +9,7 @@ const years = Array.from(new Set(publications.map((p) => p.year))).sort((a, b) =
 
 // Curated achievement milestones per year. Edit this list to tell the AsPEN story.
 // `year` drives the filter; click jumps to that year's publications below.
-// Each milestone may optionally link to a specific paper by PMID — clicking will
+// Each milestone may optionally link to a specific paper by PMID; clicking will
 // scroll the publication list below to that paper. Milestones without `pmid`
 // (e.g. organisational events) just sit on the timeline.
 const milestones: { year: number; text: string; pmid?: string }[] = [
@@ -25,7 +25,7 @@ const milestones: { year: number; text: string; pmid?: string }[] = [
 ];
 ---
 
-<BaseLayout title="Publications — AsPEN" description="Peer-reviewed publications from the Asian Pharmacoepidemiology Network.">
+<BaseLayout title="Publications · AsPEN" description="Peer-reviewed publications from the Asian Pharmacoepidemiology Network.">
   <PageHeader
     eyebrow="Publications"
     title="Publications"

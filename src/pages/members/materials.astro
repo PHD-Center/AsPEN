@@ -7,7 +7,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 
 <BaseLayout
-  title="Working materials — AsPEN members"
+  title="Working materials · AsPEN members"
   description="Study protocols, slides, analysis code shared within the AsPEN community."
 >
   <PageHeader
@@ -103,7 +103,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       };
 
       if (!WORKER_URL) {
-        setError("Members area isn't enabled yet — the auth worker URL hasn't been set.");
+        setError("Members area isn't enabled yet; the auth worker URL hasn't been set.");
         return;
       }
 
@@ -150,7 +150,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
           const meData = await meR.json();
           isAdmin = Boolean(meData?.member?.isAdmin);
 
-          // Materials is parked — non-admin members see the friendly notice.
+          // Materials is parked; non-admin members see the friendly notice.
           // Admins keep full access so they can manage / clean up existing
           // files until we decide whether to bring it back.
           if (!isAdmin) return setState("parked");

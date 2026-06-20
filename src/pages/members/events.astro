@@ -17,8 +17,8 @@ type EventEntry = {
 };
 
 // Build-time sort:
-//   · Upcoming  (date >= today) — ascending by date (next event first)
-//   · Past      (date <  today) — descending by date (most recent first)
+//   · Upcoming  (date >= today); ascending by date (next event first)
+//   · Past      (date <  today); descending by date (most recent first)
 // "Today" is computed at build time; since GH Actions rebuilds on every push
 // and the calendar is mostly informational, build-time freshness is fine.
 // The iCal feed (/events.ics) is also static so the same model applies.
@@ -36,7 +36,7 @@ const past = events
   .filter((e) => (e.endDate ?? e.date) < todayIso)
   .sort((a, b) => b.date.localeCompare(a.date));
 
-// Type chip colours — kept restrained so a long list doesn't look like a circus.
+// Type chip colours; kept restrained so a long list doesn't look like a circus.
 const TYPE_TONE: Record<string, string> = {
   conference: "bg-brand-100 text-brand-800 border-brand-200",
   deadline:   "bg-rose-100 text-rose-800 border-rose-200",
@@ -74,14 +74,14 @@ const fmtRange = (start: string, end?: string): string => {
   return `${fmtSingle(start)} – ${fmtSingle(end)}`;
 };
 
-// iCal feed lives at /events.ics (public — calendar clients don't carry auth).
+// iCal feed lives at /events.ics (public; calendar clients don't carry auth).
 // We render it absolute when possible so the "copy this URL" UI is unambiguous.
 const SITE_BASE = "https://www.aspensig.asia";
 const ICS_URL = `${SITE_BASE}/events.ics`;
 ---
 
 <BaseLayout
-  title="Events — AsPEN members"
+  title="Events · AsPEN members"
   description="Upcoming ICPE, ISPE Asian, AsPEN webinars, and submission deadlines. Subscribe in Google Calendar / Outlook."
 >
   <PageHeader
@@ -168,7 +168,7 @@ const ICS_URL = `${SITE_BASE}/events.ics`;
         </summary>
         <div class="px-4 pb-4 pt-1 text-xs text-slate-700 leading-relaxed space-y-3 border-t border-brand-100">
           <p>
-            Copy the subscription URL below and add it in your calendar app — events stay current as the AsPEN office updates them.
+            Copy the subscription URL below and add it in your calendar app; events stay current as the AsPEN office updates them.
           </p>
           <div class="flex flex-wrap items-center gap-2">
             <input type="text" readonly value={ICS_URL} data-ics-url
@@ -337,7 +337,7 @@ const ICS_URL = `${SITE_BASE}/events.ics`;
         }
       });
 
-      // Auth gate — any signed-in member can view. Admins also get the
+      // Auth gate; any signed-in member can view. Admins also get the
       // "+ Add event" details revealed.
       fetch(`${WORKER_URL}/api/me`, { credentials: "include" })
         .then((r) => r.ok ? r.json() : null)

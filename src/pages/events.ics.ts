@@ -5,17 +5,17 @@
 //
 // Why public (no auth):
 //   Calendar clients fetch the feed periodically with no Authorization header
-//   and no cookie — so any "Bearer required" path is unusable. The events
+//   and no cookie; so any "Bearer required" path is unusable. The events
 //   themselves (ICPE / ISPE Asian conference dates, AsPEN teleconference) are
 //   public knowledge already; nothing in the feed is sensitive.
 //
-// Build mode: this is a static endpoint — Astro emits a single .ics file at
+// Build mode: this is a static endpoint; Astro emits a single .ics file at
 // build time. The feed is therefore refreshed on each site deploy (which
 // matches our PagesCMS edit → push → GH Actions cycle).
 //
 // RFC 5545 compliance: minimal subset. We intentionally avoid VTIMEZONE
 // blocks and treat all events as all-day (VALUE=DATE) since none of the
-// AsPEN-relevant events need wall-clock precision in the .ics — conference
+// AsPEN-relevant events need wall-clock precision in the .ics; conference
 // dates and deadlines are date-granularity anyway.
 
 import type { APIRoute } from "astro";
@@ -33,7 +33,7 @@ interface EventEntry {
   description?: string;
 }
 
-// RFC 5545 §3.3.11 — TEXT field escaping. Backslash MUST come first.
+// RFC 5545 §3.3.11; TEXT field escaping. Backslash MUST come first.
 const escText = (s: string | undefined): string =>
   (s ?? "")
     .replace(/\\/g, "\\\\")
@@ -41,7 +41,7 @@ const escText = (s: string | undefined): string =>
     .replace(/,/g, "\\,")
     .replace(/\r\n|\n|\r/g, "\\n");
 
-// RFC 5545 §3.1 — long lines must be folded at 75 octets. Keeping this simple:
+// RFC 5545 §3.1; long lines must be folded at 75 octets. Keeping this simple:
 // fold every output line after 73 chars to leave room for CRLF.
 const fold = (line: string): string => {
   if (line.length <= 75) return line;
@@ -100,7 +100,7 @@ const buildVEvent = (e: EventEntry, dtstamp: string): string[] => {
 };
 
 export const GET: APIRoute = () => {
-  // Build-time "now" — fine since this is prerendered.
+  // Build-time "now"; fine since this is prerendered.
   const dtstamp = toIcsTimestamp(new Date());
   const events = eventsRaw as EventEntry[];
 
@@ -127,7 +127,7 @@ export const GET: APIRoute = () => {
     headers: {
       "Content-Type": "text/calendar; charset=utf-8",
       "Content-Disposition": "inline; filename=aspen-events.ics",
-      // Mild cache — but calendar clients ignore this and refresh on their own
+      // Mild cache; but calendar clients ignore this and refresh on their own
       // schedule (Google Calendar refreshes a subscribed URL every few hours).
       "Cache-Control": "public, max-age=600",
     },

@@ -4,7 +4,7 @@ import PageHeader from "../../../components/PageHeader.astro";
 import { WORKER_URL } from "../../../data/site-config";
 import databasesRaw from "../../../data/databases.json";
 
-// Feature taxonomy — same 8 dimensions as the /databases/ compare drawer.
+// Feature taxonomy; same 8 dimensions as the /databases/ compare drawer.
 const FEATURES = [
   { id: "rx",        short: "Rx",   label: "Prescriptions" },
   { id: "dx",        short: "Dx",   label: "Diagnoses" },
@@ -64,7 +64,7 @@ const SITES = [
   { code: "US", name: "United States (Medicare / Medicaid)" },
 ];
 
-// Curated checkbox lists — keeps the form selectable; user can add custom
+// Curated checkbox lists; keeps the form selectable; user can add custom
 // lines below each list.
 const CENSORING = [
   "Discontinuation of index drug (gap > grace period)",
@@ -142,7 +142,7 @@ const SUBGROUPS = [
   "Baseline HbA1c (≥8% vs <8%)",
 ];
 
-// Common inclusion / exclusion criteria — surfaced as checkboxes so a
+// Common inclusion / exclusion criteria; surfaced as checkboxes so a
 // typical AsPEN ACNU protocol can be assembled almost entirely by ticking.
 const INCLUSION = [
   "Adult (≥18 years) at index date",
@@ -311,15 +311,15 @@ const PHENOTYPES = {
     { name: "Opioid analgesics", codes: "ATC N02A* (excluding diamorphine where required)", notes: "Consider OMEDD calculation for dose comparison across sites." },
     { name: "NSAIDs", codes: "ATC M01A* (excluding M01AX, the topical / non-systemic)", notes: "" },
     { name: "Bisphosphonates", codes: "ATC M05BA* / M05BB*", notes: "" },
-    { name: "Anticoagulants — DOACs", codes: "ATC B01AE07 (dabigatran), B01AF01 (rivaroxaban), B01AF02 (apixaban), B01AF03 (edoxaban)", notes: "" },
-    { name: "Anticoagulants — warfarin", codes: "ATC B01AA03", notes: "" },
+    { name: "Anticoagulants; DOACs", codes: "ATC B01AE07 (dabigatran), B01AF01 (rivaroxaban), B01AF02 (apixaban), B01AF03 (edoxaban)", notes: "" },
+    { name: "Anticoagulants; warfarin", codes: "ATC B01AA03", notes: "" },
   ],
   outcomes: [
     {
       name: "Myocardial infarction (MI)",
       codes: "ICD-10 I21.*, I22.* (primary discharge diagnosis)",
       definition: "First hospitalisation with a primary discharge diagnosis of acute MI.",
-      validation: "PPV ~88% in NHIRD when restricted to inpatient primary diagnosis — Cheng CL, Lee CH, Chen PS, Li YH, Lin SJ, Yang YH. Validation of acute myocardial infarction cases in the National Health Insurance Research Database in Taiwan. J Epidemiol 2014;24(6):500-7.",
+      validation: "PPV ~88% in NHIRD when restricted to inpatient primary diagnosis; Cheng CL, Lee CH, Chen PS, Li YH, Lin SJ, Yang YH. Validation of acute myocardial infarction cases in the National Health Insurance Research Database in Taiwan. J Epidemiol 2014;24(6):500-7.",
     },
     {
       name: "Ischemic stroke",
@@ -331,29 +331,29 @@ const PHENOTYPES = {
       name: "Heart failure hospitalisation",
       codes: "ICD-10 I50.*, I11.0, I13.0, I13.2 (primary discharge diagnosis)",
       definition: "First hospitalisation with a primary discharge diagnosis of heart failure.",
-      validation: "Validated in NHIRD- and CGRD-linked studies — see Shao SC et al, Clinical Epidemiology series, and the broader CGRD foundational paper: Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Chang Gung Research Database — a multi-institutional electronic medical records database for real-world epidemiological research in Taiwan. Pharmacoepidemiol Drug Saf 2019;28(5):593-600.",
+      validation: "Validated in NHIRD- and CGRD-linked studies; see Shao SC et al, Clinical Epidemiology series, and the broader CGRD foundational paper: Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Chang Gung Research Database; a multi-institutional electronic medical records database for real-world epidemiological research in Taiwan. Pharmacoepidemiol Drug Saf 2019;28(5):593-600.",
     },
     {
       name: "3-point MACE",
       codes: "Composite: ICD-10 I21.*, I22.* (MI); I63.*, I64.* (stroke); cause-of-death I00-I99 (CV death)",
-      definition: "Time to first of: non-fatal MI, non-fatal ischemic stroke, or cardiovascular death — whichever occurs first.",
+      definition: "Time to first of: non-fatal MI, non-fatal ischemic stroke, or cardiovascular death; whichever occurs first.",
       validation: "Standard composite endpoint in CV outcome trials; component validation as per individual outcomes above (Cheng CL 2014 J Epidemiol; Cheng CL 2011 PDS).",
     },
     {
       name: "4-point MACE",
       codes: "3-point MACE + ICD-10 I50.* heart-failure hospitalisation",
       definition: "Time to first of: non-fatal MI, non-fatal stroke, CV death, or heart-failure hospitalisation.",
-      validation: "Composite of validated components — Cheng CL 2014 (MI), Cheng CL 2011 (stroke), Shao SC et al CGRD HF studies.",
+      validation: "Composite of validated components; Cheng CL 2014 (MI), Cheng CL 2011 (stroke), Shao SC et al CGRD HF studies.",
     },
     {
       name: "All-cause mortality",
-      codes: "National death-registry linkage (NHIRD ↔ Cause-of-Death; HIRA ↔ KOSIS; etc.) — site-specific",
+      codes: "National death-registry linkage (NHIRD ↔ Cause-of-Death; HIRA ↔ KOSIS; etc.); site-specific",
       definition: "Date of death from any cause.",
-      validation: "Near-complete in NHIRD via Cause-of-Death registry — see Lu TH et al, Hsieh CY et al for NHIRD mortality linkage validation. Sites without linkage use disenrolment + ≥30-day gap as proxy.",
+      validation: "Near-complete in NHIRD via Cause-of-Death registry; see Lu TH et al, Hsieh CY et al for NHIRD mortality linkage validation. Sites without linkage use disenrolment + ≥30-day gap as proxy.",
     },
     {
       name: "Cardiovascular death",
-      codes: "Cause-of-death ICD-10 I00-I99 (primary cause) — requires death-registry linkage",
+      codes: "Cause-of-death ICD-10 I00-I99 (primary cause); requires death-registry linkage",
       definition: "Death with a cardiovascular primary cause on the death certificate.",
       validation: "NHIRD-linked Cause-of-Death studies (Hsieh CY et al Clinical Epidemiology 2019); cause-of-death accuracy is moderate, so sensitivity analysis with broader CV cause definition is recommended.",
     },
@@ -361,19 +361,19 @@ const PHENOTYPES = {
       name: "Acute kidney injury (AKI)",
       codes: "ICD-10 N17.* (primary discharge diagnosis); KDIGO criteria where serum creatinine available",
       definition: "First hospitalisation with primary discharge AKI diagnosis OR serum-creatinine-based KDIGO definition where lab linkage exists.",
-      validation: "Code-only AKI ascertainment has moderate PPV — Shao SC et al have used both code-based and lab-confirmed AKI in CGRD; pair with eGFR / serum-creatinine trajectories where available.",
+      validation: "Code-only AKI ascertainment has moderate PPV; Shao SC et al have used both code-based and lab-confirmed AKI in CGRD; pair with eGFR / serum-creatinine trajectories where available.",
     },
     {
       name: "Diabetic ketoacidosis (DKA)",
       codes: "ICD-10 E10.1, E11.1, E13.1, E14.1 (primary discharge diagnosis)",
       definition: "First hospitalisation with primary discharge diagnosis of DKA.",
-      validation: "High specificity when restricted to inpatient primary diagnosis — used in NHIRD-based SGLT2i safety studies (e.g., Shao SC et al Clinical Epidemiology). Confirm with site-specific PPV where possible.",
+      validation: "High specificity when restricted to inpatient primary diagnosis; used in NHIRD-based SGLT2i safety studies (e.g., Shao SC et al Clinical Epidemiology). Confirm with site-specific PPV where possible.",
     },
     {
       name: "Hip fracture",
-      codes: "ICD-10 S72.0, S72.1, S72.2 (primary discharge diagnosis) — paired with surgical procedure code for highest PPV",
+      codes: "ICD-10 S72.0, S72.1, S72.2 (primary discharge diagnosis); paired with surgical procedure code for highest PPV",
       definition: "First hospitalisation with primary discharge diagnosis of hip fracture (typically also requiring surgical-fixation code).",
-      validation: "High PPV reported across multiple AsPEN-network sites — see also AsPEN multi-country hip-fracture study (Lai EC et al, BMJ Open 2021/2023 — protocol & epidemiology papers).",
+      validation: "High PPV reported across multiple AsPEN-network sites; see also AsPEN multi-country hip-fracture study (Lai EC et al, BMJ Open 2021/2023; protocol & epidemiology papers).",
     },
     {
       name: "Any fracture",
@@ -385,7 +385,7 @@ const PHENOTYPES = {
       name: "Falls",
       codes: "ICD-10 W00-W19 (external cause); R29.6 (history of falling); injury-by-fall codes",
       definition: "First ED or hospital encounter with a fall code (often combined with fall-related injury for higher capture).",
-      validation: "Used as a primary outcome in the AsPEN antipsychotic-cholinesterase falls/fractures BMJ study (Wang GH et al, BMJ 2021;PMID 34503972) — defined as fall + injury composite for specificity.",
+      validation: "Used as a primary outcome in the AsPEN antipsychotic-cholinesterase falls/fractures BMJ study (Wang GH et al, BMJ 2021;PMID 34503972); defined as fall + injury composite for specificity.",
     },
     {
       name: "Pneumonia hospitalisation",
@@ -397,7 +397,7 @@ const PHENOTYPES = {
       name: "GI bleeding",
       codes: "ICD-10 K25.0, K25.2, K25.4, K25.6, K26.0, K26.2, K26.4, K26.6, K27.*, K28.*, K29.0, K92.0, K92.1, K92.2 (primary discharge diagnosis)",
       definition: "First hospitalisation with primary discharge diagnosis of GI bleeding.",
-      validation: "Used in AsPEN PSSA studies on NSAID and PPI safety — see Andersen M, Pratt N, Sanfélix-Gimeno G et al. Pharmacoepidemiol Drug Saf 2013 (founding AsPEN methods paper).",
+      validation: "Used in AsPEN PSSA studies on NSAID and PPI safety; see Andersen M, Pratt N, Sanfélix-Gimeno G et al. Pharmacoepidemiol Drug Saf 2013 (founding AsPEN methods paper).",
     },
     {
       name: "Intracranial haemorrhage",
@@ -415,13 +415,13 @@ const PHENOTYPES = {
       name: "Dementia (incident)",
       codes: "ICD-10 F00-F03, G30.*, G31.0, G31.83; OR ≥1 dispensing of donepezil / galantamine / rivastigmine / memantine",
       definition: "First diagnosis of dementia OR first dispensing of a dementia medication, whichever earlier.",
-      validation: "AsPEN dementia work uses this combined definition — see Tsai DHT et al CNS Drugs 2025 (PMID 40437158, NHIRD dementia survival) and the AsPEN 2023 NeuroGEN infrastructure paper (Tsai DHT et al Clinical Epidemiology 2023;PMID 38146486).",
+      validation: "AsPEN dementia work uses this combined definition; see Tsai DHT et al CNS Drugs 2025 (PMID 40437158, NHIRD dementia survival) and the AsPEN 2023 NeuroGEN infrastructure paper (Tsai DHT et al Clinical Epidemiology 2023;PMID 38146486).",
     },
     {
       name: "Thyroid cancer",
-      codes: "ICD-10 C73; cancer-registry linkage (NHIRD ↔ TCR; HIRA ↔ KNCI) — strongly recommended",
+      codes: "ICD-10 C73; cancer-registry linkage (NHIRD ↔ TCR; HIRA ↔ KNCI); strongly recommended",
       definition: "First diagnosis of thyroid cancer from cancer-registry linkage (preferred) or claims (with lower PPV).",
-      validation: "AsPEN GLP-1 RA thyroid-cancer studies (Shao SC et al / Lai EC et al, 2025) used NHIRD ↔ Cancer Registry linkage — see PMIDs 39772758 and 40465422 in the AsPEN publication list.",
+      validation: "AsPEN GLP-1 RA thyroid-cancer studies (Shao SC et al / Lai EC et al, 2025) used NHIRD ↔ Cancer Registry linkage; see PMIDs 39772758 and 40465422 in the AsPEN publication list.",
     },
   ],
 };
@@ -505,13 +505,13 @@ const TIMELINE_PRESETS: Record<string, string> = {
 ---
 
 <BaseLayout
-  title="Protocol template · ACNU — AsPEN members"
+  title="Protocol template · ACNU · AsPEN members"
   description="Guided form that drafts a multi-national active-comparator new-user (ACNU) study protocol for AsPEN sites."
 >
   <PageHeader
     eyebrow="Members → Templates"
     title="Multi-national ACNU protocol builder"
-    description="Active-comparator new-user design under a target trial emulation framework. The active comparator behaves as an 'emulated placebo' from the same therapeutic context — minimising confounding by indication and addressing immortal-time / prevalent-user bias. Tick the boxes for the operational pieces; export as Word (.docx) or Markdown."
+    description="Active-comparator new-user design under a target trial emulation framework. The active comparator behaves as an 'emulated placebo' from the same therapeutic context; minimising confounding by indication and addressing immortal-time / prevalent-user bias. Tick the boxes for the operational pieces; export as Word (.docx) or Markdown."
   />
 
   <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -603,7 +603,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
           </summary>
           <div class="px-5 pb-5 space-y-4">
             <p class="text-xs text-slate-500">
-              Tick every <strong>database</strong> (not just country) you want to include. The feature chips next to each show what each database can support — only tick a site whose features cover what your outcome / exposure / covariates need (e.g., a lab-defined outcome needs <span class="font-mono">Lab</span>; an all-cause mortality endpoint needs <span class="font-mono">Mor</span>).
+              Tick every <strong>database</strong> (not just country) you want to include. The feature chips next to each show what each database can support; only tick a site whose features cover what your outcome / exposure / covariates need (e.g., a lab-defined outcome needs <span class="font-mono">Lab</span>; an all-cause mortality endpoint needs <span class="font-mono">Mor</span>).
             </p>
             <div class="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 border-y border-slate-100 py-2">
               <span class="uppercase tracking-widest font-bold text-slate-600">Legend</span>
@@ -636,12 +636,12 @@ const TIMELINE_PRESETS: Record<string, string> = {
             </div>
             <label class="flex flex-col gap-1">
               <span class="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Others (one per line)</span>
-              <textarea name="sitesOther" rows="2" placeholder="e.g.&#10;Vietnam — local single-site EHR&#10;Singapore — National Healthcare Group"
+              <textarea name="sitesOther" rows="2" placeholder="e.g.&#10;Vietnam; local single-site EHR&#10;Singapore; National Healthcare Group"
                         class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
             </label>
-            <!-- Feasibility heads-up — populated by JS based on form keywords vs site features -->
+            <!-- Feasibility heads-up; populated by JS based on form keywords vs site features -->
             <div data-feasibility class="hidden bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs leading-relaxed">
-              <p class="font-bold text-amber-800 uppercase tracking-[0.2em] text-[10px]">⚠ Feasibility heads-up — not a blocker</p>
+              <p class="font-bold text-amber-800 uppercase tracking-[0.2em] text-[10px]">⚠ Feasibility heads-up; not a blocker</p>
               <p class="mt-1 text-amber-900">
                 Your study question implies data features that some selected sites don't carry. Multi-country protocols often accommodate this (other sites cover what some miss); just be explicit in the per-site analytic plan.
               </p>
@@ -672,7 +672,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
                 {AGE_RANGES.map((a, i) => (
                   <option value={a} selected={i === 0}>{a}</option>
                 ))}
-                <option value="custom">Custom — specify below</option>
+                <option value="custom">Custom; specify below</option>
               </select>
               <input type="text" name="ageRangeCustom" placeholder="Used only if 'Custom' selected (e.g., ≥30, ≤75)"
                      class="border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
@@ -686,7 +686,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
               </select>
             </label>
             <div class="sm:col-span-2">
-              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Inclusion criteria — tick those to apply</p>
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Inclusion criteria; tick those to apply</p>
               <div class="mt-2 grid sm:grid-cols-2 gap-1.5">
                 {INCLUSION.map((c, i) => (
                   <label class="flex items-start gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
@@ -702,7 +702,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
               </label>
             </div>
             <div class="sm:col-span-2">
-              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exclusion criteria — tick those to apply</p>
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exclusion criteria; tick those to apply</p>
               <div class="mt-2 grid sm:grid-cols-2 gap-1.5">
                 {EXCLUSION.map((c, i) => (
                   <label class="flex items-start gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
@@ -736,22 +736,22 @@ const TIMELINE_PRESETS: Record<string, string> = {
               </button>
             </div>
             <label class="flex flex-col gap-1">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure — name</span>
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure; name</span>
               <input type="text" name="exposureName" placeholder="SGLT2 inhibitors"
                      class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
             <label class="flex flex-col gap-1">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure — code set</span>
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure; code set</span>
               <input type="text" name="exposureCodes" placeholder="ATC A10BK*"
                      class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
             <label class="flex flex-col gap-1">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Comparator — name</span>
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Comparator; name</span>
               <input type="text" name="comparatorName" placeholder="DPP-4 inhibitors"
                      class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
             <label class="flex flex-col gap-1">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Comparator — code set</span>
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Comparator; code set</span>
               <input type="text" name="comparatorCodes" placeholder="ATC A10BH*"
                      class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
@@ -772,7 +772,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
                 {INDEX_DATE_OPTIONS.map((o, i) => (
                   <option value={o.value} selected={i === 0}>{o.label}</option>
                 ))}
-                <option value="custom">Custom — specify below</option>
+                <option value="custom">Custom; specify below</option>
               </select>
               <input type="text" name="indexDateCustom" placeholder="Used only if 'Custom' selected"
                      class="border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
@@ -794,7 +794,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
             </div>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Operational definition</span>
-              <textarea name="outcomeDef" rows="3" placeholder="First hospitalisation with primary discharge diagnosis I21.x (MI), I63.x (ischemic stroke), or CV death — composite, time-to-first-event."
+              <textarea name="outcomeDef" rows="3" placeholder="First hospitalisation with primary discharge diagnosis I21.x (MI), I63.x (ischemic stroke), or CV death; composite, time-to-first-event."
                         class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
             </label>
             <label class="flex flex-col gap-1">
@@ -803,7 +803,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
                      class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
             <div>
-              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Secondary outcomes — tick those to include</p>
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Secondary outcomes; tick those to include</p>
               <div class="mt-2 grid sm:grid-cols-2 gap-1.5">
                 {SECONDARY_OUTCOMES_COMMON.map((o, i) => (
                   <label class="flex items-start gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
@@ -852,14 +852,14 @@ const TIMELINE_PRESETS: Record<string, string> = {
                   {MAX_FOLLOWUP_OPTIONS.map((o, i) => (
                     <option value={o} selected={i === 3}>{o}</option>
                   ))}
-                  <option value="custom">Custom — specify below</option>
+                  <option value="custom">Custom; specify below</option>
                 </select>
                 <input type="text" name="maxFollowupCustom" placeholder="Used only if 'Custom' selected"
                        class="border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
               </label>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Censoring rules — tick those that apply</p>
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Censoring rules; tick those that apply</p>
               <div class="mt-2 grid sm:grid-cols-2 gap-1.5">
                 {CENSORING.map((c, i) => (
                   <label class="flex items-start gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
@@ -917,7 +917,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
                         class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
             </label>
             <div>
-              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Baseline covariates — tick those to adjust for</p>
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Baseline covariates; tick those to adjust for</p>
               <div class="mt-2 space-y-3">
                 {COVARIATES.map((g) => (
                   <div>
@@ -967,7 +967,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
               </label>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Subgroup analyses — tick those to perform</p>
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Subgroup analyses; tick those to perform</p>
               <div class="mt-2 grid sm:grid-cols-2 gap-1.5">
                 {SUBGROUPS.map((s, i) => (
                   <label class="flex items-start gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
@@ -982,7 +982,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
               </label>
             </div>
             <div>
-              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Sensitivity analyses — tick those to include</p>
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Sensitivity analyses; tick those to include</p>
               <div class="mt-2 grid sm:grid-cols-2 gap-1.5">
                 {SENSITIVITY.map((s, i) => (
                   <label class="flex items-start gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
@@ -1052,7 +1052,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
             </label>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Key references (one per line)</span>
-              <textarea name="references" rows="11" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Cashin AG, Hansford HJ, Hernán MA, Swanson SA, Lee H, Jones MD, et al. Transparent Reporting of Observational Studies Emulating a Target Trial: The TARGET Statement. JAMA 2025. PMID: 40899949. (Reporting framework anchoring this protocol — see also https://target-guideline.org/)
+              <textarea name="references" rows="11" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Cashin AG, Hansford HJ, Hernán MA, Swanson SA, Lee H, Jones MD, et al. Transparent Reporting of Observational Studies Emulating a Target Trial: The TARGET Statement. JAMA 2025. PMID: 40899949. (Reporting framework anchoring this protocol; see also https://target-guideline.org/)
 Tsai DHT, Chuang ATM, Liu KH, Shao SC, Lai ECC. SGLT2 inhibitors and risk of CKD-mineral and bone disorders in patients with type 2 diabetes mellitus and stage 1-3 CKD. CMAJ 2025;197(7):E178-E189. PMID: 39993818. (AsPEN ACNU + target trial emulation exemplar.)
 Hernán MA, Robins JM. Using big data to emulate a target trial when a randomized trial is not available. Am J Epidemiol 2016;183(8):758-64.
 Lund JL, Richardson DB, Stürmer T. The active comparator, new user study design in pharmacoepidemiology: historical foundations and contemporary application. Curr Epidemiol Rep 2015;2:221-8.
@@ -1119,7 +1119,7 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
         </div>
         <div data-library-list class="px-2 py-2 max-h-[60vh] overflow-y-auto"></div>
         <footer class="px-5 py-3 border-t border-slate-100 text-[11px] text-slate-500 leading-relaxed">
-          Code sets are starting points based on published literature — always confirm against your site's coding system version and indication-specific guidance before locking the protocol.
+          Code sets are starting points based on published literature; always confirm against your site's coding system version and indication-specific guidance before locking the protocol.
         </footer>
       </div>
     </div>
@@ -1142,11 +1142,11 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
           </label>
           <div class="grid sm:grid-cols-2 gap-3">
             <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead — name</span>
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead; name</span>
               <input type="text" name="leadName" maxlength="120" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
             <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead — email</span>
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead; email</span>
               <input type="email" name="leadEmail" maxlength="200" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
           </div>
@@ -1171,7 +1171,7 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
 
   </section>
 
-  <!-- docx library (UMD bundle) — used to generate Word files client-side -->
+  <!-- docx library (UMD bundle); used to generate Word files client-side -->
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js" is:inline></script>
 
   <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES_DETAIL_MAP, FEATURES, TIMELINE_PRESETS, PS_METHODS, PS_METHOD_DESCRIPTIONS, INDEX_DATE_OPTIONS, PHENOTYPES }}>
@@ -1190,7 +1190,7 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
       const preview = document.querySelector("[data-preview]");
       const actionMsg = document.querySelector("[data-action-msg]");
 
-      // ── Picked citations (from library picks) — appended to References on export.
+      // ── Picked citations (from library picks); appended to References on export.
       // Stored as { phenotypeName: citationString } so we dedup and can clear.
       let pickedCitations = {};
       try { pickedCitations = JSON.parse(localStorage.getItem(STORAGE_CITATIONS_KEY) || "{}") || {}; } catch {}
@@ -1276,7 +1276,7 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
 
         if (gaps.length === 0) { panel.classList.add("hidden"); return; }
         list.innerHTML = gaps.map((g) =>
-          `<li><strong>${g.feature}</strong> — implied by your study text. Missing at: <strong>${g.missing.join(", ")}</strong>` +
+          `<li><strong>${g.feature}</strong>; implied by your study text. Missing at: <strong>${g.missing.join(", ")}</strong>` +
           (g.have.length > 0 ? `. Available at: ${g.have.join(", ")}.` : `.`) + `</li>`
         ).join("");
         panel.classList.remove("hidden");
@@ -1345,10 +1345,10 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
         // Resolve dropdown choices to free-text used in the protocol body
         const indexDateLabel = (val) => (INDEX_DATE_OPTIONS.find((o) => o.value === val) || {}).label || "";
         const resolvedIndexDate = s.indexDateChoice === "custom"
-          ? (s.indexDateCustom || "Custom — see study-specific protocol")
+          ? (s.indexDateCustom || "Custom; see study-specific protocol")
           : indexDateLabel(s.indexDateChoice) || indexDateLabel("after-washout");
         const resolvedMaxFu = s.maxFollowupChoice === "custom"
-          ? (s.maxFollowupCustom || "Custom — see study-specific protocol")
+          ? (s.maxFollowupCustom || "Custom; see study-specific protocol")
           : (s.maxFollowupChoice || "5 years per patient, or until censoring (whichever first)");
 
         const sex      = ({ both: "both sexes", female: "female only", male: "male only" })[s.sex] || "both sexes";
@@ -1366,9 +1366,9 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
           fe: "Fixed-effects (inverse-variance) meta-analysis pooling site-specific estimates. Forest plot per outcome.",
         })[s.metaMethod] || "Random-effects meta-analysis.";
         const arch     = ({
-          federated:   "Federated — each AsPEN site executes a common analytic package locally and shares only aggregate site-level estimates with the coordinating centre.",
-          cdm:         "Common Data Model — each site first transforms its source database into the agreed CDM (e.g. OMOP), then runs the shared SQL/R/Python package.",
-          centralised: "Centralised — site-level individual data are pooled at the coordinating centre under appropriate data-sharing agreements.",
+          federated:   "Federated; each AsPEN site executes a common analytic package locally and shares only aggregate site-level estimates with the coordinating centre.",
+          cdm:         "Common Data Model; each site first transforms its source database into the agreed CDM (e.g. OMOP), then runs the shared SQL/R/Python package.",
+          centralised: "Centralised; site-level individual data are pooled at the coordinating centre under appropriate data-sharing agreements.",
         })[s.arch] || "Federated";
 
         const refsUser   = (s.references || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
@@ -1401,7 +1401,7 @@ Schneeweiss S et al. Epidemiology 2009 (high-dimensional propensity score).</tex
 **Version:** ${version}
 **Design:** Multi-national active-comparator new-user (ACNU) cohort study under a target trial emulation framework${s.emulatedTrial ? ` (emulating ${s.emulatedTrial})` : ""}.
 
-The active comparator is used as an emulated placebo arm — a drug class with similar indication, similar temporal trends in use, and no known a priori association with the outcome of interest. This minimises confounding by indication and addresses immortal-time / prevalent-user bias by anchoring follow-up at the moment of treatment commencement, similar to randomisation in a target RCT (Hernán & Robins 2016).
+The active comparator is used as an emulated placebo arm; a drug class with similar indication, similar temporal trends in use, and no known a priori association with the outcome of interest. This minimises confounding by indication and addresses immortal-time / prevalent-user bias by anchoring follow-up at the moment of treatment commencement, similar to randomisation in a target RCT (Hernán & Robins 2016).
 
 ---
 
@@ -1439,7 +1439,7 @@ ${bullets(exclusion)}
 | **Exposure** | ${orFb(s.exposureName, "_(exposure)_")} | ${orFb(s.exposureCodes, "_(codes)_")} |
 | **Comparator** | ${orFb(s.comparatorName, "_(comparator)_")} | ${orFb(s.comparatorCodes, "_(codes)_")} |
 
-- **Washout period:** ${s.washout || "365"} days — no prior dispensing of EITHER exposure or comparator in this window before index.
+- **Washout period:** ${s.washout || "365"} days; no prior dispensing of EITHER exposure or comparator in this window before index.
 - **Index date:** ${resolvedIndexDate}
 
 ## 5. Outcome ascertainment
@@ -1579,7 +1579,7 @@ _Drafted with the AsPEN protocol builder (${today})._
           await navigator.clipboard.writeText(preview.textContent || "");
           setMsg("Copied to clipboard.");
         } catch {
-          setMsg("Couldn't copy — your browser may block clipboard access.", true);
+          setMsg("Couldn't copy; your browser may block clipboard access.", true);
         }
       });
 
@@ -1588,7 +1588,7 @@ _Drafted with the AsPEN protocol builder (${today})._
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(STORAGE_CITATIONS_KEY);
         pickedCitations = {};
-        // True blank slate — form.reset() only restores HTML defaults, which
+        // True blank slate; form.reset() only restores HTML defaults, which
         // leaves all the pre-checked checkboxes ticked. Walk every form
         // control and zero it out so "Clear" actually means clear.
         form.querySelectorAll("input, textarea, select").forEach((el) => {
@@ -1609,7 +1609,7 @@ _Drafted with the AsPEN protocol builder (${today})._
       // ── Word .docx download (Times New Roman, with tables) ─
       document.querySelector("[data-action='download-docx']")?.addEventListener("click", async () => {
         if (typeof docx === "undefined") {
-          setMsg("Word library failed to load — check your network and try again.", true);
+          setMsg("Word library failed to load; check your network and try again.", true);
           return;
         }
         setMsg("Building Word document…");
@@ -1630,7 +1630,7 @@ _Drafted with the AsPEN protocol builder (${today})._
       // ── TARGET checklist download ─────────────────────
       document.querySelector("[data-action='download-target']")?.addEventListener("click", async () => {
         if (typeof docx === "undefined") {
-          setMsg("Word library failed to load — check your network and try again.", true);
+          setMsg("Word library failed to load; check your network and try again.", true);
           return;
         }
         setMsg("Building TARGET checklist…");
@@ -1706,7 +1706,7 @@ _Drafted with the AsPEN protocol builder (${today})._
                 borders: cellBorders,
                 width: { size: 6026, type: D.WidthType.DXA },
                 margins: { top: 60, bottom: 60, left: 100, right: 100 },
-                children: [p([text(value || "—")])],
+                children: [p([text(value || "-")])],
               }),
             ],
           })),
@@ -1732,7 +1732,7 @@ _Drafted with the AsPEN protocol builder (${today})._
                 borders: cellBorders,
                 width: { size: [2200, 3000, 3826][i], type: D.WidthType.DXA },
                 margins: { top: 60, bottom: 60, left: 100, right: 100 },
-                children: [p([text(c || "—")])],
+                children: [p([text(c || "-")])],
               })),
             })),
           ],
@@ -1760,10 +1760,10 @@ _Drafted with the AsPEN protocol builder (${today})._
 
         const indexDateLabel = (val) => (INDEX_DATE_OPTIONS.find((o) => o.value === val) || {}).label || "";
         const resolvedIndexDate = s.indexDateChoice === "custom"
-          ? (s.indexDateCustom || "Custom — see study-specific protocol")
+          ? (s.indexDateCustom || "Custom; see study-specific protocol")
           : indexDateLabel(s.indexDateChoice) || indexDateLabel("after-washout");
         const resolvedMaxFu = s.maxFollowupChoice === "custom"
-          ? (s.maxFollowupCustom || "Custom — see study-specific protocol")
+          ? (s.maxFollowupCustom || "Custom; see study-specific protocol")
           : (s.maxFollowupChoice || "5 years per patient, or until censoring (whichever first)");
 
         const sex      = ({ both: "both sexes", female: "female only", male: "male only" })[s.sex] || "both sexes";
@@ -1776,9 +1776,9 @@ _Drafted with the AsPEN protocol builder (${today})._
           fe: "Fixed-effects (inverse-variance) meta-analysis pooling site-specific estimates. Forest plot per outcome.",
         })[s.metaMethod] || "Random-effects meta-analysis.";
         const arch     = ({
-          federated:   "Federated — each AsPEN site executes a common analytic package locally and shares only aggregate site-level estimates with the coordinating centre.",
-          cdm:         "Common Data Model — each site first transforms its source database into the agreed CDM (e.g. OMOP), then runs the shared SQL/R/Python package.",
-          centralised: "Centralised — site-level individual data are pooled at the coordinating centre under appropriate data-sharing agreements.",
+          federated:   "Federated; each AsPEN site executes a common analytic package locally and shares only aggregate site-level estimates with the coordinating centre.",
+          cdm:         "Common Data Model; each site first transforms its source database into the agreed CDM (e.g. OMOP), then runs the shared SQL/R/Python package.",
+          centralised: "Centralised; site-level individual data are pooled at the coordinating centre under appropriate data-sharing agreements.",
         })[s.arch] || "Federated";
 
         const sitesPart = (s.sites && s.sites.length > 0)
@@ -1804,7 +1804,7 @@ _Drafted with the AsPEN protocol builder (${today})._
                        + (s.emulatedTrial ? " (emulating " + s.emulatedTrial + ")" : "")],
         ]));
         children.push(p([text(
-          "The active comparator is used as an emulated placebo arm — a drug class with similar indication, similar temporal trends in use, and no known a priori association with the outcome of interest. This minimises confounding by indication and addresses immortal-time / prevalent-user bias by anchoring follow-up at the moment of treatment commencement, similar to randomisation in a target RCT (Hernán & Robins 2016)."
+          "The active comparator is used as an emulated placebo arm; a drug class with similar indication, similar temporal trends in use, and no known a priori association with the outcome of interest. This minimises confounding by indication and addresses immortal-time / prevalent-user bias by anchoring follow-up at the moment of treatment commencement, similar to randomisation in a target RCT (Hernán & Robins 2016)."
         )]));
 
         children.push(h1("1. Research question"));
@@ -1837,12 +1837,12 @@ _Drafted with the AsPEN protocol builder (${today})._
             ["Comparator", s.comparatorName, s.comparatorCodes],
           ],
         ));
-        children.push(para("Washout period: " + (s.washout || "365") + " days — no prior dispensing of EITHER exposure or comparator in this window before index."));
+        children.push(para("Washout period: " + (s.washout || "365") + " days; no prior dispensing of EITHER exposure or comparator in this window before index."));
         children.push(para("Index date: " + resolvedIndexDate));
 
         children.push(h1("5. Outcome ascertainment"));
-        children.push(p([text("Operational definition. ", { bold: true }), text(s.outcomeDef || "—")]));
-        children.push(p([text("Code set. ", { bold: true }), text(s.outcomeCodes || "—")]));
+        children.push(p([text("Operational definition. ", { bold: true }), text(s.outcomeDef || "-")]));
+        children.push(p([text("Code set. ", { bold: true }), text(s.outcomeCodes || "-")]));
         children.push(h2("Secondary outcomes"));
         secondary.length ? secondary.forEach((l) => children.push(bullet(l))) : children.push(para("(none specified)"));
 
@@ -1883,7 +1883,7 @@ _Drafted with the AsPEN protocol builder (${today})._
         children.push(h1("10. Execution and timeline"));
         children.push(labelTable([
           ["Architecture", arch],
-          ["CDM", s.cdm || "—"],
+          ["CDM", s.cdm || "-"],
         ]));
         children.push(h2("Timeline milestones"));
         milestones.length ? milestones.forEach((l) => children.push(numItem(l))) : children.push(para("(none)"));
@@ -1939,7 +1939,7 @@ _Drafted with the AsPEN protocol builder (${today})._
       // ── TARGET checklist document ────────────────────
       // Produces a Word file mapping the protocol to the TARGET checklist
       // (Cashin AG, Hansford HJ, Hernán MA, Swanson SA et al. JAMA 2025;
-      // PMID 40899949). Item 7 (target trial emulation) is the centrepiece —
+      // PMID 40899949). Item 7 (target trial emulation) is the centrepiece -
       // a 3-column table with rows a-h showing 'Target trial specification'
       // vs 'Emulation in this study'. Items in Results / Discussion / Other
       // are stubbed as placeholders to be completed at reporting time.
@@ -1979,10 +1979,10 @@ _Drafted with the AsPEN protocol builder (${today})._
         // Resolve fields the same way the main Word/MD generators do
         const indexDateLabel = (val) => (INDEX_DATE_OPTIONS.find((o) => o.value === val) || {}).label || "";
         const resolvedIndexDate = s.indexDateChoice === "custom"
-          ? (s.indexDateCustom || "Custom — see study-specific protocol")
+          ? (s.indexDateCustom || "Custom; see study-specific protocol")
           : indexDateLabel(s.indexDateChoice) || indexDateLabel("after-washout");
         const resolvedMaxFu = s.maxFollowupChoice === "custom"
-          ? (s.maxFollowupCustom || "Custom — see study-specific protocol")
+          ? (s.maxFollowupCustom || "Custom; see study-specific protocol")
           : (s.maxFollowupChoice || "5 years per patient, or until censoring (whichever first)");
         const resolvedAge = s.ageRangeChoice === "custom"
           ? (s.ageRangeCustom || "(specify)")
@@ -2046,7 +2046,7 @@ _Drafted with the AsPEN protocol builder (${today})._
               "Inclusion criteria:\n" + bulletText(inclusion) + "\n" +
               "Exclusion criteria:\n" + bulletText(exclusion)),
             row7("b. Treatment strategies",
-              "Initiate " + (s.picoI || s.exposureName || "(exposure)") + " vs initiate " + (s.picoC || s.comparatorName || "(active comparator)") + " — drugs of the same indication that compete for use.",
+              "Initiate " + (s.picoI || s.exposureName || "(exposure)") + " vs initiate " + (s.picoC || s.comparatorName || "(active comparator)") + "; drugs of the same indication that compete for use.",
               "Exposure: " + (s.exposureName || "(name)") + " (" + (s.exposureCodes || "codes TBD") + ").\n" +
               "Active comparator: " + (s.comparatorName || "(name)") + " (" + (s.comparatorCodes || "codes TBD") + ").\n" +
               "Washout for new-user status: " + (s.washout || "365") + " days."),
@@ -2092,7 +2092,7 @@ _Drafted with the AsPEN protocol builder (${today})._
               "[To be completed at the time of reporting.]"],
           ]],
           ["Introduction", [
-            ["2", "Background — scientific context and gap in knowledge.", "[Background paragraph from your protocol.]"],
+            ["2", "Background; scientific context and gap in knowledge.", "[Background paragraph from your protocol.]"],
             ["3", "Causal question.",
               "Among " + (s.picoP || "(population)") + ", does new use of " + (s.picoI || "(exposure)") + " versus " + (s.picoC || "(comparator)") + " change the incidence of " + (s.picoO || "(outcome)") + "?"],
             ["4", "Rationale for emulating a target trial with the available data; cite informing RCTs.",
@@ -2115,7 +2115,7 @@ _Drafted with the AsPEN protocol builder (${today})._
           ]],
           ["Discussion", [
             ["15", "Interpretation of key findings.", "[To be completed at the time of reporting.]"],
-            ["16", "Limitations — differences between target trial and emulation; plausibility of assumptions.",
+            ["16", "Limitations; differences between target trial and emulation; plausibility of assumptions.",
               "Residual / unmeasured confounding cannot be excluded. Treatment switching during follow-up is censored per the on-treatment analysis. Misclassification of outcome possible."],
           ]],
           ["Other information", [
@@ -2162,7 +2162,7 @@ _Drafted with the AsPEN protocol builder (${today})._
 
         const children = [];
         children.push(new D.Paragraph({
-          children: [text("TARGET checklist — " + (s.title || "(Untitled multi-national ACNU study)"), { bold: true, size: 32 })],
+          children: [text("TARGET checklist; " + (s.title || "(Untitled multi-national ACNU study)"), { bold: true, size: 32 })],
           spacing: { before: 0, after: 120 },
         }));
         children.push(p([new D.TextRun({
@@ -2174,7 +2174,7 @@ _Drafted with the AsPEN protocol builder (${today})._
           font: FONT, size: 18, italics: true, color: "777777",
         })], { spacing: { after: 240 } }));
 
-        children.push(h1("Item 7 — Target trial specification vs emulation"));
+        children.push(h1("Item 7; Target trial specification vs emulation"));
         children.push(p([text("Item 7 is the heart of TARGET. Rows a-h show what the target trial would specify and how this study emulates each piece in observational data.")]));
         children.push(item7Table);
 
@@ -2188,8 +2188,8 @@ _Drafted with the AsPEN protocol builder (${today})._
         })], { spacing: { before: 400 } }));
 
         const doc = new D.Document({
-          creator: "AsPEN protocol builder — TARGET checklist generator",
-          title: "TARGET checklist — " + (s.title || "ACNU protocol"),
+          creator: "AsPEN protocol builder; TARGET checklist generator",
+          title: "TARGET checklist; " + (s.title || "ACNU protocol"),
           styles: {
             default: { document: { run: { font: FONT, size: 22 } } },
             paragraphStyles: [
@@ -2239,7 +2239,7 @@ _Drafted with the AsPEN protocol builder (${today})._
           modalList.innerHTML = '<p class="px-3 py-6 text-sm text-slate-500 italic text-center">No matches.</p>';
           return;
         }
-        // NOTE: validation citation is NOT shown in the modal — it accumulates
+        // NOTE: validation citation is NOT shown in the modal; it accumulates
         // silently on pick and lands in the Word/MD References section at the
         // end of export. Modal stays focused on operational definitions.
         modalList.innerHTML = filtered.map((it, idx) => `
@@ -2251,7 +2251,7 @@ _Drafted with the AsPEN protocol builder (${today})._
             ${it.notes ? `<p class="mt-1 text-[11px] text-slate-500 leading-relaxed">${esc(it.notes)}</p>` : ""}
           </button>
         `).join("");
-        // Click handler — fill targets + close
+        // Click handler; fill targets + close
         modalList.querySelectorAll("[data-phenotype-idx]").forEach((btn) => {
           btn.addEventListener("click", () => {
             const it = filtered[parseInt(btn.dataset.phenotypeIdx, 10)];
@@ -2291,8 +2291,8 @@ _Drafted with the AsPEN protocol builder (${today})._
         modalTitle.textContent = ({
           indications: "Pick an indication (cohort definition)",
           exposures:   "Pick a drug class (exposure or comparator)",
-          outcomes:    "Pick an outcome — fills definition + codes",
-          confounding: "Pick a confounding-control method — fills the method + operational details",
+          outcomes:    "Pick an outcome; fills definition + codes",
+          confounding: "Pick a confounding-control method; fills the method + operational details",
         })[category] || "Pick from library";
         modalSearch.value = "";
         renderLibrary("");
@@ -2357,16 +2357,16 @@ _Drafted with the AsPEN protocol builder (${today})._
         aspenForm.querySelector("[name='description']").value = summary.description;
         aspenSites.textContent = summary.sites.length
           ? "Sites in your draft: " + summary.sites.join(", ")
-          : "No sites selected in your draft yet — chair will see this as an open recruit.";
+          : "No sites selected in your draft yet; chair will see this as an open recruit.";
         if (isAdmin) {
           aspenEyebrow.textContent = "Add to Active Studies tracker";
           aspenTitle.textContent   = "Publish this draft to the Kanban";
-          aspenHelp.textContent    = "As admin, this goes directly to /members/studies/ Kanban at stage 'protocol' — bypassing the proposal queue.";
+          aspenHelp.textContent    = "As admin, this goes directly to /members/studies/ Kanban at stage 'protocol'; bypassing the proposal queue.";
           aspenSubmit.textContent  = "Add to Studies tracker";
         } else {
           aspenEyebrow.textContent = "Send proposal to AsPEN chair";
           aspenTitle.textContent   = "Pitch this draft for chair review";
-          aspenHelp.textContent    = "Goes to the chair's queue — no obligation to publish. They can promote it onto the active Kanban with one click.";
+          aspenHelp.textContent    = "Goes to the chair's queue; no obligation to publish. They can promote it onto the active Kanban with one click.";
           aspenSubmit.textContent  = "Send to AsPEN office";
         }
         aspenMsg.textContent = "";
@@ -2429,8 +2429,8 @@ _Drafted with the AsPEN protocol builder (${today})._
           d = await r.json().catch(() => ({}));
           if (r.ok && d.ok) {
             aspenMsg.textContent = isAdmin
-              ? "Added to Active Studies tracker — see /members/studies/."
-              : (d.deduped ? "Already proposed — chair has it." : "Sent — the chair has been notified.");
+              ? "Added to Active Studies tracker; see /members/studies/."
+              : (d.deduped ? "Already proposed; chair has it." : "Sent; the chair has been notified.");
             aspenMsg.className = "text-xs text-brand-700";
             setTimeout(closeAspen, 1500);
           } else {

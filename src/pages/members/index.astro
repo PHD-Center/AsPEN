@@ -7,8 +7,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 
 <BaseLayout
-  title="Members — AsPEN"
-  description="AsPEN members area — full-text library, materials, account settings."
+  title="Members · AsPEN"
+  description="AsPEN members area: full-text library, materials, account settings."
 >
   <PageHeader
     eyebrow="Members"
@@ -31,8 +31,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       <!-- ── Greeting ──────────────────────────────────────── -->
       <div class="border border-slate-200 rounded-2xl p-6 bg-white shadow-sm">
         <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Signed in as</p>
-        <p class="mt-1 text-xl font-bold text-slate-900" data-member-name>—</p>
-        <p class="mt-0.5 text-sm text-slate-600" data-member-detail>—</p>
+        <p class="mt-1 text-xl font-bold text-slate-900" data-member-name>-</p>
+        <p class="mt-0.5 text-sm text-slate-600" data-member-detail>-</p>
         <button type="button" data-logout class="mt-4 text-xs font-semibold text-slate-500 hover:text-rose-600 hover:underline">
           Sign out
         </button>
@@ -42,12 +42,12 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       <a href={`${base}/members/events/`} class="group block border border-slate-200 rounded-lg p-5 bg-white hover:shadow-md hover:border-brand-400 transition">
         <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold">Calendar</p>
         <h3 class="mt-2 font-bold text-slate-900 group-hover:text-brand-700 transition">Upcoming AsPEN events</h3>
-        <p class="mt-1 text-sm text-slate-600">ICPE, ISPE Asian, AsPEN teleconferences, abstract deadlines — subscribe in Google Calendar / Outlook.</p>
+        <p class="mt-1 text-sm text-slate-600">ICPE, ISPE Asian, AsPEN teleconferences, abstract deadlines; subscribe in Google Calendar / Outlook.</p>
       </a>
 
       <!-- ── What's in here ────────────────────────────────── -->
       <!-- Studies tracker + Protocol templates are super-admin-only for
-           the launch — internal coordination tools for the chair, not
+           the launch; internal coordination tools for the chair, not
            ready for general member access yet. JS in refresh() reveals
            them only when isSuperAdmin. -->
       <div data-superadmin-only class="hidden grid gap-4 sm:grid-cols-2">
@@ -98,7 +98,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Country</span>
               <select name="country" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
-                <option value="">— select —</option>
+                <option value="">- select -</option>
                 <option value="TW">Taiwan (TW)</option>
                 <option value="KR">South Korea (KR)</option>
                 <option value="JP">Japan (JP)</option>
@@ -128,7 +128,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Role</span>
               <select name="role" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
-                <option value="">— select —</option>
+                <option value="">- select -</option>
                 <option value="academic">academic</option>
                 <option value="industry">industry</option>
                 <option value="regulator">regulator</option>
@@ -192,7 +192,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
       if (!WORKER_URL) {
         document.querySelector("[data-state='loading']").textContent =
-          "Members area isn't enabled yet — the auth worker URL hasn't been set.";
+          "Members area isn't enabled yet; the auth worker URL hasn't been set.";
         return;
       }
 
@@ -200,7 +200,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         const parts = [];
         if (m.affiliation) parts.push(m.affiliation);
         if (m.country) parts.push(m.country);
-        return parts.join(" · ") || "—";
+        return parts.join(" · ") || "-";
       };
 
       const setPwdMsg = (msg, isError = false) => {
@@ -263,7 +263,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
               wireForm(Boolean(data.member.hasPassword));
               setState("signed-in");
 
-              // Super-admin-only sections (Studies + Templates cards) —
+              // Super-admin-only sections (Studies + Templates cards) -
               // gated tighter than admin for the launch.
               if (data.member.isSuperAdmin) {
                 document.querySelector("[data-superadmin-only]")?.classList.remove("hidden");
@@ -379,7 +379,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
           const d = await r.json().catch(() => ({}));
           if (r.ok && d.ok) {
             if (d.emailChanged) {
-              setProfileMsg("Saved. Email changed — your session has been refreshed.");
+              setProfileMsg("Saved. Email changed; your session has been refreshed.");
             } else {
               setProfileMsg("Saved.");
             }
@@ -388,7 +388,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
             setProfileMsg(d.error || "Couldn't save.", true);
           }
         } catch {
-          setProfileMsg("Couldn't reach the auth service — try again in a moment.", true);
+          setProfileMsg("Couldn't reach the auth service; try again in a moment.", true);
         } finally {
           btn.disabled = false;
         }

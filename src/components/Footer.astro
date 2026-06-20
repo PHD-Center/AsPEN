@@ -11,11 +11,11 @@ const year = new Date().getFullYear();
 // ── Page-aware citation. Generates a RIS pointing at THIS page.
 const isoDate = new Date().toISOString().slice(0, 10);
 
-// Strip the " — AsPEN" / " - AsPEN" suffix many page titles carry, since
+// Strip the "; AsPEN" / " - AsPEN" suffix many page titles carry, since
 // the citation TI shouldn't be redundant with the corporate author.
-const cleanTitle = pageTitle.replace(/\s*[—\-]\s*AsPEN\s*$/, "").trim() || "AsPEN website";
+const cleanTitle = pageTitle.replace(/\s*[-\-]\s*AsPEN\s*$/, "").trim() || "AsPEN website";
 
-// Current page URL — Astro.url.pathname already includes the BASE_URL prefix
+// Current page URL; Astro.url.pathname already includes the BASE_URL prefix
 // (e.g. "/AsPEN/databases/") for static builds. Ensure a trailing slash so
 // the root path comes out as "/AsPEN/" rather than "/AsPEN".
 const path = (Astro.url.pathname || "/").replace(/\/?$/, "/");

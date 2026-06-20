@@ -8,7 +8,7 @@ const workerConfigured = WORKER_URL.length > 0;
 ---
 
 <BaseLayout
-  title="Members sign-in — AsPEN"
+  title="Members sign-in · AsPEN"
   description="Sign in to the AsPEN members area with a password or a one-time email link."
 >
   <PageHeader
@@ -145,10 +145,10 @@ const workerConfigured = WORKER_URL.length > 0;
           if (r.status === 401) {
             setStatus(pwdStatus, "Email or password didn't match. (If you've never set a password, use the Email link tab first.)", true);
           } else {
-            setStatus(pwdStatus, "Sign-in failed — please try again in a moment.", true);
+            setStatus(pwdStatus, "Sign-in failed; please try again in a moment.", true);
           }
         } catch {
-          setStatus(pwdStatus, "Couldn't reach the sign-in service — please try again in a moment.", true);
+          setStatus(pwdStatus, "Couldn't reach the sign-in service; please try again in a moment.", true);
         } finally {
           pwdBtn.disabled = false;
         }
@@ -174,10 +174,10 @@ const workerConfigured = WORKER_URL.length > 0;
             credentials: "include",
           });
           if (!r.ok) throw new Error(String(r.status));
-          setStatus(magicStatus, "If that email is on the member list, a sign-in link is on its way — check your inbox in the next minute. The link is valid for 15 minutes.");
+          setStatus(magicStatus, "If that email is on the member list, a sign-in link is on its way; check your inbox in the next minute. The link is valid for 15 minutes.");
           magicForm.reset();
         } catch {
-          setStatus(magicStatus, "Couldn't reach the sign-in service — please try again in a moment.", true);
+          setStatus(magicStatus, "Couldn't reach the sign-in service; please try again in a moment.", true);
         } finally {
           magicBtn.disabled = false;
         }

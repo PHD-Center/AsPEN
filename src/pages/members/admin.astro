@@ -46,7 +46,7 @@ const STAGES = [
 ---
 
 <BaseLayout
-  title="Admin — AsPEN members"
+  title="Admin · AsPEN members"
   description="AsPEN office admin tools: review uploads, manage active studies, manage members."
 >
   <PageHeader
@@ -122,7 +122,7 @@ const STAGES = [
         <div data-proposals-wrap class="hidden">
           <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">
             Member proposals · <span data-proposals-count>0</span>
-            <span class="ml-1 text-[10px] normal-case tracking-normal text-slate-500 font-normal">studies proposed by members — Promote pre-fills the edit form below.</span>
+            <span class="ml-1 text-[10px] normal-case tracking-normal text-slate-500 font-normal">studies proposed by members; Promote pre-fills the edit form below.</span>
           </p>
           <div data-proposals class="space-y-2"></div>
         </div>
@@ -137,7 +137,7 @@ const STAGES = [
             <label class="block">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Title *</span>
               <input type="text" name="title" required maxlength="300"
-                     placeholder="e.g. SGLT2 inhibitors vs DPP-4 and MACE — an AsPEN multi-country ACNU study"
+                     placeholder="e.g. SGLT2 inhibitors vs DPP-4 and MACE; an AsPEN multi-country ACNU study"
                      class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
             <div class="grid sm:grid-cols-3 gap-3">
@@ -165,11 +165,11 @@ const STAGES = [
             </div>
             <div class="grid sm:grid-cols-2 gap-3">
               <label class="block">
-                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead — name</span>
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead; name</span>
                 <input type="text" name="leadName" maxlength="120" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
               </label>
               <label class="block">
-                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead — email</span>
+                <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead; email</span>
                 <input type="email" name="leadEmail" maxlength="200" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
               </label>
             </div>
@@ -255,7 +255,7 @@ const STAGES = [
             <label class="block">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Country</span>
               <select name="country" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
-                <option value="">— select —</option>
+                <option value="">- select -</option>
                 <option value="TW">Taiwan (TW)</option>
                 <option value="KR">South Korea (KR)</option>
                 <option value="JP">Japan (JP)</option>
@@ -566,7 +566,7 @@ const STAGES = [
         studyMsg?.classList.add("hidden");
       };
 
-      // Show / hide the edit form details. Default state is hidden — it
+      // Show / hide the edit form details. Default state is hidden; it
       // only appears when Edit on a row or Promote on a proposal opens it.
       const showStudyForm = () => {
         if (!studyDetails) return;
@@ -622,7 +622,7 @@ const STAGES = [
               <header class="px-4 py-3 flex items-start justify-between gap-3 border-b border-slate-100">
                 <div class="min-w-0">
                   <p class="font-semibold text-slate-900 text-sm leading-snug">${esc(s.title)}</p>
-                  <p class="text-xs text-slate-500 mt-0.5">${esc(s.design)} · Lead: ${esc(s.lead?.name || "—")} · ${(s.sites||[]).length} confirmed · ${(s.interested||[]).length} interested</p>
+                  <p class="text-xs text-slate-500 mt-0.5">${esc(s.design)} · Lead: ${esc(s.lead?.name || "-")} · ${(s.sites||[]).length} confirmed · ${(s.interested||[]).length} interested</p>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
                   <select data-stage-select data-slug="${esc(s.slug)}" class="text-xs border border-slate-300 rounded px-2 py-1 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
@@ -978,11 +978,11 @@ const STAGES = [
         const bn = (b.name || b.email || "").toLowerCase();
         return an.localeCompare(bn);
       });
-      // Country dropdown options — same set as the "Add a member" form
+      // Country dropdown options; same set as the "Add a member" form
       // above. Inlined here as a string template so each row can stamp it
       // with the current member's country pre-selected.
       const COUNTRY_OPTS = [
-        { v: "",    l: "— select —" },
+        { v: "",    l: "- select -" },
         { v: "TW",  l: "Taiwan (TW)" },
         { v: "KR",  l: "South Korea (KR)" },
         { v: "JP",  l: "Japan (JP)" },
@@ -1011,7 +1011,7 @@ const STAGES = [
       const countryOptionsFor = (current) =>
         COUNTRY_OPTS.map((o) => `<option value="${esc(o.v)}"${(current || "") === o.v ? " selected" : ""}>${esc(o.l)}</option>`).join("");
       const roleOptionsFor = (current) =>
-        `<option value=""${!current ? " selected" : ""}>— select —</option>` +
+        `<option value=""${!current ? " selected" : ""}>- select -</option>` +
         ROLE_OPTS.map((r) => `<option value="${r}"${(current || "") === r ? " selected" : ""}>${r}</option>`).join("");
 
       const renderMembers = (membersRaw) => {
@@ -1027,7 +1027,7 @@ const STAGES = [
               ? ' <span class="ml-1 text-[9px] uppercase tracking-widest font-bold text-brand-700 align-middle">admin</span>'
               : "";
           // Controls for super-admin rows stay disabled (so nobody can
-          // accidentally demote them in the UI) — just no visible label.
+          // accidentally demote them in the UI); just no visible label.
           const sa = m.superAdmin ? " disabled title=\"Cannot be modified\"" : "";
           return `
             <li class="hover:bg-slate-50">
@@ -1151,7 +1151,7 @@ const STAGES = [
                 body: JSON.stringify({ email }),
               });
               const d = await r.json().catch(() => ({}));
-              if (r.ok && d.ok) alert(`Sent — magic-link is on its way to ${email}.`);
+              if (r.ok && d.ok) alert(`Sent; magic-link is on its way to ${email}.`);
               else alert((d.error || "Couldn't send invite.") + " (HTTP " + r.status + ")");
               return;
             }
@@ -1165,7 +1165,7 @@ const STAGES = [
               });
               const d = await r.json().catch(() => ({}));
               if (r.ok && d.ok) {
-                alert(d.alreadyCleared ? `${email} already had no password — nothing to reset.` : `Password cleared for ${email}.`);
+                alert(d.alreadyCleared ? `${email} already had no password; nothing to reset.` : `Password cleared for ${email}.`);
                 loadMembers();
               } else {
                 alert((d.error || "Couldn't reset password.") + " (HTTP " + r.status + ")");

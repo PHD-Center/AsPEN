@@ -1,15 +1,15 @@
 ---
-// "Cite this resource" widget. Five formats — Lancet (Vancouver-style),
-// JAMA (AMA 11th ed.), NEJM (modified Vancouver), BibTeX, RIS — each with
+// "Cite this resource" widget. Five formats; Lancet (Vancouver-style),
+// JAMA (AMA 11th ed.), NEJM (modified Vancouver), BibTeX, RIS; each with
 // copy-to-clipboard and download-as-file buttons.
 //
 // Attribution model: AsPEN is the corporate author; maintainers credited
 // in a "Maintained by" note. Mirrors the on-screen byline.
 //
 // Props:
-//   title   — the resource title, e.g. "Databases" or "Publications"
-//   url     — canonical URL to cite
-//   bibkey  — short BibTeX/RIS identifier and download filename stem
+//   title  ; the resource title, e.g. "Databases" or "Publications"
+//   url    ; canonical URL to cite
+//   bibkey ; short BibTeX/RIS identifier and download filename stem
 interface Props {
   title: string;
   url: string;
@@ -22,15 +22,15 @@ const year = today.getFullYear();
 const isoDate = today.toISOString().slice(0, 10);
 const longDate = today.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 
-// Lancet (Vancouver-style) — corporate author, title, maintainers in note,
+// Lancet (Vancouver-style); corporate author, title, maintainers in note,
 // year. URL (accessed Month Day, Year).
 const lancet = `Asian Pharmacoepidemiology Network (AsPEN). ${title}. Maintained by PHDc, NCKU; Tsai DH-T, Lai EC-C. ${year}. ${url} (accessed ${longDate}).`;
 
-// JAMA (AMA 11th edition) — separate "Published" and "Accessed" sentences;
+// JAMA (AMA 11th edition); separate "Published" and "Accessed" sentences;
 // URL at the very end, no trailing punctuation.
 const jama = `Asian Pharmacoepidemiology Network (AsPEN). ${title}. PHDc, NCKU. Maintained by Tsai DH-T, Lai EC-C. Published ${year}. Accessed ${longDate}. ${url}`;
 
-// NEJM — modified Vancouver. URL embedded as a sentence, then "Accessed".
+// NEJM; modified Vancouver. URL embedded as a sentence, then "Accessed".
 const nejm = `Asian Pharmacoepidemiology Network. ${title}. Maintained by PHDc, NCKU; Tsai DH-T, Lai EC-C. ${url}. Accessed ${longDate}.`;
 
 const bibtex = `@misc{${bibkey},

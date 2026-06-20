@@ -8,8 +8,8 @@ const hotspots = [NHIRD, MATERNAL_CHILD, ...SATELLITES];
 ---
 
 <BaseLayout
-  title="Taiwan's Data Infrastructure — AsPEN"
-  description="Taiwan's National Health Insurance Research Database and the linked national registries that orbit it — hover or tap each box to see what each data source is."
+  title="Taiwan's Data Infrastructure · AsPEN"
+  description="Taiwan's National Health Insurance Research Database and the linked national registries that orbit it; hover or tap each box to see what each data source is."
 >
   <PageHeader
     eyebrow="Databases → Taiwan"
@@ -18,14 +18,14 @@ const hotspots = [NHIRD, MATERNAL_CHILD, ...SATELLITES];
   />
 
   <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Diagram container — image + hotspots overlay -->
+    <!-- Diagram container; image + hotspots overlay -->
     <div
       data-nhird-diagram
       class="relative w-full border border-slate-200 rounded-lg overflow-hidden shadow-sm bg-white"
     >
       <img
         src={`${base}/images/nhird-ecosystem.png`}
-        alt="Taiwan's data infrastructure — NHIRD at the centre, linked to national registries and common data models"
+        alt="Taiwan's data infrastructure; NHIRD at the centre, linked to national registries and common data models"
         class="block w-full h-auto select-none"
         draggable="false"
       />
@@ -35,13 +35,13 @@ const hotspots = [NHIRD, MATERNAL_CHILD, ...SATELLITES];
         <button
           type="button"
           data-hotspot-id={r.id}
-          aria-label={`${r.name} — ${r.meta}`}
+          aria-label={`${r.name}; ${r.meta}`}
           class="absolute cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:rounded"
           style={`top:${r.bbox?.top ?? "0%"}; left:${r.bbox?.left ?? "0%"}; width:${r.bbox?.width ?? "0%"}; height:${r.bbox?.height ?? "0%"};`}
         ></button>
       ))}
 
-      <!-- Tooltip — repositioned via JS to whichever hotspot is active.
+      <!-- Tooltip; repositioned via JS to whichever hotspot is active.
            Tooltip body is pointer-events-none to avoid flicker on hover-mouseleave,
            but the "Read more on PHDc" link inside opts back in via pointer-events-auto. -->
       <div

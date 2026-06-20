@@ -45,21 +45,21 @@ const SITES_BY_COUNTRY: Record<string, typeof SITES_DB> = SITES_DB.reduce((acc, 
   return acc;
 }, {} as Record<string, typeof SITES_DB>);
 
-// Shared phenotype library (subset — same shape as ACNU page).
+// Shared phenotype library (subset; same shape as ACNU page).
 const PHENOTYPES = {
   exposures: [
     { name: "SGLT2 inhibitors",            codes: "ATC A10BK* (canagliflozin A10BK02, dapagliflozin A10BK01, empagliflozin A10BK03, ertugliflozin A10BK04)" },
     { name: "DPP-4 inhibitors",            codes: "ATC A10BH* (sitagliptin A10BH01, vildagliptin A10BH02, saxagliptin A10BH03, linagliptin A10BH05, alogliptin A10BH04)" },
     { name: "GLP-1 receptor agonists",     codes: "ATC A10BJ* (exenatide A10BJ01, liraglutide A10BJ02, dulaglutide A10BJ05, semaglutide A10BJ06, tirzepatide A10BX16)" },
-    { name: "Antipsychotics (any)",        codes: "ATC N05A* — Atypicals N05AH/N05AL/N05AX; typicals N05AA-N05AG" },
-    { name: "ADHD stimulants",             codes: "ATC N06BA — methylphenidate N06BA04, amphetamine N06BA01, lisdexamfetamine N06BA12" },
+    { name: "Antipsychotics (any)",        codes: "ATC N05A*; Atypicals N05AH/N05AL/N05AX; typicals N05AA-N05AG" },
+    { name: "ADHD stimulants",             codes: "ATC N06BA; methylphenidate N06BA04, amphetamine N06BA01, lisdexamfetamine N06BA12" },
     { name: "Opioid analgesics",           codes: "ATC N02A* (excluding diamorphine where required)" },
     { name: "NSAIDs",                      codes: "ATC M01A* (excluding M01AX)" },
     { name: "Bisphosphonates",             codes: "ATC M05BA* / M05BB*" },
-    { name: "Anticoagulants — DOACs",      codes: "ATC B01AE07 (dabigatran), B01AF01 (rivaroxaban), B01AF02 (apixaban), B01AF03 (edoxaban)" },
-    { name: "Anticoagulants — warfarin",   codes: "ATC B01AA03" },
+    { name: "Anticoagulants; DOACs",      codes: "ATC B01AE07 (dabigatran), B01AF01 (rivaroxaban), B01AF02 (apixaban), B01AF03 (edoxaban)" },
+    { name: "Anticoagulants; warfarin",   codes: "ATC B01AA03" },
     { name: "Statins",                     codes: "ATC C10AA*" },
-    { name: "Cholinesterase inhibitors",   codes: "ATC N06DA — donepezil N06DA02, galantamine N06DA04, rivastigmine N06DA03; plus memantine N06DX01" },
+    { name: "Cholinesterase inhibitors",   codes: "ATC N06DA; donepezil N06DA02, galantamine N06DA04, rivastigmine N06DA03; plus memantine N06DX01" },
   ],
   outcomes: [
     {
@@ -78,13 +78,13 @@ const PHENOTYPES = {
       name: "Falls and/or fractures",
       codes: "Falls ICD-10 W00-W19; fracture ICD-10 S02/S12/S22/S32/S42/S52/S62/S72/S82/S92; combined for higher specificity.",
       definition: "First ED / hospital encounter with fall-injury or fracture code during the observation period.",
-      validation: "Used as primary outcome in the AsPEN antipsychotic-falls SCCS — Wang GH, Man KKC, Chang WH, Liao TC, Lai ECC. BMJ 2021;PMID 34503972.",
+      validation: "Used as primary outcome in the AsPEN antipsychotic-falls SCCS; Wang GH, Man KKC, Chang WH, Liao TC, Lai ECC. BMJ 2021;PMID 34503972.",
     },
     {
       name: "Hip fracture",
       codes: "ICD-10 S72.0, S72.1, S72.2 (primary discharge diagnosis), ideally paired with surgical-fixation procedure code.",
       definition: "First hospitalisation with primary discharge hip-fracture diagnosis.",
-      validation: "AsPEN hip-fracture multi-country work — Lai EC et al, BMJ Open 2021/2023 (protocol & epidemiology).",
+      validation: "AsPEN hip-fracture multi-country work; Lai EC et al, BMJ Open 2021/2023 (protocol & epidemiology).",
     },
     {
       name: "Acute kidney injury (AKI)",
@@ -128,11 +128,11 @@ const SUBGROUPS = [
 
 const SENSITIVITY = [
   "Alternative risk window length (e.g., 7-30, 0-90, 0-180 d)",
-  "Alternative pre-risk window (0, 30, 60 d) — checks for event-dependent exposure",
+  "Alternative pre-risk window (0, 30, 60 d); checks for event-dependent exposure",
   "Alternative post-risk window (washout) (0, 30, 90 d)",
   "Restrict to first event only (vs all events)",
   "Method of Farrington for event-dependent exposure (SCCS-EDE)",
-  "Negative-control outcome — should show null",
+  "Negative-control outcome; should show null",
   "Exclude seasonal months (if outcome is seasonal)",
   "Restrict to patients with ≥1 year of observation before first exposure",
   "Sub-divide risk window into early (0-14 d) vs late (15+ d) to look at risk attenuation",
@@ -158,7 +158,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
 ---
 
 <BaseLayout
-  title="Protocol template · SCCS — AsPEN members"
+  title="Protocol template · SCCS · AsPEN members"
   description="Guided form for drafting a multi-national self-controlled case series (SCCS) protocol."
 >
   <PageHeader
@@ -231,7 +231,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
           <summary class="cursor-pointer select-none px-5 py-4 font-semibold text-slate-900 hover:bg-slate-50 rounded-2xl">3 · Sites</summary>
           <div class="px-5 pb-5 space-y-4">
             <p class="text-xs text-slate-500">
-              Tick every <strong>database</strong> (not just country). Feature chips indicate what each database can support — only tick a site whose features cover what your case definition / exposure / time-varying covariates need.
+              Tick every <strong>database</strong> (not just country). Feature chips indicate what each database can support; only tick a site whose features cover what your case definition / exposure / time-varying covariates need.
             </p>
             <div class="flex flex-wrap items-center gap-2 text-[10px] text-slate-500 border-y border-slate-100 py-2">
               <span class="uppercase tracking-widest font-bold text-slate-600">Legend</span>
@@ -267,7 +267,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
               <textarea name="sitesOther" rows="2" placeholder="Sites beyond the active databases list" class="w-full border border-slate-300 rounded px-3 py-2 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"></textarea>
             </label>
             <div data-feasibility class="hidden bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs leading-relaxed">
-              <p class="font-bold text-amber-800 uppercase tracking-[0.2em] text-[10px]">⚠ Feasibility heads-up — not a blocker</p>
+              <p class="font-bold text-amber-800 uppercase tracking-[0.2em] text-[10px]">⚠ Feasibility heads-up; not a blocker</p>
               <p class="mt-1 text-amber-900">Your study question implies data features that some selected sites don't carry. Multi-country SCCS protocols often accommodate this; just be explicit in the per-site analytic plan.</p>
               <ul data-feasibility-list class="mt-2 space-y-1 text-amber-900 list-disc list-inside"></ul>
             </div>
@@ -306,11 +306,11 @@ const TIMELINE_PRESETS: Record<string, string> = {
               <button type="button" data-open-library data-category="exposures" data-target-name="exposureName" data-target-codes="exposureCodes" data-also-fill="picoI" class="text-[10px] uppercase tracking-widest font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-2 py-1 rounded transition">📚 Pick exposure from library</button>
             </div>
             <label class="flex flex-col gap-1">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure — name</span>
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure; name</span>
               <input type="text" name="exposureName" placeholder="Antipsychotics" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
             <label class="flex flex-col gap-1">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure — code set</span>
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Exposure; code set</span>
               <input type="text" name="exposureCodes" placeholder="ATC N05A*" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
             <label class="flex flex-col gap-1 sm:col-span-2">
@@ -334,9 +334,9 @@ const TIMELINE_PRESETS: Record<string, string> = {
             <label class="flex flex-col gap-1 sm:col-span-2">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">SCCS variant</span>
               <select name="sccsVariant" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">
-                <option value="standard" selected>Standard SCCS (Farrington 1995) — within-person exposed vs unexposed time</option>
-                <option value="extended-unexposed">SCCS extended with unexposed reference cases — augments within-person estimation with never-exposed cohort members (Whitaker et al, Stat Med 2006)</option>
-                <option value="active-comparator">Active-comparator within-person SCCS — case-time on the index drug compared with case-time on a comparator drug (no reliance on a 'no-drug' baseline)</option>
+                <option value="standard" selected>Standard SCCS (Farrington 1995); within-person exposed vs unexposed time</option>
+                <option value="extended-unexposed">SCCS extended with unexposed reference cases; augments within-person estimation with never-exposed cohort members (Whitaker et al, Stat Med 2006)</option>
+                <option value="active-comparator">Active-comparator within-person SCCS; case-time on the index drug compared with case-time on a comparator drug (no reliance on a 'no-drug' baseline)</option>
               </select>
               <span class="text-[11px] text-slate-500">Choose Standard when most cases have substantial unexposed time. Choose Extended when within-person unexposed time is sparse and you want to borrow strength from a never-exposed cohort. Choose Active-comparator when patients are continuously on some therapy of the same indication and the relevant question is 'drug A vs drug B'.</span>
             </label>
@@ -349,7 +349,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Pre-risk (pretreatment) window (days)</span>
               <input type="number" name="preRisk" value="14" min="0" step="1" class="border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-              <span class="text-[11px] text-slate-500">A short window immediately before first exposure, separated out to (a) absorb event-dependent exposure where the outcome itself triggers prescribing and (b) benchmark the underlying-disease risk just before therapy. AsPEN antipsychotic-falls SCCS used 14 days (Wang GH, BMJ 2021;PMID 34503972) and found the pretreatment IRR was higher than treatment IRRs — confirming underlying disease, not the drugs, drove much of the early risk.</span>
+              <span class="text-[11px] text-slate-500">A short window immediately before first exposure, separated out to (a) absorb event-dependent exposure where the outcome itself triggers prescribing and (b) benchmark the underlying-disease risk just before therapy. AsPEN antipsychotic-falls SCCS used 14 days (Wang GH, BMJ 2021;PMID 34503972) and found the pretreatment IRR was higher than treatment IRRs; confirming underlying disease, not the drugs, drove much of the early risk.</span>
             </label>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Risk window definition</span>
@@ -449,7 +449,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
               </select>
             </label>
             <div class="sm:col-span-2">
-              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Subgroup analyses — tick those to perform</p>
+              <p class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Subgroup analyses; tick those to perform</p>
               <div class="mt-2 grid sm:grid-cols-2 gap-1.5">
                 {SUBGROUPS.map((g, i) => (
                   <label class="flex items-start gap-2 text-xs border border-slate-200 rounded px-3 py-2 hover:bg-slate-50 cursor-pointer">
@@ -590,11 +590,11 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
           </label>
           <div class="grid sm:grid-cols-2 gap-3">
             <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead — name</span>
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead; name</span>
               <input type="text" name="leadName" maxlength="120" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
             <label class="block">
-              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead — email</span>
+              <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Lead; email</span>
               <input type="email" name="leadEmail" maxlength="200" class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
             </label>
           </div>
@@ -712,7 +712,7 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
 
         if (gaps.length === 0) { panel.classList.add("hidden"); return; }
         list.innerHTML = gaps.map((g) =>
-          `<li><strong>${g.feature}</strong> — implied by your study text. Missing at: <strong>${g.missing.join(", ")}</strong>` +
+          `<li><strong>${g.feature}</strong>; implied by your study text. Missing at: <strong>${g.missing.join(", ")}</strong>` +
           (g.have.length > 0 ? `. Available at: ${g.have.join(", ")}.` : `.`) + `</li>`
         ).join("");
         panel.classList.remove("hidden");
@@ -767,10 +767,10 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
         const season = ({ month: "Calendar month (12-level)", season: "Season (4-level)", none: "Not adjusted" })[s.seasonAdj] || "Calendar month";
         const eventHandling = s.eventHandling === "first" ? "First event only per person" : "All events per person (recurrent events allowed)";
         const sccsVariantText = ({
-          "standard":           "Standard SCCS (Farrington 1995) — within-person comparison of exposed vs unexposed time, with each case acting as their own control.",
-          "extended-unexposed": "SCCS extended with unexposed reference cases (Whitaker et al, Stat Med 2006) — within-person estimation augmented with never-exposed cohort members. Useful when within-person unexposed time is sparse.",
-          "active-comparator":  "Active-comparator within-person SCCS — case-time on the index drug compared with case-time on a comparator drug (no reliance on a 'no-drug' baseline). Best when patients of the same indication are continuously on some therapy.",
-        })[s.sccsVariant] || "Standard SCCS (Farrington 1995) — within-person comparison of exposed vs unexposed time.";
+          "standard":           "Standard SCCS (Farrington 1995); within-person comparison of exposed vs unexposed time, with each case acting as their own control.",
+          "extended-unexposed": "SCCS extended with unexposed reference cases (Whitaker et al, Stat Med 2006); within-person estimation augmented with never-exposed cohort members. Useful when within-person unexposed time is sparse.",
+          "active-comparator":  "Active-comparator within-person SCCS; case-time on the index drug compared with case-time on a comparator drug (no reliance on a 'no-drug' baseline). Best when patients of the same indication are continuously on some therapy.",
+        })[s.sccsVariant] || "Standard SCCS (Farrington 1995); within-person comparison of exposed vs unexposed time.";
 
         const refsUser = (s.references || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const refs = (() => { const set = new Set(refsUser); for (const c of Object.values(pickedCitations)) if (c && c.trim()) set.add(c.trim()); return Array.from(set); })();
@@ -785,7 +785,7 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
 **Study ID:** ${orFb(s.shortId, "(short id)")}
 **Lead investigator(s):** ${orFb(s.leadInvestigator, "(lead)")}
 **Version:** ${orFb(s.version, "v0.1 draft · " + today)}
-**Design:** Multi-national self-controlled case series (SCCS) — ${sccsVariantText}
+**Design:** Multi-national self-controlled case series (SCCS); ${sccsVariantText}
 
 ---
 
@@ -827,7 +827,7 @@ ${sccsVariantText}
 
 | | |
 |---|---|
-| **Pre-risk window** | ${s.preRisk || "14"} days immediately before first exposure — separated to absorb event-dependent exposure |
+| **Pre-risk window** | ${s.preRisk || "14"} days immediately before first exposure; separated to absorb event-dependent exposure |
 | **Risk window** | ${riskWin} |
 | **Post-risk window** | ${s.postRisk || "14"} days after exposure end (washout) |
 | **Baseline (control) period** | ${orFb(s.baselinePeriod, "All observation time NOT in pre-risk, risk, or post-risk windows.")} |
@@ -925,7 +925,7 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
 
       document.querySelector("[data-action='copy']")?.addEventListener("click", async () => {
         try { await navigator.clipboard.writeText(preview.textContent || ""); setMsg("Copied to clipboard."); }
-        catch { setMsg("Couldn't copy — your browser may block clipboard access.", true); }
+        catch { setMsg("Couldn't copy; your browser may block clipboard access.", true); }
       });
 
       const doReset = () => {
@@ -977,7 +977,7 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
           rows: rows.map(([l, v]) => new D.TableRow({
             children: [
               new D.TableCell({ borders: cellBorders, width: { size: 3000, type: D.WidthType.DXA }, margins: { top: 60, bottom: 60, left: 100, right: 100 }, shading: { fill: "F5F5F5", type: D.ShadingType.CLEAR }, children: [p([text(l, { bold: true })])] }),
-              new D.TableCell({ borders: cellBorders, width: { size: 6026, type: D.WidthType.DXA }, margins: { top: 60, bottom: 60, left: 100, right: 100 }, children: [p([text(v || "—")])] }),
+              new D.TableCell({ borders: cellBorders, width: { size: 6026, type: D.WidthType.DXA }, margins: { top: 60, bottom: 60, left: 100, right: 100 }, children: [p([text(v || "-")])] }),
             ],
           })),
         });
@@ -995,12 +995,12 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
         const season  = ({ month: "Calendar month (12-level)", season: "Season (4-level)", none: "Not adjusted" })[s.seasonAdj] || "Calendar month";
         const riskWin = ({ entire: "Entire exposure episode", "0-30": "Days 0-30 after exposure start", "0-90": "Days 0-90 after exposure start", "0-180": "Days 0-180 after exposure start", "early-late": "Early (0-14 d) and Late (15+ d) split" })[s.riskWindowDef] || "Entire exposure episode";
         const meta = ({ re: "Random-effects (DerSimonian-Laird) meta-analysis; report I² and τ²; forest plot per outcome.", "re-reml": "Random-effects (REML); report I² and τ²; forest plot per outcome.", fe: "Fixed-effects (inverse-variance) meta-analysis; forest plot per outcome." })[s.metaMethod] || "Random-effects meta-analysis";
-        const arch = ({ federated: "Federated — each AsPEN site executes locally; only aggregate site-level estimates leave.", cdm: "Common Data Model — site transforms to agreed CDM, runs shared package.", centralised: "Centralised — pooled individual data under DUA." })[s.arch] || "Federated";
+        const arch = ({ federated: "Federated; each AsPEN site executes locally; only aggregate site-level estimates leave.", cdm: "Common Data Model; site transforms to agreed CDM, runs shared package.", centralised: "Centralised; pooled individual data under DUA." })[s.arch] || "Federated";
         const eventHandling = s.eventHandling === "first" ? "First event only per person" : "All events per person (recurrent events allowed)";
         const sccsVariantText = ({
-          "standard":           "Standard SCCS (Farrington 1995) — within-person comparison of exposed vs unexposed time.",
-          "extended-unexposed": "SCCS extended with unexposed reference cases (Whitaker et al, Stat Med 2006) — augments within-person estimation with never-exposed cohort members.",
-          "active-comparator":  "Active-comparator within-person SCCS — case-time on the index drug compared with case-time on a comparator drug.",
+          "standard":           "Standard SCCS (Farrington 1995); within-person comparison of exposed vs unexposed time.",
+          "extended-unexposed": "SCCS extended with unexposed reference cases (Whitaker et al, Stat Med 2006); augments within-person estimation with never-exposed cohort members.",
+          "active-comparator":  "Active-comparator within-person SCCS; case-time on the index drug compared with case-time on a comparator drug.",
         })[s.sccsVariant] || "Standard SCCS";
         const sccsVariantShort = ({
           "standard":           "Standard SCCS",
@@ -1014,7 +1014,7 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
           ["Study ID", s.shortId || ""],
           ["Lead investigator(s)", s.leadInvestigator || ""],
           ["Version", s.version || ("v0.1 draft · " + today)],
-          ["Design", "Multi-national self-controlled case series (SCCS) — " + sccsVariantShort],
+          ["Design", "Multi-national self-controlled case series (SCCS); " + sccsVariantShort],
         ]));
 
         children.push(h1("1. Research question"));
@@ -1024,8 +1024,8 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
         children.push(para(sitesText));
 
         children.push(h1("3. Case definition (outcome)"));
-        children.push(p([text("Operational definition. ", { bold: true }), text(s.outcomeDef || "—")]));
-        children.push(p([text("Code set. ", { bold: true }), text(s.outcomeCodes || "—")]));
+        children.push(p([text("Operational definition. ", { bold: true }), text(s.outcomeDef || "-")]));
+        children.push(p([text("Code set. ", { bold: true }), text(s.outcomeCodes || "-")]));
         children.push(p([text("Event handling. ", { bold: true }), text(eventHandling)]));
 
         children.push(h1("4. Exposure definition"));
@@ -1050,9 +1050,9 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
 
         children.push(h1("7. Observation period"));
         children.push(labelTable([
-          ["Period starts at", ({ "age-cohort": "Later of (a) calendar start or (b) cohort entry age", "study-start": "Calendar start of study period", "age-onset": "Age at first eligibility", enrolment: "Date of database registration" })[s.obsStart] || "—"],
-          ["Period ends at", ({ "earliest-of": "Earliest of: end of study period, death, disenrolment", "study-end": "Calendar end of study period", death: "Death", disenrol: "Disenrolment from database" })[s.obsEnd] || "—"],
-          ["Study calendar period", s.studyCalendar || "—"],
+          ["Period starts at", ({ "age-cohort": "Later of (a) calendar start or (b) cohort entry age", "study-start": "Calendar start of study period", "age-onset": "Age at first eligibility", enrolment: "Date of database registration" })[s.obsStart] || "-"],
+          ["Period ends at", ({ "earliest-of": "Earliest of: end of study period, death, disenrolment", "study-end": "Calendar end of study period", death: "Death", disenrol: "Disenrolment from database" })[s.obsEnd] || "-"],
+          ["Study calendar period", s.studyCalendar || "-"],
         ]));
 
         children.push(h1("8. Time-varying confounders"));
@@ -1115,7 +1115,7 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
         const f = filter.trim().toLowerCase();
         const filtered = f ? items.filter((it) => (it.name || "").toLowerCase().includes(f) || (it.codes || "").toLowerCase().includes(f) || (it.definition || "").toLowerCase().includes(f) || (it.validation || "").toLowerCase().includes(f)) : items;
         if (filtered.length === 0) { modalList.innerHTML = '<p class="px-3 py-6 text-sm text-slate-500 italic text-center">No phenotype matches.</p>'; return; }
-        // validation citation hidden in modal — accumulates silently and
+        // validation citation hidden in modal; accumulates silently and
         // lands in the Word/MD References section at export time.
         modalList.innerHTML = filtered.map((it, idx) => `
           <button type="button" data-phenotype-idx="${idx}" class="block w-full text-left px-4 py-3 rounded-lg border border-transparent hover:border-brand-300 hover:bg-brand-50/40 transition">
@@ -1195,16 +1195,16 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
         aspenForm.querySelector("[name='description']").value = summary.description;
         aspenSites.textContent = summary.sites.length
           ? "Sites in your draft: " + summary.sites.join(", ")
-          : "No sites selected in your draft yet — chair will see this as an open recruit.";
+          : "No sites selected in your draft yet; chair will see this as an open recruit.";
         if (isAdmin) {
           aspenEyebrow.textContent = "Add to Active Studies tracker";
           aspenTitle.textContent   = "Publish this draft to the Kanban";
-          aspenHelp.textContent    = "As admin, this goes directly to /members/studies/ Kanban at stage 'protocol' — bypassing the proposal queue.";
+          aspenHelp.textContent    = "As admin, this goes directly to /members/studies/ Kanban at stage 'protocol'; bypassing the proposal queue.";
           aspenSubmit.textContent  = "Add to Studies tracker";
         } else {
           aspenEyebrow.textContent = "Send proposal to AsPEN chair";
           aspenTitle.textContent   = "Pitch this draft for chair review";
-          aspenHelp.textContent    = "Goes to the chair's queue — no obligation to publish. They can promote it onto the active Kanban with one click.";
+          aspenHelp.textContent    = "Goes to the chair's queue; no obligation to publish. They can promote it onto the active Kanban with one click.";
           aspenSubmit.textContent  = "Send to AsPEN office";
         }
         aspenMsg.textContent = "";
@@ -1267,8 +1267,8 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
           d = await r.json().catch(() => ({}));
           if (r.ok && d.ok) {
             aspenMsg.textContent = isAdmin
-              ? "Added to Active Studies tracker — see /members/studies/."
-              : (d.deduped ? "Already proposed — chair has it." : "Sent — the chair has been notified.");
+              ? "Added to Active Studies tracker; see /members/studies/."
+              : (d.deduped ? "Already proposed; chair has it." : "Sent; the chair has been notified.");
             aspenMsg.className = "text-xs text-brand-700";
             setTimeout(closeAspen, 1500);
           } else {
