@@ -682,5 +682,51 @@
     ],
     "theme": "diabetes-cardiometabolic",
     "pmcid": "PMC6456811"
+  },
+  {
+    "year": 2023,
+    "authors": "Huang WC, Yang AS, Tsai DH, Shao SC, Lin SJ, Lai EC.",
+    "title": "Association between recently raised anticholinergic burden and risk of acute cardiovascular events: nationwide case-case-time-control study",
+    "journal": "BMJ",
+    "doi": "10.1136/bmj-2023-076045",
+    "pmid": "37758279",
+    "pmcid": "PMC10523277",
+    "tags": [
+      "anticholinergic",
+      "cardiovascular",
+      "older adults",
+      "case case time control"
+    ],
+    "theme": "older-adults"
+  },
+  {
+    "year": 2026,
+    "authors": "Li BM, Wei SY, Chuang MT, Lai EC.",
+    "title": "Benzodiazepine use in pregnancy and the risk of pregnancy outcomes",
+    "journal": "JAMA Internal Medicine",
+    "doi": "10.1001/jamainternmed.2025.6882",
+    "pmid": "41428288",
+    "pmcid": "PMC12723596",
+    "tags": [
+      "benzodiazepines",
+      "pregnancy",
+      "preterm birth"
+    ],
+    "theme": "pregnancy-paediatric"
+  },
+  {
+    "year": 2025,
+    "authors": "Tsai MJ, Su CTT, Sung SF, Yang HY, Cheng MCY, Chuang ATM, Shao SC, Lai ECC.",
+    "title": "Transient anticholinergic burden and out-of-hospital cardiac arrest: a case-crossover study",
+    "journal": "European Heart Journal",
+    "doi": "10.1093/eurheartj/ehaf723",
+    "pmid": "40996095",
+    "tags": [
+      "anticholinergic",
+      "cardiovascular",
+      "case crossover",
+      "cardiac arrest"
+    ],
+    "theme": "cardiovascular"
   }
 ]
