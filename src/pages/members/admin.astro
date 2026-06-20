@@ -81,8 +81,8 @@ const STAGES = [
                 class="flex-1 px-3 py-2 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
           Review queue <span data-uploads-count class="hidden ml-1 bg-brand-700 text-white text-[10px] rounded-full px-1.5 py-0.5 tabular-nums"></span>
         </button>
-        <button type="button" role="tab" data-tab="studies" aria-selected="false"
-                class="flex-1 px-3 py-2 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
+        <button type="button" role="tab" data-tab="studies" aria-selected="false" data-superadmin-only
+                class="hidden flex-1 px-3 py-2 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
           Studies <span data-studies-count class="hidden ml-1 bg-brand-700 text-white text-[10px] rounded-full px-1.5 py-0.5 tabular-nums"></span>
         </button>
         <button type="button" role="tab" data-tab="members" aria-selected="false"
@@ -1296,10 +1296,12 @@ const STAGES = [
           const me = await meR.json();
           if (!me?.member?.isAdmin) return setState("forbidden");
           setState("ready");
+          if (me.member.isSuperAdmin) {
+            document.querySelectorAll("[data-superadmin-only]").forEach(el => el.classList.remove("hidden"));
+          }
           loadUploads();
           loadDeleteRequests();
-          loadStudies();
-          loadProposals();
+          if (me.member.isSuperAdmin) { loadStudies(); loadProposals(); }
           loadMembers();
         } catch { setState("signed-out"); }
       })();
