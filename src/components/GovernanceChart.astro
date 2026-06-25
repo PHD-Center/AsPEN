@@ -28,6 +28,15 @@ const chair: Member = {
   profile: "https://skb.skku.edu/eng_pharm/intro/faculty_pharmacy.do?mode=view&perId=LZStrIYVgqgzg6gKgdgTwMYFMCyBFAmkgnMAZQCk4AOAaQwF4qg%20&",
 };
 
+const chairElect: Member = {
+  name: "Hiraku Kumamaru",
+  role: "Chair-Elect",
+  inst: "Yokohama City University",
+  photo: "Hiraku.jpg",
+  pos: "center top",
+  profile: "https://www-user.yokohama-cu.ac.jp/~ycuds/hds/researchers/kumamaru.html",
+};
+
 const educationLeads: Member[] = [
   {
     name: "Edward Lai",
@@ -104,7 +113,44 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
     </div>
   </article>
 
-  <!-- vertical drop from chair -->
+  <!-- succession connector -->
+  <div class="flex justify-center"><div class="w-px h-6 bg-slate-300"></div></div>
+
+  <!-- ── CHAIR-ELECT ─────────────────────────────────────────── -->
+  <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold mb-3 text-center">Chair-Elect</p>
+  <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm max-w-4xl mx-auto">
+    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-accent-500 via-brand-500 to-brand-700"></div>
+    <div class="flex flex-col sm:flex-row items-center sm:items-stretch gap-5 sm:gap-6 p-5 sm:p-7 pl-7 sm:pl-9">
+      <div class="shrink-0 w-28 h-28 sm:w-36 sm:h-36 rounded-xl overflow-hidden bg-brand-50 border border-slate-200">
+        {chairElect.photo ? (
+          <img src={`${base}/images/${chairElect.photo}`} alt={chairElect.name} class="block w-full h-full object-cover" style={`object-position: ${chairElect.pos ?? "center top"}`} />
+        ) : (
+          <div class="w-full h-full grid place-items-center text-brand-700 font-bold text-3xl">{initials(chairElect.name)}</div>
+        )}
+      </div>
+      <div class="flex-1 flex flex-col justify-center text-center sm:text-left">
+        <p class="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">{chairElect.name}</p>
+        <p class="text-sm sm:text-base text-slate-600 mt-1">{chairElect.inst}</p>
+        <p class="text-sm text-slate-600 mt-3 leading-relaxed max-w-2xl">
+          Incoming Chair; will succeed the current Chair under AsPEN's leadership succession process.
+        </p>
+        {chairElect.profile && (
+          <div class="mt-4 flex flex-wrap gap-2 justify-center sm:justify-start">
+            <a
+              href={chairElect.profile}
+              target="_blank"
+              rel="noopener"
+              class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:border-brand-400 hover:text-brand-700 transition"
+            >
+              Profile <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  </article>
+
+  <!-- vertical drop from leadership to branches -->
   <div class="flex justify-center"><div class="w-px h-8 bg-slate-300"></div></div>
 
   <!-- ── TIER 2 · OPS | EDUCATION ────────────────────────────── -->
