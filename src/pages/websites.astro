@@ -12,6 +12,7 @@ const sites = [
     tagline: "AsPEN's page as a Special Interest Group within the International Society for Pharmacoepidemiology (ISPE).",
     href: "https://www.pharmacoepi.org/communities/sigs/aspen/",
     image: "websites/ispe.jpg",
+    heightClass: "h-14",
   },
   {
     name: "NeuroGEN",
@@ -23,12 +24,14 @@ const sites = [
     tagline: "PHDc at National Cheng Kung University; the data infrastructure behind much of AsPEN's Taiwan-based work.",
     href: "https://www.phdcenter.org.tw/",
     image: "websites/phdc-wide.png",
+    heightClass: "h-14",
   },
   {
     name: "DARWIN EU",
     tagline: "Data Analysis and Real World Interrogation Network; the European Medicines Agency's federated real-world evidence network.",
     href: "https://www.darwin-eu.org/",
     image: "websites/darwin-eu.png",
+    heightClass: "h-16",
   },
 ];
 ---
@@ -43,16 +46,16 @@ const sites = [
     description="Partner organisations and networks AsPEN works alongside."
   />
 
-  <section class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16">
-    <div class="grid gap-6 sm:grid-cols-2">
+  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16">
+    <div class="grid gap-8 sm:grid-cols-2">
       {sites.map((s) => (
         <a href={s.href} target="_blank" rel="noopener noreferrer"
            class="group block border border-slate-200 rounded-2xl p-8 bg-white hover:shadow-md hover:border-brand-400 transition">
-          <div class="h-16 flex items-center">
+          <div class="h-20 flex items-center">
             {s.image ? (
-              <img src={`${base}/images/${s.image}`} alt={s.name} class="max-h-14 max-w-[70%] w-auto object-contain" />
+              <img src={`${base}/images/${s.image}`} alt={s.name} class:list={[s.heightClass, "w-auto"]} />
             ) : (
-              <h2 class="text-xl font-bold text-slate-900 group-hover:text-brand-700 transition leading-snug">{s.name}</h2>
+              <h2 class="text-2xl font-bold text-slate-900 group-hover:text-brand-700 transition leading-snug">{s.name}</h2>
             )}
           </div>
           <p class="mt-6 text-sm text-slate-700 leading-relaxed">{s.tagline}</p>
