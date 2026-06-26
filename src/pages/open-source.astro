@@ -31,6 +31,13 @@ const oss = [
     heightClass: "h-20",
   },
   {
+    name: "Population Health Data Center, NCKU",
+    tagline: "PHDc at National Cheng Kung University; the data infrastructure behind much of AsPEN's Taiwan-based work.",
+    href: "https://www.phdcenter.org.tw/database/",
+    image: "websites/phdc-wide.png",
+    heightClass: "h-24",
+  },
+  {
     name: "NeuroGEN",
     // No supplied logo; render a styled wordmark instead of plain text.
     wordmark: 'Neuro<span class="text-brand-600">GEN</span>',
@@ -38,18 +45,11 @@ const oss = [
     href: "https://neurogen.hku.hk/",
   },
   {
-    name: "Population Health Data Center, NCKU",
-    tagline: "PHDc at National Cheng Kung University; the data infrastructure behind much of AsPEN's Taiwan-based work.",
-    href: "https://www.phdcenter.org.tw/database/",
-    image: "websites/phdc-wide.png",
-    heightClass: "h-20",
-  },
-  {
     name: "DARWIN EU",
     tagline: "Data Analysis and Real World Interrogation Network; the European Medicines Agency's federated real-world evidence network.",
     href: "https://www.darwin-eu.org/",
     image: "websites/darwin-eu.png",
-    heightClass: "h-28",
+    heightClass: "h-32",
   },
 ];
 ---
@@ -69,7 +69,7 @@ const oss = [
       {oss.map((s) => (
         <a href={s.href} target="_blank" rel="noopener noreferrer"
            class="group block border border-slate-200 rounded-2xl p-8 bg-white hover:shadow-md hover:border-brand-400 transition">
-          <div class="h-28 flex items-center">
+          <div class="h-32 flex items-center">
             {s.image ? (
               <img src={`${base}/images/${s.image}`} alt={s.name} class:list={[s.heightClass, "w-auto"]} />
             ) : (
