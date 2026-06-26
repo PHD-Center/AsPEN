@@ -1,0 +1,7 @@
+# AsPEN: Asian Pharmacoepidemiology Network
+# Allow search engines to crawl everything except the auth-gated members area.
+User-agent: *
+Allow: /
+Disallow: /members/
+
+Sitemap: https://www.aspensig.asia/sitemap-index.xml

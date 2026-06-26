@@ -20,6 +20,28 @@ const {
 // Normalise base so `${base}/path` always produces a single slash regardless
 // of whether BASE_URL ends with one (apex build → '/', GH Pages → '/AsPEN').
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+// Canonical URL always points at the primary public domain, so the GitHub
+// Pages mirror (phd-center.github.io/AsPEN) defers to aspensig.asia instead
+// of competing with it for ranking. Strip the /AsPEN base from the path.
+const PRIMARY_ORIGIN = "https://www.aspensig.asia";
+const canonicalPath = Astro.url.pathname.replace(/^\/AsPEN(?=\/|$)/, "") || "/";
+const canonical = `${PRIMARY_ORIGIN}${canonicalPath}`;
+const ogImage = `${PRIMARY_ORIGIN}/images/AsPenLogo.png`;
+
+// JSON-LD Organization markup helps search engines recognise AsPEN as an
+// entity (knowledge-panel eligible) and link its official profiles.
+const orgSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Asian Pharmacoepidemiology Network",
+  alternateName: "AsPEN",
+  url: PRIMARY_ORIGIN,
+  logo: ogImage,
+  description:
+    "A Special Interest Group of ISPE advancing multi-national database research in pharmacoepidemiology across the Asia/Pacific region.",
+  sameAs: ["https://www.pharmacoepi.org/communities/sigs/aspen/"],
+};
 ---
 
 <!doctype html>
@@ -31,10 +53,19 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
     <link rel="icon" type="image/png" sizes="100x100" href={`${base}/images/AsPenLogo-100.png`} />
     <link rel="icon" type="image/png" href={`${base}/images/AsPenLogo.png`} />
     <title>{title}</title>
+    <link rel="canonical" href={canonical} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={`${base}/images/AsPenLogo.png`} />
+    <meta property="og:image" content={ogImage} />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="Asian Pharmacoepidemiology Network" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <script type="application/ld+json" set:html={JSON.stringify(orgSchema)} is:inline />
+    <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
     <script is:inline define:vars={{ WORKER_URL }}>
       // Expose the auth worker URL globally so the Header (and any other
       // page-level script) can call /api/me to detect a member session.
