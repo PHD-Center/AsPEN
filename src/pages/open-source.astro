@@ -32,6 +32,8 @@ const oss = [
   },
   {
     name: "NeuroGEN",
+    // No supplied logo; render a styled wordmark instead of plain text.
+    wordmark: 'Neuro<span class="text-brand-600">GEN</span>',
     tagline: "The Neurological and mental health Global Epidemiology Network; a multi-database platform spanning Asia, Oceania, Europe, and North America.",
     href: "https://neurogen.hku.hk/",
   },
@@ -47,7 +49,7 @@ const oss = [
     tagline: "Data Analysis and Real World Interrogation Network; the European Medicines Agency's federated real-world evidence network.",
     href: "https://www.darwin-eu.org/",
     image: "websites/darwin-eu.png",
-    heightClass: "h-24",
+    heightClass: "h-28",
   },
 ];
 ---
@@ -67,11 +69,11 @@ const oss = [
       {oss.map((s) => (
         <a href={s.href} target="_blank" rel="noopener noreferrer"
            class="group block border border-slate-200 rounded-2xl p-8 bg-white hover:shadow-md hover:border-brand-400 transition">
-          <div class="h-24 flex items-center">
+          <div class="h-28 flex items-center">
             {s.image ? (
               <img src={`${base}/images/${s.image}`} alt={s.name} class:list={[s.heightClass, "w-auto"]} />
             ) : (
-              <h2 class="text-2xl font-bold text-slate-900 group-hover:text-brand-700 transition leading-snug">{s.name}</h2>
+              <h2 class="text-5xl font-extrabold tracking-tight text-slate-900 leading-none" set:html={s.wordmark ?? s.name} />
             )}
           </div>
           <p class="mt-6 text-sm text-slate-700 leading-relaxed">{s.tagline}</p>
