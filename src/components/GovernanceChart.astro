@@ -66,104 +66,56 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
 ---
 
 <div class="not-prose my-8">
-  <!-- ── TIER 1 · CHAIR ──────────────────────────────────────── -->
-  <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold mb-3 text-center">Chair</p>
-  <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm max-w-4xl mx-auto">
-    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-accent-500 via-brand-500 to-brand-700"></div>
-    <div class="flex flex-col sm:flex-row items-center sm:items-stretch gap-5 sm:gap-6 p-5 sm:p-7 pl-7 sm:pl-9">
-      <div class="shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden bg-brand-50 border border-slate-200">
-        {chair.photo ? (
-          <img src={`${base}/images/${chair.photo}`} alt={chair.name} class="block w-full h-full object-cover object-top" />
-        ) : (
-          <div class="w-full h-full grid place-items-center text-brand-700 font-bold text-3xl">{initials(chair.name)}</div>
-        )}
-      </div>
-      <div class="flex-1 flex flex-col justify-center text-center sm:text-left">
-        <p class="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">{chair.name}</p>
-        <p class="text-sm sm:text-base text-slate-600 mt-1">{chair.inst}</p>
-        <p class="text-sm text-slate-600 mt-3 leading-relaxed max-w-2xl">
-          Coordinates AsPEN's programme strategy, ISPE liaison, and multi-country study governance.
-        </p>
-        {(chair.orcid || chair.profile) && (
-          <div class="mt-4 flex flex-wrap gap-2 justify-center sm:justify-start">
-            {chair.orcid && (
-              <a
-                href={`https://orcid.org/${chair.orcid}`}
-                target="_blank"
-                rel="noopener"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:border-[#A6CE39] hover:text-slate-900 transition"
-                aria-label={`${chair.name} ORCID profile`}
-              >
-                <svg width="14" height="14" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#A6CE39"/><text x="128" y="170" text-anchor="middle" font-family="Arial,sans-serif" font-size="124" font-weight="900" fill="#fff">iD</text></svg>
-                <span class="tabular-nums">{chair.orcid}</span>
-              </a>
-            )}
-            {chair.profile && (
-              <a
-                href={chair.profile}
-                target="_blank"
-                rel="noopener"
-                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:border-brand-400 hover:text-brand-700 transition"
-              >
-                Profile <span aria-hidden="true">↗</span>
-              </a>
+  <!-- ── TIER 1 · LEADERSHIP (Chair + Chair-Elect, co-top-level) ── -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
+    {[chair, chairElect].map((m) => (
+      <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm">
+        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-accent-500 via-brand-500 to-brand-700"></div>
+        <div class="flex items-center gap-4 p-5 pl-7">
+          <div class="shrink-0 w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-brand-50 border border-slate-200">
+            {m.photo ? (
+              <img src={`${base}/images/${m.photo}`} alt={m.name} class="block w-full h-full object-cover" style={`object-position: ${m.pos ?? "center top"}`} />
+            ) : (
+              <div class="w-full h-full grid place-items-center text-brand-700 font-bold text-2xl">{initials(m.name)}</div>
             )}
           </div>
-        )}
-      </div>
-    </div>
-  </article>
-
-  <!-- succession connector -->
-  <div class="flex justify-center"><div class="w-px h-6 bg-slate-300"></div></div>
-
-  <!-- ── CHAIR-ELECT ─────────────────────────────────────────── -->
-  <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold mb-3 text-center">Chair-Elect</p>
-  <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm max-w-4xl mx-auto">
-    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-accent-500 via-brand-500 to-brand-700"></div>
-    <div class="flex flex-col sm:flex-row items-center sm:items-stretch gap-5 sm:gap-6 p-5 sm:p-7 pl-7 sm:pl-9">
-      <div class="shrink-0 w-28 h-28 sm:w-36 sm:h-36 rounded-xl overflow-hidden bg-brand-50 border border-slate-200">
-        {chairElect.photo ? (
-          <img src={`${base}/images/${chairElect.photo}`} alt={chairElect.name} class="block w-full h-full object-cover" style={`object-position: ${chairElect.pos ?? "center top"}`} />
-        ) : (
-          <div class="w-full h-full grid place-items-center text-brand-700 font-bold text-3xl">{initials(chairElect.name)}</div>
-        )}
-      </div>
-      <div class="flex-1 flex flex-col justify-center text-center sm:text-left">
-        <p class="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">{chairElect.name}</p>
-        <p class="text-sm sm:text-base text-slate-600 mt-1">{chairElect.inst}</p>
-        <p class="text-sm text-slate-600 mt-3 leading-relaxed max-w-2xl">
-          Chair-Elect.
-        </p>
-        {(chairElect.orcid || chairElect.profile) && (
-          <div class="mt-4 flex flex-wrap gap-2 justify-center sm:justify-start">
-            {chairElect.orcid && (
-              <a
-                href={`https://orcid.org/${chairElect.orcid}`}
-                target="_blank"
-                rel="noopener"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:border-[#A6CE39] hover:text-slate-900 transition"
-                aria-label={`${chairElect.name} ORCID profile`}
-              >
-                <svg width="14" height="14" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#A6CE39"/><text x="128" y="170" text-anchor="middle" font-family="Arial,sans-serif" font-size="124" font-weight="900" fill="#fff">iD</text></svg>
-                <span class="tabular-nums">{chairElect.orcid}</span>
-              </a>
-            )}
-            {chairElect.profile && (
-              <a
-                href={chairElect.profile}
-                target="_blank"
-                rel="noopener"
-                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:border-brand-400 hover:text-brand-700 transition"
-              >
-                Profile <span aria-hidden="true">↗</span>
-              </a>
+          <div class="min-w-0">
+            <p class="text-[10px] uppercase tracking-[0.2em] text-brand-600 font-bold">{m.role}</p>
+            <p class="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">{m.name}</p>
+            <p class="text-sm text-slate-600 mt-0.5 leading-snug">{m.inst}</p>
+            {(m.orcid || m.profile) && (
+              <div class="mt-2.5 flex items-center gap-2">
+                {m.orcid && (
+                  <a
+                    href={`https://orcid.org/${m.orcid}`}
+                    target="_blank"
+                    rel="noopener"
+                    class="inline-flex items-center justify-center w-6 h-6 rounded-full hover:scale-110 transition"
+                    aria-label={`${m.name} ORCID profile`}
+                    title={`ORCID: ${m.orcid}`}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#A6CE39"/><text x="128" y="170" text-anchor="middle" font-family="Arial,sans-serif" font-size="124" font-weight="900" fill="#fff">iD</text></svg>
+                  </a>
+                )}
+                {m.profile && (
+                  <a
+                    href={m.profile}
+                    target="_blank"
+                    rel="noopener"
+                    class="inline-flex items-center justify-center w-6 h-6 rounded-full text-slate-500 hover:text-brand-700 hover:scale-110 transition"
+                    aria-label={`${m.name} profile page`}
+                    title="Profile page"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  </a>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
-    </div>
-  </article>
+        </div>
+      </article>
+    ))}
+  </div>
 
   <!-- vertical drop from leadership to branches -->
   <div class="flex justify-center"><div class="w-px h-8 bg-slate-300"></div></div>
