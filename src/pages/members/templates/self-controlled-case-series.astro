@@ -3,6 +3,7 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PageHeader from "../../../components/PageHeader.astro";
 import { WORKER_URL } from "../../../data/site-config";
 import databasesRaw from "../../../data/databases.json";
+import { STROBE_ITEMS } from "../../../data/strobe";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -538,6 +539,7 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
           <button type="button" data-action="send-aspen" class="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-2.5 rounded-lg transition text-sm">📤 Send to AsPEN office</button>
           <button type="button" data-action="download-docx" class="bg-white border border-brand-700 text-brand-700 hover:bg-brand-50 font-semibold px-5 py-2.5 rounded-lg transition text-sm">⬇ Download Word (.docx)</button>
           <button type="button" data-action="download-md" class="text-brand-700 hover:underline font-semibold text-sm">⬇ Markdown</button>
+          <button type="button" data-action="download-strobe" class="text-brand-700 hover:underline font-semibold text-sm" title="Generate the STROBE reporting checklist (von Elm 2007; strobe-statement.org) as a Word document, pre-filled from your protocol fields.">⬇ STROBE checklist</button>
           <button type="button" data-action="copy" class="text-brand-700 hover:underline font-semibold text-sm">📋 Copy</button>
           <button type="button" data-action="reset" class="ml-auto text-slate-500 hover:text-rose-600 hover:underline text-sm font-semibold">Clear all</button>
           <p data-action-msg class="basis-full text-xs"></p>
@@ -620,7 +622,7 @@ Shao SC, Chan YY, Kao Yang YH, Lin SJ, Hung MJ, Chien RN, Lai CC, Lai EC. The Ch
 
   <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js" is:inline></script>
 
-  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES_DETAIL_MAP, FEATURES, PHENOTYPES, TIMELINE_PRESETS }}>
+  <script is:inline define:vars={{ WORKER_URL, BASE: base, SITES_DETAIL_MAP, FEATURES, PHENOTYPES, TIMELINE_PRESETS, STROBE_ITEMS }}>
     (() => {
       const setState = (name) => {
         document.querySelectorAll("[data-state]").forEach((el) => {
@@ -957,6 +959,89 @@ _Drafted with the AsPEN SCCS protocol builder (${today})._
           setMsg("Downloaded " + a.download);
         } catch (e) { console.error(e); setMsg("Couldn't build the Word file: " + String(e), true); }
       });
+
+      // ── STROBE checklist (.docx) ──────────────────────────
+      document.querySelector("[data-action='download-strobe']")?.addEventListener("click", async () => {
+        if (typeof docx === "undefined") { setMsg("Word library failed to load.", true); return; }
+        setMsg("Building STROBE checklist…");
+        try {
+          const s = readForm();
+          const blob = await buildStrobeDocx(s);
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          const today = new Date().toISOString().slice(0, 10);
+          a.href = url;
+          a.download = (s.shortId || "sccs").replace(/[^a-z0-9]+/gi, "-").toLowerCase() + "-STROBE-checklist-" + today + ".docx";
+          document.body.appendChild(a); a.click(); a.remove();
+          URL.revokeObjectURL(url);
+          setMsg("Downloaded " + a.download);
+        } catch (e) { console.error(e); setMsg("Couldn't build the STROBE checklist: " + String(e), true); }
+      });
+
+      // Map this SCCS protocol's fields onto the STROBE items it can pre-fill.
+      const strobeWhere = (s) => {
+        const sitesPlain = (() => {
+          const parts = (s.sites || []).map((c) => formatSiteFull(c));
+          const others = (s.sitesOther || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+          return [...parts, ...others].join("; ") || "(no sites selected)";
+        })();
+        const bul = (a) => a.length ? a.map((x) => "• " + x).join("\n") : "(none specified)";
+        const sens = mergeList(s.sensitivityPick, s.sensitivityCustom);
+        const subg = mergeList(s.subgroupsPick, s.subgroupsCustom);
+        const tvc = (s.tvCovariates || "").split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const metaTxt = ({ re: "random-effects (DerSimonian-Laird)", "re-reml": "random-effects (REML)", fe: "fixed-effects (inverse-variance)" })[s.metaMethod] || "random-effects";
+        const ageTxt = ({ "6m": "6-month", "1m": "1-month", "3m": "3-month", "12m": "12-month" })[s.ageBands] || "6-month";
+        const seasonTxt = ({ month: "calendar month", season: "season", none: "not adjusted" })[s.seasonAdj] || "calendar month";
+        return {
+          "1a": "Multi-national self-controlled case series (SCCS).",
+          "3": "Among " + (s.picoP || "(population)") + ", does " + (s.picoI || "(exposure)") + " change the rate of " + (s.picoO || "(outcome)") + "? Estimated within-person.",
+          "4": "Self-controlled case series. Each case acts as their own control, so all time-invariant between-person confounding is removed by design.",
+          "5": "AsPEN sites: " + sitesPlain + ". Observation, exposure-risk and pre-exposure windows as defined in the protocol.",
+          "6": "Cases experiencing the outcome during the observation period. Case definition: " + (s.outcomeDef || "(case definition)") + " (" + (s.outcomeCodes || "codes TBD") + "). Event handling: " + (s.eventHandling === "first" ? "first event only" : "all events (recurrent)") + ".",
+          "7": "Exposure: " + (s.picoI || s.exposureName || "(exposure)") + ". Outcome: " + (s.picoO || "(outcome)") + " (" + (s.outcomeCodes || "codes TBD") + "). Time-varying covariates:\n" + bul(tvc),
+          "8": "Routinely-collected health data from the contributing databases (" + sitesPlain + "). Outcomes ascertained by the code set " + (s.outcomeCodes || "(codes)") + ".",
+          "9": "The self-controlled design removes all fixed between-person confounders. Residual (time-varying) bias addressed by pre-specified sensitivity analyses:\n" + bul(sens),
+          "11": "Age modelled as a time-varying covariate in " + ageTxt + " bands; seasonality: " + seasonTxt + ".",
+          "12": "Conditional Poisson regression for the within-person incidence rate ratio (IRR), with age and season as time-varying covariates. Site-specific IRRs pooled by " + metaTxt + " meta-analysis (report I², τ²). Subgroups:\n" + bul(subg) + "\nSensitivity analyses:\n" + bul(sens),
+          "17": "Pre-specified subgroups:\n" + bul(subg) + "\nSensitivity analyses:\n" + bul(sens),
+          "19": "The within-person design controls time-invariant confounding but not time-varying confounders; it assumes event occurrence does not alter subsequent exposure probability (event-dependent exposure) and is non-censoring; outcome misclassification is possible.",
+          "21": "Results generalise to the source populations of the contributing AsPEN databases: " + sitesPlain + ".",
+        };
+      };
+
+      const buildStrobeDocx = async (s) => {
+        const D = docx;
+        const FONT = "Times New Roman";
+        const today = new Date().toISOString().slice(0, 10);
+        const text = (str, o = {}) => new D.TextRun({ text: String(str ?? ""), font: FONT, size: 22, ...o });
+        const p = (ch, o = {}) => new D.Paragraph({ children: Array.isArray(ch) ? ch : [ch], spacing: { before: 50, after: 50 }, ...o });
+        const border = { style: D.BorderStyle.SINGLE, size: 4, color: "BBBBBB" };
+        const cb = { top: border, bottom: border, left: border, right: border };
+        const cell = (children, opt = {}) => new D.TableCell({ borders: cb, margins: { top: 60, bottom: 60, left: 120, right: 120 }, ...opt, children });
+        const headerCell = (str) => new D.TableCell({ borders: cb, shading: { fill: "21443E", type: D.ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [p([text(str, { bold: true, color: "FFFFFF" })])] });
+        const where = strobeWhere(s);
+        const rows = [new D.TableRow({ tableHeader: true, children: [headerCell("#"), headerCell("STROBE recommendation"), headerCell("Where addressed in this protocol")] })];
+        for (const sec of STROBE_ITEMS) {
+          rows.push(new D.TableRow({ children: [new D.TableCell({ borders: cb, columnSpan: 3, shading: { fill: "E8F0EE", type: D.ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 120, right: 120 }, children: [p([text(sec.section, { bold: true, color: "21443E" })])] })] }));
+          for (const [n, rec] of sec.items) {
+            const w = where[n] || "[To be completed at the time of reporting.]";
+            rows.push(new D.TableRow({ children: [
+              cell([p([text(n, { bold: true })])], { width: { size: 700, type: D.WidthType.DXA }, shading: { fill: "F5F5F5", type: D.ShadingType.CLEAR } }),
+              cell([p([text(rec)])], { width: { size: 4163, type: D.WidthType.DXA } }),
+              cell(String(w).split("\n").map((l) => p([text(l)])), { width: { size: 4163, type: D.WidthType.DXA } }),
+            ] }));
+          }
+        }
+        const table = new D.Table({ width: { size: 9026, type: D.WidthType.DXA }, columnWidths: [700, 4163, 4163], rows });
+        const children = [
+          new D.Paragraph({ children: [text("STROBE checklist; " + (s.title || "(Untitled multi-national SCCS study)"), { bold: true, size: 32 })], spacing: { after: 120 } }),
+          p([new D.TextRun({ text: "This document maps the protocol fields to the STROBE statement (von Elm E, et al. PLoS Med 2007;4:e296). Methods items are pre-filled from your protocol; Results / Discussion items are placeholders to complete at the time of reporting. Full checklist with elaboration: strobe-statement.org.", font: FONT, size: 20, italics: true, color: "555555" })]),
+          p([new D.TextRun({ text: "Generated " + today + " from the AsPEN SCCS protocol builder.", font: FONT, size: 18, italics: true, color: "777777" })]),
+          table,
+        ];
+        const doc = new D.Document({ sections: [{ properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } }, children }] });
+        return await D.Packer.toBlob(doc);
+      };
 
       const buildDocx = async (s) => {
         const D = docx;
