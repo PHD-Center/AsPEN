@@ -39,6 +39,10 @@ jobs:
       - name: Install Rclone
         run: sudo -v ; curl https://rclone.org/install.sh | sudo bash
       - name: Deploy to NCKU PHDc NAS via WebDAV
+        # Non-fatal: if the NAS WebDAV endpoint (dev.aspensig.asia) is
+        # unreachable, don't block the public GitHub Pages build/deploy that
+        # follows. The NAS catches up on the next run once it is back online.
+        continue-on-error: true
         env:
           WEBDAV_PASS: ${{ secrets.NAS_PASSWORD }}
         run: |
