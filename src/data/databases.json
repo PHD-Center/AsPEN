@@ -115,13 +115,12 @@
     "lng": 139.6503,
     "name": "DeSC Database",
     "type": "Claims",
-    "coverage": "~9.3M members · ~8% of Japan (employer / national / late-stage elderly insurers) · since 2014",
-    "notes": "First commercial Japanese DB to span Employee Health Insurance, National Health Insurance, and Late-Stage Elderly Healthcare in a single dataset.",
-    "since": 2014,
+    "coverage": "~9.3M cumulative members · employee / national / late-stage-elderly health insurers · data since 2012",
+    "notes": "Commercial claims database built by DeSC Healthcare in 2020, pooling receipts, enrolment records, and specific health-checkup data across all three Japanese insurer types (employee, national, and late-stage-elderly), so it spans children to the very old. Coverage reaches ~2.8% of employee-insurance, ~13.7% of national-insurance, and ~20.5% of late-stage-elderly members.",
+    "since": 2012,
     "popM": 9.3,
-    "lagMonths": 5,
-    "features": ["rx", "dx", "labs"],
-    "hidden": true
+    "lagMonths": 1,
+    "features": ["rx", "dx", "labs"]
   },
   {
     "country": "Japan",
