@@ -4,6 +4,20 @@ import PageHeader from "../components/PageHeader.astro";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
+// NeuroGEN spans 9 regions in the 2023 infrastructure paper (Tsai DH et al.,
+// Clin Epidemiol 2023; PMID 38146486); its card shows their flags as the mark.
+const NEUROGEN_FLAGS = [
+  { code: "tw", name: "Taiwan" },
+  { code: "kr", name: "South Korea" },
+  { code: "hk", name: "Hong Kong" },
+  { code: "au", name: "Australia" },
+  { code: "gb", name: "United Kingdom" },
+  { code: "gb-sct", name: "Scotland" },
+  { code: "nl", name: "Netherlands" },
+  { code: "fi", name: "Finland" },
+  { code: "us", name: "United States" },
+];
+
 // Open-source tools + partner organisations AsPEN works alongside.
 // `image` is a path under public/images/ (omit for a text-only card that
 // shows the site name instead of a logo). `heightClass` tunes each logo so
@@ -73,15 +87,15 @@ const oss = [
             {s.image ? (
               <img src={`${base}/images/${s.image}`} alt={s.name} class:list={[s.heightClass, "w-auto"]} />
             ) : (
-              <!-- NeuroGEN: the wordmark itself is filled with the flags of its 9
-                   partner regions (PMID 38146486). A thin dark stroke keeps the
-                   letters over mostly-white flags (Finland, Netherlands, Scotland)
-                   readable on the white card (without it they fragment into the bg). -->
-              <h2
-                class="text-6xl font-black tracking-tight leading-none"
-                style={`background:url('${base}/images/flags/neurogen-name.png') center / 100% 100% no-repeat; -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent; -webkit-text-stroke:2.5px #21443e;`}
-                title="NeuroGEN partner regions: Taiwan, South Korea, Hong Kong, Australia, United Kingdom, Scotland, Netherlands, Finland, United States"
-              >{s.name}</h2>
+              <div class="flex items-center gap-3">
+                <!-- NeuroGEN mark: the flags of its 9 partner regions (PMID 38146486) -->
+                <div class="grid grid-cols-3 gap-1 shrink-0" role="img" aria-label="NeuroGEN partner countries: Taiwan, South Korea, Hong Kong, Australia, United Kingdom, Scotland, Netherlands, Finland, United States">
+                  {NEUROGEN_FLAGS.map((f) => (
+                    <img src={`${base}/images/flags/${f.code}.svg`} alt={f.name} title={f.name} width="22" height="22" class="w-[22px] h-[22px] rounded-full ring-1 ring-white shadow-sm" />
+                  ))}
+                </div>
+                <h2 class="text-5xl font-extrabold tracking-tight text-slate-900 leading-none" set:html={s.wordmark ?? s.name} />
+              </div>
             )}
           </div>
           <p class="mt-6 text-sm text-slate-700 leading-relaxed">{s.tagline}</p>
