@@ -151,14 +151,11 @@ const otherSites = [
     description="Population-level health databases used in AsPEN multi-national studies. The map is focused on East Asia; pan or zoom out to view partner sites."
   />
 
-  <!-- When the compare drawer is open (lg+), the content reserves the
-       drawer's width on the right and left-anchors, so the floating tray
-       never covers the page. Pure CSS via :has() on the drawer's data-open. -->
-  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 space-y-12
-                  lg:transition-[margin] lg:duration-300 lg:ease-out
-                  lg:has-[[data-compare-tray][data-open]]:ml-0
-                  lg:has-[[data-compare-tray][data-open]]:mr-[480px]
-                  xl:has-[[data-compare-tray][data-open]]:mr-[560px]">
+  <!-- Content stays centred at max-w-6xl. The compare drawer is a floating
+       slide-over (fixed, lg+); it overlays the right edge while open and is
+       dismissed with the Compare tab / Clear. Kept simple so the layout never
+       blows out on wide screens. -->
+  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 space-y-12">
     <div>
       <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-3">AsPEN network</h2>
       <WorldMap
