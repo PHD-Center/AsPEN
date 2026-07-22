@@ -369,12 +369,16 @@ const otherSites = [
         // reliably and blew the layout out on wide screens.
         const content = document.querySelector("[data-compare-content]");
         const MAX_CONTENT = 1152; // max-w-6xl
+        const GUTTER = 24;        // breathing room between content and drawer
         const reflowContent = () => {
           if (!content) return;
           if (isDrawerMode() && tray.hasAttribute("data-open")) {
             // clientWidth, not innerWidth: the latter includes the scrollbar,
             // which the right-anchored fixed drawer sits inside of.
-            const free = Math.max(320, document.documentElement.clientWidth - tray.offsetWidth);
+            const free = Math.max(
+              320,
+              document.documentElement.clientWidth - tray.offsetWidth - GUTTER,
+            );
             const box  = Math.min(MAX_CONTENT, free);
             content.style.maxWidth    = box + "px";
             content.style.marginLeft  = Math.max(0, (free - box) / 2) + "px";
