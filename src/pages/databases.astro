@@ -26,7 +26,7 @@ const countryMeta: Record<
   Finland:          { code: "FI",     flag: "🇫🇮",                       lat: 60.17,  lng: 24.94,  region: "external" },
   Australia:        { code: "AU",     flag: "🇦🇺",                       lat: -25.27, lng: 133.78, region: "external" },
   Singapore:        { code: "SG",     flag: "🇸🇬",                       lat: 1.35,   lng: 103.82, region: "external" },
-  Thailand:         { code: "TH",     flag: "🇹🇭",                       lat: 13.76,  lng: 100.50, region: "external" },
+  Thailand:         { code: "TH",     flag: "🇹🇭",                       lat: 13.76,  lng: 100.50, region: "asia" },
 };
 
 // Group databases by country for the cards (Scotland's ISD goes under UK section)
@@ -64,8 +64,10 @@ const mapGroups = Array.from(mapGroupedMap.entries()).map(([key, dbs]) => {
   };
 });
 
-// Singapore + Thailand; appear on the map (no anchor since they live in the prose section)
-// Inline rather than in databases.json because they're "other sites", not active.
+// Historical sites that appear on the map but live in the "Other sites" prose
+// section rather than databases.json, since they're not active partners.
+// Thailand also has an active database (HDC), so these merge into that marker
+// instead of adding a second pin at the same coordinates.
 const otherMapEntries: Record<string, { name: string; type: string; coverage?: string }[]> = {
   Singapore: [
     { name: "National Electronic Health Record (NEHR)", type: "National EHR" },
@@ -78,13 +80,12 @@ const otherMapEntries: Record<string, { name: string; type: string; coverage?: s
 for (const [country, items] of Object.entries(otherMapEntries)) {
   const meta = countryMeta[country];
   if (!meta) continue;
-  mapGroups.push({
-    country,
-    code: meta.code,
-    lat: meta.lat,
-    lng: meta.lng,
-    items: items.map((it) => ({ name: it.name, type: it.type, coverage: it.coverage ?? "", anchor: "other-sites" })),
-  });
+  const mapped = items.map((it) => ({
+    name: it.name, type: it.type, coverage: it.coverage ?? "", anchor: "other-sites",
+  }));
+  const existing = mapGroups.find((g) => g.country === country);
+  if (existing) existing.items.push(...mapped);
+  else mapGroups.push({ country, code: meta.code, lat: meta.lat, lng: meta.lng, items: mapped });
 }
 
 const typeColor: Record<string, string> = {

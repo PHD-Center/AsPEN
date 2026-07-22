@@ -153,6 +153,19 @@
     "features": ["rx", "dx", "labs", "imaging", "mortality", "cancer"]
   },
   {
+    "country": "Thailand",
+    "code": "TH",
+    "city": "Nonthaburi",
+    "lat": 13.8621,
+    "lng": 100.5144,
+    "name": "Ministry of Public Health Health Data Center (HDC)",
+    "type": "National EHR",
+    "coverage": "Hospitals and health facilities affiliated with the MOPH · nationwide · accessible 2016 to present",
+    "notes": "Common data model maintained by the Ministry of Public Health (MOPH) and shared with the National Health Security Office (NHSO), which holds the separate e-claim database. Known as the 43 files: demographic and basic data (14 files), outpatient and inpatient service data (17 files), and survey and special data (12 files). Contents span ICD-10 diagnoses, dispensing, procedures, charges, admissions, laboratory results, chronic-disease follow-up, immunisation, NCD screening, antenatal and newborn records, and recorded cause of death. Records link by citizen ID, or by patient ID within a hospital code.",
+    "since": 2016,
+    "features": ["rx", "dx", "labs", "mortality", "pregnancy"]
+  },
+  {
     "country": "United Kingdom",
     "code": "GB",
     "city": "London",

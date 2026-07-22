@@ -22,7 +22,7 @@ const shortDbName = (full: string): string => {
   const m = full.match(/\(([^)]+)\)$/);
   return m ? m[1] : full;
 };
-const COUNTRY_ORDER = ["TW", "KR", "JP", "HK", "AU", "FI", "GB", "NL", "US"];
+const COUNTRY_ORDER = ["TW", "KR", "JP", "HK", "TH", "AU", "FI", "GB", "NL", "US"];
 type DbRow = typeof databasesRaw[number] & { hidden?: boolean; features?: string[] };
 const SITES_DB = (databasesRaw as DbRow[])
   .filter((d) => !d.hidden && COUNTRY_ORDER.includes(d.code))
