@@ -160,8 +160,8 @@
     "lng": 100.5144,
     "name": "Ministry of Public Health Health Data Center (HDC)",
     "type": "National EHR",
-    "coverage": "947 MOPH and 55 non-MOPH public hospitals · 9,760 subdistrict health promotion hospitals (2021) · accessible 2016 to present",
-    "notes": "Common data model maintained by the Ministry of Public Health (MOPH) and shared with the National Health Security Office (NHSO), which holds the separate e-claim database. Known as the 43 files: demographic and basic data (14 files), outpatient and inpatient service data (17 files), and survey and special data (12 files). Contents span ICD-10 diagnoses, dispensing, procedures, charges, admissions, laboratory results, chronic-disease follow-up, immunisation, NCD screening, antenatal and newborn records, and recorded cause of death. Facilities upload to the central data centre at least monthly; in 2021 the platform received records from 947 MOPH public hospitals, 55 non-MOPH public hospitals, and 9,760 subdistrict health promotion hospitals. Records link by citizen ID, or by patient ID within a hospital code.",
+    "coverage": "947 MOPH and 55 non-MOPH public hospitals · 9,760 subdistrict health promotion hospitals (2021) · since 2016",
+    "notes": "Common data model maintained by the Ministry of Public Health (MOPH); the NHSO e-claim database is separate. Known as the 43 files, spanning ICD-10 diagnoses, dispensing, laboratory results, chronic-disease and antenatal follow-up, immunisation, and cause of death. Facilities upload at least monthly.",
     "since": 2016,
     "features": ["rx", "dx", "labs", "mortality", "pregnancy"]
   },
