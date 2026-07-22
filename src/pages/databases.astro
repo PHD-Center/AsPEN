@@ -151,11 +151,15 @@ const otherSites = [
     description="Population-level health databases used in AsPEN multi-national studies. The map is focused on East Asia; pan or zoom out to view partner sites."
   />
 
-  <!-- Content stays centred at max-w-6xl. The compare drawer is a floating
-       slide-over (fixed, lg+); it overlays the right edge while open and is
-       dismissed with the Compare tab / Clear. Kept simple so the layout never
-       blows out on wide screens. -->
-  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+  <!-- Content is centred at max-w-6xl. When the compare drawer opens (lg+), the
+       inline script measures the drawer and re-centres this section inside the
+       remaining space (explicit margin-left + max-width), so the tray never
+       covers the content and the layout can't blow out. Done in JS rather than
+       CSS :has(), which behaved inconsistently here. -->
+  <section
+    data-compare-content
+    class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 space-y-12"
+  >
     <div>
       <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-3">AsPEN network</h2>
       <WorldMap
@@ -358,14 +362,41 @@ const otherSites = [
 
         // Drawer open/close (lg+ only; on smaller screens the tray is inline)
         const isDrawerMode = () => window.matchMedia("(min-width: 1024px)").matches;
+
+        // While the drawer is open on lg+, re-centre the page content inside the
+        // space the drawer leaves free, so the floating tray never covers it.
+        // Measured and set here rather than via CSS :has(), which didn't apply
+        // reliably and blew the layout out on wide screens.
+        const content = document.querySelector("[data-compare-content]");
+        const MAX_CONTENT = 1152; // max-w-6xl
+        const reflowContent = () => {
+          if (!content) return;
+          if (isDrawerMode() && tray.hasAttribute("data-open")) {
+            // clientWidth, not innerWidth: the latter includes the scrollbar,
+            // which the right-anchored fixed drawer sits inside of.
+            const free = Math.max(320, document.documentElement.clientWidth - tray.offsetWidth);
+            const box  = Math.min(MAX_CONTENT, free);
+            content.style.maxWidth    = box + "px";
+            content.style.marginLeft  = Math.max(0, (free - box) / 2) + "px";
+            content.style.marginRight = "0px";
+          } else {
+            content.style.maxWidth    = "";
+            content.style.marginLeft  = "";
+            content.style.marginRight = "";
+          }
+        };
+
         const openDrawer = () => {
           tray.setAttribute("data-open", "");
           if (tab) tab.setAttribute("aria-expanded", "true");
+          reflowContent();
         };
         const closeDrawer = () => {
           tray.removeAttribute("data-open");
           if (tab) tab.setAttribute("aria-expanded", "false");
+          reflowContent();
         };
+        window.addEventListener("resize", reflowContent);
         const toggleDrawer = () => {
           if (tray.hasAttribute("data-open")) closeDrawer();
           else openDrawer();
