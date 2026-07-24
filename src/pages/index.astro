@@ -21,10 +21,9 @@ const asianDbs = databases.filter((d) => ASIAN_CODES.has(d.code));
 const asianCountries = new Set(asianDbs.map((d) => d.country)).size;
 
 // Population covered, summed across the largest national database in each of
-// the four East-Asia countries with a published coverage figure. ~200M people:
-//   TW NHIRD ~23M · JP NDB ~120M · KR HIRA/NHIS ~50M · HK CDARS ~7M
-// Thailand's HDC is excluded: the source deck states no population count.
-const POPULATION_M = 200;
+// the five East-Asia countries with a coverage figure. ~280M people:
+//   TW NHIRD ~23M · JP NDB ~120M · KR HIRA/NHIS ~50M · HK CDARS ~7M · TH HDC ~79M
+const POPULATION_M = 279;
 
 const stats = [
   { value: asianCountries, label: "Countries", sublabel: "in Asia" },
