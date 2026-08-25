@@ -22,7 +22,9 @@ export default defineConfig({
     // The auth-gated /members/ area is excluded (no point indexing a login
     // shell). Submit the sitemap-index.xml URL in Google Search Console.
     sitemap({
-      filter: (page) => !page.includes('/members'),
+      // /history/ is unlisted: reachable only from the year in the footer,
+      // so it is kept out of the sitemap rather than advertised to crawlers.
+      filter: (page) => !page.includes('/members') && !page.includes('/history'),
     }),
   ],
   vite: {
