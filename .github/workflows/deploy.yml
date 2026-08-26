@@ -43,29 +43,55 @@ jobs:
         # unreachable, don't block the public GitHub Pages build/deploy that
         # follows. The NAS catches up on the next run once it is back online.
         continue-on-error: true
-        # continue-on-error covers a failure, not a hang: an unresponsive
-        # NAS left rclone retrying and stalled the Pages steps behind it.
-        # Cap the step so it can only ever cost minutes.
-        timeout-minutes: 10
+        # continue-on-error reports the step as succeeding even when it does
+        # not, so read the log, not the badge, when the NAS misbehaves.
+        # The cap exists because continue-on-error covers a failure but not a
+        # hang: an unresponsive NAS otherwise stalls the Pages steps behind it.
+        timeout-minutes: 25
         env:
           WEBDAV_PASS: ${{ secrets.NAS_PASSWORD }}
         run: |
           OBSCURED_PASS=$(rclone obscure "$WEBDAV_PASS")
-          # --ignore-times forces re-upload every file: the NAS WebDAV
-          # doesn't preserve modtimes and doesn't expose MD5 checksums,
-          # so rclone falls back to size-only comparison and otherwise
-          # silently skips HTML whose byte length happens to be unchanged
-          # while its internal CSS hash refs differ → stale-asset 404s.
+
+          # Pass 1 - structure. Uploads new and resized files and removes what
+          # no longer exists. Re-uploading *everything* here (--ignore-times)
+          # is what used to push this past 10 minutes and draw 408s out of the
+          # NAS; rclone then refuses to delete anything ("not deleting files as
+          # there were IO errors"), so removed pages lingered on the live site.
           rclone sync ./dist :webdav:/AsPEN.sig \
             --webdav-url="https://dev.aspensig.asia" \
             --webdav-user="aspen-git" \
             --webdav-pass="$OBSCURED_PASS" \
             --webdav-vendor="other" \
-            --ignore-times \
+            --transfers=2 \
+            --checkers=2 \
             --contimeout=30s \
             --timeout=120s \
-            --retries=2 \
-            --low-level-retries=3
+            --retries=3 \
+            --low-level-retries=5
+
+          # Pass 2 - text files, forced. The NAS exposes neither modtimes nor
+          # MD5, so pass 1 compares by size alone and would skip an HTML file
+          # whose length is unchanged while its hashed asset refs differ, which
+          # serves stale CSS/JS. These files are small, so forcing all of them
+          # costs little. CSS and JS carry content hashes in their names, so a
+          # change there is a new filename and pass 1 already caught it.
+          rclone copy ./dist :webdav:/AsPEN.sig \
+            --include "*.html" \
+            --include "*.xml" \
+            --include "*.txt" \
+            --include "*.json" \
+            --ignore-times \
+            --webdav-url="https://dev.aspensig.asia" \
+            --webdav-user="aspen-git" \
+            --webdav-pass="$OBSCURED_PASS" \
+            --webdav-vendor="other" \
+            --transfers=2 \
+            --checkers=2 \
+            --contimeout=30s \
+            --timeout=120s \
+            --retries=3 \
+            --low-level-retries=5
 
       # ──────────────────────────────────────────
       # Build #2 — for GitHub Pages mirror (subpath base '/AsPEN/')
