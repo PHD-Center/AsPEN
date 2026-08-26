@@ -1,0 +1,205 @@
+---
+// Hidden easter egg: typing "/2012" anywhere on the page brings up the site
+// AsPEN carried until the rebuild; "/2026" (or Esc) puts it away again.
+// Nothing on the page advertises it.
+//
+// The reconstruction is built from the Internet Archive's capture of
+// 2019-12-07 (web.archive.org/web/20191207010519/https://www.aspensig.asia/),
+// using the original masthead, tiled background, and photograph from that
+// snapshot, plus its nav labels and "What is AsPEN?" copy.
+//
+// Images carry data-src rather than src, so none of them are fetched until
+// someone actually triggers the egg; a visitor who never types the code pays
+// nothing for it.
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+
+<div
+  data-old-site
+  class="fixed inset-0 z-[60] hidden items-center justify-center p-3 sm:p-6"
+  role="dialog"
+  aria-modal="true"
+  aria-label="The previous AsPEN website, as captured in December 2019"
+  aria-hidden="true"
+>
+  <!-- backdrop -->
+  <div data-old-backdrop class="absolute inset-0 bg-slate-900/70 backdrop-blur-sm opacity-0 transition-opacity duration-500"></div>
+
+  <!-- the old site, in a period browser window -->
+  <div
+    data-old-frame
+    class="relative w-full max-w-5xl max-h-full flex flex-col rounded-lg overflow-hidden shadow-2xl
+           opacity-0 scale-95 transition-[opacity,transform] duration-500 ease-out"
+  >
+    <!-- chrome -->
+    <div class="bg-gradient-to-b from-slate-200 to-slate-300 border-b border-slate-400/60 px-3 py-2 shrink-0">
+      <div class="flex items-center gap-2">
+        <div class="flex gap-1.5 shrink-0" aria-hidden="true">
+          <span class="w-3 h-3 rounded-full bg-red-400 border border-red-500/40"></span>
+          <span class="w-3 h-3 rounded-full bg-amber-400 border border-amber-500/40"></span>
+          <span class="w-3 h-3 rounded-full bg-green-400 border border-green-500/40"></span>
+        </div>
+        <div class="flex-1 flex items-center gap-2 bg-white/90 border border-slate-400/50 rounded px-2 py-1 min-w-0">
+          <span class="text-[10px] font-bold text-red-600 whitespace-nowrap flex items-center gap-1">
+            <span aria-hidden="true">⚠</span> Not secure
+          </span>
+          <span class="text-[11px] text-slate-600 truncate font-mono">www.aspensig.asia</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- page body -->
+    <div
+      class="overflow-y-auto"
+      style={`background-color:#f4f4f4; background-image:url('${base}/images/history/old-bg-tile.png'); background-repeat:repeat;`}
+      data-old-body
+    >
+      <div class="bg-white/85 px-4 sm:px-8 pt-5 pb-0">
+        <img
+          data-src={`${base}/images/history/old-masthead.png`}
+          alt="Asian Pharmacoepidemiology Network; A Special Interest Group of the International Society for Pharmacoepidemiology"
+          class="w-full max-w-3xl mx-auto"
+        />
+      </div>
+
+      <div class="bg-[#5a5a5a] text-white text-[11px] sm:text-xs">
+        <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-x-6 gap-y-1 px-4 py-2.5 font-semibold tracking-wide">
+          <span>About US</span>
+          <span>National Groups and Contact Persons</span>
+          <span>Activities</span>
+          <span>Publications</span>
+          <span>Related Links</span>
+        </div>
+      </div>
+
+      <div class="max-w-4xl mx-auto px-4 sm:px-8 py-5">
+        <img
+          data-src={`${base}/images/history/old-banner.jpg`}
+          alt="AsPEN members at an ICPE poster session"
+          class="w-full rounded-sm border border-slate-300"
+        />
+        <p class="mt-2 text-center text-[11px] text-slate-500 italic">AsPen Photo</p>
+
+        <h2 class="mt-5 text-lg font-bold text-slate-800" style="font-family:Georgia,serif;">About AsPEN</h2>
+        <p class="mt-1 text-sm font-bold text-slate-700" style="font-family:Georgia,serif;">What is AsPEN?</p>
+        <p class="mt-2 text-[13px] text-slate-600 leading-relaxed" style="font-family:Georgia,serif;">
+          The Asian Pharmacoepidemiology Network, or AsPEN, is a multi-national research
+          network which was formed to provide a mechanism to support the conduct of
+          pharmaco-epidemiological research and to facilitate the prompt identification
+          and validation of emerging safety issues among the Asian countries.
+        </p>
+        <p class="mt-4 text-[13px] text-slate-500" style="font-family:Georgia,serif;">1. The History of AsPEN</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- the flash that covers each swap -->
+  <div data-old-flash class="pointer-events-none absolute inset-0 bg-white opacity-0"></div>
+</div>
+
+<style>
+  [data-old-site].is-open { display: flex; }
+  [data-old-site].is-open [data-old-backdrop] { opacity: 1; }
+  [data-old-site].is-open [data-old-frame] { opacity: 1; transform: scale(1); }
+
+  [data-old-flash].is-flashing { animation: egg-flash 650ms ease-out 1; }
+  @keyframes egg-flash {
+    0%   { opacity: 0; }
+    10%  { opacity: .95; }
+    100% { opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-old-backdrop], [data-old-frame] { transition: none !important; }
+    [data-old-flash] { animation: none !important; }
+  }
+</style>
+
+<script>
+  (() => {
+    const egg = document.querySelector("[data-old-site]");
+    if (!egg) return;
+
+    const frame = egg.querySelector("[data-old-frame]");
+    const flash = egg.querySelector("[data-old-flash]");
+    const body  = egg.querySelector("[data-old-body]");
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const OPEN  = "/2012";
+    const CLOSE = "/2026";
+    const LONGEST = Math.max(OPEN.length, CLOSE.length);
+
+    let buffer = "";
+    let lastFocus: Element | null = null;
+
+    // Fetch the period images only the first time the egg is opened.
+    let loaded = false;
+    const loadImages = () => {
+      if (loaded) return;
+      loaded = true;
+      egg.querySelectorAll("img[data-src]").forEach((img) => {
+        const el = img as HTMLImageElement;
+        el.src = el.dataset.src || "";
+        el.removeAttribute("data-src");
+      });
+    };
+
+    const doFlash = () => {
+      if (reduced || !flash) return;
+      flash.classList.remove("is-flashing");
+      void (flash as HTMLElement).offsetWidth; // restart the animation
+      flash.classList.add("is-flashing");
+    };
+
+    const open = () => {
+      if (egg.classList.contains("is-open")) return;
+      loadImages();
+      lastFocus = document.activeElement;
+      egg.classList.add("is-open");
+      egg.removeAttribute("aria-hidden");
+      document.documentElement.style.overflow = "hidden"; // don't scroll behind
+      doFlash();
+      // let `display:flex` land before the transition starts
+      requestAnimationFrame(() => frame?.classList.add("shown"));
+      if (body) (body as HTMLElement).scrollTop = 0;
+    };
+
+    const close = () => {
+      if (!egg.classList.contains("is-open")) return;
+      doFlash();
+      egg.classList.remove("is-open");
+      egg.setAttribute("aria-hidden", "true");
+      document.documentElement.style.overflow = "";
+      if (lastFocus instanceof HTMLElement) lastFocus.focus();
+    };
+
+    window.addEventListener("keydown", (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if (e.key === "Escape" && egg.classList.contains("is-open")) {
+        close();
+        return;
+      }
+
+      // Ignore anything being typed into a field.
+      const t = e.target as HTMLElement | null;
+      if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+      if (t && t.isContentEditable) return;
+      if (e.key.length !== 1) return;
+
+      buffer = (buffer + e.key).slice(-LONGEST);
+      if (buffer.endsWith(OPEN)) {
+        buffer = "";
+        open();
+      } else if (buffer.endsWith(CLOSE)) {
+        buffer = "";
+        close();
+      }
+    });
+
+    // Clicking the backdrop also puts it away.
+    egg.addEventListener("click", (e) => {
+      if (e.target === egg || (e.target as HTMLElement).hasAttribute("data-old-backdrop")) close();
+    });
+  })();
+</script>

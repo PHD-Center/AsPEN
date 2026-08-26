@@ -3,6 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/Hero.astro";
 import ChairCard from "../components/ChairCard.astro";
 import StatsBar from "../components/StatsBar.astro";
+import OldSiteEgg from "../components/OldSiteEgg.astro";
 import databasesRaw from "../data/databases.json";
 import publications from "../data/publications.json";
 
@@ -157,4 +158,5 @@ const countries = featured.length;
       <a href={`${base}/databases/`} class="text-brand-600 font-semibold hover:underline">See all databases →</a>
     </div>
   </section>
+  <OldSiteEgg />
 </BaseLayout>
