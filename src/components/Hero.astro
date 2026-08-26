@@ -29,11 +29,157 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         <a href={`${base}/about/#how-to-join`} class="inline-flex items-center bg-white text-slate-800 border border-slate-300 font-semibold px-5 py-2.5 rounded-lg hover:border-brand-500 hover:text-brand-700 transition">How to join</a>
       </div>
     </div>
+
+    <!-- ── The mark ──────────────────────────────────────────────
+         Drifts on its own, leans towards the cursor, and carries a
+         hidden swap: typing "/2012" turns it over to the emblem AsPEN
+         used before the rebuild, "/2026" turns it back. The old image
+         is fetched only if someone summons it. -->
     <div class="hidden lg:flex items-center justify-center">
-      <div class="relative">
-        <div class="absolute inset-0 -m-4 bg-gradient-to-br from-accent-500/10 to-brand-500/10 rounded-3xl blur-xl"></div>
-        <img src={`${base}/images/AsPenLogo.png`} alt="AsPEN logo" class="relative w-60 h-60 object-contain" />
+      <div data-mark class="relative w-60 h-60 [perspective:900px]">
+        <!-- glow, breathing slowly behind the mark -->
+        <div
+          data-mark-glow
+          class="absolute inset-0 -m-6 rounded-[2.5rem] bg-gradient-to-br from-accent-500/20 via-brand-500/15 to-brand-700/10 blur-2xl"
+          aria-hidden="true"
+        ></div>
+
+        <!-- three dots circling, echoing the ones in the mark itself -->
+        <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <span data-orbit="1" class="absolute inset-0">
+            <span class="absolute left-1/2 -top-1 w-2.5 h-2.5 -ml-[5px] rounded-full bg-brand-500/70"></span>
+          </span>
+          <span data-orbit="2" class="absolute inset-3">
+            <span class="absolute left-1/2 -top-1 w-1.5 h-1.5 -ml-[3px] rounded-full bg-accent-500/70"></span>
+          </span>
+          <span data-orbit="3" class="absolute inset-1">
+            <span class="absolute left-1/2 -top-1 w-2 h-2 -ml-1 rounded-full bg-brand-700/50"></span>
+          </span>
+        </div>
+
+        <!-- leans towards the cursor -->
+        <div data-mark-tilt class="relative w-full h-full [transform-style:preserve-3d]">
+          <!-- drifts up and down -->
+          <div data-mark-float class="w-full h-full [transform-style:preserve-3d]">
+            <!-- turns over for the swap -->
+            <div data-mark-card class="relative w-full h-full [transform-style:preserve-3d]">
+              <img
+                src={`${base}/images/AsPenLogo.png`}
+                alt="AsPEN logo"
+                class="absolute inset-0 w-full h-full object-contain [backface-visibility:hidden]"
+              />
+              <img
+                data-mark-old
+                data-src={`${base}/images/history/old-logo-mark.png`}
+                alt=""
+                aria-hidden="true"
+                class="absolute inset-0 w-full h-full object-contain [backface-visibility:hidden] [transform:rotateY(180deg)]"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
+
+<style>
+  /* Idle drift. Kept small so it reads as alive rather than restless. */
+  @keyframes mark-float {
+    0%, 100% { transform: translateY(-6px); }
+    50%      { transform: translateY(6px); }
+  }
+  [data-mark-float] { animation: mark-float 6s ease-in-out infinite; }
+
+  /* The glow breathes on a different cycle from the drift, so the two
+     never lock into an obvious rhythm. */
+  @keyframes mark-glow {
+    0%, 100% { opacity: .75; transform: scale(1); }
+    50%      { opacity: 1;   transform: scale(1.06); }
+  }
+  [data-mark-glow] { animation: mark-glow 7.5s ease-in-out infinite; }
+
+  @keyframes orbit-cw  { from { transform: rotate(0deg); }   to { transform: rotate(360deg); } }
+  @keyframes orbit-ccw { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+  [data-orbit="1"] { animation: orbit-cw  18s linear infinite; }
+  [data-orbit="2"] { animation: orbit-ccw 24s linear infinite; }
+  [data-orbit="3"] { animation: orbit-cw  31s linear infinite; }
+
+  /* Lean towards the cursor. Short transition so it tracks without lag,
+     and separate from the flip so the two don't fight over one property. */
+  [data-mark-tilt] {
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform 220ms ease-out;
+  }
+  [data-mark-card] {
+    transform: rotateY(var(--flip, 0deg));
+    transition: transform 900ms cubic-bezier(.66, 0, .2, 1);
+  }
+  [data-mark]:hover [data-mark-glow] { opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-mark-float], [data-mark-glow],
+    [data-orbit="1"], [data-orbit="2"], [data-orbit="3"] { animation: none !important; }
+    [data-mark-tilt] { transition: none !important; transform: none !important; }
+    [data-mark-card] { transition: none !important; }
+  }
+</style>
+
+<script>
+  (() => {
+    const mark = document.querySelector("[data-mark]");
+    if (!mark) return;
+    const tilt = mark.querySelector("[data-mark-tilt]") as HTMLElement | null;
+    const card = mark.querySelector("[data-mark-card]") as HTMLElement | null;
+    const old  = mark.querySelector("[data-mark-old]") as HTMLImageElement | null;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // ── lean towards the cursor
+    if (tilt && !reduced) {
+      const MAX = 11; // degrees
+      mark.addEventListener("mousemove", (e) => {
+        const r = mark.getBoundingClientRect();
+        const px = (e as MouseEvent).clientX - r.left;
+        const py = (e as MouseEvent).clientY - r.top;
+        const ry = ((px / r.width) - 0.5) * 2 * MAX;
+        const rx = -((py / r.height) - 0.5) * 2 * MAX;
+        tilt.style.setProperty("--ry", ry.toFixed(2) + "deg");
+        tilt.style.setProperty("--rx", rx.toFixed(2) + "deg");
+      });
+      mark.addEventListener("mouseleave", () => {
+        tilt.style.setProperty("--ry", "0deg");
+        tilt.style.setProperty("--rx", "0deg");
+      });
+    }
+
+    // ── the swap
+    if (card && old) {
+      const OLD = "/2012";
+      const NEW = "/2026";
+      const LONGEST = Math.max(OLD.length, NEW.length);
+      let buffer = "";
+      let loaded = false;
+
+      const turn = (toOld: boolean) => {
+        if (toOld && !loaded) {
+          loaded = true;
+          old.src = old.dataset.src || "";
+          old.removeAttribute("data-src");
+        }
+        card.style.setProperty("--flip", toOld ? "180deg" : "0deg");
+      };
+
+      window.addEventListener("keydown", (e) => {
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const t = e.target as HTMLElement | null;
+        if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+        if (t && t.isContentEditable) return;
+        if (e.key.length !== 1) return;
+
+        buffer = (buffer + e.key).slice(-LONGEST);
+        if (buffer.endsWith(OLD))      { buffer = ""; turn(true); }
+        else if (buffer.endsWith(NEW)) { buffer = ""; turn(false); }
+      });
+    }
+  })();
+</script>
