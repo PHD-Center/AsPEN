@@ -17,10 +17,22 @@ const isOnMembers = path.startsWith(`${base}/members`.replace(/\/$/, ""));
 <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
   <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
     <a href={`${base}/`} class="flex items-center gap-3" aria-label="AsPEN; Asian Pharmacoepidemiology Network">
-      <img src={`${base}/images/AsPenLogo.png`} alt="" class="h-10 w-auto shrink-0" width="36" height="40" />
-      <span class="hidden lg:inline text-sm font-bold text-brand-700 leading-tight whitespace-nowrap">
-        Asian Pharmacoepidemiology Network
+      <span data-brand-current class="flex items-center gap-3 transition-opacity duration-300">
+        <img src={`${base}/images/AsPenLogo.png`} alt="" class="h-10 w-auto shrink-0" width="36" height="40" />
+        <span class="hidden lg:inline text-sm font-bold text-brand-700 leading-tight whitespace-nowrap">
+          Asian Pharmacoepidemiology Network
+        </span>
       </span>
+      <!-- Easter egg: the masthead AsPEN carried until the rebuild, recovered
+           from the Internet Archive's 2019-12-07 capture. Hidden, and fetched
+           only if someone actually summons it, so it costs nothing normally. -->
+      <img
+        data-brand-old
+        data-src={`${base}/images/history/old-masthead.png`}
+        alt=""
+        aria-hidden="true"
+        class="hidden h-7 sm:h-8 lg:h-10 w-auto max-w-[52vw] object-contain transition-opacity duration-300"
+      />
     </a>
     <nav aria-label="Primary" class="hidden md:flex items-center gap-1">
       {nav.map((item) => {
@@ -85,5 +97,45 @@ const isOnMembers = path.startsWith(`${base}/members`.replace(/\/$/, ""));
         }
       })
       .catch(() => { /* offline / cors / no session; ignore */ });
+  })();
+</script>
+
+<!-- Easter egg: typing "/2012" swaps the brand for the masthead AsPEN used
+     until the rebuild; "/2026" puts the current one back. Undocumented on
+     purpose. The old image is only fetched the first time it is summoned. -->
+<script>
+  (() => {
+    const current = document.querySelector("[data-brand-current]");
+    const old     = document.querySelector("[data-brand-old]");
+    if (!current || !old) return;
+
+    const OPEN = "/2012";
+    const BACK = "/2026";
+    const LONGEST = Math.max(OPEN.length, BACK.length);
+    let buffer = "";
+    let loaded = false;
+
+    const show = (showOld: boolean) => {
+      if (showOld && !loaded) {
+        loaded = true;
+        const el = old as HTMLImageElement;
+        el.src = el.dataset.src || "";
+        el.removeAttribute("data-src");
+      }
+      current.classList.toggle("hidden", showOld);
+      old.classList.toggle("hidden", !showOld);
+    };
+
+    window.addEventListener("keydown", (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+      if (t && t.isContentEditable) return;
+      if (e.key.length !== 1) return;
+
+      buffer = (buffer + e.key).slice(-LONGEST);
+      if (buffer.endsWith(OPEN))      { buffer = ""; show(true);  }
+      else if (buffer.endsWith(BACK)) { buffer = ""; show(false); }
+    });
   })();
 </script>
