@@ -43,6 +43,10 @@ jobs:
         # unreachable, don't block the public GitHub Pages build/deploy that
         # follows. The NAS catches up on the next run once it is back online.
         continue-on-error: true
+        # continue-on-error covers a failure, not a hang: an unresponsive
+        # NAS left rclone retrying and stalled the Pages steps behind it.
+        # Cap the step so it can only ever cost minutes.
+        timeout-minutes: 10
         env:
           WEBDAV_PASS: ${{ secrets.NAS_PASSWORD }}
         run: |
@@ -57,7 +61,11 @@ jobs:
             --webdav-user="aspen-git" \
             --webdav-pass="$OBSCURED_PASS" \
             --webdav-vendor="other" \
-            --ignore-times
+            --ignore-times \
+            --contimeout=30s \
+            --timeout=120s \
+            --retries=2 \
+            --low-level-retries=3
 
       # ──────────────────────────────────────────
       # Build #2 — for GitHub Pages mirror (subpath base '/AsPEN/')
