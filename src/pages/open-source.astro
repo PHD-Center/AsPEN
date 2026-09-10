@@ -39,10 +39,10 @@ const oss = [
   },
   {
     name: "NeuroGEN",
-    // Wordmark filled with the flags of its 9 partner regions (PMID 38146486),
-    // outlined so the pale flags (Finland, Netherlands, Scotland) stay legible.
+    // The name floating above the world laid out as a floor, with the 9 partner
+    // regions (PMID 38146486) lit up on it.
     image: "websites/neurogen.png",
-    heightClass: "h-14",
+    heightClass: "h-24",
     tagline: "The Neurological and mental health Global Epidemiology Network; a multi-database platform spanning Asia, Oceania, Europe, and North America.",
     href: "https://neurogen.hku.hk/",
   },
@@ -72,7 +72,7 @@ const oss = [
         <a href={s.href} target="_blank" rel="noopener noreferrer"
            class="group block border border-slate-200 rounded-2xl p-8 bg-white hover:shadow-md hover:border-brand-400 transition">
           <div class="h-36 flex items-center">
-            <img src={`${base}/images/${s.image}`} alt={s.name} class:list={[s.heightClass, "w-auto"]} />
+            <img src={`${base}/images/${s.image}`} alt={s.name} class:list={[s.heightClass, "w-auto max-w-full object-contain"]} />
           </div>
           <p class="mt-6 text-sm text-slate-700 leading-relaxed">{s.tagline}</p>
           <p class="mt-4 text-xs text-brand-700 font-semibold group-hover:underline">
