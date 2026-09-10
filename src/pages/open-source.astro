@@ -39,8 +39,10 @@ const oss = [
   },
   {
     name: "NeuroGEN",
-    // No supplied logo; render a styled wordmark instead of plain text.
-    wordmark: 'Neuro<span class="text-brand-600">GEN</span>',
+    // Wordmark filled with the flags of its 9 partner regions (PMID 38146486),
+    // outlined so the pale flags (Finland, Netherlands, Scotland) stay legible.
+    image: "websites/neurogen.png",
+    heightClass: "h-14",
     tagline: "The Neurological and mental health Global Epidemiology Network; a multi-database platform spanning Asia, Oceania, Europe, and North America.",
     href: "https://neurogen.hku.hk/",
   },
@@ -70,19 +72,7 @@ const oss = [
         <a href={s.href} target="_blank" rel="noopener noreferrer"
            class="group block border border-slate-200 rounded-2xl p-8 bg-white hover:shadow-md hover:border-brand-400 transition">
           <div class="h-36 flex items-center">
-            {s.image ? (
-              <img src={`${base}/images/${s.image}`} alt={s.name} class:list={[s.heightClass, "w-auto"]} />
-            ) : (
-              <!-- NeuroGEN: the wordmark itself is filled with the flags of its 9
-                   partner regions (PMID 38146486). A thin dark stroke keeps the
-                   letters over mostly-white flags (Finland, Netherlands, Scotland)
-                   readable on the white card. -->
-              <h2
-                class="text-6xl font-black tracking-tight leading-none"
-                style={`background:url('${base}/images/flags/neurogen-name.png') center / 100% 100% no-repeat; -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent; -webkit-text-stroke:1.4px #21443e;`}
-                title="NeuroGEN partner regions: Taiwan, South Korea, Hong Kong, Australia, United Kingdom, Scotland, Netherlands, Finland, United States"
-              >{s.name}</h2>
-            )}
+            <img src={`${base}/images/${s.image}`} alt={s.name} class:list={[s.heightClass, "w-auto"]} />
           </div>
           <p class="mt-6 text-sm text-slate-700 leading-relaxed">{s.tagline}</p>
           <p class="mt-4 text-xs text-brand-700 font-semibold group-hover:underline">
