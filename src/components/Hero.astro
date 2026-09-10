@@ -1,4 +1,5 @@
 ---
+import HeroFloor from "./HeroFloor.astro";
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 
@@ -9,10 +10,13 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
     <div class="absolute -bottom-40 -left-20 w-[360px] h-[360px] rounded-full bg-gradient-to-tr from-brand-500/10 to-transparent blur-3xl"></div>
   </div>
 
+  <!-- the world, laid down as a floor under the whole hero -->
+  <HeroFloor />
+
   <!-- top accent bar -->
   <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent-500 via-brand-500 to-brand-700"></div>
 
-  <div class="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-20 md:py-28 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
+  <div class="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-20 md:py-28 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
     <div>
       <p class="inline-flex items-center gap-2 uppercase tracking-widest text-xs text-brand-600 font-semibold mb-4">
         <span class="inline-block w-6 h-px bg-brand-500"></span>
