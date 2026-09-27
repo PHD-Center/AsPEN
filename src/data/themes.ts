@@ -130,7 +130,7 @@ export const THEMES: Theme[] = [
     number: "09",
     name: "Infection & Vaccine",
     headline: "Pandemic-era surveillance",
-    story: "AsPEN's pandemic work; vaccine-safety surveillance across 19 Asia-Pacific countries (2021), multi-organ COVID-19 outcomes, and post-acute sequelae studies that needed multi-country denominators to be statistically tractable.",
+    story: "AsPEN's pandemic work: the multi-organ sequelae of COVID-19 over the short, medium and long term, and its psychiatric and neuropsychiatric sequelae within two years, each from a multinational cohort. The Asia-Pacific vaccine-safety database survey is filed under Infrastructure.",
     coverVisual: "target",
     tags: ["COVID 19", "vaccine safety", "post acute sequelae"],
   },
