@@ -46,13 +46,54 @@ const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
 >
   const init = () => {
     const map = L.map(mapId, { scrollWheelZoom: false }).setView(initialCenter, initialZoom);
-    // CARTO Voyager; light, English/romanised labels, only major cities at low zoom
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png", {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: "abcd",
+
+    // Basemap: Esri "World Light Gray Canvas", drawn as two layers — a pale
+    // landmass base with the place labels painted over it. No API key, and
+    // the labels are romanised worldwide, which is what this map needs when
+    // it opens centred on East Asia.
+    //
+    // This replaced CARTO Voyager in Sept 2026, when CARTO moved their
+    // basemaps behind an API key. An unkeyed request there does not fail: it
+    // answers HTTP 200 with a single "API KEY REQUIRED" watermark tile, the
+    // same image for every coordinate. Nothing client-side could tell that
+    // apart from real imagery, so the map sat blank for days before anyone
+    // noticed. The notice below cannot catch that particular trick either,
+    // but it does catch the ordinary ways a tile host stops answering.
+    const ESRI = "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas";
+    const esriAttr =
+      '&copy; <a href="https://www.esri.com/">Esri</a>, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+    // Esri addresses tiles as /{z}/{y}/{x} — y before x, unlike the usual XYZ.
+    const baseLayer = L.tileLayer(ESRI + "/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+      attribution: esriAttr,
       maxZoom: 10,
+      zIndex: 1,
     }).addTo(map);
+
+    L.tileLayer(ESRI + "/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}", {
+      maxZoom: 10,
+      zIndex: 2,
+    }).addTo(map);
+
+    // If the basemap host stops answering, say so in the corner rather than
+    // leaving a blank rectangle that reads as a broken page. The flag markers
+    // and their popups are our own markup and keep working either way.
+    let tilesOk = false;
+    const warnBasemap = () => {
+      if (tilesOk || document.getElementById(mapId + "-tilewarn")) return;
+      const el = document.createElement("div");
+      el.id = mapId + "-tilewarn";
+      el.setAttribute("role", "status");
+      el.style.cssText =
+        "position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:900;" +
+        "background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;" +
+        "font:600 11px Inter,system-ui,sans-serif;color:#475569;box-shadow:0 1px 4px rgba(0,0,0,.12)";
+      el.textContent = "Basemap unavailable; the locations below are unaffected.";
+      map.getContainer().appendChild(el);
+    };
+    baseLayer.on("tileload", () => { tilesOk = true; });
+    baseLayer.on("tileerror", warnBasemap);
+    setTimeout(() => { if (!tilesOk) warnBasemap(); }, 8000);
 
     const markers = groups.map((g) => {
       const flagUrl = `https://flagcdn.com/w40/${g.code.toLowerCase()}.png`;
