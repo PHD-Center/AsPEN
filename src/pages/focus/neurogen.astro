@@ -13,6 +13,7 @@
 // breakdown. The 320 million is the paper's figure, not a sum of popM: the
 // site's per-database counts overlap and are not the paper's denominators.
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import Chalkdust from "../../components/Chalkdust.astro";
 import databasesRaw from "../../data/databases.json";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -119,7 +120,7 @@ const STEPS = [
   { tag: "The alibi", text: "Siblings share their family. Where one sibling was exposed and the other was not, their risks were similar: HR 1.05 (0.94–1.17). The interval crosses 1." },
   { tag: "The verdict", text: "The link between gestational diabetes and ADHD is unlikely to be causal. Diabetes that began before pregnancy still carried a higher risk (HR 1.39, 1.25–1.55)." },
 ];
-const DWELL = [3800, 5000, 4600, 5200, 5400, 7000]; // ms each room is held
+const DWELL = [2600, 3400, 3200, 3600, 3800, 5500]; // ms each room is held
 const DEPTH = 1100; // px between rooms
 const LAST = STEPS.length - 1;
 
@@ -150,8 +151,8 @@ const ITEMS: Record<string, Item> = {
   dna: { on: [3, 3], x: 24, y: 86, w: "clamp(2.2rem, 4.2vw, 3.2rem)" },
   house: { on: [3, 3], x: 76, y: 86, w: "clamp(3.6rem, 7vw, 5.2rem)" },
   // 4 · the alibi
-  sibs: { on: [4, 4], x: 50, y: 13, w: "clamp(5.5rem, 11vw, 8rem)" },
-  plot: { on: [4, 4], x: 50, y: 36, w: "clamp(15rem, 38vw, 27rem)" },
+  sibs: { on: [4, 4], x: 50, y: 11, w: "clamp(5.5rem, 11vw, 8rem)" },
+  plot: { on: [4, 4], x: 50, y: 38.5, w: "clamp(15rem, 38vw, 27rem)" },
   // 5 · the verdict
   stamp: { on: [5, 5], x: 50, y: 27, w: "auto", hideFar: true },
   // floating deductions, typed on beside the objects (words from the abstract)
@@ -470,6 +471,8 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
         <p class="absolute left-4 sm:left-6 top-3 z-10 font-mono text-[11px] tracking-[0.25em] text-[#92ebda]">
           MIND PALACE · CASE FILE · PMID 38589601
         </p>
+        <p class="game" aria-hidden="true">The game is on.</p>
+        <p class="mp-toast" role="status"></p>
         <h2 id="palace-title" class="sr-only">The case of the missing cause: gestational diabetes and ADHD</h2>
 
         <div class="space absolute inset-0" aria-hidden="true">
@@ -501,10 +504,10 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
             <!-- 0 · the question -->
             <div class="it" {...at("file")}>
               <div class="card">
-                <p class="font-mono text-[10px] sm:text-[11px] tracking-[0.22em] text-[#92ebda]">CASE FILE · PMID 38589601</p>
-                <p class="mt-2 text-[clamp(1.25rem,2.6vw,2rem)] font-light leading-tight text-[#f2f7f5]">The case of the missing cause</p>
+                <p class="font-mono text-[11px] sm:text-xs tracking-[0.22em] text-[#92ebda]">CASE FILE · PMID 38589601</p>
+                <p class="mt-2 text-[clamp(1.5rem,3.2vw,2.5rem)] font-light leading-tight text-[#f2f7f5]">The case of the missing cause</p>
                 <span class="rule"></span>
-                <p class="text-[11px] sm:text-xs text-[#b3cac5]">Chan AYL et al. · <em>Nature Medicine</em> 2024</p>
+                <p class="text-xs sm:text-sm text-[#b3cac5]">Chan AYL et al. · <em>Nature Medicine</em> 2024</p>
               </div>
             </div>
             <div class="it" {...at("qmom")}>
@@ -618,19 +621,19 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
             </div>
             <div class="it" {...at("plot")}>
               <div class="card !p-3 sm:!p-4">
-                <svg viewBox="0 0 300 104" class="w-full h-auto block plot" aria-hidden="true">
-                  <path d={`M${px(1).toFixed(1)} 8 V80`} class="null" />
+                <svg viewBox="0 0 300 112" class="w-full h-auto block plot" aria-hidden="true">
+                  <path d={`M${px(1).toFixed(1)} 6 V86`} class="null" />
                   {[0.9, 1.0, 1.1, 1.2].map((t) => (
-                    <text x={px(t)} y="96" text-anchor="middle" class="tick">{t.toFixed(1)}</text>
+                    <text x={px(t)} y="104" text-anchor="middle" class="tick">{t.toFixed(1)}</text>
                   ))}
-                  <text x="0" y="30" class="row">Everyone</text>
+                  <text x="0" y="31" class="row">Everyone</text>
                   <path class="d ci" pathLength="1" d={`M${px(1.04).toFixed(1)} 26 H${px(1.17).toFixed(1)}`} />
                   <circle class="pt" cx={px(1.1)} cy="26" r="4.5" />
-                  <text x={px(1.1)} y="15" text-anchor="middle" class="val">1.10</text>
-                  <text x="0" y="64" class="row hi">Siblings</text>
+                  <text x={px(1.1)} y="14" text-anchor="middle" class="val">1.10</text>
+                  <text x="0" y="65" class="row hi">Siblings</text>
                   <path class="d ci hi" pathLength="1" d={`M${px(0.94).toFixed(1)} 60 H${px(1.17).toFixed(1)}`} />
                   <circle class="pt hi" cx={px(1.05)} cy="60" r="4.5" />
-                  <text x={px(1.05)} y="49" text-anchor="middle" class="val hi">1.05</text>
+                  <text x={px(1.05)} y="48" text-anchor="middle" class="val hi">1.05</text>
                 </svg>
               </div>
             </div>
@@ -656,10 +659,10 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
           <ol class="caps">
             {STEPS.map((s, i) => (
               <li class:list={["cap", i === LAST && "on"]} data-i={i}>
-                <p class="font-mono text-[11px] tracking-[0.22em] text-[#92ebda] uppercase">
+                <p class="font-mono text-xs tracking-[0.22em] text-[#92ebda] uppercase">
                   {String(i + 1).padStart(2, "0")} / {String(STEPS.length).padStart(2, "0")} · {s.tag}
                 </p>
-                <p class="mt-1.5 text-[#e2eeeb] text-base sm:text-lg leading-snug max-w-3xl">{s.text}</p>
+                <p class="mt-1.5 text-[#e2eeeb] text-[1.05rem] sm:text-xl leading-snug max-w-4xl">{s.text}</p>
               </li>
             ))}
           </ol>
@@ -743,6 +746,8 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
     </div>
   </section>
 
+  <Chalkdust />
+
   <!-- Hide the chalk only once JS is known to be running, so a no-JS or
        reduced-motion visitor always sees the finished board. -->
   <script is:inline>
@@ -812,7 +817,7 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
         return [b.x + dx * k, b.y + dy * k];
       };
 
-      let step = -2, lineTimer = 0, countTimer = 0;
+      let step = -2, lineTimer = 0, countTimer = 0, speed = 1;
 
       const drawLines = (instant) => {
         for (const l of lines) {
@@ -852,9 +857,9 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
         if (!num) return;
         if (instant) { num.textContent = TO.toFixed(1); return; }
         num.textContent = "0.0";
-        const t0 = performance.now() + 500;
+        const t0 = performance.now() + 350;
         countTimer = setInterval(() => {
-          const k = Math.min(Math.max((performance.now() - t0) / 1300, 0), 1);
+          const k = Math.min(Math.max((performance.now() - t0) / 900, 0), 1);
           num.textContent = (TO * (1 - Math.pow(1 - k, 3))).toFixed(1);
           if (k === 1) clearInterval(countTimer);
         }, 40);
@@ -892,12 +897,12 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
         } else {
           for (const l of lines) if (!(s >= +l.dataset.a && s <= +l.dataset.b)) l.classList.remove("drawn");
           for (const m of marks) m.classList.remove("on");
-          lineTimer = setTimeout(() => drawLines(false), still ? 0 : 900);
+          lineTimer = setTimeout(() => drawLines(false), still ? 0 : 600 / speed);
         }
         if (s === 1 && prev !== 1) countUp(instant || still);
         // the camera keeps creeping forward while it holds a room
         if (!instant && s >= 0) {
-          dolly.style.setProperty("--dwell", `${DWELL[s]}ms`);
+          dolly.style.setProperty("--dwell", `${DWELL[s] / speed}ms`);
           dolly.classList.remove("go");
           void dolly.offsetWidth;
           dolly.classList.add("go");
@@ -920,7 +925,7 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
         if (!playing) return;
         t += Math.min(now - last, 100);
         last = now;
-        const d = DWELL[Math.max(step, 0)];
+        const d = DWELL[Math.max(step, 0)] / speed;
         fill.style.transform = `scaleX(${Math.min(t / d, 1).toFixed(4)})`;
         if (t >= d) {
           if (step >= n - 1) { playing = false; done = true; setBtn(); return; }
@@ -966,6 +971,34 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
       };
       addEventListener("resize", layout);
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+
+      // An alternate staging of the palace, toggled from the keyboard.
+      const toastEl = sec.querySelector(".mp-toast");
+      const game = sec.querySelector(".game");
+      let keys = "";
+      window.addEventListener("keydown", (e) => {
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const tg = e.target;
+        if (tg && (/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName) || tg.isContentEditable)) return;
+        if (e.key.length !== 1) return;
+        keys = (keys + e.key.toLowerCase()).slice(-5);
+        if (!keys.endsWith("/····")) return;
+        keys = "";
+        const on = sec.classList.toggle("sherlock");
+        speed = on && !still ? 2 : 1;
+        toastEl.textContent = on ? "Sherlock mode" : "Sherlock mode off";
+        toastEl.classList.remove("show"); void toastEl.offsetWidth; toastEl.classList.add("show");
+        sec.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "center" });
+        if (on) { game.classList.remove("show"); void game.offsetWidth; game.classList.add("show"); }
+        // under reduced motion these show without animating, so take them down by hand
+        clearTimeout(toastEl._t); toastEl._t = setTimeout(() => { toastEl.classList.remove("show"); game.classList.remove("show"); }, 2200);
+        pause();
+        done = false; t = 0;
+        fill.style.transform = "scaleX(0)";
+        setStep(-1, true);
+        userPaused = false;
+        setTimeout(play, on && !still ? 1600 : 0);
+      });
 
       // Start just outside the first room, so playing opens with a fly-in.
       sec.style.setProperty("--mp-top", `${header ? header.offsetHeight : 0}px`);
@@ -1020,26 +1053,26 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
     /* the 3D space: one perspective, a slow sway so depth reads as depth */
     .palace .space { perspective: 900px; perspective-origin: 50% 45%; }
     .palace .dolly, .palace .sway { position: absolute; inset: 0; transform-style: preserve-3d; }
-    .palace.live:not(.still) .sway { animation: mp-sway 11s ease-in-out infinite alternate; }
+    .palace.live:not(.still) .sway { animation: mp-sway 8s ease-in-out infinite alternate; }
     @keyframes mp-sway {
       from { transform: rotateY(-4.5deg) rotateX(1.6deg); }
       to   { transform: rotateY(4.5deg) rotateX(-1.6deg); }
     }
     .palace.live:not(.still) .dolly.go { animation: mp-dolly var(--dwell, 5s) linear both; }
     .palace.paused .dolly.go { animation-play-state: paused; }
-    @keyframes mp-dolly { from { transform: translateZ(0); } to { transform: translateZ(150px); } }
+    @keyframes mp-dolly { from { transform: translateZ(0); } to { transform: translateZ(200px); } }
 
     .palace .door {
       position: absolute; inset: 0; border: 1px solid rgba(146, 235, 218, .45);
       transform: translateZ(var(--z, 0px)); opacity: var(--o, 0);
-      transition: transform 1.1s cubic-bezier(.6, .04, .2, 1), opacity .8s ease;
+      transition: transform .8s cubic-bezier(.6, .04, .2, 1), opacity .55s ease;
     }
     .palace .it {
       position: absolute; width: var(--w);
       display: flex; flex-direction: column; align-items: center; text-align: center;
       transform: translate(-50%, -50%) translateZ(var(--z, 0px)) rotateY(var(--ry, 0deg));
       opacity: var(--o, 1); filter: blur(var(--b, 0px));
-      transition: transform 1.1s cubic-bezier(.6, .04, .2, 1), opacity .8s ease, filter .8s ease;
+      transition: transform .8s cubic-bezier(.6, .04, .2, 1), opacity .55s ease, filter .55s ease;
     }
     .palace.instant .it, .palace.instant .door, .palace.instant .ln,
     .palace.still .it, .palace.still .door, .palace.still .ln { transition: none !important; }
@@ -1053,7 +1086,7 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
     .palace .ico rect { fill: rgba(146, 235, 218, .35); stroke: none; }
     .palace .lbl {
       margin-top: .45rem; white-space: nowrap; letter-spacing: .02em;
-      font-size: clamp(.72rem, 1.15vw, .92rem); color: #e2eeeb;
+      font-size: clamp(.9rem, 1.5vw, 1.15rem); color: #e2eeeb;
       text-shadow: 0 0 12px rgba(16, 36, 32, .95);
     }
     .palace .card {
@@ -1066,7 +1099,7 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
     .palace .card .rule { display: block; height: 1px; margin: .8rem 0 .55rem; background: rgba(146, 235, 218, .35); }
     .palace .chip {
       display: inline-block; white-space: nowrap; border-radius: 9999px;
-      padding: .35rem .9rem; font-size: clamp(.78rem, 1.35vw, 1rem); font-variant-numeric: tabular-nums;
+      padding: .4rem 1rem; font-size: clamp(.95rem, 1.7vw, 1.25rem); font-variant-numeric: tabular-nums;
       color: #f2f7f5; border: 1px solid rgba(146, 235, 218, .5); background: rgba(16, 36, 32, .75);
       box-shadow: 0 0 18px rgba(86, 226, 202, .12);
     }
@@ -1093,9 +1126,9 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
 
     /* the alibi plot */
     .palace .plot .null { stroke: #88a69f; stroke-dasharray: 3 3; }
-    .palace .plot .tick { fill: #88a69f; font-size: 10px; }
-    .palace .plot .row { fill: #b3cac5; font-size: 12px; }
-    .palace .plot .val { fill: #b3cac5; font-size: 11px; font-variant-numeric: tabular-nums; }
+    .palace .plot .tick { fill: #88a69f; font-size: 12px; }
+    .palace .plot .row { fill: #b3cac5; font-size: 15px; }
+    .palace .plot .val { fill: #b3cac5; font-size: 14px; font-variant-numeric: tabular-nums; }
     .palace .plot .ci { stroke: #b3cac5; stroke-width: 2; fill: none; stroke-linecap: round; }
     .palace .plot .pt { fill: #b3cac5; }
     .palace .plot .hi { stroke: #92ebda; fill: #92ebda; }
@@ -1105,16 +1138,16 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
     /* the verdict, in the board's yellow chalk */
     .palace .stamp {
       display: inline-block; white-space: nowrap; text-transform: uppercase;
-      font-weight: 800; letter-spacing: .14em; font-size: clamp(1.05rem, 2.6vw, 1.9rem);
+      font-weight: 800; letter-spacing: .14em; font-size: clamp(1.3rem, 3.2vw, 2.4rem);
       color: #f4e285; border: 2.5px solid #f4e285; border-radius: 6px; padding: .4em .9em;
       transform: rotate(-5deg);
       box-shadow: 0 0 26px rgba(244, 226, 133, .22), inset 0 0 16px rgba(244, 226, 133, .12);
     }
 
     /* arrival: holograms draw themselves, the stamp lands */
-    .palace.live:not(.still) .arrive .d { stroke-dasharray: 1; animation: mp-draw .9s ease .35s both; }
-    .palace.live:not(.still) .arrive .stamp { animation: mp-slam .45s cubic-bezier(.2, .9, .3, 1.25) .7s both; }
-    .palace.live:not(.still) .arrive .card { animation: mp-glint 1s ease .3s both; }
+    .palace.live:not(.still) .arrive .d { stroke-dasharray: 1; animation: mp-draw .6s ease .2s both; }
+    .palace.live:not(.still) .arrive .stamp { animation: mp-slam .4s cubic-bezier(.2, .9, .3, 1.25) .45s both; }
+    .palace.live:not(.still) .arrive .card { animation: mp-glint .8s ease .2s both; }
     @keyframes mp-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
     @keyframes mp-slam {
       from { opacity: 0; transform: rotate(-5deg) scale(2.4); }
@@ -1127,15 +1160,17 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
     /* Sherlock's floating text: typed on beside the objects */
     .palace .say {
       display: inline-block; white-space: nowrap; color: #f2f7f5; font-weight: 300;
-      font-size: clamp(1rem, 1.9vw, 1.45rem); letter-spacing: .03em;
+      font-size: clamp(1.2rem, 2.4vw, 1.9rem); letter-spacing: .03em;
       text-shadow: 0 0 14px rgba(86, 226, 202, .45), 0 0 2px rgba(16, 36, 32, .9);
     }
     .palace .say.mint { color: #92ebda; font-weight: 400; }
+    /* the long caveat wraps between the two icons rather than reaching them */
+    .palace .it[data-id="w5"] .say { white-space: normal; max-width: min(26rem, 62vw); text-align: center; line-height: 1.25; }
     .palace .drift {
       display: inline-block; white-space: nowrap; color: #e2eeeb; font-weight: 300;
-      font-size: clamp(.95rem, 1.8vw, 1.4rem); letter-spacing: .04em;
+      font-size: clamp(1.1rem, 2.2vw, 1.75rem); letter-spacing: .04em;
     }
-    .palace.live:not(.still) .arrive .say { animation: mp-type .75s steps(22, end) .45s both; }
+    .palace.live:not(.still) .arrive .say { animation: mp-type .5s steps(22, end) .25s both; }
     @keyframes mp-type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 
     /* links between items, drawn once the camera has arrived */
@@ -1143,7 +1178,7 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
     .palace:not(.live) .links { display: none; }
     .palace .ln {
       stroke: rgba(242, 247, 245, .5); stroke-width: 1.3; fill: none; opacity: 0;
-      transition: stroke-dashoffset .9s ease, opacity .5s ease;
+      transition: stroke-dashoffset .6s ease, opacity .4s ease;
     }
     .palace .ln.drawn { opacity: 1; }
     .palace .ln.suspect { stroke: rgba(242, 247, 245, .85); stroke-width: 1.8; }
@@ -1163,6 +1198,17 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
       .palace .it[data-id="nz"] { left: 84% !important; }
       .palace .it[data-id="hr1"] { top: 33% !important; }
       .palace .it[data-id="w0"] { top: 53% !important; }
+      .palace .lbl { white-space: normal; width: max-content; max-width: 40vw; }
+      .palace .it[data-id="fam"] .lbl { max-width: 62vw; }
+      .palace .it[data-id="gdm"] { left: 20% !important; top: 55% !important; }
+      .palace .it[data-id="adhd"] { left: 80% !important; top: 55% !important; }
+      .palace .it[data-id="sibs"] { top: 10% !important; width: 4.5rem !important; }
+      .palace .it[data-id="plot"] { top: 32% !important; }
+      .palace .it[data-id="w1"] { top: 79% !important; }
+      .palace .it[data-id="w2"], .palace .it[data-id="w3"], .palace .it[data-id="w4"] { top: 73% !important; }
+      .palace .it[data-id="w5"] { top: 72.5% !important; }
+      .palace .it[data-id="fam"] { top: 87% !important; width: 3.6rem !important; }
+      .palace .it[data-id="dna"], .palace .it[data-id="house"] { top: 87% !important; }
       .palace .it[data-id="dna"] { left: 13% !important; }
       .palace .it[data-id="house"] { left: 87% !important; }
     }
@@ -1192,7 +1238,36 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
     .palace .play[data-state="replay"] .i-replay { display: block; }
     .palace .dot:focus-visible, .palace .play:focus-visible { outline: 2px solid #92ebda; outline-offset: 3px; }
 
+    /* ── alternate staging ── */
+    .palace .game, .palace .mp-toast { position: absolute; z-index: 20; pointer-events: none; opacity: 0; }
+    .palace .game {
+      left: 50%; top: 42%; transform: translate(-50%, -50%); white-space: nowrap;
+      font-size: clamp(2.2rem, 7vw, 5.5rem); font-weight: 300; letter-spacing: .02em; color: #f2f7f5;
+      text-shadow: 0 0 24px rgba(86, 226, 202, .6);
+    }
+    .palace .game.show { animation: mp-game 2.2s ease both; }
+    @keyframes mp-game {
+      0% { opacity: 1; clip-path: inset(0 100% 0 0); }
+      35% { opacity: 1; clip-path: inset(0 0 0 0); }
+      75% { opacity: 1; }
+      100% { opacity: 0; clip-path: inset(0 0 0 0); }
+    }
+    .palace .mp-toast {
+      right: 16px; top: 10px; padding: 3px 10px; border-radius: 999px;
+      font: 600 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .12em; text-transform: uppercase;
+      color: #102420; background: #92ebda;
+    }
+    .palace .mp-toast.show { animation: mp-toast 2s ease both; }
+    @keyframes mp-toast { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
+    .palace.sherlock .field::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .16;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='80'%3E%3Cg fill='none' stroke='%2392ebda' stroke-width='1'%3E%3Cpath d='M30 4 C39 16 39 28 30 40 C21 28 21 16 30 4 Z M30 40 C39 52 39 64 30 76 C21 64 21 52 30 40 Z'/%3E%3Cpath d='M0 40 C9 33 15 33 19 40 C15 47 9 47 0 40 Z M60 40 C51 33 45 33 41 40 C45 47 51 47 60 40 Z'/%3E%3Ccircle cx='30' cy='40' r='3.5'/%3E%3Cpath d='M30 0 V4 M30 76 V80' /%3E%3C/g%3E%3C/svg%3E") 0 0 / 60px 80px;
+    }
+    .palace.sherlock .it, .palace.sherlock .door { transition-duration: .4s, .3s, .3s; }
+    .palace.sherlock .say { letter-spacing: .01em; padding-bottom: 2px; border-bottom: 1px solid #92ebda; }
+
     @media (prefers-reduced-motion: reduce) {
+      .palace .game.show, .palace .mp-toast.show { animation: none; opacity: 1; }
       .palace .cap, .palace .mark { transition: none !important; }
     }
 

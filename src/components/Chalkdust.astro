@@ -1,0 +1,257 @@
+---
+/**
+ * Chalkdust — an encrypted note.
+ *
+ * Nothing readable lives here: NOTE holds only a salted hash ("gate") and an
+ * AES-GCM ciphertext. The key is derived in the browser from what the visitor
+ * types, so neither the trigger nor the note appears in the repo or the build.
+ *
+ * Regenerate the blob with the offline make-note.mjs helper and paste its JSON
+ * output over the object below. With an empty `gate` the script does nothing.
+ */
+
+// PLACEHOLDER — replace with the JSON printed by make-note.mjs.
+const NOTE = { v: 1, salt: "", gate: "", iv: "", data: "" };
+---
+
+<script is:inline define:vars={{ NOTE }}>
+  (() => {
+    if (!NOTE || NOTE.v !== 1 || !NOTE.gate || !NOTE.salt || !NOTE.iv || !NOTE.data) return;
+    const subtle = window.crypto && window.crypto.subtle;
+    if (!subtle) return;
+
+    const enc = new TextEncoder();
+    const fromB64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+    const toB64 = (buf) => {
+      const b = new Uint8Array(buf);
+      let s = "";
+      for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+      return btoa(s);
+    };
+    const salt = fromB64(NOTE.salt);
+
+    const MAX = 64;
+    const MIN = 6;
+    let buffer = "";
+    let busy = false;
+    let pending = null;
+    let open = false;
+
+    const gateOf = async (candidate) => {
+      const c = enc.encode(candidate);
+      const joined = new Uint8Array(salt.length + c.length);
+      joined.set(salt, 0);
+      joined.set(c, salt.length);
+      return toB64(await subtle.digest("SHA-256", joined));
+    };
+
+    const unlock = async (candidate) => {
+      const base = await subtle.importKey("raw", enc.encode(candidate), "PBKDF2", false, ["deriveKey"]);
+      const key = await subtle.deriveKey(
+        { name: "PBKDF2", hash: "SHA-256", salt, iterations: 250000 },
+        base,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["decrypt"]
+      );
+      const plain = await subtle.decrypt({ name: "AES-GCM", iv: fromB64(NOTE.iv) }, key, fromB64(NOTE.data));
+      return JSON.parse(new TextDecoder().decode(plain));
+    };
+
+    // Only one check in flight; while busy, keep just the latest candidate.
+    const check = async (candidate) => {
+      if (busy) { pending = candidate; return; }
+      busy = true;
+      try {
+        let next = candidate;
+        while (next !== null && !open) {
+          pending = null;
+          if ((await gateOf(next)) === NOTE.gate) {
+            open = true;
+            buffer = "";
+            try {
+              const note = await unlock(next);
+              show(String((note && note.title) || ""), String((note && note.body) || ""));
+            } catch (_) {
+              open = false;
+            }
+            break;
+          }
+          next = pending;
+        }
+      } catch (_) {
+        /* silent */
+      } finally {
+        pending = null;
+        busy = false;
+      }
+    };
+
+    const show = (title, body) => {
+      const returnTo = document.activeElement;
+
+      const root = document.createElement("div");
+      root.className = "cd-overlay";
+      root.setAttribute("role", "dialog");
+      root.setAttribute("aria-modal", "true");
+      root.setAttribute("aria-label", title);
+
+      const close = document.createElement("button");
+      close.type = "button";
+      close.className = "cd-close";
+      close.setAttribute("aria-label", "Close");
+      close.textContent = "×";
+
+      const card = document.createElement("div");
+      card.className = "cd-card";
+
+      const h = document.createElement("h2");
+      h.className = "cd-title";
+      h.textContent = title;
+
+      const svgNS = "http://www.w3.org/2000/svg";
+      const line = document.createElementNS(svgNS, "svg");
+      line.setAttribute("class", "cd-line");
+      line.setAttribute("viewBox", "0 0 300 20");
+      line.setAttribute("preserveAspectRatio", "none");
+      line.setAttribute("aria-hidden", "true");
+      const path = document.createElementNS(svgNS, "path");
+      path.setAttribute("d", "M4 12 C 60 6, 120 16, 180 10 S 270 8, 296 11");
+      path.setAttribute("pathLength", "1");
+      line.appendChild(path);
+
+      const p = document.createElement("p");
+      p.className = "cd-body";
+      p.textContent = body;
+
+      card.append(h, line, p);
+      root.append(close, card);
+      document.body.appendChild(root);
+
+      const prevOverflow = document.documentElement.style.overflow;
+      document.documentElement.style.overflow = "hidden";
+
+      const onKey = (e) => {
+        if (e.key === "Escape") { e.preventDefault(); done(); }
+        else if (e.key === "Tab") { e.preventDefault(); close.focus(); }
+      };
+      const done = () => {
+        document.removeEventListener("keydown", onKey, true);
+        root.remove();
+        document.documentElement.style.overflow = prevOverflow;
+        open = false;
+        buffer = "";
+        if (returnTo && typeof returnTo.focus === "function") {
+          try { returnTo.focus({ preventScroll: true }); } catch (_) { /* ignore */ }
+        }
+      };
+
+      document.addEventListener("keydown", onKey, true);
+      root.addEventListener("click", done);
+      close.focus({ preventScroll: true });
+    };
+
+    window.addEventListener("keydown", (e) => {
+      if (open) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target;
+      if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+      if (t && t.isContentEditable) return;
+      if (typeof e.key !== "string" || e.key.length !== 1) return;
+
+      buffer = (buffer + e.key).slice(-MAX);
+      const at = buffer.lastIndexOf("/");
+      if (at < 0) return;
+      const candidate = buffer.slice(at);
+      if (candidate.length < MIN || candidate.length > MAX) return;
+      check(candidate);
+    });
+  })();
+</script>
+
+<style is:global>
+  .cd-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    overflow-y: auto;
+    cursor: pointer;
+    background-color: rgba(16, 36, 32, 0.92);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .94 0 0 0 0 .91 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: cd-fade 0.35s ease-out both;
+  }
+  .cd-card {
+    max-width: min(60rem, 100%);
+    text-align: center;
+    font-family: "Caveat", "Segoe Print", "Bradley Hand", cursive;
+  }
+  .cd-title {
+    margin: 0;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: clamp(3rem, 10vw, 7rem);
+    line-height: 1;
+    color: #f1f0e8;
+    text-shadow: 0 0 1px rgba(241, 240, 232, 0.6), 0 0 12px rgba(241, 240, 232, 0.12);
+    clip-path: inset(0 100% 0 0);
+    animation: cd-write 1.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) 0.2s forwards;
+  }
+  .cd-line {
+    display: block;
+    width: min(16rem, 60%);
+    height: 1.1rem;
+    margin: 0.5rem auto 1.25rem;
+    overflow: visible;
+  }
+  .cd-line path {
+    fill: none;
+    stroke: #f4e285;
+    stroke-width: 4;
+    stroke-linecap: round;
+    opacity: 0.9;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: cd-stroke 0.5s ease-out 1.9s forwards;
+  }
+  .cd-body {
+    margin: 0;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: clamp(1.3rem, 3vw, 2rem);
+    line-height: 1.35;
+    color: #e7e4d6;
+    white-space: pre-line;
+    opacity: 0;
+    animation: cd-fade 0.9s ease-out 2.4s forwards;
+  }
+  .cd-close {
+    position: fixed;
+    top: 0.75rem;
+    right: 0.9rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid rgba(241, 240, 232, 0.25);
+    border-radius: 999px;
+    background: transparent;
+    color: #f1f0e8;
+    font: 400 1.6rem/1 system-ui, sans-serif;
+    cursor: pointer;
+  }
+  .cd-close:hover { background: rgba(241, 240, 232, 0.08); }
+  .cd-close:focus-visible { outline: 2px solid #f4e285; outline-offset: 2px; }
+
+  @keyframes cd-write { to { clip-path: inset(0 0 0 0); } }
+  @keyframes cd-stroke { to { stroke-dashoffset: 0; } }
+  @keyframes cd-fade { from { opacity: 0; } to { opacity: 1; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cd-overlay, .cd-title, .cd-line path, .cd-body { animation: none; }
+    .cd-title { clip-path: none; }
+    .cd-line path { stroke-dashoffset: 0; }
+    .cd-body { opacity: 1; }
+  }
+</style>
