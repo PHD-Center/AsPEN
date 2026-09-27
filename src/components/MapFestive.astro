@@ -1,0 +1,629 @@
+---
+// National-day dress for the light WorldMap (the /databases/ map).
+//
+// On each member region's national day the map puts on that country's
+// style: its own basemap treatment, a patterned frame, a cartouche with the
+// day's greeting, and the region's marker brought forward. The rest of the
+// year the everyday street map is untouched.
+//
+// Dates are the viewer's local date. Where a region has no statutory
+// national day the customary one is used: the King's Official Birthday
+// (Trooping the Colour, usually the second Saturday of June) for the UK, St
+// Andrew's Day for Scotland, and HKSAR Establishment Day for Hong Kong.
+interface Props {
+  mapId: string;
+}
+const { mapId } = Astro.props;
+---
+
+<style is:global>
+  /* ── shared frame ─────────────────────────────────────────────── */
+  .mt-frame { position: absolute; inset: 0; z-index: 450; pointer-events: none; }
+  .mt-frame > * { position: absolute; }
+  .mt-paper { inset: 0; mix-blend-mode: multiply; }
+  .mt-b { background: var(--bh); }
+  .mt-bt { top: 0; left: 0; right: 0; height: var(--bw); }
+  .mt-bb { bottom: 0; left: 0; right: 0; height: var(--bw); }
+  .mt-bl, .mt-br { top: 0; bottom: 0; width: var(--bw); background: var(--bv, var(--bh)); }
+  .mt-bl { left: 0; }
+  .mt-br { right: 0; }
+  .mt-fx { inset: 0; overflow: hidden; }
+  .mt-cart {
+    top: calc(var(--bw) + 12px); right: calc(var(--bw) + 12px);
+    max-width: min(20rem, calc(100% - 2 * var(--bw) - 90px));
+    pointer-events: auto; animation: mt-in .7s cubic-bezier(.2, .9, .3, 1.15) both;
+  }
+  .mt-x {
+    position: absolute; top: 4px; right: 6px; width: 22px; height: 22px; line-height: 20px;
+    border: 0; background: transparent; color: inherit; opacity: .6; font-size: 18px; cursor: pointer;
+  }
+  .mt-x:hover, .mt-x:focus-visible { opacity: 1; }
+  .mt-deco { left: calc(var(--bw) + 14px); bottom: calc(var(--bw) + 14px); }
+  .mt .leaflet-top.leaflet-left .leaflet-control { margin-left: calc(var(--bw) + 8px); margin-top: calc(var(--bw) + 8px); }
+  .mt .leaflet-bottom.leaflet-right .leaflet-control { margin-right: var(--bw); margin-bottom: var(--bw); }
+  .mt .leaflet-tile-pane { filter: var(--tf, none); }
+  .mt .aspen-flag-marker.mt-hero { z-index: 1000 !important; }
+  .mt .aspen-flag-marker.mt-hero > div { animation: mt-hero 1.2s cubic-bezier(.2, .9, .3, 1.2) both; transform: scale(1.35); }
+  .mt .aspen-flag-marker.mt-hero img { box-shadow: 0 0 0 2px var(--accent, #3a8a6e), 0 0 18px var(--accent, #3a8a6e) !important; }
+  .mt-britain .mt-noise::after, .mt-japan .mt-noise::after, .mt-korea .mt-noise::after { display: block; }
+  /* while a popup is open, the cartouche and ornaments step aside */
+  .mt.mt-popped .mt-cart, .mt.mt-popped .mt-deco { opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+  .mt-cart, .mt-deco { transition: opacity .25s ease; }
+  @keyframes mt-in { from { opacity: 0; transform: translateY(-10px) scale(.96); } }
+  @keyframes mt-hero { from { transform: scale(.4); } 60% { transform: scale(1.55); } to { transform: scale(1.35); } }
+  .mt-noise::after {
+    content: ""; position: absolute; inset: 0; display: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .32  0 0 0 0 .15  0 0 0 .22 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  /* ── United Kingdom: an eighteenth-century county map ─────────── */
+  .mt-britain {
+    --bw: 14px; --accent: #225641;
+    --tf: sepia(.92) saturate(1.35) hue-rotate(-10deg) contrast(.92) brightness(1.05);
+    --bh: repeating-linear-gradient(90deg, #2b2116 0 22px, #efe2bf 22px 44px);
+    --bv: repeating-linear-gradient(0deg, #2b2116 0 22px, #efe2bf 22px 44px);
+  }
+  .mt-britain .mt-paper {
+    background:
+      radial-gradient(ellipse at center, transparent 50%, rgba(112, 72, 24, .38) 100%),
+      linear-gradient(rgba(239, 226, 191, .28), rgba(239, 226, 191, .28));
+  }
+  .mt-britain .mt-fx {
+    inset: var(--bw);
+    box-shadow: inset 0 0 0 1px #2b2116, inset 0 0 0 5px #efe2bf, inset 0 0 0 6px #2b2116, inset 0 0 48px rgba(34, 86, 65, .35);
+  }
+  .mt-britain .mt-cart {
+    color: #2b2116; font-family: "IM Fell English", Georgia, serif; text-align: center;
+    background: #f5ead0; padding: 14px 24px 12px; border: 1px solid #2b2116;
+    box-shadow: 0 0 0 4px #f5ead0, 0 0 0 5px #2b2116, 0 6px 20px rgba(60, 40, 10, .35);
+  }
+  .mt-britain .mt-cart .k { font-family: "IM Fell English SC", Georgia, serif; font-size: 12px; letter-spacing: .12em; }
+  .mt-britain .mt-cart .t { font-size: 22px; line-height: 1.1; margin: 2px 0 4px; }
+  .mt-britain .mt-cart .ribbon {
+    display: inline-block; margin-top: 6px; padding: 2px 14px; color: #f5ead0; background: #225641;
+    font-style: italic; font-size: 13px; clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%);
+  }
+  .mt-britain .mt-compass { width: 96px; height: 96px; }
+  .mt-britain .leaflet-popup-content-wrapper, .mt-britain .leaflet-popup-tip { background: #f5ead0; }
+  .mt-britain .aspen-flag-marker img { filter: sepia(.4); }
+
+  /* ── Scotland: tartan ─────────────────────────────────────────── */
+  .mt-scotland {
+    --bw: 16px; --accent: #f4e285;
+    --tf: saturate(.75) hue-rotate(12deg) brightness(.97) contrast(1.04);
+    --bh:
+      repeating-linear-gradient(90deg, transparent 0 7px, rgba(244, 226, 133, .95) 7px 8px, transparent 8px 22px, rgba(16, 36, 32, .6) 22px 34px),
+      repeating-linear-gradient(0deg, transparent 0 7px, rgba(244, 226, 133, .7) 7px 8px, transparent 8px 22px, rgba(16, 36, 32, .6) 22px 34px),
+      linear-gradient(#1f4d6b, #1f4d6b);
+  }
+  .mt-scotland .mt-cart {
+    color: #f2f5f8; text-align: center; background: #1f4d6b; padding: 14px 22px 12px;
+    border: 3px solid #f2f5f8; border-radius: 4px; box-shadow: 0 6px 20px rgba(0, 0, 0, .35);
+  }
+  .mt-scotland .mt-cart .t { font-family: "Uncial Antiqua", Georgia, serif; font-size: 19px; line-height: 1.25; margin: 6px 0 4px; }
+  .mt-scotland .mt-cart .k { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; opacity: .85; }
+
+  /* ── Netherlands: Delft blue ─────────────────────────────────── */
+  .mt-netherlands {
+    --bw: 22px; --accent: #e8741f;
+    --tf: grayscale(1) sepia(1) hue-rotate(172deg) saturate(2.4) brightness(1.02) contrast(.95);
+    --bh:
+      radial-gradient(circle at 50% 50%, transparent 0 3px, #1d4f91 3.5px 4.5px, transparent 5px),
+      radial-gradient(circle at 0 0, #1d4f91 0 4px, transparent 4.5px),
+      radial-gradient(circle at 100% 0, #1d4f91 0 4px, transparent 4.5px),
+      radial-gradient(circle at 0 100%, #1d4f91 0 4px, transparent 4.5px),
+      radial-gradient(circle at 100% 100%, #1d4f91 0 4px, transparent 4.5px),
+      linear-gradient(90deg, #b7c9e2 1px, transparent 1px),
+      linear-gradient(0deg, #b7c9e2 1px, transparent 1px),
+      #f7f9fc;
+  }
+  .mt-netherlands .mt-b { background-size: 22px 22px; }
+  .mt-netherlands .mt-cart {
+    color: #1d4f91; text-align: center; background: #f7f9fc; padding: 14px 22px 12px;
+    border: 2px solid #1d4f91; box-shadow: inset 0 0 0 4px #f7f9fc, inset 0 0 0 5px #1d4f91, 0 6px 20px rgba(29, 79, 145, .3);
+  }
+  .mt-netherlands .mt-cart .t { font-family: "Cormorant Garamond", Georgia, serif; font-style: italic; font-weight: 700; font-size: 28px; line-height: 1; margin: 4px 0; }
+  .mt-netherlands .mt-cart .ribbon { display: inline-block; margin-top: 6px; padding: 2px 12px; background: #e8741f; color: #fff; font-size: 12px; font-weight: 600; letter-spacing: .06em; }
+
+  /* ── Finland: a winter night, two candles in the window ──────── */
+  .mt-finland {
+    --bw: 12px; --accent: #003580;
+    --tf: grayscale(.6) sepia(.25) hue-rotate(175deg) saturate(1.3) brightness(1.06);
+    --bh: linear-gradient(#003580, #003580) 0 40% / 100% 2px no-repeat, linear-gradient(#003580, #003580) 0 75% / 100% 1px no-repeat, #fbfdff;
+    --bv: linear-gradient(90deg, #003580, #003580) 40% 0 / 2px 100% no-repeat, linear-gradient(90deg, #003580, #003580) 75% 0 / 1px 100% no-repeat, #fbfdff;
+  }
+  .mt-finland .mt-fx {
+    background:
+      radial-gradient(circle, #fff 0 1.6px, transparent 2px) 0 0 / 70px 70px,
+      radial-gradient(circle, rgba(255, 255, 255, .85) 0 1.1px, transparent 1.5px) 25px 35px / 44px 44px,
+      radial-gradient(circle, rgba(255, 255, 255, .7) 0 .9px, transparent 1.3px) 10px 12px / 30px 30px;
+    filter: drop-shadow(0 0 1px rgba(0, 53, 128, .6));
+    animation: mt-snow 14s linear infinite;
+  }
+  @keyframes mt-snow { to { background-position: 70px 700px, 69px 475px, 40px 312px; } }
+  .mt-finland .mt-cart {
+    color: #003580; background: rgba(251, 253, 255, .95); padding: 14px 20px 12px;
+    border-top: 4px solid #003580; box-shadow: 0 6px 20px rgba(0, 53, 128, .25);
+  }
+  .mt-finland .mt-cart .t { font-size: 20px; font-weight: 700; line-height: 1.15; margin: 4px 0; }
+  .mt-finland .mt-cart .k { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #4a6a99; }
+  .mt-finland .mt-candles { width: 64px; height: 72px; }
+  .mt-finland .flame { transform-origin: 50% 100%; animation: mt-flicker 1.4s ease-in-out infinite alternate; }
+  .mt-finland .flame.b { animation-duration: 1.1s; }
+  @keyframes mt-flicker { from { transform: scale(1, 1) rotate(-2deg); } to { transform: scale(.88, 1.12) rotate(3deg); } }
+
+  /* ── Japan: washi and seigaiha ────────────────────────────────── */
+  .mt-japan {
+    --bw: 20px; --accent: #bc2d29;
+    --tf: sepia(.55) saturate(.75) brightness(1.06) contrast(.94);
+    --bh:
+      radial-gradient(circle at 100% 150%, #f4ecd8 24%, #1f4f5c 24%, #1f4f5c 28%, #f4ecd8 28%, #f4ecd8 36%, #1f4f5c 36%, #1f4f5c 40%, transparent 40%) 0 0 / 40px 20px,
+      radial-gradient(circle at 0 150%, #f4ecd8 24%, #1f4f5c 24%, #1f4f5c 28%, #f4ecd8 28%, #f4ecd8 36%, #1f4f5c 36%, #1f4f5c 40%, transparent 40%) 0 0 / 40px 20px,
+      radial-gradient(circle at 50% 100%, #1f4f5c 10%, #f4ecd8 10%, #f4ecd8 23%, #1f4f5c 23%, #1f4f5c 30%, #f4ecd8 30%, #f4ecd8 43%, #1f4f5c 43%, #1f4f5c 50%, #f4ecd8 50%, #f4ecd8 63%, #1f4f5c 63%, #1f4f5c 71%, transparent 71%) 0 0 / 40px 20px,
+      #f4ecd8;
+  }
+  .mt-japan .mt-paper { background: linear-gradient(rgba(244, 236, 216, .3), rgba(244, 236, 216, .3)); }
+  .mt-japan .mt-cart {
+    color: #1f2a2e; background: #f7f0de; padding: 14px 20px 12px 20px; display: flex; gap: 14px; align-items: center;
+    border: 1px solid #1f4f5c; box-shadow: 0 6px 20px rgba(31, 79, 92, .28);
+  }
+  .mt-japan .mt-cart .t { font-family: "Shippori Mincho", serif; font-weight: 700; font-size: 24px; line-height: 1.1; }
+  .mt-japan .mt-cart .k { font-size: 11px; letter-spacing: .08em; color: #4c5b5f; margin-top: 4px; }
+  .mt-japan .hanko {
+    flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 6px;
+    background: #bc2d29; color: #f7f0de; font-family: "Shippori Mincho", serif; font-weight: 700; font-size: 26px;
+  }
+
+  /* ── Korea: dancheong ─────────────────────────────────────────── */
+  .mt-korea {
+    --bw: 22px; --accent: #b8312f;
+    --tf: sepia(.28) saturate(.95) brightness(1.05);
+    --bh:
+      radial-gradient(circle, #e0b33a 0 2.6px, #b8312f 3px 5.5px, #f2ead3 6px 6.8px, transparent 7.2px) 0 50% / 22px 22px repeat-x,
+      repeating-linear-gradient(90deg, #2f7a5e 0 11px, #f2ead3 11px 12px, #2b4c8c 12px 17px, #f2ead3 17px 18px, #b8312f 18px 22px);
+    --bv:
+      radial-gradient(circle, #e0b33a 0 2.6px, #b8312f 3px 5.5px, #f2ead3 6px 6.8px, transparent 7.2px) 50% 0 / 22px 22px repeat-y,
+      repeating-linear-gradient(0deg, #2f7a5e 0 11px, #f2ead3 11px 12px, #2b4c8c 12px 17px, #f2ead3 17px 18px, #b8312f 18px 22px);
+  }
+  .mt-korea .mt-paper { background: linear-gradient(rgba(242, 234, 211, .22), rgba(242, 234, 211, .22)); }
+  .mt-korea .mt-cart {
+    color: #22302b; background: #f6f0de; padding: 12px 20px; display: flex; gap: 14px; align-items: center;
+    border: 2px solid #2f7a5e; box-shadow: inset 0 0 0 3px #f6f0de, inset 0 0 0 5px #b8312f, 0 6px 20px rgba(0, 0, 0, .2);
+  }
+  .mt-korea .mt-cart .t { font-family: "Nanum Myeongjo", serif; font-weight: 800; font-size: 26px; line-height: 1.1; }
+  .mt-korea .mt-cart .k { font-size: 11px; letter-spacing: .06em; color: #4b5a54; margin-top: 3px; }
+  .mt-korea .taegeuk { flex: none; width: 42px; height: 42px; }
+
+  /* ── Taiwan: floral cloth, iron grille, temple plaque ── */
+  /* --bh (花布 tile) and --gh/--gv (鐵窗花 tiles) are built in the script */
+  .mt-taiwan { --bw: 26px; --accent: #c8102e; --tf: sepia(.18) saturate(1.15); }
+  .mt-taiwan .grille { position: absolute; background: var(--gh) 0 0 / 22px 10px repeat-x, #f3ead3; }
+  .mt-taiwan .g-t { top: var(--bw); left: var(--bw); right: var(--bw); height: 10px; border-bottom: 1px solid #1f4d3f; }
+  .mt-taiwan .g-b { bottom: var(--bw); left: var(--bw); right: var(--bw); height: 10px; border-top: 1px solid #1f4d3f; }
+  .mt-taiwan .g-l, .mt-taiwan .g-r {
+    top: calc(var(--bw) + 11px); bottom: calc(var(--bw) + 11px); width: 10px;
+    background: var(--gv) 0 0 / 10px 22px repeat-y, #f3ead3;
+  }
+  .mt-taiwan .g-l { left: var(--bw); border-right: 1px solid #1f4d3f; }
+  .mt-taiwan .g-r { right: var(--bw); border-left: 1px solid #1f4d3f; }
+  .mt-taiwan .leaflet-top.leaflet-left .leaflet-control { margin-left: calc(var(--bw) + 19px); margin-top: calc(var(--bw) + 19px); }
+  .mt-taiwan .leaflet-bottom.leaflet-right .leaflet-control { margin-right: calc(var(--bw) + 11px); margin-bottom: calc(var(--bw) + 11px); }
+  .mt-taiwan .mt-cart {
+    top: calc(var(--bw) + 20px); right: calc(var(--bw) + 20px);
+    color: #d9b25f; text-align: center; padding: 14px 30px 12px; border-radius: 3px;
+    background: radial-gradient(ellipse at 50% 30%, #b52626, #9e1b1b 60%, #861515);
+    border: 2px solid #d9b25f;
+    box-shadow: inset 0 0 0 3px #861515, inset 0 0 0 4px #d9b25f, inset 0 0 18px rgba(60, 8, 8, .45), 0 6px 20px rgba(60, 10, 10, .35);
+  }
+  .mt-taiwan .mt-cart .t {
+    font-family: "LXGW WenKai TC", "Noto Serif TC", serif; font-weight: 700; font-size: 28px; line-height: 1.15; letter-spacing: .12em;
+    text-shadow: 0 1px 0 rgba(60, 8, 8, .7), 0 0 8px rgba(217, 178, 95, .35);
+  }
+  .mt-taiwan .mt-cart .k { font-size: 11px; letter-spacing: .06em; color: #f3ead3; opacity: .9; margin-top: 4px; }
+
+  /* ── Hong Kong: neon ──────────────────────────────────────────── */
+  .mt-hongkong { --bw: 10px; --accent: #3ff2ff; --tf: none; --bh: #0b0b12; }
+  .mt-hongkong .mt-fx {
+    inset: 16px; border: 2px solid #ff4fa3; border-radius: 8px;
+    box-shadow: 0 0 6px #ff4fa3, 0 0 22px rgba(255, 79, 163, .55), inset 0 0 10px rgba(255, 79, 163, .45);
+    animation: mt-buzz 6s steps(1) infinite;
+  }
+  .mt-hongkong .mt-fx::after {
+    content: ""; position: absolute; inset: 7px; border: 1.5px solid #3ff2ff; border-radius: 5px;
+    box-shadow: 0 0 6px #3ff2ff, 0 0 16px rgba(63, 242, 255, .5);
+  }
+  @keyframes mt-buzz { 0%, 100% { opacity: 1; } 71% { opacity: .35; } 72% { opacity: 1; } 74% { opacity: .5; } 75% { opacity: 1; } }
+  /* the cartouche is a Hong Kong street-name plate: white enamel, a thin
+     black keyline, English over Chinese, the bilingual form the city's
+     signs have kept since the British era, lit by the neon around it */
+  .mt-hongkong .mt-cart {
+    color: #111; text-align: center; background: #fbfbf7; padding: 12px 22px 10px; border-radius: 4px;
+    border: 2px solid #111;
+    box-shadow: inset 0 0 0 3px #fbfbf7, inset 0 0 0 4.5px #111, 0 0 14px rgba(255, 79, 163, .55), 0 0 34px rgba(63, 242, 255, .25);
+  }
+  .mt-hongkong .mt-cart .en {
+    font: 700 15px/1.2 "Helvetica Neue", Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase;
+  }
+  .mt-hongkong .mt-cart .t {
+    font-family: "Noto Sans HK", sans-serif; font-weight: 900; font-size: 21px; line-height: 1.3; letter-spacing: .06em; margin-top: 3px;
+  }
+  .mt-hongkong .mt-cart .k {
+    font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #444; margin-top: 6px;
+    padding-top: 5px; border-top: 1px solid #111;
+  }
+  .mt-hongkong .aspen-flag-marker img { box-shadow: 0 0 0 1px #3ff2ff, 0 0 14px rgba(63, 242, 255, .7) !important; }
+
+  /* ── Thailand: gold on red ────────────────────────────────────── */
+  .mt-thailand {
+    --bw: 20px; --accent: #d4a52c;
+    --tf: sepia(.6) saturate(1.45) hue-rotate(-6deg) brightness(1.03);
+    --bh: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cpath d='M10 18 C4.5 13.5 7.5 7.5 10 2.5 C12.5 7.5 15.5 13.5 10 18 Z' fill='none' stroke='%23d4a52c' stroke-width='1.3'/%3E%3Cpath d='M10 14.5 C8.2 12.8 9.2 10.4 10 8.6 C10.8 10.4 11.8 12.8 10 14.5 Z' fill='%23d4a52c'/%3E%3C/svg%3E") 0 0 / 20px 20px, #7a1c1c;
+  }
+  .mt-thailand .mt-fx { inset: var(--bw); box-shadow: inset 0 0 0 2px #d4a52c, inset 0 0 30px rgba(122, 28, 28, .25); }
+  .mt-thailand .mt-cart {
+    color: #f6e2a8; text-align: center; background: #7a1c1c; padding: 14px 22px 12px;
+    border: 2px solid #d4a52c; box-shadow: inset 0 0 0 4px #7a1c1c, inset 0 0 0 5px #d4a52c, 0 6px 20px rgba(0, 0, 0, .3);
+  }
+  .mt-thailand .mt-cart .t { font-family: "Noto Serif Thai", serif; font-weight: 700; font-size: 26px; line-height: 1.2; color: #ffe39a; }
+  .mt-thailand .mt-cart .k { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; margin-top: 2px; }
+
+  /* ── Australia: green and gold, the Southern Cross ────────────── */
+  .mt-australia {
+    --bw: 18px; --accent: #f2c230;
+    --tf: sepia(.5) saturate(1.7) hue-rotate(-16deg) brightness(1.02);
+    --bh:
+      radial-gradient(circle at 30% 40%, #f2c230 0 2.4px, transparent 2.9px) 0 0 / 22px 22px,
+      radial-gradient(circle at 62% 30%, #f7d55a 0 2px, transparent 2.5px) 0 0 / 22px 22px,
+      radial-gradient(circle at 52% 66%, #f2c230 0 2.2px, transparent 2.7px) 0 0 / 22px 22px,
+      #1f5c47;
+  }
+  .mt-australia .mt-fx { inset: var(--bw); box-shadow: inset 0 0 0 2px #f2c230; }
+  .mt-australia .mt-cart {
+    color: #1f3b30; background: #fbf6e6; padding: 0 0 12px; overflow: hidden; text-align: center;
+    border: 2px solid #1f5c47; box-shadow: 0 6px 20px rgba(0, 0, 0, .25);
+  }
+  .mt-australia .mt-cart .strip { height: 8px; background: linear-gradient(90deg, #1f5c47 0 50%, #f2c230 50%); margin-bottom: 10px; }
+  .mt-australia .mt-cart .t { font-family: "Playfair Display", Georgia, serif; font-weight: 800; font-size: 22px; padding: 0 22px; }
+  .mt-australia .mt-cart .k { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #4f6a5c; margin-top: 2px; }
+  .mt-australia .mt-cross { width: 84px; height: 100px; filter: drop-shadow(0 0 4px rgba(16, 36, 32, .8)); }
+
+  /* ── United States: stars, stripes, fireworks ─────────────────── */
+  .mt-usa {
+    --bw: 18px; --accent: #b22234;
+    --tf: sepia(.3) saturate(.95) contrast(1.02);
+    --bh: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='18'%3E%3Cpath d='M11 3 L12.4 7 L16.6 7 L13.2 9.5 L14.5 13.5 L11 11 L7.5 13.5 L8.8 9.5 L5.4 7 L9.6 7 Z' fill='%23fff'/%3E%3C/svg%3E") 0 0 / 22px 18px, #1c2e5a;
+    --bv: repeating-linear-gradient(0deg, #b22234 0 9px, #fff 9px 18px);
+  }
+  .mt-usa .mt-fx .fw {
+    position: absolute; width: 4px; height: 4px; border-radius: 50%; opacity: 0;
+    animation: mt-burst 3.6s ease-out infinite;
+  }
+  @keyframes mt-burst {
+    0% { opacity: 0; transform: scale(.1); }
+    8% { opacity: 1; }
+    70% { opacity: .9; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.15) translateY(8px); }
+  }
+  .mt-usa .mt-cart {
+    color: #1c2e5a; text-align: center; background: #fdfaf2; padding: 12px 22px;
+    border: 3px solid #1c2e5a; box-shadow: inset 0 0 0 3px #fdfaf2, inset 0 0 0 5px #b22234, 0 6px 20px rgba(0, 0, 0, .25);
+  }
+  .mt-usa .mt-cart .t { font-family: "Alfa Slab One", Georgia, serif; font-size: 22px; line-height: 1.1; color: #b22234; }
+  .mt-usa .mt-cart .k { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; margin-top: 4px; }
+
+  /* phones: the cartouche runs along the bottom, full width, and the
+     corner ornaments step out, so nothing is squeezed to one glyph a line */
+  @media (max-width: 560px) {
+    .mt .mt-cart {
+      top: auto; bottom: calc(var(--bw) + 30px);
+      left: calc(var(--bw) + 10px); right: calc(var(--bw) + 10px); max-width: none;
+    }
+    .mt-taiwan .mt-cart { bottom: calc(var(--bw) + 40px); left: calc(var(--bw) + 18px); right: calc(var(--bw) + 18px); }
+    .mt .mt-deco { display: none; }
+  }
+
+  /* the "type /xx" toast */
+  .mt-toast {
+    position: absolute; left: 50%; bottom: calc(var(--bw, 0px) + 12px); transform: translateX(-50%); z-index: 460;
+    padding: 4px 10px; border-radius: 999px; background: rgba(16, 36, 32, .85); color: #e2eeeb;
+    font: 600 11px Inter, system-ui, sans-serif; letter-spacing: .04em; pointer-events: none;
+    animation: mt-in .4s ease both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mt-cart, .mt-toast, .mt .aspen-flag-marker.mt-hero > div,
+    .mt-finland .mt-fx, .mt-finland .flame, .mt-hongkong .mt-fx, .mt-usa .mt-fx .fw { animation: none !important; }
+    .mt-usa .mt-fx .fw { opacity: .8; }
+  }
+</style>
+
+<script is:inline define:vars={{ mapId }}>
+  (() => {
+    const el = document.getElementById(mapId);
+    if (!el) return;
+    const ESRI = "https://services.arcgisonline.com/ArcGIS/rest/services/";
+    const ESRI_A = '&copy; <a href="https://www.esri.com/">Esri</a>';
+    const SRC = {
+      "World_Physical_Map": ESRI_A + ", US National Park Service",
+      "World_Terrain_Base": ESRI_A + ", USGS, NOAA",
+      "Canvas/World_Light_Gray_Base": ESRI_A + ', HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      "Canvas/World_Dark_Gray_Base": ESRI_A + ', HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    };
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // nth weekday of a month: month 0-based, weekday 0 = Sunday
+    const nth = (y, m, wd, k) => {
+      const first = new Date(y, m, 1).getDay();
+      return new Date(y, m, 1 + ((wd - first + 7) % 7) + (k - 1) * 7);
+    };
+    const on = (m, d) => (y) => new Date(y, m, d);
+
+    const compass = (() => {
+      let pts = "";
+      for (let i = 0; i < 16; i++) {
+        const a = (i * 22.5 * Math.PI) / 180;
+        const r = i % 4 === 0 ? 44 : i % 2 === 0 ? 30 : 20;
+        const w = i % 4 === 0 ? 7 : 5;
+        const tip = [Math.sin(a) * r, -Math.cos(a) * r];
+        const l = [Math.sin(a - Math.PI / 2) * w, -Math.cos(a - Math.PI / 2) * w];
+        const rr = [Math.sin(a + Math.PI / 2) * w, -Math.cos(a + Math.PI / 2) * w];
+        const f = (p) => p.map((v) => v.toFixed(1)).join(" ");
+        pts += `<path d="M0 0 L${f(l)} L${f(tip)} Z" fill="#2b2116"/><path d="M0 0 L${f(rr)} L${f(tip)} Z" fill="${i % 4 === 0 ? "#225641" : "#efe2bf"}" stroke="#2b2116" stroke-width=".5"/>`;
+      }
+      return `<svg class="mt-compass" viewBox="-50 -58 100 108" aria-hidden="true">
+        <circle r="36" fill="none" stroke="#2b2116" stroke-width=".8"/><circle r="33" fill="none" stroke="#2b2116" stroke-width=".4"/>
+        ${pts}<circle r="2.5" fill="#efe2bf" stroke="#2b2116" stroke-width=".6"/>
+        <text y="-49" text-anchor="middle" font-family="IM Fell English SC, Georgia, serif" font-size="11" fill="#2b2116">N</text></svg>`;
+    })();
+    const star = (x, y, r, p = 7) => {
+      let d = "";
+      for (let i = 0; i < p * 2; i++) {
+        const a = (i * Math.PI) / p - Math.PI / 2;
+        const rr = i % 2 ? r * 0.45 : r;
+        d += `${i ? "L" : "M"}${(x + Math.cos(a) * rr).toFixed(1)} ${(y + Math.sin(a) * rr).toFixed(1)} `;
+      }
+      return `<path d="${d}Z" fill="#fbf6e6"/>`;
+    };
+    const svgUrl = (w, h, body) => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${body}</svg>`)}")`;
+
+    // 台灣花布: a peony centred on each 26px band, leaves and a white blossom
+    // mirrored across the diagonal so the top and side bars carry the same
+    const huabu = (() => {
+      const peony = (x, y) => {
+        let s = `<g transform='translate(${x} ${y})'>`;
+        for (let i = 0; i < 5; i++) {
+          s += `<g transform='rotate(${i * 72})'><ellipse cy='-9.5' rx='7.6' ry='10' fill='#f7a8bf' stroke='#e5467a' stroke-width='.8'/>` +
+            `<path d='M0 -4 V-16' stroke='#fff' stroke-opacity='.55' stroke-width='.8'/></g>`;
+        }
+        for (let i = 0; i < 5; i++) s += `<ellipse cy='-5.2' rx='4.6' ry='6.4' transform='rotate(${i * 72 + 36})' fill='#e5467a'/>`;
+        return s + `<circle r='3.6' fill='#ffe9a8'/><circle r='1.3' fill='#e5467a'/></g>`;
+      };
+      const leaf = (x, y, a, fill) => `<g transform='translate(${x} ${y}) rotate(${a})'><path d='M0 0 C5 -7 14 -7 21 0 C14 7 5 7 0 0 Z' fill='${fill}'/>` +
+        `<path d='M2 0 H18' stroke='#cfe8da' stroke-opacity='.7' stroke-width='.7'/></g>`;
+      const bloom = (x, y) => Array.from({ length: 5 }, (_, i) => {
+        const a = (i * 72 * Math.PI) / 180;
+        return `<circle cx='${(x + Math.sin(a) * 2.7).toFixed(1)}' cy='${(y - Math.cos(a) * 2.7).toFixed(1)}' r='2.4' fill='#fff'/>`;
+      }).join("") + `<circle cx='${x}' cy='${y}' r='1.5' fill='#ffd23f'/>`;
+      const dots = [[40, 2], [2, 40], [36, 24], [24, 36], [42, 42], [52, 30], [30, 52]]
+        .map(([x, y]) => `<circle cx='${x}' cy='${y}' r='1.1' fill='#fff'/>`).join("");
+      const body = `<rect width='56' height='56' fill='#c8102e'/>${leaf(29, 14, -18, "#2f7a5e")}${leaf(14, 29, 108, "#3a8a6e")}` +
+        [[14, 14], [70, 14], [14, 70], [70, 70]].map(([x, y]) => peony(x, y)).join("") + bloom(46, 21) + bloom(21, 46) + dots;
+      return `${svgUrl(56, 56, body)} 0 0 / 56px 56px, #c8102e`;
+    })();
+    // 鐵窗花: a ring on a rail between two scroll curls
+    const grille = `<circle cx='11' cy='5' r='3.2' fill='none' stroke='#1f4d3f' stroke-width='1.2'/><circle cx='11' cy='5' r='.9' fill='#1f4d3f'/>` +
+      `<path d='M0 5 H7.8 M14.2 5 H22' stroke='#1f4d3f' stroke-width='1.1'/>` +
+      `<path d='M2.5 5 C2.5 1.8 5.8 1.8 5.8 3.6 M19.5 5 C19.5 8.2 16.2 8.2 16.2 6.4' fill='none' stroke='#1f4d3f' stroke-width='.9' stroke-linecap='round'/>`;
+
+    const n = (count) => `${count} AsPEN ${count === 1 ? "database" : "databases"}`;
+    const THEMES = {
+      britain: {
+        group: "GB", zoom: 5, day: (y) => nth(y, 5, 6, 2), tiles: "World_Physical_Map", native: 8,
+        fonts: "IM+Fell+English:ital@0;1&family=IM+Fell+English+SC",
+        cart: (c) => `<div class="k">A New Map of the</div><div class="t">Asian Pharmacoepidemiology Network</div>
+          <div class="k">Shewing ${n(c)} in the United Kingdom</div><span class="ribbon">On the King's Official Birthday</span>`,
+        deco: () => compass,
+      },
+      scotland: {
+        group: "gb-sct", zoom: 5, day: on(10, 30), tiles: "World_Terrain_Base", native: 13, ref: true,
+        fonts: "Uncial+Antiqua",
+        cart: (c) => `<svg viewBox="0 0 60 36" width="54" height="32" aria-hidden="true"><rect width="60" height="36" fill="#1f4d6b"/><path d="M0 0 L60 36 M60 0 L0 36" stroke="#f2f5f8" stroke-width="7"/></svg>
+          <div class="t">Latha Naomh Anndrais sona dhuibh!</div><div class="k">St Andrew's Day · 30 November · ${n(c)}</div>`,
+      },
+      netherlands: {
+        group: "NL", zoom: 5, tiles: "Canvas/World_Light_Gray_Base", native: 16, ref: true,
+        day: (y) => { const d = new Date(y, 3, 27); return d.getDay() === 0 ? new Date(y, 3, 26) : d; },
+        fonts: "Cormorant+Garamond:ital,wght@1,700",
+        cart: (c) => `<div class="t">Fijne Koningsdag!</div><div style="font-size:12px">King's Day · ${THEMES.netherlands.day(new Date().getFullYear()).getDate()} April · ${n(c)}</div><span class="ribbon">ORANJE BOVEN</span>`,
+      },
+      finland: {
+        group: "FI", zoom: 5, day: on(11, 6), tiles: "Canvas/World_Light_Gray_Base", native: 16, ref: true,
+        cart: (c) => `<div class="k">Independence Day · 6 December</div><div class="t">Hyvää itsenäisyyspäivää!</div><div class="k">${n(c)} in Finland</div>`,
+        deco: () => `<svg class="mt-candles" viewBox="0 0 64 72" aria-hidden="true">
+          <rect x="10" y="34" width="14" height="36" rx="2" fill="#fbfdff" stroke="#003580" stroke-width="1.2"/>
+          <rect x="40" y="34" width="14" height="36" rx="2" fill="#fbfdff" stroke="#003580" stroke-width="1.2"/>
+          <path class="flame" d="M17 32 C11 24 17 18 17 12 C21 20 23 25 17 32 Z" fill="#f4b82e"/>
+          <path class="flame b" d="M47 32 C41 24 47 18 47 12 C51 20 53 25 47 32 Z" fill="#f4b82e"/></svg>`,
+      },
+      japan: {
+        group: "JP", zoom: 5, day: on(1, 11), tiles: "World_Terrain_Base", native: 13, ref: true,
+        fonts: "Shippori+Mincho:wght@700",
+        cart: (c) => `<span class="hanko">祝</span><div><div class="t">建国記念の日</div><div class="k">National Foundation Day · 11 February · ${n(c)}</div></div>`,
+      },
+      korea: {
+        group: "KR", zoom: 6, day: on(9, 3), tiles: "World_Terrain_Base", native: 13, ref: true,
+        fonts: "Nanum+Myeongjo:wght@800",
+        cart: (c) => `<svg class="taegeuk" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="#2b4c8c"/>
+          <path d="M-19 0 A19 19 0 0 1 19 0 A9.5 9.5 0 0 0 0 0 A9.5 9.5 0 0 1 -19 0 Z" fill="#b8312f"/></svg>
+          <div><div class="t">개천절</div><div class="k">National Foundation Day · 3 October · ${n(c)}</div></div>`,
+      },
+      taiwan: {
+        group: "TW", zoom: 6, day: on(9, 10),
+        fonts: "LXGW+WenKai+TC:wght@700",
+        vars: {
+          "--bh": huabu,
+          "--gh": svgUrl(22, 10, grille),
+          "--gv": svgUrl(10, 22, `<g transform='translate(10 0) rotate(90)'>${grille}</g>`),
+        },
+        cart: (c) => `<div class="t">國慶日快樂</div><div class="k">雙十國慶 · 10 October · ${n(c)}</div>`,
+        fx: () => ["t", "b", "l", "r"].map((s) => `<i class="grille g-${s}"></i>`).join(""),
+      },
+      hongkong: {
+        group: "HK", zoom: 7, day: on(6, 1), tiles: "Canvas/World_Dark_Gray_Base", native: 16, darkRef: true,
+        fonts: "Noto+Sans+HK:wght@900",
+        cart: (c) => `<div class="en">HKSAR Establishment Day</div><div class="t">香港特別行政區成立紀念日</div><div class="k">1 July · ${n(c)}</div>`,
+      },
+      thailand: {
+        group: "TH", zoom: 5, day: on(11, 5), tiles: "World_Terrain_Base", native: 13, ref: true,
+        fonts: "Noto+Serif+Thai:wght@700",
+        cart: (c) => `<div class="t">วันชาติ</div><div class="k">National Day · 5 December · ${n(c)}</div>`,
+      },
+      australia: {
+        group: "AU", zoom: 4, day: on(0, 26), tiles: "World_Terrain_Base", native: 13, ref: true,
+        fonts: "Playfair+Display:wght@800",
+        cart: (c) => `<div class="strip"></div><div class="t">Australia Day</div><div class="k">26 January · ${n(c)}</div>`,
+        deco: () => `<svg class="mt-cross" viewBox="0 0 84 100" aria-hidden="true">${star(42, 12, 8)}${star(66, 40, 7)}${star(50, 56, 4, 5)}${star(20, 50, 7)}${star(40, 88, 9)}</svg>`,
+      },
+      usa: {
+        group: "US", zoom: 4, day: on(6, 4),
+        fonts: "Alfa+Slab+One",
+        cart: (c) => `<div class="t">Happy Fourth of July</div><div class="k">Independence Day · ${n(c)}</div>`,
+        fx: () => [
+          ["18%", "30%", "#b22234", 0], ["70%", "24%", "#1c2e5a", 1.2], ["44%", "62%", "#fff", 2.3], ["84%", "68%", "#b22234", 0.6],
+        ].map(([x, y, c, d]) => {
+          const pts = Array.from({ length: 14 }, (_, i) => {
+            const a = (i / 14) * Math.PI * 2;
+            return `${(Math.cos(a) * 34).toFixed(0)}px ${(Math.sin(a) * 34).toFixed(0)}px 0 0 ${c}, ${(Math.cos(a) * 20).toFixed(0)}px ${(Math.sin(a) * 20).toFixed(0)}px 0 0 ${c}`;
+          }).join(",");
+          return `<span class="fw" style="left:${x};top:${y};box-shadow:${pts};background:${c};animation-delay:${d}s;filter:drop-shadow(0 0 2px rgba(0,0,0,.35))"></span>`;
+        }).join(""),
+      },
+    };
+
+    const ready = (fn) => (el.__aspen ? fn(el.__aspen) : el.addEventListener("aspen:map", () => fn(el.__aspen), { once: true }));
+
+    ready(({ map, baseLayer, markers, groups }) => {
+      const home = { center: map.getCenter(), zoom: map.getZoom() };
+      map.on("popupopen", () => el.classList.add("mt-popped"));
+      map.on("popupclose", () => el.classList.remove("mt-popped"));
+      const loaded = new Set();
+      let current = null, layers = [], frame = null, vars = [];
+
+      const loadFont = (f) => {
+        if (!f || loaded.has(f)) return;
+        loaded.add(f);
+        const l = document.createElement("link");
+        l.rel = "stylesheet";
+        l.href = `https://fonts.googleapis.com/css2?family=${f}&display=swap`;
+        document.head.appendChild(l);
+      };
+
+      const clear = (fly) => {
+        if (!current) return;
+        el.classList.remove("mt", "mt-" + current);
+        vars.forEach((k) => el.style.removeProperty(k));
+        vars = [];
+        layers.forEach((l) => map.removeLayer(l));
+        layers = [];
+        if (!map.hasLayer(baseLayer)) baseLayer.addTo(map);
+        frame?.remove();
+        frame = null;
+        markers.forEach((m) => m.getElement()?.classList.remove("mt-hero"));
+        current = null;
+        if (fly) still ? map.setView(home.center, home.zoom) : map.flyTo(home.center, home.zoom, { duration: 1.2 });
+      };
+
+      const apply = (code) => {
+        const t = THEMES[code];
+        clear(false);
+        current = code;
+        loadFont(t.fonts);
+        el.classList.add("mt", "mt-" + code);
+        // theme values too long or computed for the stylesheet
+        Object.entries(t.vars || {}).forEach(([k, v]) => { el.style.setProperty(k, v); vars.push(k); });
+
+        if (t.tiles) {
+          map.removeLayer(baseLayer);
+          layers.push(L.tileLayer(ESRI + t.tiles + "/MapServer/tile/{z}/{y}/{x}", {
+            attribution: SRC[t.tiles] || ESRI_A, maxZoom: 10, maxNativeZoom: t.native, zIndex: 1,
+          }).addTo(map));
+          if (t.ref || t.darkRef) {
+            const ref = t.darkRef ? "Canvas/World_Dark_Gray_Reference" : "Reference/World_Boundaries_and_Places_Alternate";
+            layers.push(L.tileLayer(ESRI + ref + "/MapServer/tile/{z}/{y}/{x}", {
+              attribution: "HERE, Garmin", maxZoom: 10, zIndex: 2, opacity: 0.85,
+            }).addTo(map));
+          }
+        }
+
+        const g = groups.findIndex((x) => x.code.toLowerCase() === t.group.toLowerCase());
+        const count = g >= 0 ? groups[g].items.length : 0;
+        frame = document.createElement("div");
+        frame.className = "mt-frame";
+        frame.innerHTML = `<div class="mt-paper mt-noise" aria-hidden="true"></div>
+          <i class="mt-b mt-bt"></i><i class="mt-b mt-bb"></i><i class="mt-b mt-bl"></i><i class="mt-b mt-br"></i>
+          <div class="mt-fx" aria-hidden="true">${t.fx ? t.fx() : ""}</div>
+          ${t.deco ? `<div class="mt-deco" aria-hidden="true">${t.deco()}</div>` : ""}
+          <div class="mt-cart" role="status">${t.cart(count)}<button type="button" class="mt-x" aria-label="Back to the everyday map">×</button></div>`;
+        el.appendChild(frame);
+        frame.querySelector(".mt-x").addEventListener("click", () => clear(true));
+        L.DomEvent.disableClickPropagation(frame.querySelector(".mt-cart"));
+        L.DomEvent.disableScrollPropagation(frame.querySelector(".mt-cart"));
+
+        if (g >= 0) {
+          markers[g].getElement()?.classList.add("mt-hero");
+          const to = [groups[g].lat, groups[g].lng];
+          still ? map.setView(to, t.zoom) : map.flyTo(to, t.zoom, { duration: 1.4 });
+        }
+      };
+
+      const toast = (msg) => {
+        const old = el.querySelector(".mt-toast");
+        old?.remove();
+        const d = document.createElement("div");
+        d.className = "mt-toast";
+        d.textContent = msg;
+        el.appendChild(d);
+        setTimeout(() => d.remove(), 2200);
+      };
+
+      const SIGS = { "b4df4b6c56e6316c3181ac2a": "britain", "7052f17503b62eefb25a6120": "scotland", "8e975a7512515b11b84815f8": "netherlands", "ad8eaf83771bb310bc93c008": "finland", "b45a40f3a214e7cbb3299e4e": "japan", "4a8f772e329fc77b43ecbd40": "korea", "8f65908ad5b9f3f36d386e15": "taiwan", "9091a38edb4f4c6ca06d77f6": "hongkong", "9202c471111f6a4f378e0d73": "thailand", "7bf8acd42709773bb1ce4c97": "australia", "ed7adc28f147122f2b803c1f": "usa" };
+      const HOME = "8d1a06276875bfeafb69e6d8";
+      const sig = async (x) => {
+        if (!(window.crypto && crypto.subtle)) return "";
+        const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("chalk:" + x));
+        return [...new Uint8Array(b)].slice(0, 12).map((v) => v.toString(16).padStart(2, "0")).join("");
+      };
+      const pick = (h) => (Object.prototype.hasOwnProperty.call(SIGS, h) ? SIGS[h] : null);
+      const now = new Date();
+      const today = Object.keys(THEMES).find((k) => {
+        const d = THEMES[k].day(now.getFullYear());
+        return d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+      });
+      const q = (new URLSearchParams(location.search).get("map") || "").toLowerCase();
+      (q ? sig("/" + q) : Promise.resolve("")).then((h) => {
+        const chosen = pick(h);
+        if (chosen) apply(chosen);
+        else if (today) apply(today);
+      });
+
+      let buffer = "";
+      window.addEventListener("keydown", async (e) => {
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        const tg = e.target;
+        if (tg && (/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName) || tg.isContentEditable)) return;
+        if (e.key.length !== 1) return;
+        buffer = (buffer + e.key.toLowerCase()).slice(-4);
+        const at = buffer.lastIndexOf("/");
+        if (at < 0 || buffer.length - at < 3) return;
+        const h = await sig(buffer.slice(at));
+        if (h === HOME) { buffer = ""; if (current) { clear(true); toast("Everyday map"); } return; }
+        const code = pick(h);
+        if (!code) return;
+        buffer = "";
+        if (current === code) { clear(true); return; }
+        el.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "center" });
+        apply(code);
+      });
+    });
+  })();
+</script>

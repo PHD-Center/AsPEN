@@ -43,6 +43,8 @@ const {
   variant = "light",
 } = Astro.props;
 
+import MapFestive from "./MapFestive.astro";
+
 const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
 const dark = variant === "dark";
 ---
@@ -58,6 +60,7 @@ const dark = variant === "dark";
   ]}
   aria-label="Interactive map of AsPEN locations"
 ></div>
+{!dark && <MapFestive mapId={mapId} />}
 
 <style is:global>
   /* Dark-variant popups. Scoped by the class Leaflet puts on the popup, so the
@@ -188,7 +191,9 @@ const dark = variant === "dark";
     };
     baseLayer.on("tileload", () => { tilesOk = true; });
     baseLayer.on("tileerror", warnBasemap);
-    setTimeout(() => { if (!tilesOk) warnBasemap(); }, 8000);
+    // Only while the street map is actually showing: a national-day dress
+    // (MapFestive) may have swapped it out before its tiles arrived.
+    setTimeout(() => { if (!tilesOk && map.hasLayer(baseLayer)) warnBasemap(); }, 8000);
 
     // Palette per variant. Light keeps the original values exactly.
     const P = dark
@@ -299,6 +304,11 @@ const dark = variant === "dark";
 
     map.on("click", () => map.scrollWheelZoom.enable());
     map.on("mouseout", () => map.scrollWheelZoom.disable());
+
+    // Hand the map to MapFestive (national-day dress), which may load first.
+    const box = map.getContainer();
+    box.__aspen = { map, baseLayer, markers, groups };
+    box.dispatchEvent(new CustomEvent("aspen:map"));
   };
 
   if (window.L) {
