@@ -100,6 +100,82 @@ const xOf = (v: number) => ((Math.log(v) - Math.log(AX.min)) / (Math.log(AX.max)
 const TICKS = [0.9, 1.0, 1.1, 1.2];
 const fmt = (v: number) => v.toFixed(2);
 
+// ── The mind palace (Sherlock) ──────────────────────────────────
+// The same case, told the way Sherlock thinks: every fact floats in the
+// dark at once, then scrolling pulls the relevant ones forward, swipes the
+// rest away and joins them up. Every word and number here is from the
+// abstract of PMID 38589601; nothing is added.
+//
+// A word is sharp for steps on[0]..on[1]. Before that it is latent (unseen), except
+// on step 0, where everything but the verdict floats out of focus (the
+// palace). After that it is swiped away. `cloud` words only ever float.
+type Word = {
+  id: string; t: string; x: number; y: number;
+  on?: [number, number]; cloud?: boolean;
+  size?: "sm" | "md" | "lg" | "xl"; wide?: boolean;
+  /** px nudge while floating in the palace, so shared spots do not pile up */
+  fo?: [number, number];
+};
+const STEPS = [
+  { tag: "The question", text: "Earlier studies linked diabetes in pregnancy to ADHD in children. Is the diabetes to blame?" },
+  { tag: "The data", text: "Seven regions, one question: over 3.6 million mother–child pairs, born 2001–2014 and followed up to 2020." },
+  { tag: "The suspect", text: "Gestational diabetes. Across everyone, children exposed to it had more ADHD: HR 1.10 (95% CI 1.04–1.17)." },
+  { tag: "What was overlooked", text: "Earlier studies often overlooked what a family shares, its genetics and its environment, which can sit behind both the diabetes and the ADHD." },
+  { tag: "The alibi", text: "Siblings share their family. Where one sibling was exposed and the other was not, their risks were similar: HR 1.05 (0.94–1.17). The interval crosses 1." },
+  { tag: "The verdict", text: "The link between gestational diabetes and ADHD is unlikely to be causal. Diabetes that began before pregnancy still carried a higher risk (HR 1.39, 1.25–1.55)." },
+];
+const WORDS: Word[] = [
+  { id: "title", t: "The case of the missing cause", x: 50, y: 46, on: [0, 0], size: "xl", wide: true },
+  // the palace's loose ends: paper terms that never become the point
+  { id: "c1", t: "hyperglycaemia", x: 24, y: 22, cloud: true },
+  { id: "c2", t: "pregestational diabetes", x: 80, y: 9, cloud: true },
+  { id: "c3", t: "pooled hazard ratio", x: 22, y: 74, cloud: true },
+  { id: "c4", t: "Cox regression", x: 78, y: 72, cloud: true },
+  // 1 · the data: Nordic regions on the left, Asia-Pacific on the right
+  { id: "pairs", t: "3.6 million mother–child pairs", x: 50, y: 46, on: [1, 1], size: "lg", wide: true },
+  { id: "fi", t: "Finland", x: 32, y: 17, on: [1, 1] },
+  { id: "se", t: "Sweden", x: 19, y: 29, on: [1, 1] },
+  { id: "no", t: "Norway", x: 14, y: 46, on: [1, 1], fo: [0, -44] },
+  { id: "is", t: "Iceland", x: 19, y: 63, on: [1, 1] },
+  { id: "hk", t: "Hong Kong", x: 68, y: 17, on: [1, 1] },
+  { id: "tw", t: "Taiwan", x: 81, y: 29, on: [1, 1] },
+  { id: "nz", t: "New Zealand", x: 81, y: 63, on: [1, 1] },
+  { id: "born", t: "born 2001–2014", x: 36, y: 84, on: [1, 1], size: "sm" },
+  { id: "fu", t: "followed up to 2020", x: 64, y: 84, on: [1, 1], size: "sm" },
+  // 2 · the suspect
+  { id: "gdm", t: "gestational diabetes", x: 18, y: 46, on: [2, 5], size: "lg" },
+  { id: "adhd", t: "ADHD", x: 82, y: 46, on: [2, 5], size: "lg" },
+  { id: "hr1", t: "HR 1.10 (1.04–1.17)", x: 50, y: 36, on: [2, 3], size: "md", wide: true },
+  { id: "all", t: "everyone · exposed vs unexposed", x: 50, y: 56, on: [2, 3], size: "sm", wide: true },
+  // 3 · what was overlooked
+  { id: "fam", t: "shared familial factors", x: 50, y: 78, on: [3, 5], size: "md", wide: true },
+  { id: "gen", t: "genetics", x: 28, y: 90, on: [3, 3], size: "sm" },
+  { id: "env", t: "environment", x: 72, y: 90, on: [3, 3], size: "sm" },
+  // 4 · the alibi
+  { id: "sib", t: "siblings · one exposed, one not", x: 50, y: 22, on: [4, 4], size: "sm", wide: true },
+  { id: "hr2", t: "HR 1.05 (0.94–1.17)", x: 50, y: 36, on: [4, 4], size: "md", wide: true, fo: [0, -52] },
+  { id: "cross", t: "the interval crosses 1", x: 50, y: 56, on: [4, 4], size: "sm", wide: true, fo: [0, 34] },
+  // 5 · the verdict
+  { id: "verdict", t: "unlikely to be causal", x: 50, y: 24, on: [5, 5], size: "xl", wide: true },
+];
+// [from, to, first step, last step, style]
+const LINKS: [string, string, number, number, string?][] = [
+  ...["fi", "se", "no", "is", "hk", "tw", "nz"].map((r) => [r, "pairs", 1, 1] as [string, string, number, number]),
+  ["gdm", "adhd", 2, 5, "suspect"],
+  ["gen", "fam", 3, 3, "overlooked"],
+  ["env", "fam", 3, 3, "overlooked"],
+  ["fam", "gdm", 3, 5, "overlooked"],
+  ["fam", "adhd", 3, 5, "overlooked"],
+];
+const stateAt = (w: Word, s: number) => {
+  if (w.cloud) return s === 0 ? "far" : "gone";
+  const [a, b] = w.on!;
+  if (s >= a && s <= b) return "on";
+  if (s < a) return s === 0 && w.id !== "verdict" ? "far" : "latent";
+  return "gone";
+};
+const LAST = STEPS.length - 1;
+
 // Stagger for the draw-on: hub, then each spoke, then its leaves.
 const d0 = 0.15;
 const spokeDelay = (i: number) => d0 + 0.35 + i * 0.16;
@@ -299,44 +375,73 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
           <div>
             <h3 class="text-lg font-semibold text-slate-900">Sometimes the answer overturns the question</h3>
             <p class="mt-1 text-slate-700 leading-relaxed">
-              Earlier studies had linked diabetes in pregnancy to ADHD in children. One NeuroGEN study tested that link with sibling comparisons, and for gestational diabetes it did not hold. The case file is below.
+              Earlier studies had linked diabetes in pregnancy to ADHD in children. One NeuroGEN study tested that link with sibling comparisons, and for gestational diabetes it did not hold. The case is worked below.
             </p>
           </div>
         </li>
       </ol>
+    </div>
+  </section>
 
-      <!-- ═══ THE CASE — Sherlock's evidence board ═══════════════════ -->
-      <section class="mt-14" aria-labelledby="case-title">
-        <p class="text-[11px] font-bold tracking-[0.25em] text-[#b3261e]">CASE FILE · PMID 38589601</p>
-        <h3 id="case-title" class="mt-2 text-2xl md:text-3xl font-bold text-slate-900">The case of the missing cause</h3>
-        <p class="mt-2 max-w-2xl text-slate-700 leading-relaxed">
-          Children born to mothers with diabetes in pregnancy are diagnosed with ADHD more often. Is the diabetes to blame?
+  <!-- ═══ THE MIND PALACE — Sherlock, full bleed ═════════════════════
+       Without JS this is a still of the final deduction plus the steps as
+       a list; with JS the stage pins and scrolling walks the deduction. -->
+  <section id="palace" class="palace relative" style={`--n:${STEPS.length}`} aria-labelledby="palace-title">
+    <div class="stage">
+      <div class="field relative flex-1 min-h-0">
+        <p class="absolute left-4 sm:left-6 top-3 z-10 font-mono text-[11px] tracking-[0.25em] text-[#92ebda]">
+          MIND PALACE · CASE FILE · PMID 38589601
         </p>
+        <h2 id="palace-title" class="sr-only">The case of the missing cause: gestational diabetes and ADHD</h2>
 
-        <!-- the board: four pinned cards, joined by red string -->
-        <div class="cork relative mt-6 rounded-lg p-5 sm:p-7">
-          <svg class="hidden md:block absolute left-7 right-7 top-7 h-8 w-[calc(100%-3.5rem)] pointer-events-none" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M12.5 6 Q25 20 37.5 6 Q50 20 62.5 6 Q75 20 87.5 6" stroke="#b3261e" stroke-width="1.6" fill="none" vector-effect="non-scaling-stroke" />
-          </svg>
-          <ol class="relative grid gap-5 md:grid-cols-4">
-            {[
-              { tag: "SUSPECT", body: "Gestational diabetes", note: "diabetes that starts in pregnancy", tilt: "-rotate-1" },
-              { tag: "EVIDENCE", body: "HR 1.10", note: "3.6 million mother–child pairs: HK, NZ, TW, FI, IS, NO, SE. Exposed children: more ADHD.", tilt: "rotate-1" },
-              { tag: "ALIBI", body: "HR 1.05", note: "Siblings — one exposed, one not — had similar risk. The interval crosses 1.", tilt: "-rotate-[0.6deg]" },
-              { tag: "VERDICT", body: "Unlikely to be causal", note: "Shared family factors, not the gestational diabetes itself, are the likelier explanation.", tilt: "rotate-[0.8deg]", verdict: true },
-            ].map((c) => (
-              <li class:list={["relative rounded-sm bg-[#fbf8f1] px-4 pt-6 pb-4 shadow-[0_6px_14px_rgba(60,40,20,0.25)]", c.tilt, c.verdict && "ring-2 ring-[#b3261e]"]}>
-                <span class="absolute left-1/2 -translate-x-1/2 -top-1.5 w-3.5 h-3.5 rounded-full bg-[#c0392b] shadow-[0_2px_3px_rgba(0,0,0,0.35),inset_-2px_-2px_0_rgba(0,0,0,0.2)]" aria-hidden="true"></span>
-                <p class="text-[10px] font-bold tracking-[0.22em] text-[#b3261e]">{c.tag}</p>
-                <p class:list={["mt-1 font-bold text-slate-900 leading-tight", c.verdict ? "text-lg" : "text-xl"]}>{c.body}</p>
-                <p class="chalk-hand mt-2 text-xl leading-snug text-slate-700">{c.note}</p>
+        <svg class="links absolute inset-0 w-full h-full pointer-events-none" aria-hidden="true">
+          {LINKS.map(([f, t, a, b, kind]) => (
+            <line data-f={f} data-t={t} data-a={a} data-b={b} class:list={["ln", kind]} />
+          ))}
+          <text class="strike" text-anchor="middle" dominant-baseline="central">×</text>
+        </svg>
+
+        <div class="words absolute inset-0" aria-hidden="true">
+          {WORDS.map((w, i) => (
+            <span
+              class:list={["w", `sz-${w.size ?? "base"}`, w.wide && "wide", stateAt(w, LAST)]}
+              data-id={w.id}
+              data-a={w.on?.[0] ?? -1}
+              data-b={w.on?.[1] ?? -1}
+              data-cloud={w.cloud ? "1" : undefined}
+              style={`left:${w.x}%;top:${w.y}%;--dx:${((i * 37) % 13) - 6}px;--dy:${((i * 23) % 11) - 5}px;--dur:${7 + (i % 5)}s;--fx:${w.fo?.[0] ?? 0}px;--fy:${w.fo?.[1] ?? 0}px`}
+            >{w.t}</span>
+          ))}
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-4 sm:py-5 grid sm:grid-cols-[minmax(0,1fr)_auto] gap-3 items-end">
+          <ol class="caps">
+            {STEPS.map((s, i) => (
+              <li class:list={["cap", i === LAST && "on"]} data-i={i}>
+                <p class="font-mono text-[11px] tracking-[0.22em] text-[#92ebda] uppercase">
+                  {String(i + 1).padStart(2, "0")} / {String(STEPS.length).padStart(2, "0")} · {s.tag}
+                </p>
+                <p class="mt-1.5 text-[#e2eeeb] text-base sm:text-lg leading-snug max-w-3xl">{s.text}</p>
               </li>
             ))}
           </ol>
+          <div class="dots flex gap-2 sm:pb-1" role="group" aria-label="Jump to a step">
+            {STEPS.map((s, i) => (
+              <button type="button" class:list={["dot", i === LAST && "on"]} data-i={i} aria-label={`Step ${i + 1}: ${s.tag}`}></button>
+            ))}
+          </div>
         </div>
+      </div>
+    </div>
+  </section>
 
+  <section class="bg-white">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16">
+      <section aria-labelledby="alibi-title">
         <!-- the alibi, in numbers: two estimates against the line of no effect -->
-        <div class="mt-8 rounded-lg border border-slate-200 bg-white p-5 sm:p-6" role="figure" aria-labelledby="alibi-title">
+        <div class="rounded-lg border border-slate-200 bg-white p-5 sm:p-6" role="figure" aria-labelledby="alibi-title">
           <p id="alibi-title" class="text-sm font-semibold text-slate-900">The alibi, in numbers</p>
           <p class="mt-1 text-xs text-slate-500">Hazard ratio for ADHD after gestational diabetes, with 95% confidence interval. Log scale.</p>
 
@@ -412,6 +517,109 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
     })();
   </script>
 
+  <!-- The mind palace: pin the stage and let scroll position pick the step. -->
+  <script is:inline>
+    (() => {
+      const sec = document.getElementById("palace");
+      if (!sec) return;
+      const field = sec.querySelector(".field");
+      const words = [...sec.querySelectorAll(".w")];
+      const byId = Object.fromEntries(words.map((w) => [w.dataset.id, w]));
+      const lines = [...sec.querySelectorAll(".ln")];
+      const strike = sec.querySelector(".strike");
+      const caps = [...sec.querySelectorAll(".cap")];
+      const dots = [...sec.querySelectorAll(".dot")];
+      const n = caps.length;
+      const header = document.querySelector("header");
+
+      sec.classList.add("live");
+      let step = -1;
+
+      const stateOf = (w, s) => {
+        if (w.dataset.cloud) return s === 0 ? "far" : "gone";
+        const a = +w.dataset.a, b = +w.dataset.b;
+        if (s >= a && s <= b) return "on";
+        if (s < a) return s === 0 && w.dataset.id !== "verdict" ? "far" : "latent";
+        return "gone";
+      };
+
+      // Where a line from a word's centre towards (tx, ty) leaves its box.
+      // The anchor is read before the centring transform, so CSS overrides count.
+      const box = (w) => ({
+        x: w.offsetLeft, y: w.offsetTop,
+        hw: w.offsetWidth / 2 + 10, hh: w.offsetHeight / 2 + 6,
+      });
+      const edge = (b, tx, ty) => {
+        const dx = tx - b.x, dy = ty - b.y;
+        const k = Math.min(b.hw / Math.abs(dx || 1e-6), b.hh / Math.abs(dy || 1e-6));
+        return [b.x + dx * k, b.y + dy * k];
+      };
+
+      const drawLines = () => {
+        for (const l of lines) {
+          const on = step >= +l.dataset.a && step <= +l.dataset.b;
+          const f = box(byId[l.dataset.f]), t = box(byId[l.dataset.t]);
+          const [x1, y1] = edge(f, t.x, t.y), [x2, y2] = edge(t, f.x, f.y);
+          l.setAttribute("x1", x1); l.setAttribute("y1", y1);
+          l.setAttribute("x2", x2); l.setAttribute("y2", y2);
+          // boxes that overlap would flip the segment; draw nothing instead
+          const len = (x2 - x1) * (t.x - f.x) + (y2 - y1) * (t.y - f.y) > 0 ? Math.hypot(x2 - x1, y2 - y1) : 0;
+          l.style.visibility = len > 0 ? "" : "hidden"; // a 0 dash would draw solid
+          l.style.strokeDasharray = `${len}`;
+          l.style.strokeDashoffset = on ? "0" : `${len}`;
+          l.classList.toggle("struck", on && l.classList.contains("suspect") && step === n - 1);
+        }
+        const g = box(byId.gdm), a = box(byId.adhd);
+        strike.setAttribute("x", (g.x + a.x) / 2);
+        strike.setAttribute("y", (g.y + a.y) / 2);
+        strike.classList.toggle("on", step === n - 1);
+      };
+
+      const setStep = (s) => {
+        if (s === step) return;
+        step = s;
+        for (const w of words) {
+          const st = stateOf(w, s);
+          if (!w.classList.contains(st)) {
+            w.classList.remove("on", "far", "latent", "gone");
+            w.classList.add(st);
+          }
+        }
+        caps.forEach((c, i) => c.classList.toggle("on", i === s));
+        dots.forEach((d, i) => { d.classList.toggle("on", i === s); d.setAttribute("aria-current", i === s ? "step" : "false"); });
+        drawLines();
+        // words resolve with a letter-spacing settle; re-measure once it ends
+        setTimeout(drawLines, 700);
+      };
+
+      const top = () => (header ? header.offsetHeight : 0);
+      const onScroll = () => {
+        const r = sec.getBoundingClientRect();
+        const run = sec.offsetHeight - (innerHeight - top());
+        const p = Math.min(Math.max((top() - r.top) / Math.max(run, 1), 0), 0.9999);
+        setStep(Math.floor(p * n));
+      };
+      const layout = () => {
+        sec.style.setProperty("--mp-top", `${top()}px`);
+        const s = step; step = -1; setStep(Math.max(s, 0));
+        onScroll();
+      };
+
+      dots.forEach((d, i) => d.addEventListener("click", () => {
+        const run = sec.offsetHeight - (innerHeight - top());
+        const y = sec.getBoundingClientRect().top + scrollY - top() + ((i + 0.5) / n) * run;
+        scrollTo({ top: y, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      }));
+
+      // the timeout can fire before a slow frame finishes the settle
+      field.addEventListener("animationend", (e) => { if (e.animationName.includes("mp-resolve")) drawLines(); });
+      addEventListener("scroll", onScroll, { passive: true });
+      addEventListener("resize", layout);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+      layout();
+    })();
+  </script>
+
   <style>
     .chalk-hand { font-family: "Caveat", "Segoe Print", "Bradley Hand", cursive; }
 
@@ -438,15 +646,87 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
     }
     .tray .stick { position: absolute; top: 3px; width: 34px; height: 7px; border-radius: 3px; background: #efece2; }
     .tray .stick-y { background: #f4e285; width: 24px; }
-    /* the evidence board: cork, framed */
-    .cork {
-      background-color: #cdb28a;
-      background-image:
-        radial-gradient(rgba(90, 60, 30, 0.2) 1px, transparent 1.3px),
-        radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1.3px);
-      background-size: 7px 7px, 11px 11px;
-      background-position: 0 0, 3px 4px;
-      box-shadow: inset 0 0 0 6px #8a6a44, inset 0 0 34px rgba(60, 40, 20, 0.35);
+    /* ── the mind palace ────────────────────────────────────────────
+       The vaccine console's field (brand-900), so the two focus pages
+       share one dark; white words, mint for the kicker and the hidden
+       factor. Static by default; `.live` (set by JS) pins the stage. */
+    .palace {
+      background:
+        radial-gradient(ellipse at 50% 42%, rgba(86, 226, 202, 0.07), transparent 60%),
+        #102420;
+      color: #e2eeeb;
+    }
+    .palace .stage { display: flex; flex-direction: column; }
+    .palace:not(.live) .field { flex: none; height: 32rem; }
+    .palace.live { height: calc(var(--n) * 75svh + 100svh); }
+    .palace.live .stage {
+      position: sticky; top: var(--mp-top, 0px);
+      height: calc(100svh - var(--mp-top, 0px));
+    }
+    .palace .field { overflow: hidden; }
+    .palace .panel { border-top: 1px solid #284640; background: rgba(16, 36, 32, 0.9); }
+
+    .palace .w {
+      position: absolute; transform: translate(-50%, -50%);
+      width: max-content; max-width: min(40vw, 22rem);
+      text-align: center; line-height: 1.15; white-space: normal;
+      color: #f2f7f5; font-weight: 400; letter-spacing: 0.01em;
+      text-shadow: 0 0 18px rgba(16, 36, 32, 0.9);
+      transition: opacity .55s ease, filter .55s ease, transform .55s ease;
+      font-size: clamp(.85rem, 1.6vw, 1.2rem);
+    }
+    .palace .w.wide { max-width: min(84vw, 44rem); }
+    .palace .w.sz-sm { font-size: clamp(.8rem, 1.35vw, 1.05rem); color: #b3cac5; }
+    .palace .w.sz-md { font-size: clamp(1rem, 2vw, 1.5rem); font-variant-numeric: tabular-nums; }
+    .palace .w.sz-lg { font-size: clamp(1.2rem, 2.9vw, 2.2rem); font-weight: 500; }
+    .palace .w.sz-xl { font-size: clamp(1.9rem, 5.4vw, 4.2rem); font-weight: 300; letter-spacing: -0.01em; }
+    .palace .w[data-id="fam"] { color: #92ebda; }
+    /* phones: wrap the headline figure, give Norway room, stack the two dates */
+    @media (max-width: 640px) {
+      .palace .w[data-id="pairs"] { max-width: 52vw; }
+      .palace .w[data-id="no"] { left: 9% !important; }
+      .palace .w[data-id="born"] { left: 50% !important; top: 80% !important; }
+      .palace .w[data-id="fu"] { left: 50% !important; top: 88% !important; }
+    }
+
+    .palace .w.far { opacity: .26; filter: blur(2.2px); transform: translate(calc(-50% + var(--fx)), calc(-50% + var(--fy))) scale(.84); }
+    .palace .w.latent { opacity: 0; transform: translate(-50%, -50%) scale(.92); }
+    .palace .w.gone { opacity: 0; filter: blur(6px); transform: translate(calc(-50% - 70px), -50%); }
+    .palace.live .w.far { animation: mp-drift var(--dur) ease-in-out infinite alternate; }
+    .palace.live .w.on { animation: mp-resolve .6s ease-out; }
+    @keyframes mp-drift { from { translate: 0 0; } to { translate: var(--dx) var(--dy); } }
+    @keyframes mp-resolve {
+      from { opacity: .25; letter-spacing: .32em; filter: blur(3px); }
+      to   { opacity: 1; letter-spacing: .01em; filter: blur(0); }
+    }
+
+    .palace .ln {
+      stroke: rgba(242, 247, 245, .5); stroke-width: 1.25; fill: none;
+      transition: stroke-dashoffset .7s ease .15s, opacity .4s ease;
+    }
+    .palace .ln.suspect { stroke: rgba(242, 247, 245, .8); stroke-width: 1.6; }
+    .palace .ln.overlooked { stroke: #92ebda; stroke-opacity: .75; }
+    .palace .ln.struck { opacity: .28; }
+    .palace .strike { fill: #92ebda; font-size: 44px; font-weight: 300; opacity: 0; transition: opacity .4s ease .3s; }
+    .palace .strike.on { opacity: 1; }
+    /* no JS, no lines: they are placed from measured word boxes */
+    .palace:not(.live) .links { display: none; }
+
+    .palace .caps { display: grid; gap: 1rem; }
+    .palace.live .caps { gap: 0; }
+    .palace.live .cap { grid-area: 1 / 1; opacity: 0; transition: opacity .35s ease; }
+    .palace.live .cap.on { opacity: 1; }
+    .palace:not(.live) .dots { display: none; }
+    .palace .dot {
+      width: 10px; height: 10px; border-radius: 9999px;
+      border: 1.5px solid #88a69f; background: transparent; cursor: pointer;
+    }
+    .palace .dot.on { background: #92ebda; border-color: #92ebda; }
+    .palace .dot:focus-visible { outline: 2px solid #92ebda; outline-offset: 3px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .palace .w, .palace .ln, .palace .cap, .palace .strike { transition: none !important; }
+      .palace.live .w.far, .palace.live .w.on { animation: none; }
     }
 
     .tray .eraser { position: absolute; top: 1px; width: 56px; height: 11px; border-radius: 2px; background: linear-gradient(180deg, #8c7a64 0 45%, #3b3b3b 45%); }
