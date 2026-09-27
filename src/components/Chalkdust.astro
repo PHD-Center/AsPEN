@@ -196,7 +196,10 @@ const NOTE = {"v":1,"salt":"6L1IKmIDNIA+DuA9gTV0nA==","gate":"k0sq+IafVjeeaJN++6
     line-height: 1;
     color: #f1f0e8;
     text-shadow: 0 0 1px rgba(241, 240, 232, 0.6), 0 0 12px rgba(241, 240, 232, 0.12);
-    clip-path: inset(0 100% 0 0);
+    /* handwriting overhangs its box (the final stroke of a word), so the
+       reveal clips well outside it rather than at the edge */
+    padding: 0 .2em;
+    clip-path: inset(-.3em 100% -.4em -.3em);
     animation: cd-write 1.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) 0.2s forwards;
   }
   .cd-line {
@@ -243,7 +246,7 @@ const NOTE = {"v":1,"salt":"6L1IKmIDNIA+DuA9gTV0nA==","gate":"k0sq+IafVjeeaJN++6
   .cd-close:hover { background: rgba(241, 240, 232, 0.08); }
   .cd-close:focus-visible { outline: 2px solid #f4e285; outline-offset: 2px; }
 
-  @keyframes cd-write { to { clip-path: inset(0 0 0 0); } }
+  @keyframes cd-write { to { clip-path: inset(-.3em -.3em -.4em -.3em); } }
   @keyframes cd-stroke { to { stroke-dashoffset: 0; } }
   @keyframes cd-fade { from { opacity: 0; } to { opacity: 1; } }
 
