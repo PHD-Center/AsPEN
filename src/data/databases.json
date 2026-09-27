@@ -29,7 +29,7 @@
     "since": 2011,
     "popM": 1.5,
     "lagMonths": 1,
-    "features": ["rx", "dx", "labs", "imaging"]
+    "features": ["rx", "dx", "labs", "imaging", "pregnancy"]
   },
   {
     "country": "Taiwan",
@@ -60,7 +60,7 @@
     "since": 2009,
     "popM": 50,
     "lagMonths": 12,
-    "features": ["rx", "dx"]
+    "features": ["rx", "dx", "pregnancy"]
   },
   {
     "country": "South Korea",
@@ -75,7 +75,7 @@
     "since": 2002,
     "popM": 50,
     "lagMonths": 7,
-    "features": ["rx", "dx", "labs", "mortality", "cancer"]
+    "features": ["rx", "dx", "labs", "mortality", "cancer", "pregnancy"]
   },
   {
     "country": "Japan",
@@ -105,7 +105,7 @@
     "since": 2005,
     "popM": 13.5,
     "lagMonths": 5,
-    "features": ["rx", "dx", "labs"]
+    "features": ["rx", "dx", "labs", "pregnancy"]
   },
   {
     "country": "Japan",
@@ -150,7 +150,7 @@
     "since": 1995,
     "popM": 7,
     "lagMonths": 0,
-    "features": ["rx", "dx", "labs", "imaging", "mortality", "cancer"]
+    "features": ["rx", "dx", "labs", "imaging", "mortality", "cancer", "pregnancy"]
   },
   {
     "country": "Thailand",
@@ -315,6 +315,6 @@
     "since": 2001,
     "popM": 70,
     "lagMonths": 24,
-    "features": ["rx", "dx", "mortality"]
+    "features": ["rx", "dx", "mortality", "pregnancy"]
   }
 ]
