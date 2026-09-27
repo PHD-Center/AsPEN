@@ -11,4 +11,4 @@ The meeting covered progress on AsPEN's international survey of pregnancy health
 
 The group then discussed recent changes to ISPE policy and what they will mean for AsPEN's governance.
 
-AsPEN thanks everyone who joined in Milan and online, and looks forward to continuing this work together.
+AsPEN thanks everyone who joined the meeting, and looks forward to continuing this work together.
