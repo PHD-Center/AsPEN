@@ -47,40 +47,45 @@ const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
   const init = () => {
     const map = L.map(mapId, { scrollWheelZoom: false }).setView(initialCenter, initialZoom);
 
-    // Basemap: Esri "World Street Map" — soft blue water over warm land, with
-    // its own labels baked in, so this is a single layer. No API key, and the
-    // labels are romanised worldwide, which is what this map needs when it
-    // opens centred on East Asia.
+    // Basemap: Esri "World Ocean Base" for the ground, with the Light Gray
+    // Canvas reference layer on top for labels. No API key, and the labels
+    // are romanised worldwide, which this map needs opening centred on East
+    // Asia.
     //
-    // This replaced CARTO Voyager in Sept 2026, when CARTO moved their
-    // basemaps behind an API key. An unkeyed request there does not fail: it
-    // answers HTTP 200 with a single "API KEY REQUIRED" watermark tile, the
-    // same image for every coordinate. Nothing client-side could tell that
-    // apart from real imagery, so the map sat blank for days before anyone
-    // noticed. The notice below cannot catch that particular trick either,
-    // but it does catch the ordinary ways a tile host stops answering.
+    // The route here was not short. CARTO Voyager went behind an API key in
+    // Sept 2026 — and an unkeyed request there does not fail, it answers
+    // HTTP 200 with one "API KEY REQUIRED" watermark tile, identical for
+    // every coordinate, so nothing client-side could detect it and the map
+    // sat watermarked for days. Light Gray Canvas replaced it and was too
+    // drab: it is built to disappear under data overlays, so land and sea
+    // come out the same grey. World Street Map replaced that and was too
+    // loud — a road atlas under a dozen flag pins. Turning Street Map's
+    // saturation down fixed the noise but not the clutter: the roads and
+    // dense labels stayed, so it read flat and busy at once.
     //
-    // Esri's "World Light Gray Canvas" was tried first and rejected: it is
-    // built to sit quietly under data overlays, so it renders land and sea
-    // in the same flat grey and the map looked drained next to what CARTO
-    // had given us.
+    // Ocean Base is the shape that actually fits this map. Most of the frame
+    // is sea, so the sea carries the colour; the land is a plain cream with
+    // no road network to compete with the markers. The gentle lift below
+    // keeps the deep-ocean blues from going heavy.
     const ESRI = "https://services.arcgisonline.com/ArcGIS/rest/services";
     const esriAttr =
-      '&copy; <a href="https://www.esri.com/">Esri</a>, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+      '&copy; <a href="https://www.esri.com/">Esri</a>, GEBCO, NOAA, Garmin, HERE, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
     // Esri addresses tiles as /{z}/{y}/{x} — y before x, unlike the usual XYZ.
-    const baseLayer = L.tileLayer(ESRI + "/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
+    const baseLayer = L.tileLayer(ESRI + "/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}", {
       attribution: esriAttr,
       maxZoom: 10,
+      zIndex: 1,
     }).addTo(map);
 
-    // Street Map ships at full strength — fine for a road atlas, too loud
-    // under a dozen flag pins. Muting the tile pane pulls the land back to
-    // cream and the sea to the faintest blue — quieter even than CARTO
-    // Voyager was. The filter is on the tile pane alone; markers and popups
-    // live in their own panes, so the flags keep their full colour and now
-    // stand out against a quieter ground rather than competing with it.
-    map.getPane("tilePane").style.filter = "saturate(0.32) brightness(1.07)";
+    L.tileLayer(ESRI + "/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}", {
+      maxZoom: 10,
+      zIndex: 2,
+    }).addTo(map);
+
+    // Applied to the tile pane only; markers and popups sit in their own
+    // panes, so the flags keep full colour against the lifted ground.
+    map.getPane("tilePane").style.filter = "saturate(0.8) brightness(1.12)";
 
     // If the basemap host stops answering, say so in the corner rather than
     // leaving a blank rectangle that reads as a broken page. The flag markers
