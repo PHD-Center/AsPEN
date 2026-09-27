@@ -24,18 +24,18 @@ const vxRegions = new Set(VACCINE_DBS.map((d) => d.region)).size;
     {areas.map((area) => (
       <Fragment>
     {area === "vaccine" && (
-      <a href={`${base}/focus/vaccine/`} class="fc-vx group relative block overflow-hidden rounded-xl p-6 text-[#e2e8f0] transition hover:-translate-y-0.5 hover:shadow-xl">
-        <span class="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[radial-gradient(closest-side,rgba(34,211,238,0.18),transparent)]" aria-hidden="true"></span>
-        <p class="fc-mono relative text-[10px] tracking-[0.22em] text-[#67e8f9]">DISEASE X <span class="text-[#2a3f5c]">//</span> CASE FILE 001</p>
+      <a href={`${base}/focus/vaccine/`} class="fc-vx group relative block overflow-hidden rounded-xl p-6 text-[#e2eeeb] transition hover:-translate-y-0.5 hover:shadow-xl">
+        <span class="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[radial-gradient(closest-side,rgba(86,226,202,0.18),transparent)]" aria-hidden="true"></span>
+        <p class="fc-mono relative text-[10px] tracking-[0.22em] text-[#92ebda]">DISEASE X <span class="text-[#3a5d56]">//</span> CASE FILE 001</p>
         <h3 class="relative mt-3 text-2xl font-bold text-white">Vaccine safety</h3>
-        <p class="relative mt-2 text-sm leading-relaxed text-[#b6c2d3]">
+        <p class="relative mt-2 text-sm leading-relaxed text-[#b3cac5]">
           When the next pandemic vaccine rolls out, which Asia-Pacific data can watch its safety from day one?
         </p>
-        <p class="fc-mono relative mt-5 flex flex-wrap gap-x-5 gap-y-1 text-[11px] tracking-wider text-[#8193ab]">
-          <span><span class="fc-dot inline-block w-1.5 h-1.5 rounded-full bg-[#22d3ee] align-middle mr-1.5" aria-hidden="true"></span>{vxRegions} REGIONS</span>
+        <p class="fc-mono relative mt-5 flex flex-wrap gap-x-5 gap-y-1 text-[11px] tracking-wider text-[#88a69f]">
+          <span><span class="fc-dot inline-block w-1.5 h-1.5 rounded-full bg-[#56e2ca] align-middle mr-1.5" aria-hidden="true"></span>{vxRegions} REGIONS</span>
           <span>{VACCINE_DBS.length} DATABASES</span>
         </p>
-        <span class="fc-mono relative mt-5 inline-flex items-center gap-1 text-xs font-bold tracking-wider text-[#67e8f9]">
+        <span class="fc-mono relative mt-5 inline-flex items-center gap-1 text-xs font-bold tracking-wider text-[#92ebda]">
           ENTER THE CONSOLE <span aria-hidden="true" class="transition-transform group-hover:translate-x-1">→</span>
         </span>
       </a>
@@ -75,12 +75,12 @@ const vxRegions = new Set(VACCINE_DBS.map((d) => d.region)).size;
   .fc-hand { font-family: "Caveat", "Segoe Print", "Bradley Hand", cursive; }
 
   .fc-vx {
-    background-color: #060d18;
+    background-color: #102420;
     background-image:
-      linear-gradient(to right, rgba(22, 40, 63, 0.6) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(22, 40, 63, 0.6) 1px, transparent 1px);
+      linear-gradient(to right, rgba(40, 70, 64, 0.6) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(40, 70, 64, 0.6) 1px, transparent 1px);
     background-size: 28px 28px;
-    border: 1px solid #16283f;
+    border: 1px solid #284640;
   }
   .fc-ng { background: linear-gradient(180deg, #6b4a2f, #4a3220); }
   .fc-board {

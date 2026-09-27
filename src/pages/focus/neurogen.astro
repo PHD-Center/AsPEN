@@ -117,16 +117,16 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
   </Fragment>
 
   <!-- ═══ THE BOARD ══════════════════════════════════════════════════ -->
-  <section class="bg-[#2a211a] py-8 md:py-12">
+  <section class="bg-gradient-to-br from-brand-50 via-white to-brand-100/40 border-b border-slate-200 py-8 md:py-12">
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-      <nav aria-label="Breadcrumb" class="text-xs text-[#c9b9a6] mb-4">
-        <a href={`${base}/publications/`} class="hover:text-white">Publications</a>
+      <nav aria-label="Breadcrumb" class="text-xs text-slate-500 mb-4">
+        <a href={`${base}/publications/`} class="hover:text-brand-700">Publications</a>
         <span aria-hidden="true"> → </span>
-        <a href={`${base}/publications/themes/`} class="hover:text-white">Themes</a>
+        <a href={`${base}/publications/themes/`} class="hover:text-brand-700">Themes</a>
         <span aria-hidden="true"> → </span>
-        <a href={`${base}/publications/themes/methods-infrastructure/`} class="hover:text-white">Infrastructure</a>
+        <a href={`${base}/publications/themes/methods-infrastructure/`} class="hover:text-brand-700">Infrastructure</a>
         <span aria-hidden="true"> → </span>
-        <span class="text-white">NeuroGEN</span>
+        <span class="text-slate-900 font-semibold">NeuroGEN</span>
       </nav>
 
       <!-- the chalkboard, in its wooden frame -->
@@ -208,7 +208,7 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
                   )))}
                 </g>
 
-                <text class="chalk-hand pop" x="24" y="622" fill="#9fb0a4" font-size="20" style="--d:3.4s">fig. 1 — the network, as a graph</text>
+                <text class="chalk-hand pop" x="24" y="622" fill="#9fb0a4" font-size="20" style="--d:3.4s">the network, drawn as a graph</text>
               </svg>
             </div>
 
@@ -240,8 +240,8 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
         </div>
       </div>
 
-      <details class="mt-5 group text-[#e8dccd]">
-        <summary class="cursor-pointer select-none text-sm font-semibold hover:text-white">View the {counts.total} databases as a table</summary>
+      <details class="mt-5 group text-slate-700">
+        <summary class="cursor-pointer select-none text-sm font-semibold hover:text-brand-700">View the {counts.total} databases as a table</summary>
         <div class="mt-3 overflow-x-auto rounded-md bg-white text-slate-800">
           <table class="w-full text-sm">
             <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
@@ -259,16 +259,16 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
           </table>
         </div>
       </details>
-      <p class="mt-3 text-xs text-[#a8988a]">
+      <p class="mt-3 text-xs text-slate-500">
         Source: Tsai DHT et al. Cross-Regional Data Initiative for the Assessment and Development of Treatment for Neurological and Mental Disorders.
         <em>Clin Epidemiol</em> 2023.
-        <a href="https://pubmed.ncbi.nlm.nih.gov/38146486/" target="_blank" rel="noopener" class="underline hover:text-white">PMID 38146486</a>.
+        <a href="https://pubmed.ncbi.nlm.nih.gov/38146486/" target="_blank" rel="noopener" class="underline hover:text-brand-700">PMID 38146486</a>.
       </p>
     </div>
   </section>
 
   <!-- ═══ OFF THE BOARD — WHY IT MATTERS ═════════════════════════════ -->
-  <section class="bg-[#faf7f0]">
+  <section class="bg-white">
     <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16">
       <p class="uppercase tracking-widest text-xs text-brand-600 font-semibold">Off the board</p>
       <h2 class="mt-2 text-3xl md:text-4xl font-bold text-slate-900 leading-tight">
@@ -281,7 +281,7 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
           <div>
             <h3 class="text-lg font-semibold text-slate-900">The burden is enormous</h3>
             <p class="mt-1 text-slate-700 leading-relaxed">
-              Dementia and stroke are leading causes of disability, and mental health disorders account for up to a third of all years lived with disability.
+              Cognitive disorders, including dementia, and stroke are leading causes of disability, and mental health disorders, including depression, account for up to a third of all years lived with disability.
             </p>
             <p class="mt-1 text-xs text-slate-500">PMID <a class="hover:underline" href="https://pubmed.ncbi.nlm.nih.gov/32572794/" target="_blank" rel="noopener">32572794</a></p>
           </div>
@@ -301,7 +301,7 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
           <div>
             <h3 class="text-lg font-semibold text-slate-900">Sometimes the answer overturns the question</h3>
             <p class="mt-1 text-slate-700 leading-relaxed">
-              One NeuroGEN study went looking for a culprit and ended up clearing it. The case file is below.
+              Earlier studies had linked diabetes in pregnancy to ADHD in children. One NeuroGEN study tested that link with sibling comparisons, and for gestational diabetes it did not hold. The case file is below.
             </p>
           </div>
         </li>
@@ -323,9 +323,9 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
           <ol class="relative grid gap-5 md:grid-cols-4">
             {[
               { tag: "SUSPECT", body: "Gestational diabetes", note: "diabetes that starts in pregnancy", tilt: "-rotate-1" },
-              { tag: "EVIDENCE", body: "HR 1.10", note: "3.6 million mother–child pairs, seven regions. Exposed children: more ADHD.", tilt: "rotate-1" },
+              { tag: "EVIDENCE", body: "HR 1.10", note: "3.6 million mother–child pairs: HK, NZ, TW, FI, IS, NO, SE. Exposed children: more ADHD.", tilt: "rotate-1" },
               { tag: "ALIBI", body: "HR 1.05", note: "Siblings — one exposed, one not — had similar risk. The interval crosses 1.", tilt: "-rotate-[0.6deg]" },
-              { tag: "VERDICT", body: "Unlikely to be causal", note: "Shared family factors, not the diabetes, are the likelier explanation.", tilt: "rotate-[0.8deg]", verdict: true },
+              { tag: "VERDICT", body: "Unlikely to be causal", note: "Shared family factors, not the gestational diabetes itself, are the likelier explanation.", tilt: "rotate-[0.8deg]", verdict: true },
             ].map((c) => (
               <li class:list={["relative rounded-sm bg-[#fbf8f1] px-4 pt-6 pb-4 shadow-[0_6px_14px_rgba(60,40,20,0.25)]", c.tilt, c.verdict && "ring-2 ring-[#b3261e]"]}>
                 <span class="absolute left-1/2 -translate-x-1/2 -top-1.5 w-3.5 h-3.5 rounded-full bg-[#c0392b] shadow-[0_2px_3px_rgba(0,0,0,0.35),inset_-2px_-2px_0_rgba(0,0,0,0.2)]" aria-hidden="true"></span>
@@ -370,7 +370,7 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
           </div>
 
           <p class="mt-3 text-sm text-slate-700 leading-relaxed">
-            Across everyone, the interval sits clear of 1. Compare siblings raised in the same family and it reaches below 1: once the family is held constant, the link no longer holds.
+            Across everyone, the interval sits clear of 1. Compare siblings raised in the same family and it reaches below 1: once the family is held constant, the link can no longer be told apart from no effect.
           </p>
           <p class="mt-2 text-xs text-slate-500">
             Source: Chan AYL et al. <em>Nature Medicine</em> 2024,

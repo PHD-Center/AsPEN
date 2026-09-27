@@ -7,13 +7,15 @@
 //   4 · Back to people    the clinical and public-health meaning
 //
 // Every figure comes from src/data/vaccine-suitability.ts, which cites the
-// paper table by table. The paper itself stays filed under the Infection &
-// Vaccine theme; this page visualises it.
+// paper table by table. The paper itself is filed under the Infrastructure
+// theme, which opens this page.
 //
-// Colours: data marks use #01a4b9 (cyan) and, for the linkage-required state,
-// #c68206 (ochre). That pair passed the dataviz validator on the #060d18
-// field: lightness band, chroma floor, CVD separation (ΔE 18.9) and contrast.
-// Brighter cyan appears only as decorative glow, never on a data mark.
+// Colours are the site's own: the field is brand-900 (#102420) and every
+// other surface steps up from it along the brand hue. Data marks use #08a28f
+// (brand teal) and, for the linkage-required state, #c68206 (ochre). That
+// pair passed the dataviz validator on the brand-900 field: lightness band,
+// chroma floor, CVD separation (ΔE 12.9) and contrast. The brighter mint
+// appears only as decorative glow, never on a data mark.
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import WorldMap from "../../components/WorldMap.astro";
 import { SURVEY, SURVEY_EXCLUSIONS, DATABASES, RECORDED, TOTAL_DBS, DEDUCTIONS, EXCLUDED } from "../../data/vaccine-suitability";
@@ -65,7 +67,7 @@ const blips = regions.map((r) => ({
   label: r.region,
 }));
 
-const CYAN = "#01a4b9";
+const ACCENT = "#08a28f";
 const OCHRE = "#c68206";
 ---
 
@@ -79,37 +81,37 @@ const OCHRE = "#c68206";
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   </Fragment>
 
-  <div class="vx bg-[#060d18] text-[#e2e8f0]">
+  <div class="vx bg-[#102420] text-[#e2eeeb]">
 
     <!-- ═══ ACT 1 · DISEASE X ═══════════════════════════════════════ -->
-    <section id="disease-x" class="vx-grid relative overflow-hidden border-b border-[#16283f]">
+    <section id="disease-x" class="vx-grid relative overflow-hidden border-b border-[#284640]">
       <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
-        <div class="absolute -top-40 -right-40 w-[560px] h-[560px] rounded-full bg-[radial-gradient(closest-side,rgba(34,211,238,0.14),transparent)]"></div>
+        <div class="absolute -top-40 -right-40 w-[560px] h-[560px] rounded-full bg-[radial-gradient(closest-side,rgba(86,226,202,0.14),transparent)]"></div>
       </div>
 
       <div class="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-10 pb-16 md:pt-14 md:pb-24">
-        <nav aria-label="Breadcrumb" class="mono text-[11px] tracking-wider text-[#8193ab]">
-          <a href={`${base}/publications/`} class="hover:text-[#e2e8f0]">Publications</a>
+        <nav aria-label="Breadcrumb" class="mono text-[11px] tracking-wider text-[#88a69f]">
+          <a href={`${base}/publications/`} class="hover:text-[#e2eeeb]">Publications</a>
           <span aria-hidden="true"> / </span>
-          <a href={`${base}/publications/themes/`} class="hover:text-[#e2e8f0]">Themes</a>
+          <a href={`${base}/publications/themes/`} class="hover:text-[#e2eeeb]">Themes</a>
           <span aria-hidden="true"> / </span>
-          <a href={`${base}/publications/themes/methods-infrastructure/`} class="hover:text-[#e2e8f0]">Infrastructure</a>
+          <a href={`${base}/publications/themes/methods-infrastructure/`} class="hover:text-[#e2eeeb]">Infrastructure</a>
           <span aria-hidden="true"> / </span>
-          <span class="text-[#e2e8f0]">Vaccine safety</span>
+          <span class="text-[#e2eeeb]">Vaccine safety</span>
         </nav>
 
         <div class="mt-10 grid gap-12 lg:grid-cols-[1fr_300px] items-center">
           <div>
-            <p class="mono text-xs tracking-[0.2em] text-[#67e8f9]">
-              DISEASE&nbsp;X <span class="text-[#16283f]">//</span> CASE FILE 001 <span class="text-[#16283f]">//</span> PATHOGEN: UNKNOWN
+            <p class="mono text-xs tracking-[0.2em] text-[#92ebda]">
+              DISEASE&nbsp;X <span class="text-[#284640]">//</span> CASE FILE 001 <span class="text-[#284640]">//</span> PATHOGEN: UNKNOWN
             </p>
             <h1 class="mt-5 text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.08] tracking-tight text-white">
               The next pandemic vaccine could reach millions within months.
             </h1>
-            <p class="mt-3 text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.1] tracking-tight text-[#8193ab]">
+            <p class="mt-3 text-3xl md:text-4xl lg:text-5xl font-bold leading-[1.1] tracking-tight text-[#88a69f]">
               Its safety has to be watched at the same speed.
             </p>
-            <p class="mt-8 max-w-2xl text-base md:text-lg leading-relaxed text-[#b6c2d3]">
+            <p class="mt-8 max-w-2xl text-base md:text-lg leading-relaxed text-[#b3cac5]">
               <strong class="text-white font-semibold">Disease X</strong> is the WHO's name for the pathogen nobody has met yet.
               CEPI's 100 Days Mission aims to have a vaccine ready within 100 days of a new pandemic threat being identified.
               Watching that vaccine's safety depends on data that has to exist <em class="text-white not-italic font-semibold">before</em> day one.
@@ -119,39 +121,39 @@ const OCHRE = "#c68206";
           <!-- scope: the eight regions, where they actually are -->
           <div class="hidden lg:block" aria-hidden="true">
             <div class="relative w-[300px] h-[300px]">
-              <div class="absolute inset-0 rounded-full border border-[#16283f]"></div>
-              <div class="absolute inset-[50px] rounded-full border border-[#16283f]"></div>
-              <div class="absolute inset-[100px] rounded-full border border-[#16283f]"></div>
-              <div class="absolute left-1/2 top-0 bottom-0 w-px bg-[#16283f]"></div>
-              <div class="absolute top-1/2 left-0 right-0 h-px bg-[#16283f]"></div>
+              <div class="absolute inset-0 rounded-full border border-[#284640]"></div>
+              <div class="absolute inset-[50px] rounded-full border border-[#284640]"></div>
+              <div class="absolute inset-[100px] rounded-full border border-[#284640]"></div>
+              <div class="absolute left-1/2 top-0 bottom-0 w-px bg-[#284640]"></div>
+              <div class="absolute top-1/2 left-0 right-0 h-px bg-[#284640]"></div>
               <div class="vx-sweep absolute inset-0 rounded-full"></div>
               <svg viewBox="0 0 200 200" class="absolute inset-0 w-full h-full">
                 {blips.map((b, i) => (
-                  <circle class="vx-blip" cx={b.x} cy={b.y} r="2.6" fill="#22d3ee" style={`animation-delay:${(i * 0.37).toFixed(2)}s`} />
+                  <circle class="vx-blip" cx={b.x} cy={b.y} r="2.6" fill="#56e2ca" style={`animation-delay:${(i * 0.37).toFixed(2)}s`} />
                 ))}
               </svg>
             </div>
           </div>
         </div>
 
-        <p class="mono mt-14 text-[11px] tracking-[0.18em] text-[#8193ab] flex flex-wrap gap-x-6 gap-y-2">
-          <span><span class="text-[#67e8f9]">▮</span> ASIA-PACIFIC DATA GRID</span>
+        <p class="mono mt-14 text-[11px] tracking-[0.18em] text-[#88a69f] flex flex-wrap gap-x-6 gap-y-2">
+          <span><span class="text-[#92ebda]">▮</span> ASIA-PACIFIC DATA GRID</span>
           <span>{regions.length} REGIONS</span>
           <span>{TOTAL_DBS} DATABASES</span>
-          <span>SURVEY · 2021</span>
+          <span>SOURCE · DUSZYNSKI 2021</span>
         </p>
       </div>
     </section>
 
     <!-- ═══ ACT 2 · THREE DATA STREAMS ══════════════════════════════ -->
-    <section id="streams" class="border-b border-[#16283f] scroll-mt-16">
+    <section id="streams" class="border-b border-[#284640] scroll-mt-16">
       <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-        <p class="mono text-[11px] tracking-[0.2em] text-[#67e8f9]">02 // WHAT SURVEILLANCE NEEDS</p>
+        <p class="mono text-[11px] tracking-[0.2em] text-[#92ebda]">02 // WHAT SURVEILLANCE NEEDS</p>
         <h2 class="mt-3 text-2xl md:text-3xl font-bold text-white max-w-3xl leading-snug">
           A safety signal is three streams of data meeting in one place.
         </h2>
-        <p class="mt-3 max-w-2xl text-[#b6c2d3] leading-relaxed">
-          Each stream alone says little. Together they show whether people who received a vaccine went on to develop a condition more often than expected.
+        <p class="mt-3 max-w-2xl text-[#b3cac5] leading-relaxed">
+          The survey behind this page asked every database about all three: its vaccine exposure data, its health outcome data, and whether the two can be linked.
         </p>
 
         <div class="mt-10 grid gap-4 md:grid-cols-3">
@@ -172,13 +174,13 @@ const OCHRE = "#c68206";
               icon: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
             },
           ].map((s) => (
-            <article class="relative rounded-lg border border-[#16283f] bg-[#0b1626] p-6">
+            <article class="relative rounded-lg border border-[#284640] bg-[#18312c] p-6">
               <div class="flex items-center justify-between">
-                <span class="mono text-[11px] tracking-[0.2em] text-[#67e8f9]">{s.n} · {s.key}</span>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={s.icon} />
+                <span class="mono text-[11px] tracking-[0.2em] text-[#92ebda]">{s.n} · {s.key}</span>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#56e2ca" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={s.icon} />
               </div>
               <h3 class="mt-4 text-lg font-semibold text-white">{s.title}</h3>
-              <p class="mt-2 text-sm leading-relaxed text-[#b6c2d3]">{s.body}</p>
+              <p class="mt-2 text-sm leading-relaxed text-[#b3cac5]">{s.body}</p>
             </article>
           ))}
         </div>
@@ -186,13 +188,13 @@ const OCHRE = "#c68206";
         <!-- the three converge -->
         <div class="hidden md:block mt-2" aria-hidden="true">
           <svg viewBox="0 0 1000 90" class="w-full h-[90px]" preserveAspectRatio="none">
-            <path class="vx-flow" d="M167 0 C167 50, 500 40, 500 80" stroke="#22d3ee" stroke-opacity=".45" stroke-width="1.5" fill="none" vector-effect="non-scaling-stroke" />
-            <path class="vx-flow" d="M500 0 L500 80" stroke="#22d3ee" stroke-opacity=".45" stroke-width="1.5" fill="none" vector-effect="non-scaling-stroke" />
-            <path class="vx-flow" d="M833 0 C833 50, 500 40, 500 80" stroke="#22d3ee" stroke-opacity=".45" stroke-width="1.5" fill="none" vector-effect="non-scaling-stroke" />
+            <path class="vx-flow" d="M167 0 C167 50, 500 40, 500 80" stroke="#56e2ca" stroke-opacity=".45" stroke-width="1.5" fill="none" vector-effect="non-scaling-stroke" />
+            <path class="vx-flow" d="M500 0 L500 80" stroke="#56e2ca" stroke-opacity=".45" stroke-width="1.5" fill="none" vector-effect="non-scaling-stroke" />
+            <path class="vx-flow" d="M833 0 C833 50, 500 40, 500 80" stroke="#56e2ca" stroke-opacity=".45" stroke-width="1.5" fill="none" vector-effect="non-scaling-stroke" />
           </svg>
         </div>
-        <p class="mono text-center text-[11px] tracking-[0.25em] text-[#67e8f9] mt-4 md:mt-0">
-          <span class="inline-block w-2 h-2 rounded-full bg-[#22d3ee] align-middle mr-2 vx-blip" aria-hidden="true"></span>SAFETY SIGNAL
+        <p class="mono text-center text-[11px] tracking-[0.25em] text-[#92ebda] mt-4 md:mt-0">
+          <span class="inline-block w-2 h-2 rounded-full bg-[#56e2ca] align-middle mr-2 vx-blip" aria-hidden="true"></span>SAFETY SIGNAL
         </p>
       </div>
     </section>
@@ -200,16 +202,16 @@ const OCHRE = "#c68206";
     <!-- ═══ ACT 3 · THE ASIA-PACIFIC DATA GRID ══════════════════════ -->
     <section id="grid" class="scroll-mt-16">
       <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16 md:py-20">
-        <p class="mono text-[11px] tracking-[0.2em] text-[#67e8f9]">03 // ASIA-PACIFIC DATA GRID</p>
+        <p class="mono text-[11px] tracking-[0.2em] text-[#92ebda]">03 // ASIA-PACIFIC DATA GRID</p>
         <h2 class="mt-3 text-2xl md:text-3xl font-bold text-white max-w-3xl leading-snug">
           Which databases in the region can already do this?
         </h2>
-        <p class="mt-3 max-w-2xl text-[#b6c2d3] leading-relaxed">
-          In 2021 an ISPE-endorsed survey went looking across the Asia-Pacific for databases that hold person-level vaccination records.
+        <p class="mt-3 max-w-2xl text-[#b3cac5] leading-relaxed">
+          As COVID-19 vaccines were being introduced, an ISPE-endorsed survey went looking across the Asia-Pacific for databases that could support vaccine-safety surveillance.
         </p>
-        <figure class="mt-6 max-w-2xl border-l-2 border-[#01a4b9] pl-4">
+        <figure class="mt-6 max-w-2xl border-l-2 border-[#08a28f] pl-4">
           <blockquote class="text-lg italic text-white">“You see, but you do not observe.”</blockquote>
-          <figcaption class="mono mt-1 text-[10px] tracking-wider text-[#8193ab]">SHERLOCK HOLMES · A SCANDAL IN BOHEMIA, 1891</figcaption>
+          <figcaption class="mono mt-1 text-[10px] tracking-wider text-[#88a69f]">SHERLOCK HOLMES · A SCANDAL IN BOHEMIA, 1891</figcaption>
         </figure>
 
         <!-- pipeline: each stage keeps its own unit, so this is not a funnel -->
@@ -219,46 +221,46 @@ const OCHRE = "#c68206";
             return (
               <li class:list={[
                 "relative rounded-lg border p-5",
-                last ? "border-[#01a4b9] bg-[#01a4b9]/10" : "border-[#16283f] bg-[#0b1626]",
+                last ? "border-[#08a28f] bg-[#08a28f]/10" : "border-[#284640] bg-[#18312c]",
               ]}>
-                <p class="mono text-[10px] tracking-[0.22em] text-[#8193ab]">STAGE {i + 1} · {s.label.toUpperCase()}</p>
+                <p class="mono text-[10px] tracking-[0.22em] text-[#88a69f]">STAGE {i + 1} · {s.label.toUpperCase()}</p>
                 <p class="mt-3 flex items-baseline gap-2">
-                  <span class:list={["text-5xl font-bold leading-none", last ? "text-[#67e8f9]" : "text-white"]}>{s.value}</span>
-                  <span class="text-sm text-[#b6c2d3]">{s.unit}</span>
+                  <span class:list={["text-5xl font-bold leading-none", last ? "text-[#92ebda]" : "text-white"]}>{s.value}</span>
+                  <span class="text-sm text-[#b3cac5]">{s.unit}</span>
                 </p>
-                <p class="mono mt-3 text-[11px] text-[#8193ab]">{s.note}</p>
+                <p class="mono mt-3 text-[11px] text-[#88a69f]">{s.note}</p>
                 {!last && (
-                  <span class="hidden lg:flex absolute -right-[13px] top-1/2 -translate-y-1/2 z-10 w-6 h-6 items-center justify-center rounded-full bg-[#060d18] border border-[#16283f] text-[#67e8f9] text-xs" aria-hidden="true">→</span>
+                  <span class="hidden lg:flex absolute -right-[13px] top-1/2 -translate-y-1/2 z-10 w-6 h-6 items-center justify-center rounded-full bg-[#102420] border border-[#284640] text-[#92ebda] text-xs" aria-hidden="true">→</span>
                 )}
               </li>
             );
           })}
         </ol>
-        <ul class="mt-4 space-y-1 text-xs text-[#8193ab]">
+        <ul class="mt-4 space-y-1 text-xs text-[#88a69f]">
           {SURVEY_EXCLUSIONS.map((e) => (<li class="mono">— {e}</li>))}
         </ul>
 
         <!-- map -->
         <div class="mt-12">
           <div class="flex items-baseline justify-between gap-3 flex-wrap mb-3">
-            <h3 class="mono text-[11px] tracking-[0.2em] text-[#b6c2d3]">{TOTAL_DBS} DATABASES · {regions.length} REGIONS</h3>
-            <p class="text-xs text-[#8193ab]">Follow the clues, or select a flag for its databases.</p>
+            <h3 class="mono text-[11px] tracking-[0.2em] text-[#b3cac5]">{TOTAL_DBS} DATABASES · {regions.length} REGIONS</h3>
+            <p class="text-xs text-[#88a69f]">Follow the clues, or select a flag for its databases.</p>
           </div>
           <WorldMap groups={[...mapGroups, ...ghostGroups].sort((x, y) => y.lat - x.lat)} height="600px" initialCenter={[-3, 137.5]} initialZoom={3} variant="dark" />
           <!-- case notes: every clue the gaze reads, in plain text -->
-          <div class="mt-4 rounded-lg border border-[#16283f] bg-[#0b1626] p-4">
-            <p class="mono text-[10px] tracking-[0.22em] text-[#8193ab]">CASE NOTES</p>
+          <div class="mt-4 rounded-lg border border-[#284640] bg-[#18312c] p-4">
+            <p class="mono text-[10px] tracking-[0.22em] text-[#88a69f]">CASE NOTES</p>
             <dl class="mt-3 grid gap-x-8 gap-y-2 md:grid-cols-2">
               {regions.map((r) => (
                 <div class="flex gap-3 text-sm">
-                  <dt class="mono shrink-0 w-28 text-[11px] tracking-wide text-[#67e8f9] pt-0.5">{r.region}</dt>
-                  <dd class="text-[#b6c2d3] leading-snug">{DEDUCTIONS[r.region]}</dd>
+                  <dt class="mono shrink-0 w-28 text-[11px] tracking-wide text-[#92ebda] pt-0.5">{r.region}</dt>
+                  <dd class="text-[#b3cac5] leading-snug">{DEDUCTIONS[r.region]}</dd>
                 </div>
               ))}
               {EXCLUDED.map((e) => (
                 <div class="flex gap-3 text-sm">
-                  <dt class="mono shrink-0 w-28 text-[11px] tracking-wide text-[#8193ab] pt-0.5 line-through decoration-[#8193ab]/60">{e.region}</dt>
-                  <dd class="text-[#8193ab] leading-snug">{e.note}</dd>
+                  <dt class="mono shrink-0 w-28 text-[11px] tracking-wide text-[#88a69f] pt-0.5 line-through decoration-[#88a69f]/60">{e.region}</dt>
+                  <dd class="text-[#88a69f] leading-snug">{e.note}</dd>
                 </div>
               ))}
             </dl>
@@ -269,38 +271,38 @@ const OCHRE = "#c68206";
         <!-- status board: the paper's central finding -->
         <div class="mt-14">
           <h3 class="text-xl font-bold text-white">Vaccination and outcomes: in one database, or joined by linkage</h3>
-          <p class="mt-2 max-w-3xl text-sm leading-relaxed text-[#b6c2d3]">
+          <p class="mt-2 max-w-3xl text-sm leading-relaxed text-[#b3cac5]">
             Six hold vaccination and outcome records in one place. The other five hold only one side — four are immunisation registries with no outcomes, and Korea's insurance database has outcomes but no vaccination — so each must be linked to another source before the two can be compared. That dependence on linkage is the paper's main obstacle to a regional network.
           </p>
 
           <div class="mt-6 grid gap-4 md:grid-cols-2">
             {[
-              { list: integrated, label: "INTEGRATED", glyph: "●", color: CYAN, caption: "vaccine + outcome in one database" },
+              { list: integrated, label: "INTEGRATED", glyph: "●", color: ACCENT, caption: "vaccine + outcome in one database" },
               { list: linkage, label: "LINKAGE REQUIRED", glyph: "◐", color: OCHRE, caption: "holds one side; the other must be linked in" },
             ].map((col) => (
-              <div class="rounded-lg border border-[#16283f] bg-[#0b1626] overflow-hidden">
-                <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-[#16283f]">
-                  <p class="mono text-[11px] tracking-[0.18em] text-[#e2e8f0] flex items-center gap-2">
+              <div class="rounded-lg border border-[#284640] bg-[#18312c] overflow-hidden">
+                <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-[#284640]">
+                  <p class="mono text-[11px] tracking-[0.18em] text-[#e2eeeb] flex items-center gap-2">
                     <span style={`color:${col.color}`} class="text-base leading-none" aria-hidden="true">{col.glyph}</span>
                     {col.label}
                   </p>
                   <p class="mono text-2xl font-bold text-white leading-none">{col.list.length}</p>
                 </div>
-                <p class="px-4 pt-2 text-[11px] text-[#8193ab]">{col.caption}</p>
+                <p class="px-4 pt-2 text-[11px] text-[#88a69f]">{col.caption}</p>
                 <ul class="px-2 pb-2 pt-1">
                   {col.list.map((d) => (
-                    <li class="flex items-center gap-3 px-2 py-2 rounded hover:bg-[#0f2136]">
+                    <li class="flex items-center gap-3 px-2 py-2 rounded hover:bg-[#1f3c36]">
                       <img src={`https://flagcdn.com/w40/${d.flag}.png`} alt="" class="w-6 h-4 rounded-[2px] object-cover shrink-0" loading="lazy" />
                       <div class="min-w-0 flex-1">
                         <p class="text-sm text-white leading-tight">
                           {d.href ? (
-                            <a href={`${base}${d.href}`} class="hover:underline decoration-[#01a4b9] underline-offset-2">{d.short}</a>
+                            <a href={`${base}${d.href}`} class="hover:underline decoration-[#08a28f] underline-offset-2">{d.short}</a>
                           ) : d.short}
-                          <span class="text-[#8193ab]"> · {d.region}</span>
+                          <span class="text-[#88a69f]"> · {d.region}</span>
                         </p>
-                        <p class="text-[11px] text-[#8193ab] truncate" title={d.name}>{d.name}</p>
+                        <p class="text-[11px] text-[#88a69f] truncate" title={d.name}>{d.name}</p>
                       </div>
-                      <span class="mono shrink-0 text-[10px] tracking-wider text-[#8193ab] border border-[#16283f] rounded px-1.5 py-0.5">{d.kind === "Immunisation registry" ? "REGISTRY" : d.kind.toUpperCase()}</span>
+                      <span class="mono shrink-0 text-[10px] tracking-wider text-[#88a69f] border border-[#284640] rounded px-1.5 py-0.5">{d.kind === "Immunisation registry" ? "REGISTRY" : d.kind.toUpperCase()}</span>
                       <span class="mono shrink-0 text-[10px] tracking-wider flex items-center gap-1" style={`color:${col.color}`}>
                         <span aria-hidden="true">{col.glyph}</span><span class="sr-only">{col.label}</span>
                       </span>
@@ -315,56 +317,56 @@ const OCHRE = "#c68206";
         <!-- exposure-detail bars -->
         <div class="mt-14">
           <h3 class="text-xl font-bold text-white">Vaccine details each database records</h3>
-          <p class="mt-2 max-w-3xl text-sm leading-relaxed text-[#b6c2d3]">
-            Nearly all record the date. Far fewer record the batch or a standard code — the details needed to trace a signal back to a specific product.
+          <p class="mt-2 max-w-3xl text-sm leading-relaxed text-[#b3cac5]">
+            Nine of the eleven record the vaccination date. Fewer record a batch number or a standard ATC code, and the paper found the coding of individual vaccines varied: only influenza vaccine was recorded uniformly across almost all countries.
           </p>
 
-          <div class="mt-6 rounded-lg border border-[#16283f] bg-[#0b1626] p-5" role="figure" aria-label={`Vaccine variables recorded, out of ${TOTAL_DBS} databases`}>
+          <div class="mt-6 rounded-lg border border-[#284640] bg-[#18312c] p-5" role="figure" aria-label={`Vaccine variables recorded, out of ${TOTAL_DBS} databases`}>
             <div class="space-y-[2px]">
               {RECORDED.map((r) => {
                 const pct = (r.n / TOTAL_DBS) * 100;
                 return (
                   <div class="grid grid-cols-[minmax(0,150px)_minmax(0,1fr)_44px] sm:grid-cols-[190px_minmax(0,1fr)_48px] items-center gap-3 py-1.5" title={`${r.variable}: ${r.n} of ${TOTAL_DBS} databases`}>
-                    <span class="text-sm text-[#e2e8f0] truncate">{r.variable}</span>
-                    <span class="relative h-[18px] border-l border-[#2a3f5c]">
-                      <span class="absolute left-0 top-0 bottom-0 rounded-r-[4px]" style={`width:${pct.toFixed(1)}%;background:${CYAN}`}></span>
+                    <span class="text-sm text-[#e2eeeb] truncate">{r.variable}</span>
+                    <span class="relative h-[18px] border-l border-[#3a5d56]">
+                      <span class="absolute left-0 top-0 bottom-0 rounded-r-[4px]" style={`width:${pct.toFixed(1)}%;background:${ACCENT}`}></span>
                     </span>
-                    <span class="mono text-xs text-[#e2e8f0] text-right">{r.n}/{TOTAL_DBS}</span>
+                    <span class="mono text-xs text-[#e2eeeb] text-right">{r.n}/{TOTAL_DBS}</span>
                   </div>
                 );
               })}
             </div>
-            <p class="mono mt-4 text-[10px] tracking-wider text-[#8193ab]">SOURCE · DUSZYNSKI 2021, TABLE 3</p>
+            <p class="mono mt-4 text-[10px] tracking-wider text-[#88a69f]">SOURCE · DUSZYNSKI 2021, TABLE 3</p>
           </div>
 
           <details class="mt-3 group">
-            <summary class="mono cursor-pointer select-none text-[11px] tracking-wider text-[#8193ab] hover:text-[#e2e8f0]">VIEW AS TABLE</summary>
+            <summary class="mono cursor-pointer select-none text-[11px] tracking-wider text-[#88a69f] hover:text-[#e2eeeb]">VIEW AS TABLE</summary>
             <table class="mt-3 w-full max-w-md text-sm">
-              <thead><tr class="text-left text-[#8193ab]"><th class="py-1 font-normal">Variable</th><th class="py-1 font-normal text-right">Databases</th></tr></thead>
+              <thead><tr class="text-left text-[#88a69f]"><th class="py-1 font-normal">Variable</th><th class="py-1 font-normal text-right">Databases</th></tr></thead>
               <tbody>
                 {RECORDED.map((r) => (
-                  <tr class="border-t border-[#16283f]"><td class="py-1 text-[#e2e8f0]">{r.variable}</td><td class="py-1 text-right text-[#e2e8f0] tabular-nums">{r.n} of {TOTAL_DBS}</td></tr>
+                  <tr class="border-t border-[#284640]"><td class="py-1 text-[#e2eeeb]">{r.variable}</td><td class="py-1 text-right text-[#e2eeeb] tabular-nums">{r.n} of {TOTAL_DBS}</td></tr>
                 ))}
               </tbody>
             </table>
-            <p class="mt-2 text-[11px] text-[#8193ab] max-w-xl">The paper's abstract gives brand as 7 of 11; its Table 3 gives 6. This page follows the table.</p>
+            <p class="mt-2 text-[11px] text-[#88a69f] max-w-xl">Where the paper disagrees with itself, this page follows Table 3. The abstract gives brand as 7 of 11, the table 6; the discussion says every database records the vaccination date, the table 9 of 11.</p>
           </details>
         </div>
         <!-- the deduction: observation, inference, conclusion -->
         <div class="mt-16">
-          <p class="mono text-[11px] tracking-[0.2em] text-[#67e8f9]">THE DEDUCTION</p>
-          <ol class="mt-5 relative border-l border-[#16283f] ml-2 space-y-5">
+          <p class="mono text-[11px] tracking-[0.2em] text-[#92ebda]">THE DEDUCTION</p>
+          <ol class="mt-5 relative border-l border-[#284640] ml-2 space-y-5">
             {[
               { k: "OBSERVED", t: `${SURVEY[0].value} countries surveyed. ${regions.length} regions had person-level vaccination data.` },
               { k: "OBSERVED", t: `Only ${DATABASES.filter((d) => d.outcome === "integrated").length} of ${TOTAL_DBS} databases hold vaccine and outcome together.` },
               { k: "OBSERVED", t: `In ${allLinkage.length} of ${regions.length} regions — ${allLinkage.join(", ")} — every database needs linkage.` },
-              { k: "DEDUCED", t: "There, a safety signal stays invisible until two datasets are joined." },
-              { k: "CONCLUSION", t: "The joins have to exist before Disease X does.", end: true },
+              { k: "DEDUCED", t: "There, outcomes cannot be seen alongside vaccinations until two datasets are joined." },
+              { k: "CONCLUSION", t: "Access to data and reliance on linkage are what stand between the region and a vaccine-safety network.", end: true },
             ].map((s) => (
               <li class="relative pl-6">
-                <span class:list={["absolute -left-[5px] top-2 w-[9px] h-[9px] rounded-full", s.end ? "bg-[#22d3ee] shadow-[0_0_12px_rgba(34,211,238,0.8)]" : "bg-[#16283f] border border-[#2a3f5c]"]} aria-hidden="true"></span>
-                <p class="mono text-[10px] tracking-[0.22em] text-[#8193ab]">{s.k}</p>
-                <p class:list={["mt-1 leading-snug", s.end ? "text-2xl md:text-3xl font-bold text-white" : "text-base md:text-lg text-[#e2e8f0]"]}>{s.t}</p>
+                <span class:list={["absolute -left-[5px] top-2 w-[9px] h-[9px] rounded-full", s.end ? "bg-[#56e2ca] shadow-[0_0_12px_rgba(86,226,202,0.8)]" : "bg-[#284640] border border-[#3a5d56]"]} aria-hidden="true"></span>
+                <p class="mono text-[10px] tracking-[0.22em] text-[#88a69f]">{s.k}</p>
+                <p class:list={["mt-1 leading-snug", s.end ? "text-2xl md:text-3xl font-bold text-white" : "text-base md:text-lg text-[#e2eeeb]"]}>{s.t}</p>
               </li>
             ))}
           </ol>
@@ -374,7 +376,7 @@ const OCHRE = "#c68206";
     </section>
 
     <!-- the console hands back to the light page -->
-    <div class="h-24 bg-gradient-to-b from-[#060d18] to-white" aria-hidden="true"></div>
+    <div class="h-24 bg-gradient-to-b from-[#102420] to-white" aria-hidden="true"></div>
   </div>
 
   <!-- ═══ ACT 4 · BACK TO PEOPLE ════════════════════════════════════ -->
@@ -382,26 +384,29 @@ const OCHRE = "#c68206";
     <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-6 pb-16">
       <p class="uppercase tracking-widest text-xs text-brand-600 font-semibold">04 · Why it matters</p>
       <h2 class="mt-2 text-3xl md:text-4xl font-bold text-slate-900 max-w-3xl leading-tight">
-        Behind every row is a person who chose to be vaccinated.
+        The region needs its network in place before the next new vaccine.
       </h2>
+      <p class="mt-4 max-w-3xl text-slate-700 leading-relaxed">
+        COVID-19 showed the need for an established Asia-Pacific database network, one that can give population-level evidence on the safety and effectiveness of newly developed vaccines. The paper names what stands in the way.
+      </p>
 
       <div class="mt-10 grid gap-5 md:grid-cols-2">
         {[
           {
-            t: "Rare harms need big denominators",
-            d: "Trials before licensing are too small to see rare adverse events. Linked data covering whole populations is how they are found once a vaccine is in use.",
+            t: "Vaccines are recorded differently",
+            d: "Coding of individual vaccines varied between databases. Only influenza vaccine was recorded uniformly across almost all countries, and routine childhood vaccines were recorded inconsistently. Hong Kong's CDARS captured two vaccines and none of the childhood schedule, which the Department of Health runs.",
           },
           {
-            t: "Asian evidence for Asian populations",
-            d: "Findings from other regions' data do not always carry across populations and health systems. Generating that evidence here is why AsPEN exists.",
+            t: "Outcomes sit in another database",
+            d: "Australia, Korea, New Zealand and Taiwan keep immunisation registries that need external linkage to reach health outcomes. Korea's insurance database is the reverse: outcomes, but no vaccination.",
           },
           {
-            t: "Speed protects trust",
-            d: "When a safety question is raised, a fast and credible answer, whether it confirms a risk or rules one out, is what keeps a vaccination programme working.",
+            t: "Access takes time",
+            d: "The time to approval, and the number of approvals needed before data could be released, varied between countries, and that slowed access to the data.",
           },
           {
-            t: "The gap still open",
-            d: "Only six of the eleven databases hold vaccination and outcomes together, and approval to use the data varies widely in time. The paper recommends a common data model, and learning from networks already running elsewhere.",
+            t: "What would close the gap",
+            d: "A common data model, and lessons from vaccine networks already running: PRISM in the United States, and Vac4EU and DARWIN EU in Europe.",
           },
         ].map((c) => (
           <article class="border border-slate-200 rounded-lg p-6 bg-white">
@@ -412,12 +417,11 @@ const OCHRE = "#c68206";
       </div>
 
       <div class="mt-6 border-l-4 border-brand-500 bg-brand-50/60 rounded-r-lg p-5 text-sm text-slate-700 leading-relaxed">
-        Networks the paper points to as models: <strong>PRISM</strong> in the United States, and <strong>Vac4EU</strong> and
-        <a href={`${base}/open-source/`} class="text-brand-700 font-semibold hover:underline">DARWIN EU</a> in Europe.
-        Closer to home, Taiwan already links its
+        Further on this site: Taiwan's
         <a href={`${base}/nhird/#registry-covid`} class="text-brand-700 font-semibold hover:underline">COVID-19 vaccination registry</a> and
         <a href={`${base}/nhird/#registry-niis`} class="text-brand-700 font-semibold hover:underline">National Immunization Information System</a>
-        to its national claims data.
+        on the Taiwan data page, and
+        <a href={`${base}/open-source/`} class="text-brand-700 font-semibold hover:underline">DARWIN EU</a> among our partner networks.
       </div>
 
       <footer class="mt-12 pt-6 border-t border-slate-200 text-xs text-slate-500 leading-relaxed">
@@ -430,7 +434,7 @@ const OCHRE = "#c68206";
           Survey stages from Figure 1; databases from Table 1; recorded variables from Table 3.
         </p>
         <p class="mt-2">
-          This paper is filed under <a href={`${base}/publications/themes/infection/`} class="text-brand-700 hover:underline">Infection &amp; Vaccine</a>.
+          This paper is filed under <a href={`${base}/publications/themes/methods-infrastructure/`} class="text-brand-700 hover:underline">Infrastructure</a>.
           <a href={`${base}/publications/themes/methods-infrastructure/`} class="text-brand-700 hover:underline">← Back to Infrastructure</a>
         </p>
       </footer>
@@ -443,8 +447,8 @@ const OCHRE = "#c68206";
     /* faint console grid, drifting slowly */
     .vx-grid {
       background-image:
-        linear-gradient(to right, rgba(22, 40, 63, 0.55) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(22, 40, 63, 0.55) 1px, transparent 1px);
+        linear-gradient(to right, rgba(40, 70, 64, 0.55) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(40, 70, 64, 0.55) 1px, transparent 1px);
       background-size: 44px 44px;
       animation: vx-drift 40s linear infinite;
     }
@@ -452,7 +456,7 @@ const OCHRE = "#c68206";
 
     /* radar sweep */
     .vx-sweep {
-      background: conic-gradient(from 0deg, rgba(34, 211, 238, 0.28), rgba(34, 211, 238, 0) 70deg, transparent 360deg);
+      background: conic-gradient(from 0deg, rgba(86, 226, 202, 0.28), rgba(86, 226, 202, 0) 70deg, transparent 360deg);
       animation: vx-spin 6s linear infinite;
     }
     @keyframes vx-spin { to { transform: rotate(360deg); } }

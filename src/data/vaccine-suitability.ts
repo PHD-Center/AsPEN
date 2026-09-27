@@ -22,7 +22,7 @@
  * Table 3's total gives 6/11. ATC code (5) and manufacturer (5) agree across
  * both, so the column reading is sound; RECORDED follows the table.
  *
- * This paper is filed under the Infection & Vaccine theme. The /focus/vaccine/
+ * This paper is filed under the Infrastructure theme. The /focus/vaccine/
  * page visualises it; it does not re-file it.
  */
 

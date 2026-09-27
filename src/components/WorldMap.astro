@@ -31,7 +31,7 @@ interface Props {
   initialCenter?: [number, number];
   initialZoom?: number;
   /** "light" is the site default. "dark" is the console look used by
-      /focus/vaccine/: dark tiles, cyan-glow markers, dark popups. */
+      /focus/vaccine/: dark tiles, brand-mint glow markers, dark popups. */
   variant?: "light" | "dark";
 }
 
@@ -54,7 +54,7 @@ const dark = variant === "dark";
   style={`height:${height};`}
   class:list={[
     "rounded-lg overflow-hidden",
-    dark ? "border border-[#16283f] bg-[#060d18]" : "border border-slate-200 shadow-sm bg-slate-50",
+    dark ? "border border-[#284640] bg-[#102420]" : "border border-slate-200 shadow-sm bg-slate-50",
   ]}
   aria-label="Interactive map of AsPEN locations"
 ></div>
@@ -64,21 +64,21 @@ const dark = variant === "dark";
      light maps elsewhere on the site are untouched. */
   .aspen-popup-dark .leaflet-popup-content-wrapper,
   .aspen-popup-dark .leaflet-popup-tip {
-    background: #0b1626;
-    color: #e2e8f0;
-    border: 1px solid #16283f;
+    background: #18312c;
+    color: #e2eeeb;
+    border: 1px solid #284640;
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
   }
-  .aspen-popup-dark a.leaflet-popup-close-button { color: #8193ab; }
+  .aspen-popup-dark a.leaflet-popup-close-button { color: #88a69f; }
 
-  /* Cyan pulse behind dark-variant markers. */
+  /* Mint pulse behind dark-variant markers. */
   @keyframes aspen-pulse {
     0%   { transform: scale(0.6); opacity: 0.7; }
     100% { transform: scale(2.2); opacity: 0; }
   }
   .aspen-pulse {
     position: absolute; inset: -6px; border-radius: 6px;
-    border: 2px solid #22d3ee;
+    border: 2px solid #56e2ca;
     animation: aspen-pulse 2.4s ease-out infinite;
     pointer-events: none;
   }
@@ -89,28 +89,28 @@ const dark = variant === "dark";
   /* Deductions: floating text pinned to a marker, no box, no arrow — the way
      the thought appears beside the thing being looked at. */
   .leaflet-tooltip.aspen-deduce {
-    background: rgba(6, 13, 24, 0.78);
+    background: rgba(16, 36, 32, 0.78);
     border: 0; border-radius: 3px; box-shadow: none;
     padding: 3px 7px;
     color: #fff;
     font: 500 12px/1.35 "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
     letter-spacing: 0.01em;
-    text-shadow: 0 0 10px rgba(34, 211, 238, 0.55);
+    text-shadow: 0 0 10px rgba(86, 226, 202, 0.55);
     white-space: normal; width: max-content; max-width: 250px;
     animation: aspen-deduce-in 0.5s ease-out;
   }
   .leaflet-tooltip.aspen-deduce::before { display: none; }
-  .aspen-deduce .dl { display: inline-block; width: 16px; height: 1px; background: #22d3ee; vertical-align: middle; }
+  .aspen-deduce .dl { display: inline-block; width: 16px; height: 1px; background: #56e2ca; vertical-align: middle; }
   .aspen-deduce .dl-l { margin-right: 6px; }
   .aspen-deduce .dl-r { margin-left: 6px; }
-  .aspen-deduce.is-ghost { color: #b6c2d3; text-shadow: none; }
+  .aspen-deduce.is-ghost { color: #b3cac5; text-shadow: none; }
   @keyframes aspen-deduce-in {
     from { clip-path: inset(0 100% 0 0); opacity: 0.4; }
     to   { clip-path: inset(0 0 0 0); opacity: 1; }
   }
   /* the marker currently under the gaze */
-  .aspen-flag-marker.is-gazed img { box-shadow: 0 0 0 2px #22d3ee, 0 0 22px rgba(34, 211, 238, 0.85) !important; }
-  .aspen-flag-marker.is-gazed .aspen-ghost { border-color: #22d3ee; }
+  .aspen-flag-marker.is-gazed img { box-shadow: 0 0 0 2px #56e2ca, 0 0 22px rgba(86, 226, 202, 0.85) !important; }
+  .aspen-flag-marker.is-gazed .aspen-ghost { border-color: #56e2ca; }
   @media (prefers-reduced-motion: reduce) {
     .leaflet-tooltip.aspen-deduce { animation: none; }
   }
@@ -150,7 +150,7 @@ const dark = variant === "dark";
     // and alive at the same time.
     //
     // The dark variant is a different job: a console, not an atlas. There the
-    // Dark Gray Canvas is right precisely because it recedes — the cyan
+    // Dark Gray Canvas is right precisely because it recedes — the mint
     // markers are the only colour on the frame.
     const ESRI = "https://services.arcgisonline.com/ArcGIS/rest/services";
     const esriAttr =
@@ -181,7 +181,7 @@ const dark = variant === "dark";
         "position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:900;" +
         "border-radius:6px;padding:6px 10px;font:600 11px Inter,system-ui,sans-serif;" +
         (dark
-          ? "background:#0b1626;border:1px solid #16283f;color:#8193ab"
+          ? "background:#18312c;border:1px solid #284640;color:#88a69f"
           : "background:#fff;border:1px solid #e2e8f0;color:#475569;box-shadow:0 1px 4px rgba(0,0,0,.12)");
       el.textContent = "Basemap unavailable; the locations below are unaffected.";
       map.getContainer().appendChild(el);
@@ -192,15 +192,15 @@ const dark = variant === "dark";
 
     // Palette per variant. Light keeps the original values exactly.
     const P = dark
-      ? { badge: "#22d3ee", badgeText: "#04131f", ring: "#060d18", head: "#e2e8f0", link: "#67e8f9",
-          meta: "#8193ab", rule: "#16283f", accentRule: "#22d3ee", hover: "#0f2136", count: "#8193ab" }
+      ? { badge: "#56e2ca", badgeText: "#041a16", ring: "#102420", head: "#e2eeeb", link: "#92ebda",
+          meta: "#88a69f", rule: "#284640", accentRule: "#56e2ca", hover: "#1f3c36", count: "#88a69f" }
       : { badge: "#3a8a6e", badgeText: "#fff", ring: "#fff", head: "#225641", link: "#225641",
           meta: "#556", rule: "#eef2f0", accentRule: "#3a8a6e", hover: "#f5faf7", count: "#777" };
 
     // A deduction note on a marker. Opens on hover, and on the gaze below.
     const bindNote = (m, g, ghost) => {
       const dir = g.noteDir || "right";
-      const text = `<strong style="color:${ghost ? "#b6c2d3" : "#67e8f9"};font-weight:700">${g.country}</strong> ${g.note}`;
+      const text = `<strong style="color:${ghost ? "#b3cac5" : "#92ebda"};font-weight:700">${g.country}</strong> ${g.note}`;
       const html = dir === "left" ? `${text}<span class="dl dl-r"></span>` : `<span class="dl dl-l"></span>${text}`;
       const off = { right: [14, 0], left: [-14, 0], top: [0, -12], bottom: [0, 12] }[dir];
       m.bindTooltip(html, { direction: dir, offset: off, opacity: 1, className: "aspen-deduce" + (ghost ? " is-ghost" : "") });
@@ -211,7 +211,7 @@ const dark = variant === "dark";
       if (g.ghost) {
         const ring = L.divIcon({
           className: "aspen-flag-marker",
-          html: '<div class="aspen-ghost" style="width:20px;height:20px;border:1.5px dashed #8193ab;border-radius:50%"></div>',
+          html: '<div class="aspen-ghost" style="width:20px;height:20px;border:1.5px dashed #88a69f;border-radius:50%"></div>',
           iconSize: [20, 20],
           iconAnchor: [10, 10],
         });
@@ -224,7 +224,7 @@ const dark = variant === "dark";
       const flagUrl2x = `https://flagcdn.com/w80/${g.code.toLowerCase()}.png`;
       const count = g.items.length;
       const flagStyle = dark
-        ? "width:36px;height:24px;border:2px solid #0b1626;border-radius:3px;box-shadow:0 0 0 1px #22d3ee,0 0 14px rgba(34,211,238,.55);display:block;position:relative"
+        ? "width:36px;height:24px;border:2px solid #18312c;border-radius:3px;box-shadow:0 0 0 1px #56e2ca,0 0 14px rgba(86,226,202,.55);display:block;position:relative"
         : "width:36px;height:24px;border:2px solid #fff;border-radius:3px;box-shadow:0 2px 6px rgba(0,0,0,.35);display:block";
       const icon = L.divIcon({
         className: "aspen-flag-marker",
@@ -253,7 +253,7 @@ const dark = variant === "dark";
       m.bindPopup(
         `<div style="font-family:Inter,system-ui,sans-serif;min-width:240px;max-width:320px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;padding-bottom:6px;border-bottom:2px solid ${P.accentRule}">
-            <img src="${flagUrl}" srcset="${flagUrl2x} 2x" alt="" style="width:24px;height:16px;border:1px solid ${dark ? "#16283f" : "#ddd"};border-radius:2px" />
+            <img src="${flagUrl}" srcset="${flagUrl2x} 2x" alt="" style="width:24px;height:16px;border:1px solid ${dark ? "#284640" : "#ddd"};border-radius:2px" />
             <strong style="color:${P.head};font-size:15px">${g.country}</strong>
             <span style="font-size:11px;color:${P.count};margin-left:auto">${count} ${count === 1 ? "database" : "databases"}</span>
           </div>
