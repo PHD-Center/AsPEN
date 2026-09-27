@@ -47,45 +47,40 @@ const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
   const init = () => {
     const map = L.map(mapId, { scrollWheelZoom: false }).setView(initialCenter, initialZoom);
 
-    // Basemap: Esri "World Ocean Base" for the ground, with the Light Gray
-    // Canvas reference layer on top for labels. No API key, and the labels
-    // are romanised worldwide, which this map needs opening centred on East
-    // Asia.
+    // Basemap: Esri "World Street Map", at full strength. No API key, labels
+    // romanised worldwide, and it carries its own labels so this is a single
+    // layer.
     //
-    // The route here was not short. CARTO Voyager went behind an API key in
-    // Sept 2026 — and an unkeyed request there does not fail, it answers
-    // HTTP 200 with one "API KEY REQUIRED" watermark tile, identical for
-    // every coordinate, so nothing client-side could detect it and the map
-    // sat watermarked for days. Light Gray Canvas replaced it and was too
-    // drab: it is built to disappear under data overlays, so land and sea
-    // come out the same grey. World Street Map replaced that and was too
-    // loud — a road atlas under a dozen flag pins. Turning Street Map's
-    // saturation down fixed the noise but not the clutter: the roads and
-    // dense labels stayed, so it read flat and busy at once.
+    // Four basemaps were tried before settling here, so please read this
+    // before swapping it again:
     //
-    // Ocean Base is the shape that actually fits this map. Most of the frame
-    // is sea, so the sea carries the colour; the land is a plain cream with
-    // no road network to compete with the markers. The gentle lift below
-    // keeps the deep-ocean blues from going heavy.
+    //   CARTO Voyager      went behind an API key in Sept 2026. An unkeyed
+    //                      request does not fail — it answers HTTP 200 with
+    //                      one "API KEY REQUIRED" watermark tile, identical
+    //                      for every coordinate. Nothing client-side can
+    //                      detect that, and the map sat watermarked for days.
+    //   Light Gray Canvas  too drab. It is built to disappear under data
+    //                      overlays, so land and sea come out the same grey.
+    //   Street Map, muted  a saturate() filter killed the colour but left the
+    //                      roads and dense labels, so it read flat and busy
+    //                      at once. The density was the problem, not the
+    //                      strength.
+    //   Ocean Base         clean on land, but the deep-ocean bathymetry east
+    //                      of Japan is heavily textured and turned that half
+    //                      of the frame murky.
+    //
+    // Full-strength Street Map is busier than Voyager was, and that is the
+    // accepted trade: it is the only keyless option here that stays legible
+    // and alive at the same time.
     const ESRI = "https://services.arcgisonline.com/ArcGIS/rest/services";
     const esriAttr =
-      '&copy; <a href="https://www.esri.com/">Esri</a>, GEBCO, NOAA, Garmin, HERE, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+      '&copy; <a href="https://www.esri.com/">Esri</a>, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
     // Esri addresses tiles as /{z}/{y}/{x} — y before x, unlike the usual XYZ.
-    const baseLayer = L.tileLayer(ESRI + "/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}", {
+    const baseLayer = L.tileLayer(ESRI + "/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
       attribution: esriAttr,
       maxZoom: 10,
-      zIndex: 1,
     }).addTo(map);
-
-    L.tileLayer(ESRI + "/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}", {
-      maxZoom: 10,
-      zIndex: 2,
-    }).addTo(map);
-
-    // Applied to the tile pane only; markers and popups sit in their own
-    // panes, so the flags keep full colour against the lifted ground.
-    map.getPane("tilePane").style.filter = "saturate(0.8) brightness(1.12)";
 
     // If the basemap host stops answering, say so in the corner rather than
     // leaving a blank rectangle that reads as a broken page. The flag markers
