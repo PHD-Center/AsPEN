@@ -40,6 +40,12 @@ export interface Theme {
   coverVisual?: "network" | "wave" | "rings" | "dots" | "bars" | "target" | "cluster";
   /** Tags from publications.json that map into this theme. */
   tags: string[];
+  /**
+   * Focus-area pages this theme opens, shown as teaser cards above its
+   * paper list. They visualise work in or near the theme; they do not
+   * change which theme any paper is filed under.
+   */
+  focusAreas?: ("neurogen" | "vaccine")[];
 }
 
 export const THEMES: Theme[] = [
@@ -50,6 +56,7 @@ export const THEMES: Theme[] = [
     headline: "15 databases · 4 continents",
     story: "The methodological scaffolding every AsPEN study sits on; PSSA, SCCS, target-trial emulation, common data models, and the NeuroGEN platform that now spans 15 databases on four continents.",
     coverVisual: "network",
+    focusAreas: ["neurogen", "vaccine"],
     tags: ["sequence symmetry", "PSSA", "sccs", "target trial emulation", "CDM", "NeuroGEN", "infrastructure", "databases", "data sources", "distributed network", "methodology", "drug safety", "overview", "review", "accessibility"],
   },
   {

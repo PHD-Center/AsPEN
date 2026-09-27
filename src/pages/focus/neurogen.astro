@@ -1,0 +1,461 @@
+---
+// Focus area: NeuroGEN, worked out on a chalkboard — Good Will Hunting style.
+//
+// The film's hallway problem is graph theory: nodes and edges. NeuroGEN's
+// fifteen databases are exactly that, so the network is drawn as a graph —
+// a hub, nine regions, fifteen leaves — and the headline numbers are written
+// underneath like a proof. Then, as in the film, the page leaves the board
+// for the room where it matters: what this means for patients.
+//
+// Data: the graph is built from databases.json records flagged `neurogen`
+// (confirmed by the chair against PMID 38146486, Figure 1). The 7 + 6 + 2
+// split is derived from each record's `type` and matches the paper's own
+// breakdown. The 320 million is the paper's figure, not a sum of popM: the
+// site's per-database counts overlap and are not the paper's denominators.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import databasesRaw from "../../data/databases.json";
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+type Db = (typeof databasesRaw)[number] & { neurogen?: boolean; mapAs?: string };
+const dbs = (databasesRaw as Db[]).filter((d) => d.neurogen);
+
+// Same short-name rule as the /databases/ compare drawer: a trailing
+// acronym in parentheses if there is one, otherwise the first word.
+const shortName = (name: string) => {
+  const m = name.match(/\(([^)]+)\)$/);
+  // Mixed case allowed so "FinReg" survives; no spaces, so "20% sample" does not.
+  if (m && /^[A-Z][A-Za-z0-9–\-]{1,14}$/.test(m[1].trim())) return m[1].trim();
+  return name.replace(/\s*\([^)]*\)\s*/g, " ").trim().split(/\s+/)[0];
+};
+
+const kindOf = (type: string) =>
+  /Biobank/.test(type) ? "biobank" : /^(National )?Claims/.test(type) ? "claims" : "EHR";
+
+const CONTINENT: Record<string, string> = {
+  Taiwan: "Asia", "South Korea": "Asia", "Hong Kong": "Asia",
+  "United Kingdom": "Europe", Scotland: "Europe", Netherlands: "Europe", Finland: "Europe",
+  Australia: "Oceania", "United States": "North America",
+};
+
+const regionOf = (d: Db) => d.mapAs ?? d.country;
+const counts = {
+  total: dbs.length,
+  claims: dbs.filter((d) => kindOf(d.type) === "claims").length,
+  ehr: dbs.filter((d) => kindOf(d.type) === "EHR").length,
+  biobank: dbs.filter((d) => kindOf(d.type) === "biobank").length,
+  regions: new Set(dbs.map(regionOf)).size,
+  continents: new Set(dbs.map((d) => CONTINENT[regionOf(d)])).size,
+};
+
+// ── Graph layout ────────────────────────────────────────────────
+// Regions sit roughly where they are on an Atlantic-centred map: the
+// Americas left, Europe along the top, Asia right, Oceania bottom-right.
+// `a` is the direction, in degrees, that a region's databases fan out to.
+const HUB = { x: 500, y: 330 };
+// Optional per-region `r` (leaf distance) and `s` (degrees between siblings)
+// loosen the crowded European cluster.
+const LAYOUT: Record<string, { x: number; y: number; a: number; label?: string; r?: number; s?: number }> = {
+  "United States":  { x: 160, y: 350, a: 180, label: "USA" },
+  Scotland:         { x: 225, y: 205, a: -150 },
+  "United Kingdom": { x: 375, y: 195, a: -112, label: "UK", r: 94, s: 35 },
+  Netherlands:      { x: 505, y: 150, a: -90 },
+  Finland:          { x: 630, y: 140, a: -62 },
+  "South Korea":    { x: 820, y: 215, a: -28, label: "Korea" },
+  Taiwan:           { x: 830, y: 355, a: 8 },
+  "Hong Kong":      { x: 680, y: 480, a: 80 },
+  Australia:        { x: 840, y: 520, a: 38 },
+};
+const LEAF_R = 82;
+const SPREAD = 30; // degrees between sibling leaves
+
+const rad = (deg: number) => (deg * Math.PI) / 180;
+const regions = Object.entries(LAYOUT)
+  .map(([name, p], i) => {
+    const members = dbs.filter((d) => regionOf(d) === name);
+    const leaves = members.map((d, j) => {
+      const ang = p.a + (j - (members.length - 1) / 2) * (p.s ?? SPREAD);
+      const x = p.x + (p.r ?? LEAF_R) * Math.cos(rad(ang));
+      const y = p.y + (p.r ?? LEAF_R) * Math.sin(rad(ang));
+      const c = Math.cos(rad(ang));
+      const anchor = c < -0.3 ? "end" : c > 0.3 ? "start" : "middle";
+      const lx = anchor === "end" ? x - 9 : anchor === "start" ? x + 9 : x;
+      const ly = anchor === "middle" ? y + (Math.sin(rad(ang)) < 0 ? -11 : 24) : y + 7;
+      return { name: shortName(d.name), full: d.name, x, y, lx, ly, anchor };
+    });
+    return { name, label: p.label ?? name, ...p, leaves, i };
+  })
+  .filter((r) => r.leaves.length > 0);
+
+// ── The case (Sherlock) ─────────────────────────────────────────
+// Gestational diabetes and ADHD, from the abstract of PMID 38589601.
+// Population estimate first (the evidence against), then the sibling
+// comparison (the alibi). Hazard ratios sit on a log axis, as ratios should.
+const CASE = [
+  { label: "Everyone", sub: "exposed vs unexposed", hr: 1.1, lo: 1.04, hi: 1.17, alibi: false },
+  { label: "Siblings", sub: "one exposed, one not", hr: 1.05, lo: 0.94, hi: 1.17, alibi: true },
+];
+const AX = { min: 0.9, max: 1.25 };
+const xOf = (v: number) => ((Math.log(v) - Math.log(AX.min)) / (Math.log(AX.max) - Math.log(AX.min))) * 100;
+const TICKS = [0.9, 1.0, 1.1, 1.2];
+const fmt = (v: number) => v.toFixed(2);
+
+// Stagger for the draw-on: hub, then each spoke, then its leaves.
+const d0 = 0.15;
+const spokeDelay = (i: number) => d0 + 0.35 + i * 0.16;
+const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
+---
+
+<BaseLayout
+  title="NeuroGEN · Focus area · AsPEN"
+  description="NeuroGEN, the Neurological and Mental Health Global Epidemiology Network: fifteen databases across nine regions and four continents, and what they have shown."
+>
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap" rel="stylesheet" />
+  </Fragment>
+
+  <!-- ═══ THE BOARD ══════════════════════════════════════════════════ -->
+  <section class="bg-[#2a211a] py-8 md:py-12">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <nav aria-label="Breadcrumb" class="text-xs text-[#c9b9a6] mb-4">
+        <a href={`${base}/publications/`} class="hover:text-white">Publications</a>
+        <span aria-hidden="true"> → </span>
+        <a href={`${base}/publications/themes/`} class="hover:text-white">Themes</a>
+        <span aria-hidden="true"> → </span>
+        <a href={`${base}/publications/themes/methods-infrastructure/`} class="hover:text-white">Infrastructure</a>
+        <span aria-hidden="true"> → </span>
+        <span class="text-white">NeuroGEN</span>
+      </nav>
+
+      <!-- the chalkboard, in its wooden frame -->
+      <div class="board-frame rounded-md">
+        <div id="board" class="board relative rounded-sm overflow-hidden">
+          <div class="relative px-5 sm:px-8 lg:px-10 pt-7 pb-4">
+            <h1 class="chalk-hand text-[#f1f0e8] text-5xl md:text-6xl leading-none">NeuroGEN</h1>
+            <svg class="chalk-stroke block mt-1" width="260" height="14" viewBox="0 0 260 14" aria-hidden="true">
+              <path class="draw" pathLength="1" d="M3 9 C 60 3, 140 12, 256 5" stroke="#f4e285" stroke-width="2.4" fill="none" stroke-linecap="round" style="--d:0s" />
+            </svg>
+            <p class="chalk-hand text-[#d9d6c8] text-2xl md:text-[28px] mt-2 leading-tight">
+              Neurological &amp; Mental Health Global Epidemiology Network
+            </p>
+          </div>
+
+          <div class="relative grid lg:grid-cols-[minmax(0,1fr)_300px] gap-2 px-2 sm:px-4 pb-6">
+            <!-- the graph -->
+            <div class="overflow-x-auto">
+              <svg
+                viewBox="0 0 1000 640"
+                class="w-full min-w-[640px] h-auto"
+                role="img"
+                aria-label={`NeuroGEN drawn as a graph: one hub, ${counts.regions} regions, ${counts.total} databases. The full list is in the table below the board.`}
+              >
+                <defs>
+                  <!-- chalk: a slight hand wobble, then grain knocked out of the stroke -->
+                  <filter id="chalk" x="-10%" y="-10%" width="120%" height="120%">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4" result="n" />
+                    <feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G" result="w" />
+                    <feTurbulence type="fractalNoise" baseFrequency="2.1" numOctaves="1" seed="9" result="g" />
+                    <feColorMatrix in="g" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  -2.2 0 0 0 1.75" result="m" />
+                    <feComposite in="w" in2="m" operator="in" />
+                  </filter>
+                </defs>
+
+                <g filter="url(#chalk)" fill="none" stroke-linecap="round">
+                  <!-- spokes and leaf edges -->
+                  {regions.map((r) => (
+                    <g>
+                      <line class="draw" pathLength="1" x1={HUB.x} y1={HUB.y} x2={r.x} y2={r.y}
+                        stroke="#f1f0e8" stroke-width="2.2" stroke-opacity="0.85" style={`--d:${spokeDelay(r.i).toFixed(2)}s`} />
+                      {r.leaves.map((l, j) => (
+                        <line class="draw" pathLength="1" x1={r.x} y1={r.y} x2={l.x} y2={l.y}
+                          stroke="#f1f0e8" stroke-width="1.4" stroke-opacity="0.7" style={`--d:${leafDelay(r.i, j).toFixed(2)}s`} />
+                      ))}
+                    </g>
+                  ))}
+
+                  <!-- hub -->
+                  <circle class="draw" pathLength="1" cx={HUB.x} cy={HUB.y} r="46" stroke="#f4e285" stroke-width="2.6" style={`--d:${d0}s`} />
+
+                  <!-- region nodes -->
+                  {regions.map((r) => (
+                    <circle class="draw" pathLength="1" cx={r.x} cy={r.y} r="8" stroke="#f1f0e8" stroke-width="2" fill="#223128"
+                      style={`--d:${(spokeDelay(r.i) + 0.3).toFixed(2)}s`} />
+                  ))}
+                </g>
+
+                <!-- leaf dots (filled chalk) -->
+                <g filter="url(#chalk)">
+                  {regions.flatMap((r) => r.leaves.map((l, j) => (
+                    <circle class="pop" cx={l.x} cy={l.y} r="4.2" fill="#f1f0e8" style={`--d:${(leafDelay(r.i, j) + 0.35).toFixed(2)}s`} />
+                  )))}
+                </g>
+
+                <!-- labels -->
+                <g class="chalk-hand">
+                  <text class="pop" x={HUB.x} y={HUB.y + 9} text-anchor="middle" fill="#f4e285" font-size="30" style={`--d:${d0 + 0.3}s`}>NeuroGEN</text>
+                  {regions.map((r) => {
+                    const up = r.y < HUB.y;
+                    return (
+                      <text class="pop" x={r.x} y={up ? r.y + 36 : r.y - 18} text-anchor="middle" fill="#f1f0e8" font-size="25"
+                        font-weight="700" style={`--d:${(spokeDelay(r.i) + 0.35).toFixed(2)}s`}>{r.label}</text>
+                    );
+                  })}
+                  {regions.flatMap((r) => r.leaves.map((l, j) => (
+                    <text class="pop" x={l.lx} y={l.ly} text-anchor={l.anchor} fill="#e7e4d6" font-size="21"
+                      style={`--d:${(leafDelay(r.i, j) + 0.45).toFixed(2)}s`}><title>{l.full}</title>{l.name}</text>
+                  )))}
+                </g>
+
+                <text class="chalk-hand pop" x="24" y="622" fill="#9fb0a4" font-size="20" style="--d:3.4s">fig. 1 — the network, as a graph</text>
+              </svg>
+            </div>
+
+            <!-- the working -->
+            <div class="chalk-hand text-[#f1f0e8] self-center px-4 lg:px-0 pb-4 lg:pb-0">
+              <p class="pop text-[26px] text-[#9fb0a4]" style="--d:3.0s">so…</p>
+              <p class="pop text-[34px] leading-snug mt-1" style="--d:3.2s">
+                {counts.total} = {counts.claims} claims<br />
+                <span class="pl-8 inline-block">+ {counts.ehr} EHR</span><br />
+                <span class="pl-8 inline-block">+ {counts.biobank} biobank</span>
+              </p>
+              <div class="pop relative inline-block mt-4" style="--d:3.6s">
+                <p class="text-[36px] leading-none text-[#f4e285] px-3 py-2">≈ 320 million people</p>
+                <!-- boxed, the way you box an answer -->
+                <svg class="absolute inset-0 w-full h-full overflow-visible" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+                  <path class="draw" pathLength="1" d="M2 3 L98 2 L97 38 L3 37 Z" stroke="#f4e285" stroke-width="1.4" fill="none" vector-effect="non-scaling-stroke" filter="url(#chalk)" style="--d:3.8s" />
+                </svg>
+              </div>
+              <p class="pop text-[30px] mt-4" style="--d:4.0s">{counts.regions} regions · {counts.continents} continents</p>
+            </div>
+          </div>
+
+          <!-- chalk tray -->
+          <div class="tray" aria-hidden="true">
+            <span class="stick" style="left:14%"></span>
+            <span class="stick stick-y" style="left:18%"></span>
+            <span class="eraser" style="right:12%"></span>
+          </div>
+        </div>
+      </div>
+
+      <details class="mt-5 group text-[#e8dccd]">
+        <summary class="cursor-pointer select-none text-sm font-semibold hover:text-white">View the {counts.total} databases as a table</summary>
+        <div class="mt-3 overflow-x-auto rounded-md bg-white text-slate-800">
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+              <tr><th class="px-4 py-2">Region</th><th class="px-4 py-2">Database</th><th class="px-4 py-2">Type</th></tr>
+            </thead>
+            <tbody>
+              {regions.flatMap((r) => dbs.filter((d) => regionOf(d) === r.name).map((d) => (
+                <tr class="border-t border-slate-100">
+                  <td class="px-4 py-2 text-slate-600">{r.name}</td>
+                  <td class="px-4 py-2">{d.name}</td>
+                  <td class="px-4 py-2 text-slate-600">{kindOf(d.type)}</td>
+                </tr>
+              )))}
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <p class="mt-3 text-xs text-[#a8988a]">
+        Source: Tsai DHT et al. Cross-Regional Data Initiative for the Assessment and Development of Treatment for Neurological and Mental Disorders.
+        <em>Clin Epidemiol</em> 2023.
+        <a href="https://pubmed.ncbi.nlm.nih.gov/38146486/" target="_blank" rel="noopener" class="underline hover:text-white">PMID 38146486</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══ OFF THE BOARD — WHY IT MATTERS ═════════════════════════════ -->
+  <section class="bg-[#faf7f0]">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16">
+      <p class="uppercase tracking-widest text-xs text-brand-600 font-semibold">Off the board</p>
+      <h2 class="mt-2 text-3xl md:text-4xl font-bold text-slate-900 leading-tight">
+        The proof is the easy part. What it means for patients is the point.
+      </h2>
+
+      <ol class="mt-10 space-y-8">
+        <li class="grid grid-cols-[auto_1fr] gap-5">
+          <span class="chalk-hand text-4xl text-brand-600 leading-none">1</span>
+          <div>
+            <h3 class="text-lg font-semibold text-slate-900">The burden is enormous</h3>
+            <p class="mt-1 text-slate-700 leading-relaxed">
+              Dementia and stroke are leading causes of disability, and mental health disorders account for up to a third of all years lived with disability.
+            </p>
+            <p class="mt-1 text-xs text-slate-500">PMID <a class="hover:underline" href="https://pubmed.ncbi.nlm.nih.gov/32572794/" target="_blank" rel="noopener">32572794</a></p>
+          </div>
+        </li>
+        <li class="grid grid-cols-[auto_1fr] gap-5">
+          <span class="chalk-hand text-4xl text-brand-600 leading-none">2</span>
+          <div>
+            <h3 class="text-lg font-semibold text-slate-900">Trials leave the hardest questions open</h3>
+            <p class="mt-1 text-slate-700 leading-relaxed">
+              Randomised trials often do not give enough information on a medicine's benefits and risks for vulnerable groups. Pooling databases across countries gives the power to study rare outcomes and small groups, earlier safety answers after a medicine is approved, and results that hold beyond one health system.
+            </p>
+            <p class="mt-1 text-xs text-slate-500">PMID <a class="hover:underline" href="https://pubmed.ncbi.nlm.nih.gov/32572794/" target="_blank" rel="noopener">32572794</a></p>
+          </div>
+        </li>
+        <li class="grid grid-cols-[auto_1fr] gap-5">
+          <span class="chalk-hand text-4xl text-brand-600 leading-none">3</span>
+          <div>
+            <h3 class="text-lg font-semibold text-slate-900">Sometimes the answer overturns the question</h3>
+            <p class="mt-1 text-slate-700 leading-relaxed">
+              One NeuroGEN study went looking for a culprit and ended up clearing it. The case file is below.
+            </p>
+          </div>
+        </li>
+      </ol>
+
+      <!-- ═══ THE CASE — Sherlock's evidence board ═══════════════════ -->
+      <section class="mt-14" aria-labelledby="case-title">
+        <p class="text-[11px] font-bold tracking-[0.25em] text-[#b3261e]">CASE FILE · PMID 38589601</p>
+        <h3 id="case-title" class="mt-2 text-2xl md:text-3xl font-bold text-slate-900">The case of the missing cause</h3>
+        <p class="mt-2 max-w-2xl text-slate-700 leading-relaxed">
+          Children born to mothers with diabetes in pregnancy are diagnosed with ADHD more often. Is the diabetes to blame?
+        </p>
+
+        <!-- the board: four pinned cards, joined by red string -->
+        <div class="cork relative mt-6 rounded-lg p-5 sm:p-7">
+          <svg class="hidden md:block absolute left-7 right-7 top-7 h-8 w-[calc(100%-3.5rem)] pointer-events-none" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M12.5 6 Q25 20 37.5 6 Q50 20 62.5 6 Q75 20 87.5 6" stroke="#b3261e" stroke-width="1.6" fill="none" vector-effect="non-scaling-stroke" />
+          </svg>
+          <ol class="relative grid gap-5 md:grid-cols-4">
+            {[
+              { tag: "SUSPECT", body: "Gestational diabetes", note: "diabetes that starts in pregnancy", tilt: "-rotate-1" },
+              { tag: "EVIDENCE", body: "HR 1.10", note: "3.6 million mother–child pairs, seven regions. Exposed children: more ADHD.", tilt: "rotate-1" },
+              { tag: "ALIBI", body: "HR 1.05", note: "Siblings — one exposed, one not — had similar risk. The interval crosses 1.", tilt: "-rotate-[0.6deg]" },
+              { tag: "VERDICT", body: "Unlikely to be causal", note: "Shared family factors, not the diabetes, are the likelier explanation.", tilt: "rotate-[0.8deg]", verdict: true },
+            ].map((c) => (
+              <li class:list={["relative rounded-sm bg-[#fbf8f1] px-4 pt-6 pb-4 shadow-[0_6px_14px_rgba(60,40,20,0.25)]", c.tilt, c.verdict && "ring-2 ring-[#b3261e]"]}>
+                <span class="absolute left-1/2 -translate-x-1/2 -top-1.5 w-3.5 h-3.5 rounded-full bg-[#c0392b] shadow-[0_2px_3px_rgba(0,0,0,0.35),inset_-2px_-2px_0_rgba(0,0,0,0.2)]" aria-hidden="true"></span>
+                <p class="text-[10px] font-bold tracking-[0.22em] text-[#b3261e]">{c.tag}</p>
+                <p class:list={["mt-1 font-bold text-slate-900 leading-tight", c.verdict ? "text-lg" : "text-xl"]}>{c.body}</p>
+                <p class="chalk-hand mt-2 text-xl leading-snug text-slate-700">{c.note}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <!-- the alibi, in numbers: two estimates against the line of no effect -->
+        <div class="mt-8 rounded-lg border border-slate-200 bg-white p-5 sm:p-6" role="figure" aria-labelledby="alibi-title">
+          <p id="alibi-title" class="text-sm font-semibold text-slate-900">The alibi, in numbers</p>
+          <p class="mt-1 text-xs text-slate-500">Hazard ratio for ADHD after gestational diabetes, with 95% confidence interval. Log scale.</p>
+
+          <div class="mt-5 space-y-5">
+            {CASE.map((r) => (
+              <div class="grid grid-cols-[120px_minmax(0,1fr)] sm:grid-cols-[170px_minmax(0,1fr)] items-center gap-3">
+                <div>
+                  <p class:list={["text-sm leading-tight", r.alibi ? "font-bold text-slate-900" : "text-slate-700"]}>{r.label}</p>
+                  <p class="text-[11px] text-slate-500">{r.sub}</p>
+                </div>
+                <div class="relative h-10" title={`HR ${fmt(r.hr)} (95% CI ${fmt(r.lo)}–${fmt(r.hi)})`}>
+                  <span class="absolute top-0 bottom-0 w-px bg-slate-300" style={`left:${xOf(1).toFixed(2)}%`} aria-hidden="true"></span>
+                  <span class="absolute top-1/2 -translate-y-1/2 h-[2px] bg-slate-800" style={`left:${xOf(r.lo).toFixed(2)}%;width:${(xOf(r.hi) - xOf(r.lo)).toFixed(2)}%`}></span>
+                  <span class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-slate-900 ring-2 ring-white" style={`left:${xOf(r.hr).toFixed(2)}%`}></span>
+                  <span class="absolute -top-0.5 text-[11px] text-slate-700 whitespace-nowrap -translate-x-1/2" style={`left:${xOf(r.hr).toFixed(2)}%`}>{fmt(r.hr)} ({fmt(r.lo)}–{fmt(r.hi)})</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div class="mt-2 grid grid-cols-[120px_minmax(0,1fr)] sm:grid-cols-[170px_minmax(0,1fr)] gap-3">
+            <span></span>
+            <div class="relative h-8 border-t border-slate-200">
+              {TICKS.map((t) => (
+                <span class="absolute top-1 -translate-x-1/2 text-[11px] text-slate-500 tabular-nums" style={`left:${xOf(t).toFixed(2)}%`}>{t.toFixed(1)}</span>
+              ))}
+              <span class="absolute top-4 -translate-x-1/2 text-[10px] text-slate-500 whitespace-nowrap" style={`left:${xOf(1).toFixed(2)}%`}>no effect</span>
+            </div>
+          </div>
+
+          <p class="mt-3 text-sm text-slate-700 leading-relaxed">
+            Across everyone, the interval sits clear of 1. Compare siblings raised in the same family and it reaches below 1: once the family is held constant, the link no longer holds.
+          </p>
+          <p class="mt-2 text-xs text-slate-500">
+            Source: Chan AYL et al. <em>Nature Medicine</em> 2024,
+            <a class="hover:underline" href="https://pubmed.ncbi.nlm.nih.gov/38589601/" target="_blank" rel="noopener">PMID 38589601</a>.
+            Children of mothers with diabetes that began before pregnancy still showed a raised risk; this verdict is about gestational diabetes only.
+          </p>
+        </div>
+      </section>
+
+      <blockquote class="mt-14 border-l-4 border-[#f4e285] pl-6">
+        <p class="chalk-hand text-3xl md:text-4xl text-slate-800 leading-snug">
+          Sometimes the most useful thing the data can tell a mother is what was never her fault.
+        </p>
+      </blockquote>
+
+      <div class="mt-14 pt-6 border-t border-slate-200 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
+        <a href="https://neurogen.hku.hk/" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-brand-700 font-semibold hover:underline">
+          <img src={`${base}/images/websites/neurogen.png`} alt="NeuroGEN" class="h-5 w-auto" />
+          neurogen.hku.hk ↗
+        </a>
+        <a href={`${base}/databases/`} class="text-brand-700 font-semibold hover:underline">All AsPEN databases →</a>
+        <a href={`${base}/publications/themes/methods-infrastructure/`} class="text-slate-600 hover:text-brand-700 hover:underline">← Back to Infrastructure</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hide the chalk only once JS is known to be running, so a no-JS or
+       reduced-motion visitor always sees the finished board. -->
+  <script is:inline>
+    (() => {
+      const board = document.getElementById("board");
+      if (!board) return;
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      board.classList.add("js-draw");
+      const go = () => board.classList.add("drawn");
+      if (!("IntersectionObserver" in window)) return go();
+      const io = new IntersectionObserver((es) => {
+        if (es.some((e) => e.isIntersecting)) { go(); io.disconnect(); }
+      }, { threshold: 0.25 });
+      io.observe(board);
+    })();
+  </script>
+
+  <style>
+    .chalk-hand { font-family: "Caveat", "Segoe Print", "Bradley Hand", cursive; }
+
+    .board-frame {
+      padding: 12px 12px 0;
+      background: linear-gradient(180deg, #6b4a2f, #4a3220);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.35), 0 18px 40px rgba(0,0,0,.35);
+    }
+    .board {
+      background-color: #223128;
+      background-image:
+        radial-gradient(ellipse at 22% 30%, rgba(241,240,232,.05), transparent 55%),
+        radial-gradient(ellipse at 78% 70%, rgba(241,240,232,.04), transparent 50%),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+      box-shadow: inset 0 0 60px rgba(0,0,0,.45);
+    }
+    .tray {
+      position: relative; height: 16px; margin: 0 -12px;
+      background: linear-gradient(180deg, #5a3e27, #3d2a1b);
+      box-shadow: 0 -2px 0 rgba(0,0,0,.25) inset;
+    }
+    .tray .stick { position: absolute; top: 3px; width: 34px; height: 7px; border-radius: 3px; background: #efece2; }
+    .tray .stick-y { background: #f4e285; width: 24px; }
+    /* the evidence board: cork, framed */
+    .cork {
+      background-color: #cdb28a;
+      background-image:
+        radial-gradient(rgba(90, 60, 30, 0.2) 1px, transparent 1.3px),
+        radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1.3px);
+      background-size: 7px 7px, 11px 11px;
+      background-position: 0 0, 3px 4px;
+      box-shadow: inset 0 0 0 6px #8a6a44, inset 0 0 34px rgba(60, 40, 20, 0.35);
+    }
+
+    .tray .eraser { position: absolute; top: 1px; width: 56px; height: 11px; border-radius: 2px; background: linear-gradient(180deg, #8c7a64 0 45%, #3b3b3b 45%); }
+
+    /* draw-on: only when JS has opted in, never for reduced motion */
+    .js-draw .draw { stroke-dasharray: 1; stroke-dashoffset: 1; }
+    .js-draw .pop  { opacity: 0; }
+    .js-draw.drawn .draw { animation: chalk-draw .8s ease forwards; animation-delay: var(--d, 0s); }
+    .js-draw.drawn .pop  { animation: chalk-pop .5s ease forwards; animation-delay: var(--d, 0s); }
+    @keyframes chalk-draw { to { stroke-dashoffset: 0; } }
+    @keyframes chalk-pop  { to { opacity: 1; } }
+  </style>
+</BaseLayout>

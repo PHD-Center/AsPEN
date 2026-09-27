@@ -2,6 +2,7 @@
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PageHeader from "../../../components/PageHeader.astro";
 import PublicationCard from "../../../components/PublicationCard.astro";
+import FocusCards from "../../../components/FocusCards.astro";
 import pubsRaw from "../../../data/publications.json";
 import { THEMES, type Theme } from "../../../data/themes";
 
@@ -20,12 +21,20 @@ const matched: Pub[] = (pubsRaw as Pub[])
 
 const yearMin = matched.length ? Math.min(...matched.map((p) => p.year)) : 0;
 const yearMax = matched.length ? Math.max(...matched.map((p) => p.year)) : 0;
+const focusAreas = theme.focusAreas ?? [];
 ---
 
 <BaseLayout
   title={`${theme.name}; Publications; AsPEN`}
   description={`AsPEN publications in the ${theme.name} theme.`}
 >
+  {focusAreas.length > 0 && (
+    <Fragment slot="head">
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+    </Fragment>
+  )}
   <PageHeader
     eyebrow={`Publications → Themes → ${theme.number}`}
     title={theme.name}
@@ -40,6 +49,12 @@ const yearMax = matched.length ? Math.max(...matched.map((p) => p.year)) : 0;
       </div>
       <p class="text-slate-500 tabular-nums">{matched.length} {matched.length === 1 ? "paper" : "papers"} · {yearMin === yearMax ? yearMin : `${yearMin}–${yearMax}`}</p>
     </div>
+
+    {focusAreas.length > 0 && <FocusCards areas={focusAreas} />}
+
+    {focusAreas.length > 0 && matched.length > 0 && (
+      <h2 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-3">Papers in this theme</h2>
+    )}
 
     {matched.length === 0 ? (
       <p class="text-sm italic text-slate-500">No publications matched this theme yet.</p>

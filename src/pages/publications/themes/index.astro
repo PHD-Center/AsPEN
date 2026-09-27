@@ -85,6 +85,19 @@ const orphanPubs = pubs.filter((p) => !themeIds.has((p as { theme?: string }).th
           <!-- Editorial story -->
           <p class="text-sm text-slate-700 leading-relaxed">{t.story}</p>
 
+          <!-- Focus areas this theme opens, if any -->
+          {t.focusAreas && t.focusAreas.length > 0 && (
+            <p class="mt-3 text-xs text-slate-600">
+              <span class="font-semibold text-brand-700">Focus areas:</span>
+              {t.focusAreas.map((f, i) => (
+                <>
+                  {i > 0 && <span class="text-slate-400"> · </span>}
+                  <a href={`${base}/focus/${f}/`} class="text-brand-700 hover:underline">{f === "neurogen" ? "NeuroGEN" : "Vaccine safety"}</a>
+                </>
+              ))}
+            </p>
+          )}
+
           <!-- Highlight paper -->
           {t.highlight && (
             <div class="mt-3 pt-3 border-t border-slate-100">
