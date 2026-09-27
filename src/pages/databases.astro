@@ -90,6 +90,7 @@ for (const [country, items] of Object.entries(otherMapEntries)) {
 
 const typeColor: Record<string, string> = {
   Claims: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  "National Claims": "bg-teal-100 text-teal-800 border-teal-300",
   "National EHR": "bg-sky-50 text-sky-700 border-sky-200",
   "Public-sector EHR": "bg-cyan-50 text-cyan-700 border-cyan-200",
   "Multi-institutional EHR": "bg-indigo-50 text-indigo-700 border-indigo-200",
@@ -435,6 +436,7 @@ const otherSites = [
         // Type → bar colour class (matches the chip palette used on the cards)
         const TYPE_COLOR = {
           "Claims":                   "bg-emerald-500",
+          "National Claims":          "bg-teal-600",
           "National EHR":             "bg-sky-500",
           "Public-sector EHR":        "bg-cyan-500",
           "Multi-institutional EHR":  "bg-indigo-500",
@@ -443,6 +445,7 @@ const otherSites = [
         };
         const TYPE_TEXT = {
           "Claims":                   "text-emerald-700 bg-emerald-50 border-emerald-200",
+          "National Claims":          "text-teal-800 bg-teal-100 border-teal-300",
           "National EHR":             "text-sky-700 bg-sky-50 border-sky-200",
           "Public-sector EHR":        "text-cyan-700 bg-cyan-50 border-cyan-200",
           "Multi-institutional EHR":  "text-indigo-700 bg-indigo-50 border-indigo-200",
