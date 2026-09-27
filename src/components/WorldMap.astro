@@ -47,10 +47,10 @@ const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
   const init = () => {
     const map = L.map(mapId, { scrollWheelZoom: false }).setView(initialCenter, initialZoom);
 
-    // Basemap: Esri "World Light Gray Canvas", drawn as two layers — a pale
-    // landmass base with the place labels painted over it. No API key, and
-    // the labels are romanised worldwide, which is what this map needs when
-    // it opens centred on East Asia.
+    // Basemap: Esri "World Street Map" — soft blue water over warm land, with
+    // its own labels baked in, so this is a single layer. No API key, and the
+    // labels are romanised worldwide, which is what this map needs when it
+    // opens centred on East Asia.
     //
     // This replaced CARTO Voyager in Sept 2026, when CARTO moved their
     // basemaps behind an API key. An unkeyed request there does not fail: it
@@ -59,20 +59,19 @@ const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
     // apart from real imagery, so the map sat blank for days before anyone
     // noticed. The notice below cannot catch that particular trick either,
     // but it does catch the ordinary ways a tile host stops answering.
-    const ESRI = "https://services.arcgisonline.com/ArcGIS/rest/services/Canvas";
+    //
+    // Esri's "World Light Gray Canvas" was tried first and rejected: it is
+    // built to sit quietly under data overlays, so it renders land and sea
+    // in the same flat grey and the map looked drained next to what CARTO
+    // had given us.
+    const ESRI = "https://services.arcgisonline.com/ArcGIS/rest/services";
     const esriAttr =
       '&copy; <a href="https://www.esri.com/">Esri</a>, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
     // Esri addresses tiles as /{z}/{y}/{x} — y before x, unlike the usual XYZ.
-    const baseLayer = L.tileLayer(ESRI + "/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}", {
+    const baseLayer = L.tileLayer(ESRI + "/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
       attribution: esriAttr,
       maxZoom: 10,
-      zIndex: 1,
-    }).addTo(map);
-
-    L.tileLayer(ESRI + "/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}", {
-      maxZoom: 10,
-      zIndex: 2,
     }).addTo(map);
 
     // If the basemap host stops answering, say so in the corner rather than
