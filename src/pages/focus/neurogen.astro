@@ -120,7 +120,7 @@ const STEPS = [
   { tag: "The alibi", text: "Siblings share their family. Where one sibling was exposed and the other was not, their risks were similar: HR 1.05 (0.94–1.17). The interval crosses 1." },
   { tag: "The verdict", text: "The link between gestational diabetes and ADHD is unlikely to be causal. Diabetes that began before pregnancy still carried a higher risk (HR 1.39, 1.25–1.55)." },
 ];
-const DWELL = [2600, 3400, 3200, 3600, 3800, 5500]; // ms each room is held
+const DWELL = [2900, 3800, 3600, 4000, 4200, 6000]; // ms each room is held
 const DEPTH = 1100; // px between rooms
 const LAST = STEPS.length - 1;
 
@@ -1094,14 +1094,14 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
     .palace .door {
       position: absolute; inset: 0; border: 1px solid rgba(146, 235, 218, .45);
       transform: translateZ(var(--z, 0px)); opacity: var(--o, 0);
-      transition: transform .8s cubic-bezier(.6, .04, .2, 1), opacity .55s ease;
+      transition: transform .9s cubic-bezier(.6, .04, .2, 1), opacity .6s ease;
     }
     .palace .it {
       position: absolute; width: var(--w);
       display: flex; flex-direction: column; align-items: center; text-align: center;
       transform: translate(-50%, -50%) translateZ(var(--z, 0px)) rotateY(var(--ry, 0deg));
       opacity: var(--o, 1); filter: blur(var(--b, 0px));
-      transition: transform .8s cubic-bezier(.6, .04, .2, 1), opacity .55s ease, filter .55s ease;
+      transition: transform .9s cubic-bezier(.6, .04, .2, 1), opacity .6s ease, filter .6s ease;
     }
     .palace.instant .it, .palace.instant .door, .palace.instant .ln,
     .palace.still .it, .palace.still .door, .palace.still .ln { transition: none !important; }
