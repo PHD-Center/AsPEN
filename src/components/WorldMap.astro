@@ -3,7 +3,10 @@ interface DBItem {
   name: string;
   type: string;
   coverage?: string;
+  /** Same-page anchor (the /databases/ map links to its own cards). */
   anchor?: string;
+  /** Full URL, base prefix included. Wins over `anchor` when both are set. */
+  href?: string;
 }
 
 interface CountryGroup {
@@ -12,6 +15,14 @@ interface CountryGroup {
   lat: number;
   lng: number;
   items: DBItem[];
+  /** Dark variant: a one-line deduction pinned to this marker. The map's
+      "gaze" moves from one to the next, Sherlock-style. */
+  note?: string;
+  /** Which side of the marker the note sits on, to keep clusters legible. */
+  noteDir?: "left" | "right" | "top" | "bottom";
+  /** Dark variant: an empty ring instead of a flag — a place that was looked
+      at and ruled out. No popup. */
+  ghost?: boolean;
 }
 
 interface Props {
@@ -19,6 +30,9 @@ interface Props {
   height?: string;
   initialCenter?: [number, number];
   initialZoom?: number;
+  /** "light" is the site default. "dark" is the console look used by
+      /focus/vaccine/: dark tiles, cyan-glow markers, dark popups. */
+  variant?: "light" | "dark";
 }
 
 const {
@@ -26,9 +40,11 @@ const {
   height = "540px",
   initialCenter = [30, 60],
   initialZoom = 3,
+  variant = "light",
 } = Astro.props;
 
 const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
+const dark = variant === "dark";
 ---
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -36,13 +52,73 @@ const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
 <div
   id={mapId}
   style={`height:${height};`}
-  class="rounded-lg border border-slate-200 overflow-hidden shadow-sm bg-slate-50"
+  class:list={[
+    "rounded-lg overflow-hidden",
+    dark ? "border border-[#16283f] bg-[#060d18]" : "border border-slate-200 shadow-sm bg-slate-50",
+  ]}
   aria-label="Interactive map of AsPEN locations"
 ></div>
 
+<style is:global>
+  /* Dark-variant popups. Scoped by the class Leaflet puts on the popup, so the
+     light maps elsewhere on the site are untouched. */
+  .aspen-popup-dark .leaflet-popup-content-wrapper,
+  .aspen-popup-dark .leaflet-popup-tip {
+    background: #0b1626;
+    color: #e2e8f0;
+    border: 1px solid #16283f;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  }
+  .aspen-popup-dark a.leaflet-popup-close-button { color: #8193ab; }
+
+  /* Cyan pulse behind dark-variant markers. */
+  @keyframes aspen-pulse {
+    0%   { transform: scale(0.6); opacity: 0.7; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+  .aspen-pulse {
+    position: absolute; inset: -6px; border-radius: 6px;
+    border: 2px solid #22d3ee;
+    animation: aspen-pulse 2.4s ease-out infinite;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .aspen-pulse { animation: none; opacity: 0.35; transform: none; }
+  }
+
+  /* Deductions: floating text pinned to a marker, no box, no arrow — the way
+     the thought appears beside the thing being looked at. */
+  .leaflet-tooltip.aspen-deduce {
+    background: rgba(6, 13, 24, 0.78);
+    border: 0; border-radius: 3px; box-shadow: none;
+    padding: 3px 7px;
+    color: #fff;
+    font: 500 12px/1.35 "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: 0.01em;
+    text-shadow: 0 0 10px rgba(34, 211, 238, 0.55);
+    white-space: normal; width: max-content; max-width: 250px;
+    animation: aspen-deduce-in 0.5s ease-out;
+  }
+  .leaflet-tooltip.aspen-deduce::before { display: none; }
+  .aspen-deduce .dl { display: inline-block; width: 16px; height: 1px; background: #22d3ee; vertical-align: middle; }
+  .aspen-deduce .dl-l { margin-right: 6px; }
+  .aspen-deduce .dl-r { margin-left: 6px; }
+  .aspen-deduce.is-ghost { color: #b6c2d3; text-shadow: none; }
+  @keyframes aspen-deduce-in {
+    from { clip-path: inset(0 100% 0 0); opacity: 0.4; }
+    to   { clip-path: inset(0 0 0 0); opacity: 1; }
+  }
+  /* the marker currently under the gaze */
+  .aspen-flag-marker.is-gazed img { box-shadow: 0 0 0 2px #22d3ee, 0 0 22px rgba(34, 211, 238, 0.85) !important; }
+  .aspen-flag-marker.is-gazed .aspen-ghost { border-color: #22d3ee; }
+  @media (prefers-reduced-motion: reduce) {
+    .leaflet-tooltip.aspen-deduce { animation: none; }
+  }
+</style>
+
 <script
   is:inline
-  define:vars={{ mapId, groups, initialCenter, initialZoom }}
+  define:vars={{ mapId, groups, initialCenter, initialZoom, dark }}
 >
   const init = () => {
     const map = L.map(mapId, { scrollWheelZoom: false }).setView(initialCenter, initialZoom);
@@ -72,15 +148,25 @@ const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
     // Full-strength Street Map is busier than Voyager was, and that is the
     // accepted trade: it is the only keyless option here that stays legible
     // and alive at the same time.
+    //
+    // The dark variant is a different job: a console, not an atlas. There the
+    // Dark Gray Canvas is right precisely because it recedes — the cyan
+    // markers are the only colour on the frame.
     const ESRI = "https://services.arcgisonline.com/ArcGIS/rest/services";
     const esriAttr =
       '&copy; <a href="https://www.esri.com/">Esri</a>, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
     // Esri addresses tiles as /{z}/{y}/{x} — y before x, unlike the usual XYZ.
-    const baseLayer = L.tileLayer(ESRI + "/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
-      attribution: esriAttr,
-      maxZoom: 10,
-    }).addTo(map);
+    const baseLayer = L.tileLayer(
+      ESRI + (dark ? "/Canvas/World_Dark_Gray_Base" : "/World_Street_Map") + "/MapServer/tile/{z}/{y}/{x}",
+      { attribution: esriAttr, maxZoom: 10, zIndex: 1 },
+    ).addTo(map);
+    if (dark) {
+      L.tileLayer(ESRI + "/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom: 10,
+        zIndex: 2,
+      }).addTo(map);
+    }
 
     // If the basemap host stops answering, say so in the corner rather than
     // leaving a blank rectangle that reads as a broken page. The flag markers
@@ -93,8 +179,10 @@ const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
       el.setAttribute("role", "status");
       el.style.cssText =
         "position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:900;" +
-        "background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px;" +
-        "font:600 11px Inter,system-ui,sans-serif;color:#475569;box-shadow:0 1px 4px rgba(0,0,0,.12)";
+        "border-radius:6px;padding:6px 10px;font:600 11px Inter,system-ui,sans-serif;" +
+        (dark
+          ? "background:#0b1626;border:1px solid #16283f;color:#8193ab"
+          : "background:#fff;border:1px solid #e2e8f0;color:#475569;box-shadow:0 1px 4px rgba(0,0,0,.12)");
       el.textContent = "Basemap unavailable; the locations below are unaffected.";
       map.getContainer().appendChild(el);
     };
@@ -102,15 +190,48 @@ const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
     baseLayer.on("tileerror", warnBasemap);
     setTimeout(() => { if (!tilesOk) warnBasemap(); }, 8000);
 
+    // Palette per variant. Light keeps the original values exactly.
+    const P = dark
+      ? { badge: "#22d3ee", badgeText: "#04131f", ring: "#060d18", head: "#e2e8f0", link: "#67e8f9",
+          meta: "#8193ab", rule: "#16283f", accentRule: "#22d3ee", hover: "#0f2136", count: "#8193ab" }
+      : { badge: "#3a8a6e", badgeText: "#fff", ring: "#fff", head: "#225641", link: "#225641",
+          meta: "#556", rule: "#eef2f0", accentRule: "#3a8a6e", hover: "#f5faf7", count: "#777" };
+
+    // A deduction note on a marker. Opens on hover, and on the gaze below.
+    const bindNote = (m, g, ghost) => {
+      const dir = g.noteDir || "right";
+      const text = `<strong style="color:${ghost ? "#b6c2d3" : "#67e8f9"};font-weight:700">${g.country}</strong> ${g.note}`;
+      const html = dir === "left" ? `${text}<span class="dl dl-r"></span>` : `<span class="dl dl-l"></span>${text}`;
+      const off = { right: [14, 0], left: [-14, 0], top: [0, -12], bottom: [0, 12] }[dir];
+      m.bindTooltip(html, { direction: dir, offset: off, opacity: 1, className: "aspen-deduce" + (ghost ? " is-ghost" : "") });
+    };
+
     const markers = groups.map((g) => {
+      // A ruled-out place: an empty ring and its note, nothing to open.
+      if (g.ghost) {
+        const ring = L.divIcon({
+          className: "aspen-flag-marker",
+          html: '<div class="aspen-ghost" style="width:20px;height:20px;border:1.5px dashed #8193ab;border-radius:50%"></div>',
+          iconSize: [20, 20],
+          iconAnchor: [10, 10],
+        });
+        const gm = L.marker([g.lat, g.lng], { icon: ring, title: g.country + " (excluded)" }).addTo(map);
+        if (g.note) bindNote(gm, g, true);
+        return gm;
+      }
+
       const flagUrl = `https://flagcdn.com/w40/${g.code.toLowerCase()}.png`;
       const flagUrl2x = `https://flagcdn.com/w80/${g.code.toLowerCase()}.png`;
       const count = g.items.length;
+      const flagStyle = dark
+        ? "width:36px;height:24px;border:2px solid #0b1626;border-radius:3px;box-shadow:0 0 0 1px #22d3ee,0 0 14px rgba(34,211,238,.55);display:block;position:relative"
+        : "width:36px;height:24px;border:2px solid #fff;border-radius:3px;box-shadow:0 2px 6px rgba(0,0,0,.35);display:block";
       const icon = L.divIcon({
         className: "aspen-flag-marker",
         html: `<div style="position:relative;display:flex;align-items:center;justify-content:center">
-          <img src="${flagUrl}" srcset="${flagUrl2x} 2x" alt="${g.country}" style="width:36px;height:24px;border:2px solid #fff;border-radius:3px;box-shadow:0 2px 6px rgba(0,0,0,.35);display:block" />
-          ${count > 1 ? `<span style="position:absolute;top:-8px;right:-10px;background:#3a8a6e;color:#fff;font-size:10px;font-weight:700;min-width:18px;height:18px;padding:0 4px;border-radius:9px;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3)">${count}</span>` : ""}
+          ${dark ? '<span class="aspen-pulse" aria-hidden="true"></span>' : ""}
+          <img src="${flagUrl}" srcset="${flagUrl2x} 2x" alt="${g.country}" style="${flagStyle}" />
+          ${count > 1 ? `<span style="position:absolute;top:-8px;right:-10px;background:${P.badge};color:${P.badgeText};font-size:10px;font-weight:700;min-width:18px;height:18px;padding:0 4px;border-radius:9px;display:flex;align-items:center;justify-content:center;border:2px solid ${P.ring};box-shadow:0 1px 3px rgba(0,0,0,.3)">${count}</span>` : ""}
         </div>`,
         iconSize: [40, 28],
         iconAnchor: [20, 14],
@@ -120,32 +241,58 @@ const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
 
       const list = g.items
         .map((it) => {
-          const link = it.anchor
-            ? `<a href="#${it.anchor}" style="color:#225641;font-weight:600;text-decoration:none;display:block;padding:6px 0;border-bottom:1px solid #eef2f0" onmouseover="this.style.background='#f5faf7'" onmouseout="this.style.background=''">
-                <strong>${it.name}</strong><br>
-                <span style="font-size:11px;color:#556">${it.type}${it.coverage ? " · " + it.coverage : ""}</span>
-              </a>`
-            : `<div style="padding:6px 0;border-bottom:1px solid #eef2f0">
-                <strong>${it.name}</strong><br>
-                <span style="font-size:11px;color:#556">${it.type}${it.coverage ? " · " + it.coverage : ""}</span>
-              </div>`;
-          return link;
+          const url = it.href || (it.anchor ? "#" + it.anchor : "");
+          const body = `<strong style="color:${url ? P.link : P.head}">${it.name}</strong><br>
+                <span style="font-size:11px;color:${P.meta}">${it.type}${it.coverage ? " · " + it.coverage : ""}</span>`;
+          return url
+            ? `<a href="${url}" style="font-weight:600;text-decoration:none;display:block;padding:6px 0;border-bottom:1px solid ${P.rule}" onmouseover="this.style.background='${P.hover}'" onmouseout="this.style.background=''">${body}</a>`
+            : `<div style="padding:6px 0;border-bottom:1px solid ${P.rule}">${body}</div>`;
         })
         .join("");
 
       m.bindPopup(
         `<div style="font-family:Inter,system-ui,sans-serif;min-width:240px;max-width:320px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;padding-bottom:6px;border-bottom:2px solid #3a8a6e">
-            <img src="${flagUrl}" srcset="${flagUrl2x} 2x" alt="" style="width:24px;height:16px;border:1px solid #ddd;border-radius:2px" />
-            <strong style="color:#225641;font-size:15px">${g.country}</strong>
-            <span style="font-size:11px;color:#777;margin-left:auto">${count} ${count === 1 ? "database" : "databases"}</span>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;padding-bottom:6px;border-bottom:2px solid ${P.accentRule}">
+            <img src="${flagUrl}" srcset="${flagUrl2x} 2x" alt="" style="width:24px;height:16px;border:1px solid ${dark ? "#16283f" : "#ddd"};border-radius:2px" />
+            <strong style="color:${P.head};font-size:15px">${g.country}</strong>
+            <span style="font-size:11px;color:${P.count};margin-left:auto">${count} ${count === 1 ? "database" : "databases"}</span>
           </div>
           <div>${list}</div>
         </div>`,
-        { maxWidth: 340 }
+        { maxWidth: 340, className: dark ? "aspen-popup-dark" : "" }
       );
+      if (g.note) bindNote(m, g, false);
       return m;
     });
+
+    // The gaze: while the map is on screen, move from one noted marker to the
+    // next and open its deduction — reading the scene one clue at a time.
+    // Pointing at the map hands control back to the reader. Under reduced
+    // motion nothing cycles; every note still opens on hover.
+    const noted = markers.filter((m) => m.getTooltip());
+    if (dark && noted.length && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      let i = 0, cur = null, timer = null, paused = false;
+      const clear = () => {
+        if (!cur) return;
+        cur.closeTooltip();
+        cur.getElement()?.classList.remove("is-gazed");
+        cur = null;
+      };
+      const step = () => {
+        if (paused) return;
+        clear();
+        cur = noted[i++ % noted.length];
+        cur.getElement()?.classList.add("is-gazed");
+        cur.openTooltip();
+      };
+      const box = map.getContainer();
+      box.addEventListener("mouseenter", () => { paused = true; clear(); });
+      box.addEventListener("mouseleave", () => { paused = false; });
+      new IntersectionObserver((es) => {
+        if (es[0].isIntersecting) { if (!timer) { step(); timer = setInterval(step, 3200); } }
+        else { clearInterval(timer); timer = null; clear(); }
+      }, { threshold: 0.35 }).observe(box);
+    }
 
     // Auto-fit removed: respect the caller's initialCenter/initialZoom so the
     // map can stay focused (e.g. East Asia) even when markers exist elsewhere.
