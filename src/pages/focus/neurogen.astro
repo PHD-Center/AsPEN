@@ -116,33 +116,33 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap" rel="stylesheet" />
   </Fragment>
 
-  <!-- ═══ THE BOARD ══════════════════════════════════════════════════ -->
-  <section class="bg-gradient-to-br from-brand-50 via-white to-brand-100/40 border-b border-slate-200 py-8 md:py-12">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-      <nav aria-label="Breadcrumb" class="text-xs text-slate-500 mb-4">
-        <a href={`${base}/publications/`} class="hover:text-brand-700">Publications</a>
+  <!-- ═══ THE BOARD — full bleed, edge to edge, like the vaccine console ═══ -->
+  <section id="board" class="board relative overflow-hidden">
+    <!-- the frame's top rail: the only wood left, kept to a thin edge -->
+    <div class="rail" aria-hidden="true"></div>
+
+    <div class="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-8 pb-8">
+      <nav aria-label="Breadcrumb" class="text-xs text-[#9fb0a4]">
+        <a href={`${base}/publications/`} class="hover:text-[#f1f0e8]">Publications</a>
         <span aria-hidden="true"> → </span>
-        <a href={`${base}/publications/themes/`} class="hover:text-brand-700">Themes</a>
+        <a href={`${base}/publications/themes/`} class="hover:text-[#f1f0e8]">Themes</a>
         <span aria-hidden="true"> → </span>
-        <a href={`${base}/publications/themes/methods-infrastructure/`} class="hover:text-brand-700">Infrastructure</a>
+        <a href={`${base}/publications/themes/methods-infrastructure/`} class="hover:text-[#f1f0e8]">Infrastructure</a>
         <span aria-hidden="true"> → </span>
-        <span class="text-slate-900 font-semibold">NeuroGEN</span>
+        <span class="text-[#f1f0e8]">NeuroGEN</span>
       </nav>
 
-      <!-- the chalkboard, in its wooden frame -->
-      <div class="board-frame rounded-md">
-        <div id="board" class="board relative rounded-sm overflow-hidden">
-          <div class="relative px-5 sm:px-8 lg:px-10 pt-7 pb-4">
-            <h1 class="chalk-hand text-[#f1f0e8] text-5xl md:text-6xl leading-none">NeuroGEN</h1>
-            <svg class="chalk-stroke block mt-1" width="260" height="14" viewBox="0 0 260 14" aria-hidden="true">
-              <path class="draw" pathLength="1" d="M3 9 C 60 3, 140 12, 256 5" stroke="#f4e285" stroke-width="2.4" fill="none" stroke-linecap="round" style="--d:0s" />
-            </svg>
-            <p class="chalk-hand text-[#d9d6c8] text-2xl md:text-[28px] mt-2 leading-tight">
-              Neurological &amp; Mental Health Global Epidemiology Network
-            </p>
-          </div>
+      <div class="mt-8">
+        <h1 class="chalk-hand text-[#f1f0e8] text-6xl md:text-7xl leading-none">NeuroGEN</h1>
+        <svg class="chalk-stroke block mt-1" width="300" height="16" viewBox="0 0 260 14" aria-hidden="true">
+          <path class="draw" pathLength="1" d="M3 9 C 60 3, 140 12, 256 5" stroke="#f4e285" stroke-width="2.4" fill="none" stroke-linecap="round" style="--d:0s" />
+        </svg>
+        <p class="chalk-hand text-[#d9d6c8] text-2xl md:text-3xl mt-2 leading-tight">
+          Neurological &amp; Mental Health Global Epidemiology Network
+        </p>
+      </div>
 
-          <div class="relative grid lg:grid-cols-[minmax(0,1fr)_300px] gap-2 px-2 sm:px-4 pb-6">
+      <div class="relative grid lg:grid-cols-[minmax(0,1fr)_300px] gap-2 mt-2">
             <!-- the graph -->
             <div class="overflow-x-auto">
               <svg
@@ -231,17 +231,8 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
             </div>
           </div>
 
-          <!-- chalk tray -->
-          <div class="tray" aria-hidden="true">
-            <span class="stick" style="left:14%"></span>
-            <span class="stick stick-y" style="left:18%"></span>
-            <span class="eraser" style="right:12%"></span>
-          </div>
-        </div>
-      </div>
-
-      <details class="mt-5 group text-slate-700">
-        <summary class="cursor-pointer select-none text-sm font-semibold hover:text-brand-700">View the {counts.total} databases as a table</summary>
+      <details class="mt-6 group text-[#d9d6c8]">
+        <summary class="cursor-pointer select-none text-sm font-semibold hover:text-[#f1f0e8]">View the {counts.total} databases as a table</summary>
         <div class="mt-3 overflow-x-auto rounded-md bg-white text-slate-800">
           <table class="w-full text-sm">
             <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
@@ -259,11 +250,18 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
           </table>
         </div>
       </details>
-      <p class="mt-3 text-xs text-slate-500">
+      <p class="mt-3 text-xs text-[#9fb0a4]">
         Source: Tsai DHT et al. Cross-Regional Data Initiative for the Assessment and Development of Treatment for Neurological and Mental Disorders.
         <em>Clin Epidemiol</em> 2023.
-        <a href="https://pubmed.ncbi.nlm.nih.gov/38146486/" target="_blank" rel="noopener" class="underline hover:text-brand-700">PMID 38146486</a>.
+        <a href="https://pubmed.ncbi.nlm.nih.gov/38146486/" target="_blank" rel="noopener" class="underline hover:text-[#f1f0e8]">PMID 38146486</a>.
       </p>
+    </div>
+
+    <!-- chalk tray, running the full width of the board -->
+    <div class="tray" aria-hidden="true">
+      <span class="stick" style="left:14%"></span>
+      <span class="stick stick-y" style="left:18%"></span>
+      <span class="eraser" style="right:12%"></span>
     </div>
   </section>
 
@@ -417,10 +415,13 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
   <style>
     .chalk-hand { font-family: "Caveat", "Segoe Print", "Bradley Hand", cursive; }
 
-    .board-frame {
-      padding: 12px 12px 0;
+    /* The board runs full bleed, edge to edge, like the vaccine console.
+       Of the wooden frame only a thin top rail and the chalk tray remain,
+       so the page does not return to the coffee-brown the chair disliked. */
+    .rail {
+      height: 10px;
       background: linear-gradient(180deg, #6b4a2f, #4a3220);
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,.35), 0 18px 40px rgba(0,0,0,.35);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
     }
     .board {
       background-color: #223128;
@@ -431,7 +432,7 @@ const leafDelay = (i: number, j: number) => spokeDelay(i) + 0.45 + j * 0.1;
       box-shadow: inset 0 0 60px rgba(0,0,0,.45);
     }
     .tray {
-      position: relative; height: 16px; margin: 0 -12px;
+      position: relative; height: 16px;
       background: linear-gradient(180deg, #5a3e27, #3d2a1b);
       box-shadow: 0 -2px 0 rgba(0,0,0,.25) inset;
     }
