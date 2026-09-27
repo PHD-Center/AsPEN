@@ -144,7 +144,7 @@
     "lat": 22.3193,
     "lng": 114.1694,
     "name": "Clinical Data Analysis and Reporting System (CDARS)",
-    "type": "National EHR",
+    "type": "Public-sector EHR",
     "coverage": "~7M individuals · Hong Kong Hospital Authority · since 1995",
     "notes": "Public-sector electronic medical records covering the great majority of Hong Kong residents.",
     "since": 1995,
