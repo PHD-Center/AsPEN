@@ -74,6 +74,14 @@ const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
       maxZoom: 10,
     }).addTo(map);
 
+    // Street Map ships at full strength — fine for a road atlas, too loud
+    // under a dozen flag pins. Muting the tile pane pulls the land back to
+    // cream and the sea to the faintest blue — quieter even than CARTO
+    // Voyager was. The filter is on the tile pane alone; markers and popups
+    // live in their own panes, so the flags keep their full colour and now
+    // stand out against a quieter ground rather than competing with it.
+    map.getPane("tilePane").style.filter = "saturate(0.32) brightness(1.07)";
+
     // If the basemap host stops answering, say so in the corner rather than
     // leaving a blank rectangle that reads as a broken page. The flag markers
     // and their popups are our own markup and keep working either way.
