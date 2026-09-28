@@ -10,11 +10,16 @@
 // national day the customary one is used: the King's Official Birthday
 // (Trooping the Colour, usually the second Saturday of June) for the UK, St
 // Andrew's Day for Scotland, and HKSAR Establishment Day for Hong Kong.
+import Chalkdust from "./Chalkdust.astro";
+import chalk from "../data/chalk/databases.json";
+
 interface Props {
   mapId: string;
 }
 const { mapId } = Astro.props;
 ---
+
+<Chalkdust data={chalk} param="map" />
 
 <style is:global>
   /* ── shared frame ─────────────────────────────────────────────── */
@@ -500,6 +505,9 @@ const { mapId } = Astro.props;
       },
     };
 
+    // until the map is ready, hold any theme asked for
+    if (!window.__dress) window.__dress = (n) => (window.__dressQ = window.__dressQ || []).push(n);
+
     const ready = (fn) => (el.__aspen ? fn(el.__aspen) : el.addEventListener("aspen:map", () => fn(el.__aspen), { once: true }));
 
     ready(({ map, baseLayer, markers, groups }) => {
@@ -586,44 +594,24 @@ const { mapId } = Astro.props;
         setTimeout(() => d.remove(), 2200);
       };
 
-      const SIGS = { "b4df4b6c56e6316c3181ac2a": "britain", "7052f17503b62eefb25a6120": "scotland", "8e975a7512515b11b84815f8": "netherlands", "ad8eaf83771bb310bc93c008": "finland", "b45a40f3a214e7cbb3299e4e": "japan", "4a8f772e329fc77b43ecbd40": "korea", "8f65908ad5b9f3f36d386e15": "taiwan", "9091a38edb4f4c6ca06d77f6": "hongkong", "9202c471111f6a4f378e0d73": "thailand", "7bf8acd42709773bb1ce4c97": "australia", "ed7adc28f147122f2b803c1f": "usa" };
-      const HOME = "8d1a06276875bfeafb69e6d8";
-      const sig = async (x) => {
-        if (!(window.crypto && crypto.subtle)) return "";
-        const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("chalk:" + x));
-        return [...new Uint8Array(b)].slice(0, 12).map((v) => v.toString(16).padStart(2, "0")).join("");
-      };
-      const pick = (h) => (Object.prototype.hasOwnProperty.call(SIGS, h) ? SIGS[h] : null);
       const now = new Date();
       const today = Object.keys(THEMES).find((k) => {
         const d = THEMES[k].day(now.getFullYear());
         return d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
       });
-      const q = (new URLSearchParams(location.search).get("map") || "").toLowerCase();
-      (q ? sig("/" + q) : Promise.resolve("")).then((h) => {
-        const chosen = pick(h);
-        if (chosen) apply(chosen);
-        else if (today) apply(today);
-      });
+      if (today) apply(today);
 
-      let buffer = "";
-      window.addEventListener("keydown", async (e) => {
-        if (e.metaKey || e.ctrlKey || e.altKey) return;
-        const tg = e.target;
-        if (tg && (/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName) || tg.isContentEditable)) return;
-        if (e.key.length !== 1) return;
-        buffer = (buffer + e.key.toLowerCase()).slice(-4);
-        const at = buffer.lastIndexOf("/");
-        if (at < 0 || buffer.length - at < 3) return;
-        const h = await sig(buffer.slice(at));
-        if (h === HOME) { buffer = ""; if (current) { clear(true); toast("Everyday map"); } return; }
-        const code = pick(h);
-        if (!code) return;
-        buffer = "";
-        if (current === code) { clear(true); return; }
+      // Other ways in hand over a theme name, or null for the everyday map.
+      const dress = (name) => {
+        if (name === null) { if (current) { clear(true); toast("Everyday map"); } return; }
+        if (!Object.prototype.hasOwnProperty.call(THEMES, name)) return;
+        if (current === name) { clear(true); return; }
         el.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "center" });
-        apply(code);
-      });
+        apply(name);
+      };
+      const queued = window.__dressQ || [];
+      window.__dress = dress;
+      queued.forEach(dress);
     });
   })();
 </script>
