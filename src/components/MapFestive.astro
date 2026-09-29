@@ -183,17 +183,17 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
     --lf: "LXGW WenKai TC", "Noto Serif TC", serif; --lbl: #1f2a24; --halo: #eee6cc;
     --tf: sepia(.6) hue-rotate(45deg) saturate(1.5) contrast(1.25) brightness(.97);
     --vig: rgba(70, 80, 50, .22);
-    --bh: #d3dbc8; --nl: inset 0 0 0 1px #6d7f68, inset 0 0 0 3px #efe7d0, inset 0 0 0 4px #6d7f68;
+    --nl: inset 0 0 0 1px #6d7f68, inset 0 0 0 3px #efe7d0, inset 0 0 0 4px #6d7f68;
   }
   /* silk mounting: a thin wooden rod along the top, the roller with its knobs along the bottom */
   .mt-taiwan .mt-bt, .mt-taiwan .mt-bb { z-index: 1; }
-  .mt-taiwan .mt-bt { background: linear-gradient(#5b4030, #5b4030) 0 0 / 100% 4px no-repeat, #d3dbc8; }
+  .mt-taiwan .mt-bt { background: linear-gradient(#5b4030, #5b4030) 0 0 / 100% 4px no-repeat, var(--bh); }
   .mt-taiwan .mt-bb {
     background:
       linear-gradient(#3b2a1f, #3b2a1f) 0 100% / 14px 9px no-repeat,
       linear-gradient(#3b2a1f, #3b2a1f) 100% 100% / 14px 9px no-repeat,
       linear-gradient(#5b4030, #5b4030) 0 100% / 100% 6px no-repeat,
-      #d3dbc8;
+      var(--bh);
   }
   .mt-taiwan .mt-cart { color: #1f2a24; }
   .mt-taiwan .slip .t { font-family: "LXGW WenKai TC", "Noto Serif TC", serif; font-weight: 700; font-size: 25px; }
@@ -463,6 +463,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       taiwan: {
         group: "TW", zoom: 7, day: on(9, 10), tiles: "World_Shaded_Relief", native: 13,
         fonts: "LXGW+WenKai+TC:wght@700",
+        // 回紋: a key-fret border in deep green on the celadon silk
+        vars: band(24, 18, "#d3dbc8", `<g fill='none' stroke='#2d4a3e' stroke-width='1.1'><path d='M0 2.5H24M0 15.5H24'/>` +
+          `<path d='M0 12.5H3V5.5H10V11.5H6V8.5H8M12 12.5H15V5.5H22V11.5H18V8.5H20' stroke-linecap='square'/></g>`),
         cart: (c) => `<div class="slip"><div class="t">國慶日快樂</div><span class="seal">雙十</span></div>
           <div class="k">雙十國慶<br>10 October<br>${n(c)}</div>`,
       },
