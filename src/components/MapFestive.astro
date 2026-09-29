@@ -1,15 +1,17 @@
 ---
 // National-day dress for the light WorldMap (the /databases/ map).
 //
-// On each member region's national day the map puts on that country's
-// style: its own basemap treatment, a patterned frame, a cartouche with the
-// day's greeting, and the region's marker brought forward. The rest of the
-// year the everyday street map is untouched.
+// On each member region's national day the map becomes an antique map in
+// that country's own cartographic tradition: its basemap and paper, a quiet
+// frame band with one fine motif, a cartouche with the day's greeting, at
+// most one small period ornament, and the region's marker brought forward.
+// The rest of the year the everyday street map is untouched.
 //
 // Dates are the viewer's local date. Where a region has no statutory
 // national day the customary one is used: the King's Official Birthday
 // (Trooping the Colour, usually the second Saturday of June) for the UK, St
-// Andrew's Day for Scotland, and HKSAR Establishment Day for Hong Kong.
+// Andrew's Day for Scotland, and for Hong Kong the Cheung Chau Bun Festival
+// on Buddha's Birthday (the 8th day of the 4th lunar month).
 import Chalkdust from "./Chalkdust.astro";
 import chalk from "../data/chalk/databases.json";
 
@@ -23,20 +25,35 @@ const { mapId } = Astro.props;
 
 <style is:global>
   /* ── shared frame ─────────────────────────────────────────────── */
+  /* each theme sets --ink (rules, text), --card (cartouche paper), --tf (tiles),
+     --wash/--vig (paper tint and vignette), --nl (neatline inside the band) */
+  .mt { --card: #f5ead0; --ink: #2b2116; }
   .mt-frame { position: absolute; inset: 0; z-index: 450; pointer-events: none; }
   .mt-frame > * { position: absolute; }
-  .mt-paper { inset: 0; mix-blend-mode: multiply; }
+  .mt-paper {
+    inset: 0; mix-blend-mode: multiply;
+    background:
+      radial-gradient(ellipse at center, transparent 50%, var(--vig, transparent) 100%),
+      linear-gradient(var(--wash, transparent), var(--wash, transparent));
+  }
   .mt-b { background: var(--bh); }
   .mt-bt { top: 0; left: 0; right: 0; height: var(--bw); }
   .mt-bb { bottom: 0; left: 0; right: 0; height: var(--bw); }
   .mt-bl, .mt-br { top: 0; bottom: 0; width: var(--bw); background: var(--bv, var(--bh)); }
   .mt-bl { left: 0; }
   .mt-br { right: 0; }
-  .mt-fx { inset: 0; overflow: hidden; }
+  .mt-fx { inset: var(--bw); overflow: hidden; box-shadow: var(--nl, none); }
   .mt-cart {
     top: calc(var(--bw) + 12px); right: calc(var(--bw) + 12px);
     max-width: min(20rem, calc(100% - 2 * var(--bw) - 90px));
     pointer-events: auto; animation: mt-in .7s cubic-bezier(.2, .9, .3, 1.15) both;
+    color: var(--ink); background: var(--card); padding: 14px 22px 12px; text-align: center;
+    border: 1px solid var(--ink);
+    box-shadow: 0 0 0 3px var(--card), 0 0 0 4px var(--ink2, var(--ink)), 0 6px 18px rgba(40, 30, 12, .28);
+  }
+  .mt-cart .ribbon {
+    display: inline-block; margin-top: 6px; padding: 2px 14px; color: var(--card); background: var(--rib, var(--ink));
+    font-style: italic; font-size: 13px; clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%);
   }
   .mt-x {
     position: absolute; top: 4px; right: 6px; width: 22px; height: 22px; line-height: 20px;
@@ -47,274 +64,184 @@ const { mapId } = Astro.props;
   .mt .leaflet-top.leaflet-left .leaflet-control { margin-left: calc(var(--bw) + 8px); margin-top: calc(var(--bw) + 8px); }
   .mt .leaflet-bottom.leaflet-right .leaflet-control { margin-right: var(--bw); margin-bottom: var(--bw); }
   .mt .leaflet-tile-pane { filter: var(--tf, none); }
+  .mt .leaflet-popup-content-wrapper, .mt .leaflet-popup-tip { background: #f7f1e1; }
+  .mt .aspen-flag-marker img { filter: sepia(.3); }
   .mt .aspen-flag-marker.mt-hero { z-index: 1000 !important; }
   .mt .aspen-flag-marker.mt-hero > div { animation: mt-hero 1.2s cubic-bezier(.2, .9, .3, 1.2) both; transform: scale(1.35); }
-  .mt .aspen-flag-marker.mt-hero img { box-shadow: 0 0 0 2px var(--accent, #3a8a6e), 0 0 18px var(--accent, #3a8a6e) !important; }
-  .mt-britain .mt-noise::after, .mt-japan .mt-noise::after, .mt-korea .mt-noise::after { display: block; }
+  .mt .aspen-flag-marker.mt-hero img { box-shadow: 0 0 0 2px var(--accent, #3a8a6e), 0 0 14px var(--accent, #3a8a6e) !important; }
   /* while a popup is open, the cartouche and ornaments step aside */
   .mt.mt-popped .mt-cart, .mt.mt-popped .mt-deco { opacity: 0; pointer-events: none; transition: opacity .25s ease; }
   .mt-cart, .mt-deco { transition: opacity .25s ease; }
   @keyframes mt-in { from { opacity: 0; transform: translateY(-10px) scale(.96); } }
   @keyframes mt-hero { from { transform: scale(.4); } 60% { transform: scale(1.55); } to { transform: scale(1.35); } }
+  /* paper grain */
   .mt-noise::after {
-    content: ""; position: absolute; inset: 0; display: none;
+    content: ""; position: absolute; inset: 0; opacity: var(--grain, 1);
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .32  0 0 0 0 .15  0 0 0 .22 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   }
+  /* East Asian maps name themselves on a vertical title slip with a seal */
+  .mt-japan .mt-cart, .mt-korea .mt-cart, .mt-taiwan .mt-cart {
+    display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 10px; text-align: left;
+    padding: 12px 12px 12px 10px; box-shadow: 0 6px 18px rgba(40, 30, 12, .25);
+  }
+  .mt-japan .mt-x, .mt-korea .mt-x, .mt-taiwan .mt-x { top: auto; bottom: 4px; right: auto; left: 2px; }
+  .mt .slip {
+    writing-mode: vertical-rl; display: flex; align-items: center; gap: 10px; flex: none; padding: 12px 7px;
+    border: 1px solid var(--ink); box-shadow: inset 0 0 0 2px var(--card), inset 0 0 0 3px var(--ink);
+  }
+  .mt .slip .t { line-height: 1; letter-spacing: .14em; }
+  /* the note beside it runs in columns too, English turned on its side */
+  .mt .slip + .k { writing-mode: vertical-rl; font-size: 11px; line-height: 1.6; padding-top: 3px; }
+  /* (--bh/--bv for most themes are band tiles built in the script) */
 
   /* ── United Kingdom: an eighteenth-century county map ─────────── */
   .mt-britain {
-    --bw: 14px; --accent: #225641;
+    --bw: 10px; --accent: #225641; --ink: #2b2116; --rib: #225641;
     --tf: sepia(.92) saturate(1.35) hue-rotate(-10deg) contrast(.92) brightness(1.05);
-    --bh: repeating-linear-gradient(90deg, #2b2116 0 22px, #efe2bf 22px 44px);
-    --bv: repeating-linear-gradient(0deg, #2b2116 0 22px, #efe2bf 22px 44px);
+    --wash: rgba(239, 226, 191, .28); --vig: rgba(112, 72, 24, .38);
+    --nl: inset 0 0 0 3px #efe2bf, inset 0 0 0 4px #2b2116;
   }
-  .mt-britain .mt-paper {
-    background:
-      radial-gradient(ellipse at center, transparent 50%, rgba(112, 72, 24, .38) 100%),
-      linear-gradient(rgba(239, 226, 191, .28), rgba(239, 226, 191, .28));
-  }
-  .mt-britain .mt-fx {
-    inset: var(--bw);
-    box-shadow: inset 0 0 0 1px #2b2116, inset 0 0 0 5px #efe2bf, inset 0 0 0 6px #2b2116, inset 0 0 48px rgba(34, 86, 65, .35);
-  }
-  .mt-britain .mt-cart {
-    color: #2b2116; font-family: "IM Fell English", Georgia, serif; text-align: center;
-    background: #f5ead0; padding: 14px 24px 12px; border: 1px solid #2b2116;
-    box-shadow: 0 0 0 4px #f5ead0, 0 0 0 5px #2b2116, 0 6px 20px rgba(60, 40, 10, .35);
-  }
+  .mt-britain .mt-cart { font-family: "IM Fell English", Georgia, serif; padding: 14px 24px 12px; }
   .mt-britain .mt-cart .k { font-family: "IM Fell English SC", Georgia, serif; font-size: 12px; letter-spacing: .12em; }
   .mt-britain .mt-cart .t { font-size: 22px; line-height: 1.1; margin: 2px 0 4px; }
-  .mt-britain .mt-cart .ribbon {
-    display: inline-block; margin-top: 6px; padding: 2px 14px; color: #f5ead0; background: #225641;
-    font-style: italic; font-size: 13px; clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%);
-  }
   .mt-britain .mt-compass { width: 96px; height: 96px; }
-  .mt-britain .leaflet-popup-content-wrapper, .mt-britain .leaflet-popup-tip { background: #f5ead0; }
-  .mt-britain .aspen-flag-marker img { filter: sepia(.4); }
 
-  /* ── Scotland: tartan ─────────────────────────────────────────── */
+  /* ── Scotland: an Ordnance Survey first-edition engraving ─────── */
   .mt-scotland {
-    --bw: 16px; --accent: #f4e285;
-    --tf: saturate(.75) hue-rotate(12deg) brightness(.97) contrast(1.04);
-    --bh:
-      repeating-linear-gradient(90deg, transparent 0 7px, rgba(244, 226, 133, .95) 7px 8px, transparent 8px 22px, rgba(16, 36, 32, .6) 22px 34px),
-      repeating-linear-gradient(0deg, transparent 0 7px, rgba(244, 226, 133, .7) 7px 8px, transparent 8px 22px, rgba(16, 36, 32, .6) 22px 34px),
-      linear-gradient(#1f4d6b, #1f4d6b);
+    --bw: 13px; --accent: #1f3a52; --ink: #1a1a1a; --card: #f6f4ee; --grain: .5;
+    --tf: grayscale(1) sepia(.2) contrast(1.1) brightness(1.05);
+    --vig: rgba(60, 58, 50, .22);
   }
-  .mt-scotland .mt-cart {
-    color: #f2f5f8; text-align: center; background: #1f4d6b; padding: 14px 22px 12px;
-    border: 3px solid #f2f5f8; border-radius: 4px; box-shadow: 0 6px 20px rgba(0, 0, 0, .35);
-  }
-  .mt-scotland .mt-cart .t { font-family: "Uncial Antiqua", Georgia, serif; font-size: 19px; line-height: 1.25; margin: 6px 0 4px; }
-  .mt-scotland .mt-cart .k { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; opacity: .85; }
+  .mt-scotland .mt-cart .t { font-family: "Cormorant SC", Georgia, serif; font-weight: 600; font-size: 20px; line-height: 1.2; letter-spacing: .03em; margin: 6px 0 4px; }
+  .mt-scotland .mt-cart .k { font: italic 12.5px/1.4 Georgia, serif; color: #3a3a3a; }
 
-  /* ── Netherlands: Delft blue ─────────────────────────────────── */
+  /* ── Netherlands: a Golden Age atlas (Blaeu, Hondius) ─────────── */
   .mt-netherlands {
-    --bw: 22px; --accent: #e8741f;
-    --tf: grayscale(1) sepia(1) hue-rotate(172deg) saturate(2.4) brightness(1.02) contrast(.95);
-    --bh:
-      radial-gradient(circle at 50% 50%, transparent 0 3px, #1d4f91 3.5px 4.5px, transparent 5px),
-      radial-gradient(circle at 0 0, #1d4f91 0 4px, transparent 4.5px),
-      radial-gradient(circle at 100% 0, #1d4f91 0 4px, transparent 4.5px),
-      radial-gradient(circle at 0 100%, #1d4f91 0 4px, transparent 4.5px),
-      radial-gradient(circle at 100% 100%, #1d4f91 0 4px, transparent 4.5px),
-      linear-gradient(90deg, #b7c9e2 1px, transparent 1px),
-      linear-gradient(0deg, #b7c9e2 1px, transparent 1px),
-      #f7f9fc;
-  }
-  .mt-netherlands .mt-b { background-size: 22px 22px; }
-  .mt-netherlands .mt-cart {
-    color: #1d4f91; text-align: center; background: #f7f9fc; padding: 14px 22px 12px;
-    border: 2px solid #1d4f91; box-shadow: inset 0 0 0 4px #f7f9fc, inset 0 0 0 5px #1d4f91, 0 6px 20px rgba(29, 79, 145, .3);
+    --bw: 16px; --accent: #e8741f; --ink: #1d4f91; --rib: #c8661f; --card: #f6ecd2;
+    --tf: sepia(.5) saturate(1.5) hue-rotate(-8deg) contrast(.95) brightness(1.04);
+    --wash: rgba(240, 226, 192, .26); --vig: rgba(120, 80, 30, .32);
+    --nl: inset 0 0 0 3px #f0e2c0, inset 0 0 0 4px #1d4f91;
   }
   .mt-netherlands .mt-cart .t { font-family: "Cormorant Garamond", Georgia, serif; font-style: italic; font-weight: 700; font-size: 28px; line-height: 1; margin: 4px 0; }
-  .mt-netherlands .mt-cart .ribbon { display: inline-block; margin-top: 6px; padding: 2px 12px; background: #e8741f; color: #fff; font-size: 12px; font-weight: 600; letter-spacing: .06em; }
+  .mt-netherlands .mt-cart .ribbon { font-size: 11px; letter-spacing: .1em; }
+  .mt-netherlands .mt-compass { width: 84px; height: 84px; }
 
-  /* ── Finland: a winter night, two candles in the window ──────── */
+  /* ── Finland: a seventeenth-century Nordic engraving ──────────── */
   .mt-finland {
-    --bw: 12px; --accent: #003580;
-    --tf: grayscale(.6) sepia(.25) hue-rotate(175deg) saturate(1.3) brightness(1.06);
-    --bh: linear-gradient(#003580, #003580) 0 40% / 100% 2px no-repeat, linear-gradient(#003580, #003580) 0 75% / 100% 1px no-repeat, #fbfdff;
-    --bv: linear-gradient(90deg, #003580, #003580) 40% 0 / 2px 100% no-repeat, linear-gradient(90deg, #003580, #003580) 75% 0 / 1px 100% no-repeat, #fbfdff;
+    --bw: 12px; --accent: #3d5570; --ink: #3d5570; --card: #f4f4f0; --grain: .5;
+    --tf: grayscale(1) sepia(.3) hue-rotate(180deg) saturate(.8) brightness(1.04);
+    --vig: rgba(60, 80, 105, .22);
   }
-  .mt-finland .mt-fx {
-    background:
-      radial-gradient(circle, #fff 0 1.6px, transparent 2px) 0 0 / 70px 70px,
-      radial-gradient(circle, rgba(255, 255, 255, .85) 0 1.1px, transparent 1.5px) 25px 35px / 44px 44px,
-      radial-gradient(circle, rgba(255, 255, 255, .7) 0 .9px, transparent 1.3px) 10px 12px / 30px 30px;
-    filter: drop-shadow(0 0 1px rgba(0, 53, 128, .6));
-    animation: mt-snow 14s linear infinite;
-  }
-  @keyframes mt-snow { to { background-position: 70px 700px, 69px 475px, 40px 312px; } }
-  .mt-finland .mt-cart {
-    color: #003580; background: rgba(251, 253, 255, .95); padding: 14px 20px 12px;
-    border-top: 4px solid #003580; box-shadow: 0 6px 20px rgba(0, 53, 128, .25);
-  }
-  .mt-finland .mt-cart .t { font-size: 20px; font-weight: 700; line-height: 1.15; margin: 4px 0; }
-  .mt-finland .mt-cart .k { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #4a6a99; }
-  .mt-finland .mt-candles { width: 64px; height: 72px; }
-  .mt-finland .flame { transform-origin: 50% 100%; animation: mt-flicker 1.4s ease-in-out infinite alternate; }
-  .mt-finland .flame.b { animation-duration: 1.1s; }
-  @keyframes mt-flicker { from { transform: scale(1, 1) rotate(-2deg); } to { transform: scale(.88, 1.12) rotate(3deg); } }
+  .mt-finland .mt-cart .t { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 700; font-size: 24px; line-height: 1.1; margin: 4px 0; color: #2c4260; }
+  .mt-finland .mt-cart .k { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #5b7088; }
+  .mt-finland .mt-candles { width: 40px; height: 47px; }
+  .mt-finland .flame { transform-origin: 50% 100%; transform-box: fill-box; animation: mt-flicker 1.6s ease-in-out infinite alternate; }
+  .mt-finland .flame.b { animation-duration: 1.3s; }
+  @keyframes mt-flicker { from { transform: scale(1, 1) rotate(-2deg); } to { transform: scale(.9, 1.08) rotate(2deg); } }
 
-  /* ── Japan: washi and seigaiha ────────────────────────────────── */
+  /* ── Japan: an Edo woodblock map on washi, seigaiha border ────── */
   .mt-japan {
-    --bw: 20px; --accent: #bc2d29;
+    --bw: 20px; --accent: #bc2d29; --ink: #1f4f5c; --card: #f7f0de;
     --tf: sepia(.55) saturate(.75) brightness(1.06) contrast(.94);
+    --wash: rgba(244, 236, 216, .3);
     --bh:
       radial-gradient(circle at 100% 150%, #f4ecd8 24%, #1f4f5c 24%, #1f4f5c 28%, #f4ecd8 28%, #f4ecd8 36%, #1f4f5c 36%, #1f4f5c 40%, transparent 40%) 0 0 / 40px 20px,
       radial-gradient(circle at 0 150%, #f4ecd8 24%, #1f4f5c 24%, #1f4f5c 28%, #f4ecd8 28%, #f4ecd8 36%, #1f4f5c 36%, #1f4f5c 40%, transparent 40%) 0 0 / 40px 20px,
       radial-gradient(circle at 50% 100%, #1f4f5c 10%, #f4ecd8 10%, #f4ecd8 23%, #1f4f5c 23%, #1f4f5c 30%, #f4ecd8 30%, #f4ecd8 43%, #1f4f5c 43%, #1f4f5c 50%, #f4ecd8 50%, #f4ecd8 63%, #1f4f5c 63%, #1f4f5c 71%, transparent 71%) 0 0 / 40px 20px,
       #f4ecd8;
   }
-  .mt-japan .mt-paper { background: linear-gradient(rgba(244, 236, 216, .3), rgba(244, 236, 216, .3)); }
-  .mt-japan .mt-cart {
-    color: #1f2a2e; background: #f7f0de; padding: 14px 20px 12px 20px; display: flex; gap: 14px; align-items: center;
-    border: 1px solid #1f4f5c; box-shadow: 0 6px 20px rgba(31, 79, 92, .28);
-  }
-  .mt-japan .mt-cart .t { font-family: "Shippori Mincho", serif; font-weight: 700; font-size: 24px; line-height: 1.1; }
-  .mt-japan .mt-cart .k { font-size: 11px; letter-spacing: .08em; color: #4c5b5f; margin-top: 4px; }
+  .mt-japan .mt-cart { color: #1f2a2e; }
+  .mt-japan .slip .t { font-family: "Shippori Mincho", serif; font-weight: 700; font-size: 24px; }
+  .mt-japan .mt-cart .k { color: #4c5b5f; letter-spacing: .04em; }
   .mt-japan .hanko {
-    flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 6px;
-    background: #bc2d29; color: #f7f0de; font-family: "Shippori Mincho", serif; font-weight: 700; font-size: 26px;
+    flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 5px;
+    background: #bc2d29; color: #f7f0de; font-family: "Shippori Mincho", serif; font-weight: 700; font-size: 20px;
   }
 
-  /* ── Korea: dancheong ─────────────────────────────────────────── */
+  /* ── Korea: a Joseon woodblock map on hanji (Daedongyeojido) ──── */
   .mt-korea {
-    --bw: 22px; --accent: #b8312f;
-    --tf: sepia(.28) saturate(.95) brightness(1.05);
-    --bh:
-      radial-gradient(circle, #e0b33a 0 2.6px, #b8312f 3px 5.5px, #f2ead3 6px 6.8px, transparent 7.2px) 0 50% / 22px 22px repeat-x,
-      repeating-linear-gradient(90deg, #2f7a5e 0 11px, #f2ead3 11px 12px, #2b4c8c 12px 17px, #f2ead3 17px 18px, #b8312f 18px 22px);
-    --bv:
-      radial-gradient(circle, #e0b33a 0 2.6px, #b8312f 3px 5.5px, #f2ead3 6px 6.8px, transparent 7.2px) 50% 0 / 22px 22px repeat-y,
-      repeating-linear-gradient(0deg, #2f7a5e 0 11px, #f2ead3 11px 12px, #2b4c8c 12px 17px, #f2ead3 17px 18px, #b8312f 18px 22px);
+    --bw: 16px; --accent: #b8312f; --ink: #3a3029; --card: #f5eedb;
+    --tf: grayscale(1) sepia(.5) contrast(1.1) brightness(1.02);
+    --wash: rgba(242, 234, 211, .3); --vig: rgba(90, 70, 40, .2);
+    --nl: inset 0 0 0 1px #3a3029;
   }
-  .mt-korea .mt-paper { background: linear-gradient(rgba(242, 234, 211, .22), rgba(242, 234, 211, .22)); }
-  .mt-korea .mt-cart {
-    color: #22302b; background: #f6f0de; padding: 12px 20px; display: flex; gap: 14px; align-items: center;
-    border: 2px solid #2f7a5e; box-shadow: inset 0 0 0 3px #f6f0de, inset 0 0 0 5px #b8312f, 0 6px 20px rgba(0, 0, 0, .2);
-  }
-  .mt-korea .mt-cart .t { font-family: "Nanum Myeongjo", serif; font-weight: 800; font-size: 26px; line-height: 1.1; }
-  .mt-korea .mt-cart .k { font-size: 11px; letter-spacing: .06em; color: #4b5a54; margin-top: 3px; }
-  .mt-korea .taegeuk { flex: none; width: 42px; height: 42px; }
+  .mt-korea .mt-cart { color: #22201c; }
+  .mt-korea .slip .t { font-family: "Nanum Myeongjo", serif; font-weight: 800; font-size: 24px; }
+  .mt-korea .mt-cart .k { color: #57504a; letter-spacing: .03em; }
+  .mt-korea .taegeuk { flex: none; width: 26px; height: 26px; }
 
-  /* ── Taiwan: floral cloth, iron grille, temple plaque ── */
-  /* --bh (花布 tile) and --gh/--gv (鐵窗花 tiles) are built in the script */
-  .mt-taiwan { --bw: 26px; --accent: #c8102e; --tf: sepia(.18) saturate(1.15); }
-  .mt-taiwan .grille { position: absolute; background: var(--gh) 0 0 / 22px 10px repeat-x, #f3ead3; }
-  .mt-taiwan .g-t { top: var(--bw); left: var(--bw); right: var(--bw); height: 10px; border-bottom: 1px solid #1f4d3f; }
-  .mt-taiwan .g-b { bottom: var(--bw); left: var(--bw); right: var(--bw); height: 10px; border-top: 1px solid #1f4d3f; }
-  .mt-taiwan .g-l, .mt-taiwan .g-r {
-    top: calc(var(--bw) + 11px); bottom: calc(var(--bw) + 11px); width: 10px;
-    background: var(--gv) 0 0 / 10px 22px repeat-y, #f3ead3;
+  /* ── Taiwan: a Qing blue-green scroll map, mounted for hanging ── */
+  .mt-taiwan {
+    --bw: 18px; --accent: #9e1b1b; --ink: #2d4a3e; --card: #f3ead3;
+    --tf: sepia(.6) hue-rotate(45deg) saturate(1.4) brightness(1.02);
+    --wash: rgba(233, 222, 190, .28); --vig: rgba(70, 80, 50, .22);
+    --bh: #d3dbc8; --nl: inset 0 0 0 1px #6d7f68, inset 0 0 0 3px #efe7d0, inset 0 0 0 4px #6d7f68;
   }
-  .mt-taiwan .g-l { left: var(--bw); border-right: 1px solid #1f4d3f; }
-  .mt-taiwan .g-r { right: var(--bw); border-left: 1px solid #1f4d3f; }
-  .mt-taiwan .leaflet-top.leaflet-left .leaflet-control { margin-left: calc(var(--bw) + 19px); margin-top: calc(var(--bw) + 19px); }
-  .mt-taiwan .leaflet-bottom.leaflet-right .leaflet-control { margin-right: calc(var(--bw) + 11px); margin-bottom: calc(var(--bw) + 11px); }
-  .mt-taiwan .mt-cart {
-    top: calc(var(--bw) + 20px); right: calc(var(--bw) + 20px);
-    color: #d9b25f; text-align: center; padding: 14px 30px 12px; border-radius: 3px;
-    background: radial-gradient(ellipse at 50% 30%, #b52626, #9e1b1b 60%, #861515);
-    border: 2px solid #d9b25f;
-    box-shadow: inset 0 0 0 3px #861515, inset 0 0 0 4px #d9b25f, inset 0 0 18px rgba(60, 8, 8, .45), 0 6px 20px rgba(60, 10, 10, .35);
+  /* silk mounting: a thin wooden rod along the top, the roller with its knobs along the bottom */
+  .mt-taiwan .mt-bt, .mt-taiwan .mt-bb { z-index: 1; }
+  .mt-taiwan .mt-bt { background: linear-gradient(#5b4030, #5b4030) 0 0 / 100% 4px no-repeat, #d3dbc8; }
+  .mt-taiwan .mt-bb {
+    background:
+      linear-gradient(#3b2a1f, #3b2a1f) 0 100% / 14px 9px no-repeat,
+      linear-gradient(#3b2a1f, #3b2a1f) 100% 100% / 14px 9px no-repeat,
+      linear-gradient(#5b4030, #5b4030) 0 100% / 100% 6px no-repeat,
+      #d3dbc8;
   }
-  .mt-taiwan .mt-cart .t {
-    font-family: "LXGW WenKai TC", "Noto Serif TC", serif; font-weight: 700; font-size: 28px; line-height: 1.15; letter-spacing: .12em;
-    text-shadow: 0 1px 0 rgba(60, 8, 8, .7), 0 0 8px rgba(217, 178, 95, .35);
+  .mt-taiwan .mt-cart { color: #1f2a24; }
+  .mt-taiwan .slip .t { font-family: "LXGW WenKai TC", "Noto Serif TC", serif; font-weight: 700; font-size: 25px; }
+  .mt-taiwan .mt-cart .k { color: #4a5a50; }
+  .mt-taiwan .seal {
+    flex: none; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 3px;
+    background: #9e1b1b; color: #f3ead3; font-family: "LXGW WenKai TC", serif; font-weight: 700; font-size: 12px; line-height: 1;
   }
-  .mt-taiwan .mt-cart .k { font-size: 11px; letter-spacing: .06em; color: #f3ead3; opacity: .9; margin-top: 4px; }
 
-  /* ── Hong Kong: neon ──────────────────────────────────────────── */
-  .mt-hongkong { --bw: 10px; --accent: #3ff2ff; --tf: none; --bh: #0b0b12; }
-  .mt-hongkong .mt-fx {
-    inset: 16px; border: 2px solid #ff4fa3; border-radius: 8px;
-    box-shadow: 0 0 6px #ff4fa3, 0 0 22px rgba(255, 79, 163, .55), inset 0 0 10px rgba(255, 79, 163, .45);
-    animation: mt-buzz 6s steps(1) infinite;
+  /* ── Hong Kong: an Admiralty chart, for the Cheung Chau Bun Festival ── */
+  .mt-hongkong {
+    --bw: 14px; --accent: #b3261e; --ink: #1c1c1c; --card: #f7f7f2; --grain: .5;
+    --tf: grayscale(.55) sepia(.12) brightness(1.05) contrast(.95);
+    --vig: rgba(60, 75, 85, .18);
   }
-  .mt-hongkong .mt-fx::after {
-    content: ""; position: absolute; inset: 7px; border: 1.5px solid #3ff2ff; border-radius: 5px;
-    box-shadow: 0 0 6px #3ff2ff, 0 0 16px rgba(63, 242, 255, .5);
-  }
-  @keyframes mt-buzz { 0%, 100% { opacity: 1; } 71% { opacity: .35; } 72% { opacity: 1; } 74% { opacity: .5; } 75% { opacity: 1; } }
-  /* the cartouche is a Hong Kong street-name plate: white enamel, a thin
-     black keyline, English over Chinese, the bilingual form the city's
-     signs have kept since the British era, lit by the neon around it */
-  .mt-hongkong .mt-cart {
-    color: #111; text-align: center; background: #fbfbf7; padding: 12px 22px 10px; border-radius: 4px;
-    border: 2px solid #111;
-    box-shadow: inset 0 0 0 3px #fbfbf7, inset 0 0 0 4.5px #111, 0 0 14px rgba(255, 79, 163, .55), 0 0 34px rgba(63, 242, 255, .25);
-  }
-  .mt-hongkong .mt-cart .en {
-    font: 700 15px/1.2 "Helvetica Neue", Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase;
-  }
-  .mt-hongkong .mt-cart .t {
-    font-family: "Noto Sans HK", sans-serif; font-weight: 900; font-size: 21px; line-height: 1.3; letter-spacing: .06em; margin-top: 3px;
-  }
-  .mt-hongkong .mt-cart .k {
-    font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #444; margin-top: 6px;
-    padding-top: 5px; border-top: 1px solid #111;
-  }
-  .mt-hongkong .aspen-flag-marker img { box-shadow: 0 0 0 1px #3ff2ff, 0 0 14px rgba(63, 242, 255, .7) !important; }
+  .mt-hongkong .mt-cart { padding: 12px 22px 10px; }
+  .mt-hongkong .mt-cart .en { font: 700 14px/1.25 "Libre Caslon Text", Georgia, serif; letter-spacing: .12em; }
+  .mt-hongkong .mt-cart .t { font-family: "Noto Serif HK", serif; font-weight: 700; font-size: 20px; line-height: 1.3; letter-spacing: .2em; margin: 4px 0 6px; }
+  .mt-hongkong .mt-cart .k { font: italic 11.5px/1.4 "Libre Caslon Text", Georgia, serif; color: #3a3a3a; padding-top: 6px; border-top: 1px solid #1c1c1c; }
+  .mt-hongkong .mt-bunshan { width: 70px; height: 100px; }
 
-  /* ── Thailand: gold on red ────────────────────────────────────── */
+  /* ── Thailand: gold on lacquer, after the samut khoi ──────────── */
   .mt-thailand {
-    --bw: 20px; --accent: #d4a52c;
-    --tf: sepia(.6) saturate(1.45) hue-rotate(-6deg) brightness(1.03);
-    --bh: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Cpath d='M10 18 C4.5 13.5 7.5 7.5 10 2.5 C12.5 7.5 15.5 13.5 10 18 Z' fill='none' stroke='%23d4a52c' stroke-width='1.3'/%3E%3Cpath d='M10 14.5 C8.2 12.8 9.2 10.4 10 8.6 C10.8 10.4 11.8 12.8 10 14.5 Z' fill='%23d4a52c'/%3E%3C/svg%3E") 0 0 / 20px 20px, #7a1c1c;
+    --bw: 16px; --accent: #c9a14a; --ink: #c9a14a; --card: #231b17;
+    --tf: sepia(.75) saturate(1.2) hue-rotate(-4deg) contrast(.92) brightness(1.02);
+    --vig: rgba(110, 60, 10, .32);
+    --nl: inset 0 0 0 1px #c9a14a;
   }
-  .mt-thailand .mt-fx { inset: var(--bw); box-shadow: inset 0 0 0 2px #d4a52c, inset 0 0 30px rgba(122, 28, 28, .25); }
-  .mt-thailand .mt-cart {
-    color: #f6e2a8; text-align: center; background: #7a1c1c; padding: 14px 22px 12px;
-    border: 2px solid #d4a52c; box-shadow: inset 0 0 0 4px #7a1c1c, inset 0 0 0 5px #d4a52c, 0 6px 20px rgba(0, 0, 0, .3);
-  }
-  .mt-thailand .mt-cart .t { font-family: "Noto Serif Thai", serif; font-weight: 700; font-size: 26px; line-height: 1.2; color: #ffe39a; }
+  .mt-thailand .mt-cart { color: #d9bb72; }
+  .mt-thailand .mt-cart .t { font-family: "Noto Serif Thai", serif; font-weight: 700; font-size: 26px; line-height: 1.2; color: #e2c57f; }
   .mt-thailand .mt-cart .k { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; margin-top: 2px; }
 
-  /* ── Australia: green and gold, the Southern Cross ────────────── */
+  /* ── Australia: a VOC chart of Hollandia Nova ─────────────────── */
   .mt-australia {
-    --bw: 18px; --accent: #f2c230;
-    --tf: sepia(.5) saturate(1.7) hue-rotate(-16deg) brightness(1.02);
-    --bh:
-      radial-gradient(circle at 30% 40%, #f2c230 0 2.4px, transparent 2.9px) 0 0 / 22px 22px,
-      radial-gradient(circle at 62% 30%, #f7d55a 0 2px, transparent 2.5px) 0 0 / 22px 22px,
-      radial-gradient(circle at 52% 66%, #f2c230 0 2.2px, transparent 2.7px) 0 0 / 22px 22px,
-      #1f5c47;
+    --bw: 16px; --accent: #1f5c47; --ink: #1f5c47; --ink2: #b08a2e;
+    --tf: sepia(.95) saturate(1.15) hue-rotate(-8deg) contrast(.9) brightness(1.04);
+    --wash: rgba(239, 226, 191, .3); --vig: rgba(112, 72, 24, .4);
+    --nl: inset 0 0 0 3px #efe2bf, inset 0 0 0 4px #5a4630;
   }
-  .mt-australia .mt-fx { inset: var(--bw); box-shadow: inset 0 0 0 2px #f2c230; }
-  .mt-australia .mt-cart {
-    color: #1f3b30; background: #fbf6e6; padding: 0 0 12px; overflow: hidden; text-align: center;
-    border: 2px solid #1f5c47; box-shadow: 0 6px 20px rgba(0, 0, 0, .25);
-  }
-  .mt-australia .mt-cart .strip { height: 8px; background: linear-gradient(90deg, #1f5c47 0 50%, #f2c230 50%); margin-bottom: 10px; }
-  .mt-australia .mt-cart .t { font-family: "Playfair Display", Georgia, serif; font-weight: 800; font-size: 22px; padding: 0 22px; }
-  .mt-australia .mt-cart .k { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #4f6a5c; margin-top: 2px; }
-  .mt-australia .mt-cross { width: 84px; height: 100px; filter: drop-shadow(0 0 4px rgba(16, 36, 32, .8)); }
+  .mt-australia .mt-fx svg { display: block; }
+  .mt-australia .mt-cart .t { font-family: "Playfair Display", Georgia, serif; font-weight: 800; font-size: 22px; }
+  .mt-australia .mt-cart .k { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #5a4a36; margin-top: 2px; }
+  .mt-australia .mt-cross { width: 60px; height: 72px; }
 
-  /* ── United States: stars, stripes, fireworks ─────────────────── */
+  /* ── United States: an 1890s atlas plate ──────────────────────── */
   .mt-usa {
-    --bw: 18px; --accent: #b22234;
-    --tf: sepia(.3) saturate(.95) contrast(1.02);
-    --bh: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='18'%3E%3Cpath d='M11 3 L12.4 7 L16.6 7 L13.2 9.5 L14.5 13.5 L11 11 L7.5 13.5 L8.8 9.5 L5.4 7 L9.6 7 Z' fill='%23fff'/%3E%3C/svg%3E") 0 0 / 22px 18px, #1c2e5a;
-    --bv: repeating-linear-gradient(0deg, #b22234 0 9px, #fff 9px 18px);
+    --bw: 14px; --accent: #9b3a3f; --ink: #1c2e5a; --card: #f6f0e0;
+    --tf: sepia(.35) saturate(.8) hue-rotate(-8deg) contrast(.9) brightness(1.06);
+    --wash: rgba(246, 238, 215, .25); --vig: rgba(100, 80, 40, .18);
   }
-  .mt-usa .mt-fx .fw {
-    position: absolute; width: 4px; height: 4px; border-radius: 50%; opacity: 0;
-    animation: mt-burst 3.6s ease-out infinite;
+  .mt-usa .mt-cart .stars { color: #9b3a3f; font-size: 9px; letter-spacing: .7em; margin-left: .7em; }
+  .mt-usa .mt-cart .t {
+    display: inline-block; margin: 5px 0 4px; padding: 3px 26px; background: #1c2e5a; color: #f6f0e0;
+    font: italic 700 19px/1.2 "Old Standard TT", Georgia, serif; clip-path: polygon(0 0, 100% 0, 95% 50%, 100% 100%, 0 100%, 5% 50%);
   }
-  @keyframes mt-burst {
-    0% { opacity: 0; transform: scale(.1); }
-    8% { opacity: 1; }
-    70% { opacity: .9; transform: scale(1); }
-    100% { opacity: 0; transform: scale(1.15) translateY(8px); }
-  }
-  .mt-usa .mt-cart {
-    color: #1c2e5a; text-align: center; background: #fdfaf2; padding: 12px 22px;
-    border: 3px solid #1c2e5a; box-shadow: inset 0 0 0 3px #fdfaf2, inset 0 0 0 5px #b22234, 0 6px 20px rgba(0, 0, 0, .25);
-  }
-  .mt-usa .mt-cart .t { font-family: "Alfa Slab One", Georgia, serif; font-size: 22px; line-height: 1.1; color: #b22234; }
-  .mt-usa .mt-cart .k { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; margin-top: 4px; }
+  .mt-usa .mt-cart .k { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
 
   /* phones: the cartouche runs along the bottom, full width, and the
      corner ornaments step out, so nothing is squeezed to one glyph a line */
@@ -323,7 +250,12 @@ const { mapId } = Astro.props;
       top: auto; bottom: calc(var(--bw) + 30px);
       left: calc(var(--bw) + 10px); right: calc(var(--bw) + 10px); max-width: none;
     }
-    .mt-taiwan .mt-cart { bottom: calc(var(--bw) + 40px); left: calc(var(--bw) + 18px); right: calc(var(--bw) + 18px); }
+    .mt .slip, .mt .slip + .k { writing-mode: horizontal-tb; }
+    .mt .slip { padding: 7px 12px; }
+    .mt-japan .mt-cart, .mt-korea .mt-cart, .mt-taiwan .mt-cart { flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+    .mt .slip .t { font-size: 20px; }
+    .mt-hongkong .mt-cart, .mt-usa .mt-cart { bottom: calc(var(--bw) + 44px); }
+    .mt-japan .mt-x, .mt-korea .mt-x, .mt-taiwan .mt-x { top: 4px; bottom: auto; }
     .mt .mt-deco { display: none; }
   }
 
@@ -336,9 +268,7 @@ const { mapId } = Astro.props;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .mt-cart, .mt-toast, .mt .aspen-flag-marker.mt-hero > div,
-    .mt-finland .mt-fx, .mt-finland .flame, .mt-hongkong .mt-fx, .mt-usa .mt-fx .fw { animation: none !important; }
-    .mt-usa .mt-fx .fw { opacity: .8; }
+    .mt-cart, .mt-toast, .mt .aspen-flag-marker.mt-hero > div, .mt-finland .flame { animation: none !important; }
   }
 </style>
 
@@ -350,9 +280,8 @@ const { mapId } = Astro.props;
     const ESRI_A = '&copy; <a href="https://www.esri.com/">Esri</a>';
     const SRC = {
       "World_Physical_Map": ESRI_A + ", US National Park Service",
-      "World_Terrain_Base": ESRI_A + ", USGS, NOAA",
-      "Canvas/World_Light_Gray_Base": ESRI_A + ', HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      "Canvas/World_Dark_Gray_Base": ESRI_A + ', HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      "World_Shaded_Relief": ESRI_A + ", USGS",
+      "Ocean/World_Ocean_Base": ESRI_A + ", GEBCO, NOAA, National Geographic, Garmin, HERE, Geonames.org, and other contributors",
     };
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -363,7 +292,8 @@ const { mapId } = Astro.props;
     };
     const on = (m, d) => (y) => new Date(y, m, d);
 
-    const compass = (() => {
+    // a sixteen-point rose; dark and light halve each point, the cardinals in dark
+    const rose = (ink, dark, light) => {
       let pts = "";
       for (let i = 0; i < 16; i++) {
         const a = (i * 22.5 * Math.PI) / 180;
@@ -373,135 +303,164 @@ const { mapId } = Astro.props;
         const l = [Math.sin(a - Math.PI / 2) * w, -Math.cos(a - Math.PI / 2) * w];
         const rr = [Math.sin(a + Math.PI / 2) * w, -Math.cos(a + Math.PI / 2) * w];
         const f = (p) => p.map((v) => v.toFixed(1)).join(" ");
-        pts += `<path d="M0 0 L${f(l)} L${f(tip)} Z" fill="#2b2116"/><path d="M0 0 L${f(rr)} L${f(tip)} Z" fill="${i % 4 === 0 ? "#225641" : "#efe2bf"}" stroke="#2b2116" stroke-width=".5"/>`;
+        pts += `<path d="M0 0 L${f(l)} L${f(tip)} Z" fill="${ink}"/><path d="M0 0 L${f(rr)} L${f(tip)} Z" fill="${i % 4 === 0 ? dark : light}" stroke="${ink}" stroke-width=".5"/>`;
       }
-      return `<svg class="mt-compass" viewBox="-50 -58 100 108" aria-hidden="true">
-        <circle r="36" fill="none" stroke="#2b2116" stroke-width=".8"/><circle r="33" fill="none" stroke="#2b2116" stroke-width=".4"/>
-        ${pts}<circle r="2.5" fill="#efe2bf" stroke="#2b2116" stroke-width=".6"/>
-        <text y="-49" text-anchor="middle" font-family="IM Fell English SC, Georgia, serif" font-size="11" fill="#2b2116">N</text></svg>`;
-    })();
-    const star = (x, y, r, p = 7) => {
+      return `<circle r="36" fill="none" stroke="${ink}" stroke-width=".8"/><circle r="33" fill="none" stroke="${ink}" stroke-width=".4"/>
+        ${pts}<circle r="2.5" fill="${light}" stroke="${ink}" stroke-width=".6"/>`;
+    };
+    const compass = (north, ...c) => `<svg class="mt-compass" viewBox="-50 -58 100 108" aria-hidden="true">${rose(...c)}${north}</svg>`;
+    const fleur = (ink) => `<g transform="translate(0 -50) scale(.55)" fill="${ink}"><path d="M0 -12 C4 -7 4 -2 0 3 C-4 -2 -4 -7 0 -12 Z"/>
+      <path d="M-1 1 C-5 -6 -12 -4 -10 1 C-9 4 -5 4 -4 1 C-6 2 -8 0 -6 -2 C-4 -3 -2 -1 -1 3 Z"/>
+      <path d="M1 1 C5 -6 12 -4 10 1 C9 4 5 4 4 1 C6 2 8 0 6 -2 C4 -3 2 -1 1 3 Z"/><rect x="-5" y="3" width="10" height="2"/><path d="M-2 5 L0 10 L2 5 Z"/></g>`;
+    const star = (x, y, r, p = 7, fill = "#fbf6e6", stroke = "none") => {
       let d = "";
       for (let i = 0; i < p * 2; i++) {
         const a = (i * Math.PI) / p - Math.PI / 2;
         const rr = i % 2 ? r * 0.45 : r;
         d += `${i ? "L" : "M"}${(x + Math.cos(a) * rr).toFixed(1)} ${(y + Math.sin(a) * rr).toFixed(1)} `;
       }
-      return `<path d="${d}Z" fill="#fbf6e6"/>`;
+      return `<path d="${d}Z" fill="${fill}" stroke="${stroke}" stroke-width=".9" stroke-linejoin="round"/>`;
     };
     const svgUrl = (w, h, body) => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}'>${body}</svg>`)}")`;
+    // a w×h band tile for the top and bottom bars, turned a quarter for the
+    // sides; "stand" is drawn upright on every bar (--bw must equal h)
+    const band = (w, h, ground, body, stand = "") => ({
+      "--bh": `${svgUrl(w, h, body + stand)} 0 0 / ${w}px ${h}px, ${ground}`,
+      "--bv": `${svgUrl(h, w, `<g transform='translate(${h} 0) rotate(90)'>${body}</g><g transform='translate(${(h - w) / 2} ${(w - h) / 2})'>${stand}</g>`)} 0 0 / ${h}px ${w}px, ${ground}`,
+    });
 
-    // 台灣花布: a peony centred on each 26px band, leaves and a white blossom
-    // mirrored across the diagonal so the top and side bars carry the same
-    const huabu = (() => {
-      const peony = (x, y) => {
-        let s = `<g transform='translate(${x} ${y})'>`;
-        for (let i = 0; i < 5; i++) {
-          s += `<g transform='rotate(${i * 72})'><ellipse cy='-9.5' rx='7.6' ry='10' fill='#f7a8bf' stroke='#e5467a' stroke-width='.8'/>` +
-            `<path d='M0 -4 V-16' stroke='#fff' stroke-opacity='.55' stroke-width='.8'/></g>`;
-        }
-        for (let i = 0; i < 5; i++) s += `<ellipse cy='-5.2' rx='4.6' ry='6.4' transform='rotate(${i * 72 + 36})' fill='#e5467a'/>`;
-        return s + `<circle r='3.6' fill='#ffe9a8'/><circle r='1.3' fill='#e5467a'/></g>`;
-      };
-      const leaf = (x, y, a, fill) => `<g transform='translate(${x} ${y}) rotate(${a})'><path d='M0 0 C5 -7 14 -7 21 0 C14 7 5 7 0 0 Z' fill='${fill}'/>` +
-        `<path d='M2 0 H18' stroke='#cfe8da' stroke-opacity='.7' stroke-width='.7'/></g>`;
-      const bloom = (x, y) => Array.from({ length: 5 }, (_, i) => {
-        const a = (i * 72 * Math.PI) / 180;
-        return `<circle cx='${(x + Math.sin(a) * 2.7).toFixed(1)}' cy='${(y - Math.cos(a) * 2.7).toFixed(1)}' r='2.4' fill='#fff'/>`;
-      }).join("") + `<circle cx='${x}' cy='${y}' r='1.5' fill='#ffd23f'/>`;
-      const dots = [[40, 2], [2, 40], [36, 24], [24, 36], [42, 42], [52, 30], [30, 52]]
-        .map(([x, y]) => `<circle cx='${x}' cy='${y}' r='1.1' fill='#fff'/>`).join("");
-      const body = `<rect width='56' height='56' fill='#c8102e'/>${leaf(29, 14, -18, "#2f7a5e")}${leaf(14, 29, 108, "#3a8a6e")}` +
-        [[14, 14], [70, 14], [14, 70], [70, 70]].map(([x, y]) => peony(x, y)).join("") + bloom(46, 21) + bloom(21, 46) + dots;
-      return `${svgUrl(56, 56, body)} 0 0 / 56px 56px, #c8102e`;
+    // 包山: a bun tower on its bamboo pole
+    const bunshan = (() => {
+      let b = "";
+      // rows of buns, near-straight sides rounding into a dome
+      for (let i = 0; i <= 14; i++) {
+        const y = 86 - i * 5.4, half = 15 * Math.sqrt(1 - (i / 14) ** 4);
+        const k = Math.round((2 * half) / 5.6) + 1;
+        for (let j = 0; j < k; j++) b += `<circle cx="${(k === 1 ? 35 : 35 - half + (j * 2 * half) / (k - 1)).toFixed(1)}" cy="${y.toFixed(1)}" r="2.5"/>`;
+      }
+      return `<svg class="mt-bunshan" viewBox="0 0 70 100" aria-hidden="true" fill="none" stroke="#3b2f22" stroke-width=".8">
+        <path d="M35 95V3M35 3L44 5.5L35 8M17 91H53M20 91V96M50 91V96"/><g fill="#f7f7f2">${b}</g></svg>`;
     })();
-    // 鐵窗花: a ring on a rail between two scroll curls
-    const grille = `<circle cx='11' cy='5' r='3.2' fill='none' stroke='#1f4d3f' stroke-width='1.2'/><circle cx='11' cy='5' r='.9' fill='#1f4d3f'/>` +
-      `<path d='M0 5 H7.8 M14.2 5 H22' stroke='#1f4d3f' stroke-width='1.1'/>` +
-      `<path d='M2.5 5 C2.5 1.8 5.8 1.8 5.8 3.6 M19.5 5 C19.5 8.2 16.2 8.2 16.2 6.4' fill='none' stroke='#1f4d3f' stroke-width='.9' stroke-linecap='round'/>`;
 
     const n = (count) => `${count} AsPEN ${count === 1 ? "database" : "databases"}`;
     const THEMES = {
       britain: {
         group: "GB", zoom: 5, day: (y) => nth(y, 5, 6, 2), tiles: "World_Physical_Map", native: 8,
         fonts: "IM+Fell+English:ital@0;1&family=IM+Fell+English+SC",
+        // degree bar: two rules with alternate degrees filled
+        vars: band(60, 10, "#efe2bf", `<path d='M0 .5H60M0 9.5H60' stroke='#2b2116'/><rect y='4' width='30' height='2' fill='#2b2116'/>`),
         cart: (c) => `<div class="k">A New Map of the</div><div class="t">Asian Pharmacoepidemiology Network</div>
           <div class="k">Shewing ${n(c)} in the United Kingdom</div><span class="ribbon">On the King's Official Birthday</span>`,
-        deco: () => compass,
+        deco: () => compass(`<text y="-49" text-anchor="middle" font-family="IM Fell English SC, Georgia, serif" font-size="11" fill="#2b2116">N</text>`, "#2b2116", "#225641", "#efe2bf"),
       },
       scotland: {
-        group: "gb-sct", zoom: 5, day: on(10, 30), tiles: "World_Terrain_Base", native: 13, ref: true,
-        fonts: "Uncial+Antiqua",
-        cart: (c) => `<svg viewBox="0 0 60 36" width="54" height="32" aria-hidden="true"><rect width="60" height="36" fill="#1f4d6b"/><path d="M0 0 L60 36 M60 0 L0 36" stroke="#f2f5f8" stroke-width="7"/></svg>
+        group: "gb-sct", zoom: 5, day: on(10, 30), tiles: "World_Shaded_Relief", native: 13,
+        fonts: "Cormorant+SC:wght@600",
+        // neatline with graduated ticks
+        vars: band(50, 13, "#f6f4ee", `<g stroke='#1a1a1a'><path d='M0 .5H50M0 12.5H50'/><path d='M0 6.5H50' stroke-width='.6'/>` +
+          [0, 10, 20, 30, 40].map((x) => `<path d='M${x + 0.5} ${x ? 4.5 : 2.5}V${x ? 8.5 : 10.5}'/>`).join("") + `</g>`),
+        cart: (c) => `<svg viewBox="0 0 26 30" width="22" height="26" aria-hidden="true"><clipPath id="mt-shield"><path d="M1 1H25V13C25 21 13 29 13 29C13 29 1 21 1 13Z"/></clipPath>
+          <g clip-path="url(#mt-shield)"><rect width="26" height="30" fill="#1f3a52"/><path d="M0 0L26 30M26 0L0 30" stroke="#f6f4ee" stroke-width="4"/></g>
+          <path d="M1 1H25V13C25 21 13 29 13 29C13 29 1 21 1 13Z" fill="none" stroke="#1a1a1a" stroke-width=".8"/></svg>
           <div class="t">Latha Naomh Anndrais sona dhuibh!</div><div class="k">St Andrew's Day · 30 November · ${n(c)}</div>`,
       },
       netherlands: {
-        group: "NL", zoom: 5, tiles: "Canvas/World_Light_Gray_Base", native: 16, ref: true,
+        group: "NL", zoom: 5, tiles: "World_Physical_Map", native: 8,
         day: (y) => { const d = new Date(y, 3, 27); return d.getDay() === 0 ? new Date(y, 3, 26) : d; },
         fonts: "Cormorant+Garamond:ital,wght@1,700",
+        // a small Delft flower between two rules
+        vars: band(48, 16, "#f0e2c0", `<path d='M0 .5H48M0 15.5H48' stroke='#1d4f91'/><g transform='translate(24 8)' fill='#1d4f91'>` +
+          [0, 90, 180, 270].map((a) => `<ellipse cy='-2.9' rx='1.25' ry='2.3' transform='rotate(${a})'/>`).join("") +
+          [45, 135, 225, 315].map((a) => `<circle cy='-3.7' r='.6' transform='rotate(${a})'/>`).join("") + `</g>`),
         cart: (c) => `<div class="t">Fijne Koningsdag!</div><div style="font-size:12px">King's Day · ${THEMES.netherlands.day(new Date().getFullYear()).getDate()} April · ${n(c)}</div><span class="ribbon">ORANJE BOVEN</span>`,
+        deco: () => compass(fleur("#1d4f91"), "#1d4f91", "#1d4f91", "#f0e2c0"),
       },
       finland: {
-        group: "FI", zoom: 5, day: on(11, 6), tiles: "Canvas/World_Light_Gray_Base", native: 16, ref: true,
+        group: "FI", zoom: 5, day: on(11, 6), tiles: "World_Shaded_Relief", native: 13,
+        fonts: "Cormorant+Garamond:wght@700",
+        // engraved rules with a small lozenge now and then
+        vars: band(72, 12, "#eef0ec", `<path d='M0 .5H72M0 11.5H72' stroke='#3d5570'/><path d='M36 3L39 6L36 9L33 6Z' fill='#3d5570'/>`),
         cart: (c) => `<div class="k">Independence Day · 6 December</div><div class="t">Hyvää itsenäisyyspäivää!</div><div class="k">${n(c)} in Finland</div>`,
-        deco: () => `<svg class="mt-candles" viewBox="0 0 64 72" aria-hidden="true">
-          <rect x="10" y="34" width="14" height="36" rx="2" fill="#fbfdff" stroke="#003580" stroke-width="1.2"/>
-          <rect x="40" y="34" width="14" height="36" rx="2" fill="#fbfdff" stroke="#003580" stroke-width="1.2"/>
-          <path class="flame" d="M17 32 C11 24 17 18 17 12 C21 20 23 25 17 32 Z" fill="#f4b82e"/>
-          <path class="flame b" d="M47 32 C41 24 47 18 47 12 C51 20 53 25 47 32 Z" fill="#f4b82e"/></svg>`,
+        deco: () => `<svg class="mt-candles" viewBox="0 0 48 56" aria-hidden="true" fill="#f4f4f0" stroke="#3d5570" stroke-width="1">
+          <rect x="8" y="26" width="10" height="28" rx="1"/><rect x="30" y="26" width="10" height="28" rx="1"/><path d="M13 26V22M35 26V22"/>
+          <path class="flame" d="M13 21 C9 16 13 12 13 7 C16 12 17 16 13 21 Z"/><path class="flame b" d="M35 21 C31 16 35 12 35 7 C38 12 39 16 35 21 Z"/></svg>`,
       },
       japan: {
-        group: "JP", zoom: 5, day: on(1, 11), tiles: "World_Terrain_Base", native: 13, ref: true,
+        group: "JP", zoom: 5, day: on(1, 11), tiles: "World_Shaded_Relief", native: 13,
         fonts: "Shippori+Mincho:wght@700",
-        cart: (c) => `<span class="hanko">祝</span><div><div class="t">建国記念の日</div><div class="k">National Foundation Day · 11 February · ${n(c)}</div></div>`,
+        cart: (c) => `<div class="slip"><div class="t">建国記念の日</div><span class="hanko">祝</span></div>
+          <div class="k">National Foundation Day<br>11 February<br>${n(c)}</div>`,
       },
       korea: {
-        group: "KR", zoom: 6, day: on(9, 3), tiles: "World_Terrain_Base", native: 13, ref: true,
+        group: "KR", zoom: 6, day: on(9, 3), tiles: "World_Shaded_Relief", native: 13,
         fonts: "Nanum+Myeongjo:wght@800",
-        cart: (c) => `<svg class="taegeuk" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="#2b4c8c"/>
-          <path d="M-19 0 A19 19 0 0 1 19 0 A9.5 9.5 0 0 0 0 0 A9.5 9.5 0 0 1 -19 0 Z" fill="#b8312f"/></svg>
-          <div><div class="t">개천절</div><div class="k">National Foundation Day · 3 October · ${n(c)}</div></div>`,
+        // 띠살 window lattice: two rails, a band of three slats at wide intervals
+        vars: band(48, 16, "#f2ead3", `<path d='M0 3.5H48M0 12.5H48M.5 3.5V12.5M4.5 3.5V12.5M8.5 3.5V12.5' stroke='#3a3029'/>`),
+        cart: (c) => `<div class="slip"><div class="t">개천절</div><svg class="taegeuk" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="#2b4c8c"/>
+          <path d="M-19 0 A19 19 0 0 1 19 0 A9.5 9.5 0 0 0 0 0 A9.5 9.5 0 0 1 -19 0 Z" fill="#b8312f"/></svg></div>
+          <div class="k">National Foundation Day<br>3 October<br>${n(c)}</div>`,
       },
       taiwan: {
-        group: "TW", zoom: 6, day: on(9, 10),
+        group: "TW", zoom: 6, day: on(9, 10), tiles: "World_Shaded_Relief", native: 13,
         fonts: "LXGW+WenKai+TC:wght@700",
-        vars: {
-          "--bh": huabu,
-          "--gh": svgUrl(22, 10, grille),
-          "--gv": svgUrl(10, 22, `<g transform='translate(10 0) rotate(90)'>${grille}</g>`),
-        },
-        cart: (c) => `<div class="t">國慶日快樂</div><div class="k">雙十國慶 · 10 October · ${n(c)}</div>`,
-        fx: () => ["t", "b", "l", "r"].map((s) => `<i class="grille g-${s}"></i>`).join(""),
+        cart: (c) => `<div class="slip"><div class="t">國慶日快樂</div><span class="seal">雙十</span></div>
+          <div class="k">雙十國慶<br>10 October<br>${n(c)}</div>`,
       },
       hongkong: {
-        group: "HK", zoom: 7, day: on(6, 1), tiles: "Canvas/World_Dark_Gray_Base", native: 16, darkRef: true,
-        fonts: "Noto+Sans+HK:wght@900",
-        cart: (c) => `<div class="en">HKSAR Establishment Day</div><div class="t">香港特別行政區成立紀念日</div><div class="k">1 July · ${n(c)}</div>`,
+        group: "HK", zoom: 10, center: [22.2106, 114.0285], tiles: "Ocean/World_Ocean_Base", native: 13,
+        // Buddha's Birthday: the 8th day of the 4th lunar month (a leap 4th month reads "4bis")
+        isToday: (date) => {
+          try {
+            const p = new Intl.DateTimeFormat("en-u-ca-chinese", { month: "numeric", day: "numeric" }).formatToParts(date);
+            const v = (type) => p.find((x) => x.type === type)?.value;
+            return v("month") === "4" && v("day") === "8";
+          } catch {
+            return false;
+          }
+        },
+        fonts: "Libre+Caslon+Text:ital,wght@0,700;1,400&family=Noto+Serif+HK:wght@700",
+        // chart border: a minute scale between fine rules
+        vars: band(32, 14, "#f7f7f2", `<path d='M0 .5H32M0 13.5H32M0 5.5H32M0 8.5H32' stroke='#1c1c1c'/><rect y='5' width='16' height='4' fill='#1c1c1c'/>`),
+        cart: (c) => `<div class="en">CHEUNG CHAU BUN FESTIVAL</div><div class="t">長洲太平清醮</div>
+          <div class="k">Buddha's Birthday · 8th day of the 4th lunar month · ${n(c)}</div>`,
+        deco: () => bunshan,
       },
       thailand: {
-        group: "TH", zoom: 5, day: on(11, 5), tiles: "World_Terrain_Base", native: 13, ref: true,
+        group: "TH", zoom: 5, day: on(11, 5), tiles: "World_Physical_Map", native: 8,
         fonts: "Noto+Serif+Thai:wght@700",
+        // gold rules on red lacquer, a single kanok flame at wide intervals
+        vars: band(44, 16, "#5e1714", `<path d='M0 1.5H44M0 14.5H44' stroke='#c9a14a' stroke-width='.8' stroke-opacity='.8'/>`,
+          `<g fill='none' stroke='#c9a14a' stroke-width='.8'><path d='M22 13 C18.5 11 18.8 7 21 4.5 C21.6 3.8 22.4 3.2 23.4 3 C22.6 4 22.5 5 23.2 5.8 C25.2 8 25.3 11.3 22 13 Z'/>` +
+          `<path d='M22 11.5 C20.8 10 21 8 22 6.8' stroke-width='.6'/></g>`),
         cart: (c) => `<div class="t">วันชาติ</div><div class="k">National Day · 5 December · ${n(c)}</div>`,
       },
       australia: {
-        group: "AU", zoom: 4, day: on(0, 26), tiles: "World_Terrain_Base", native: 13, ref: true,
+        group: "AU", zoom: 4, day: on(0, 26), tiles: "World_Physical_Map", native: 8,
         fonts: "Playfair+Display:wght@800",
-        cart: (c) => `<div class="strip"></div><div class="t">Australia Day</div><div class="k">26 January · ${n(c)}</div>`,
-        deco: () => `<svg class="mt-cross" viewBox="0 0 84 100" aria-hidden="true">${star(42, 12, 8)}${star(66, 40, 7)}${star(50, 56, 4, 5)}${star(20, 50, 7)}${star(40, 88, 9)}</svg>`,
+        // a wattle sprig engraved in sepia, far apart
+        vars: band(64, 16, "#efe2bf", `<g fill='#5a4630'><path d='M0 .5H64M0 15.5H64M22 11 C28 9.5 36 8 44 5' fill='none' stroke='#5a4630' stroke-width='.8'/>` +
+          `<path d='M27 9.8 C31 12.8 37 13.2 41 12.4 C37 11.2 31 10.6 27 9.8 Z'/>` +
+          [[25, 8.6], [30.5, 6.8], [35.5, 5.4], [40, 3.9], [44.5, 4.6]].map(([x, y]) => `<circle cx='${x}' cy='${y}' r='1.5'/>`).join("") + `</g>`),
+        cart: (c) => `<div class="t">Australia Day</div><div class="k">26 January · ${n(c)}</div>`,
+        // rhumb lines out of a small rose, as on a portolan
+        fx: () => {
+          let s = "";
+          for (let i = 0; i < 32; i++) {
+            const a = (i * Math.PI) / 16;
+            s += `<path d="M0 0L${(Math.cos(a) * 3000).toFixed(0)} ${(Math.sin(a) * 3000).toFixed(0)}" stroke-opacity="${i % 4 ? 0.16 : 0.32}"/>`;
+          }
+          return `<svg width="100%" height="100%"><svg x="72%" y="70%" overflow="visible"><g stroke="#5a4630" stroke-width=".6">${s}</g>
+            <g transform="scale(.34)"><circle r="40" fill="#efe2bf"/>${rose("#5a4630", "#1f5c47", "#efe2bf")}</g></svg></svg>`;
+        },
+        deco: () => `<svg class="mt-cross" viewBox="0 0 84 100" aria-hidden="true">${[[42, 12, 8, 7], [66, 40, 7, 7], [50, 56, 4, 5], [20, 50, 7, 7], [40, 88, 9, 7]]
+          .map(([x, y, r, p]) => star(x, y, r, p, "#f5ead0", "#1f5c47")).join("")}</svg>`,
       },
       usa: {
         group: "US", zoom: 4, day: on(6, 4),
-        fonts: "Alfa+Slab+One",
-        cart: (c) => `<div class="t">Happy Fourth of July</div><div class="k">Independence Day · ${n(c)}</div>`,
-        fx: () => [
-          ["18%", "30%", "#b22234", 0], ["70%", "24%", "#1c2e5a", 1.2], ["44%", "62%", "#fff", 2.3], ["84%", "68%", "#b22234", 0.6],
-        ].map(([x, y, c, d]) => {
-          const pts = Array.from({ length: 14 }, (_, i) => {
-            const a = (i / 14) * Math.PI * 2;
-            return `${(Math.cos(a) * 34).toFixed(0)}px ${(Math.sin(a) * 34).toFixed(0)}px 0 0 ${c}, ${(Math.cos(a) * 20).toFixed(0)}px ${(Math.sin(a) * 20).toFixed(0)}px 0 0 ${c}`;
-          }).join(",");
-          return `<span class="fw" style="left:${x};top:${y};box-shadow:${pts};background:${c};animation-delay:${d}s;filter:drop-shadow(0 0 2px rgba(0,0,0,.35))"></span>`;
-        }).join(""),
+        fonts: "Old+Standard+TT:ital,wght@1,700",
+        // plain double rule with fine ticks
+        vars: band(12, 14, "#f3ecd9", `<path d='M0 1.5H12M0 12.5H12M.5 5V9' stroke='#1c2e5a'/>`),
+        cart: (c) => `<div class="stars">★ ★ ★</div><div class="t">Happy Fourth of July</div><div class="k">Independence Day · ${n(c)}</div>`,
       },
     };
 
@@ -555,12 +514,6 @@ const { mapId } = Astro.props;
           layers.push(L.tileLayer(ESRI + t.tiles + "/MapServer/tile/{z}/{y}/{x}", {
             attribution: SRC[t.tiles] || ESRI_A, maxZoom: 10, maxNativeZoom: t.native, zIndex: 1,
           }).addTo(map));
-          if (t.ref || t.darkRef) {
-            const ref = t.darkRef ? "Canvas/World_Dark_Gray_Reference" : "Reference/World_Boundaries_and_Places_Alternate";
-            layers.push(L.tileLayer(ESRI + ref + "/MapServer/tile/{z}/{y}/{x}", {
-              attribution: "HERE, Garmin", maxZoom: 10, zIndex: 2, opacity: 0.85,
-            }).addTo(map));
-          }
         }
 
         const g = groups.findIndex((x) => x.code.toLowerCase() === t.group.toLowerCase());
@@ -577,11 +530,10 @@ const { mapId } = Astro.props;
         L.DomEvent.disableClickPropagation(frame.querySelector(".mt-cart"));
         L.DomEvent.disableScrollPropagation(frame.querySelector(".mt-cart"));
 
-        if (g >= 0) {
-          markers[g].getElement()?.classList.add("mt-hero");
-          const to = [groups[g].lat, groups[g].lng];
-          still ? map.setView(to, t.zoom) : map.flyTo(to, t.zoom, { duration: 1.4 });
-        }
+        if (g >= 0) markers[g].getElement()?.classList.add("mt-hero");
+        // a theme may look somewhere other than its marker
+        const to = t.center || (g >= 0 ? [groups[g].lat, groups[g].lng] : null);
+        if (to) still ? map.setView(to, t.zoom) : map.flyTo(to, t.zoom, { duration: 1.4 });
       };
 
       const toast = (msg) => {
@@ -595,9 +547,10 @@ const { mapId } = Astro.props;
       };
 
       const now = new Date();
+      const sameDay = (d) => d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
       const today = Object.keys(THEMES).find((k) => {
-        const d = THEMES[k].day(now.getFullYear());
-        return d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+        const t = THEMES[k];
+        return t.isToday ? t.isToday(now) : sameDay(t.day(now.getFullYear()));
       });
       if (today) apply(today);
 
