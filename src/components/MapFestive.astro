@@ -19,6 +19,7 @@ interface Props {
   mapId: string;
 }
 const { mapId } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 ---
 
 <Chalkdust data={chalk} param="map" />
@@ -81,17 +82,17 @@ const { mapId } = Astro.props;
   }
   /* East Asian maps name themselves on a vertical title slip with a seal */
   .mt-japan .mt-cart, .mt-korea .mt-cart, .mt-taiwan .mt-cart {
-    display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 10px; text-align: left;
-    padding: 12px 12px 12px 10px; box-shadow: 0 6px 18px rgba(40, 30, 12, .25);
+    display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;
+    padding: 12px 12px 10px; box-shadow: 0 6px 18px rgba(40, 30, 12, .25);
   }
-  .mt-japan .mt-x, .mt-korea .mt-x, .mt-taiwan .mt-x { top: auto; bottom: 4px; right: auto; left: 2px; }
+
   .mt .slip {
     writing-mode: vertical-rl; display: flex; align-items: center; gap: 10px; flex: none; padding: 12px 7px;
     border: 1px solid var(--ink); box-shadow: inset 0 0 0 2px var(--card), inset 0 0 0 3px var(--ink);
   }
   .mt .slip .t { line-height: 1; letter-spacing: .14em; }
-  /* the note beside it runs in columns too, English turned on its side */
-  .mt .slip + .k { writing-mode: vertical-rl; font-size: 11px; line-height: 1.6; padding-top: 3px; }
+  /* the note under it stays horizontal, so the English reads normally */
+  .mt .slip + .k { font-size: 11px; line-height: 1.45; max-width: 11rem; }
   /* (--bh/--bv for most themes are band tiles built in the script) */
 
   /* ── United Kingdom: an eighteenth-century county map ─────────── */
@@ -261,13 +262,15 @@ const { mapId } = Astro.props;
       top: auto; bottom: calc(var(--bw) + 30px);
       left: calc(var(--bw) + 10px); right: calc(var(--bw) + 10px); max-width: none;
     }
-    .mt .slip, .mt .slip + .k { writing-mode: horizontal-tb; }
+    .mt .slip { writing-mode: horizontal-tb; }
     .mt .slip { padding: 7px 12px; }
-    .mt-japan .mt-cart, .mt-korea .mt-cart, .mt-taiwan .mt-cart { flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+    .mt-japan .mt-cart, .mt-korea .mt-cart, .mt-taiwan .mt-cart { gap: 6px; }
     .mt .slip .t { font-size: 20px; }
     .mt-hongkong .mt-cart, .mt-usa .mt-cart { bottom: calc(var(--bw) + 44px); }
-    .mt-japan .mt-x, .mt-korea .mt-x, .mt-taiwan .mt-x { top: 4px; bottom: auto; }
     .mt .mt-deco { display: none; }
+    .mt .mt-plate { left: auto; bottom: auto; right: calc(var(--bw) + 8px); top: calc(var(--bw) + 8px); width: 86px; padding: 3px; }
+    .mt .mt-plate img { max-height: 110px; }
+    .mt .mt-plate span { display: none; }
   }
 
   /* a short notice */
@@ -276,6 +279,30 @@ const { mapId } = Astro.props;
     padding: 4px 10px; border-radius: 999px; background: rgba(16, 36, 32, .85); color: #e2eeeb;
     font: 600 11px Inter, system-ui, sans-serif; letter-spacing: .04em; pointer-events: none;
     animation: mt-in .4s ease both;
+  }
+
+  /* the period map itself, as a small framed plate in the corner */
+  .mt-plate {
+    left: calc(var(--bw) + 12px); bottom: calc(var(--bw) + 12px); width: 150px; padding: 5px 5px 4px;
+    pointer-events: auto; cursor: zoom-in; border: 1px solid var(--ink); background: var(--card);
+    box-shadow: 0 0 0 2px var(--card), 0 0 0 3px var(--ink), 0 5px 14px rgba(40, 30, 12, .3);
+    transition: transform .2s ease, opacity .25s ease;
+  }
+  .mt-plate:hover, .mt-plate:focus-visible { transform: translateY(-2px); }
+  .mt-plate img { display: block; width: 100%; max-height: 180px; object-fit: contain; }
+  .mt-plate span { display: block; margin-top: 3px; font: italic 10.5px/1.25 Georgia, serif; color: var(--ink); text-align: center; }
+  .mt.mt-popped .mt-plate { opacity: 0; pointer-events: none; }
+  .mt-light {
+    position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center;
+    padding: 2.5rem 1rem 1rem; background: rgba(20, 16, 10, .88); cursor: zoom-out;
+  }
+  .mt-light figure { margin: 0; max-width: min(1600px, 100%); max-height: 100%; display: flex; flex-direction: column; align-items: center; }
+  .mt-light img { max-width: 100%; max-height: calc(100vh - 7rem); object-fit: contain; box-shadow: 0 10px 40px rgba(0, 0, 0, .5); }
+  .mt-light figcaption { margin-top: .7rem; color: #efe6cf; font: 13px/1.45 Georgia, serif; text-align: center; }
+  .mt-light figcaption a { color: #f4e285; margin-left: .4rem; }
+  .mt-light-x {
+    position: fixed; top: .75rem; right: .9rem; width: 2.5rem; height: 2.5rem; border-radius: 999px;
+    border: 1px solid rgba(239, 230, 207, .35); background: transparent; color: #efe6cf; font: 400 1.6rem/1 system-ui, sans-serif; cursor: pointer;
   }
 
   /* place names, lettered like the period map */
@@ -305,7 +332,7 @@ const { mapId } = Astro.props;
   }
 </style>
 
-<script is:inline define:vars={{ mapId }}>
+<script is:inline define:vars={{ mapId, base }}>
   (() => {
     const el = document.getElementById(mapId);
     if (!el) return;
@@ -503,6 +530,36 @@ const { mapId } = Astro.props;
     // place names per dress: [name, lat, lng, kind]; kind is cap, city (default), land or sea
     const LABELS = {"britain":[["London",51.507,-0.128,"cap"],["Edinburgh",55.953,-3.189],["Dublin",53.35,-6.26],["York",53.96,-1.08],["Bristol",51.45,-2.59],["Oxford",51.75,-1.26],["Cambridge",52.205,0.12],["Manchester",53.48,-2.24],["Belfast",54.6,-5.93],["Plymouth",50.375,-4.14],["Norwich",52.63,1.3],["England",52.6,-1.55,"land"],["Wales",52.3,-3.75,"land"],["Scotland",56.9,-4.2,"land"],["Ireland",53.2,-8.1,"land"],["The German Ocean",55.2,3.2,"sea"],["The Irish Sea",53.9,-5.1,"sea"],["The British Channel",50.1,-2.2,"sea"]],"scotland":[["Edinburgh",55.953,-3.189,"cap"],["Glasgow",55.864,-4.252],["Aberdeen",57.15,-2.09],["Dundee",56.46,-2.97],["Inverness",57.48,-4.22],["Perth",56.4,-3.43],["St Andrews",56.34,-2.8],["Stirling",56.12,-3.94],["Fort William",56.82,-5.11],["Oban",56.41,-5.47],["Wick",58.44,-3.09],["Highlands",57.25,-4.7,"land"],["Hebrides",57.6,-7.2,"land"],["Southern Uplands",55.4,-3.6,"land"],["North Sea",57.2,-0.9,"sea"],["The Minch",58.1,-5.9,"sea"],["Firth of Forth",56.1,-2.65,"sea"]],"netherlands":[["Amsterdam",52.37,4.9,"cap"],["Rotterdam",51.92,4.48],["'s-Gravenhage",52.08,4.3],["Utrecht",52.09,5.12],["Leiden",52.16,4.49],["Haarlem",52.38,4.64],["Groningen",53.22,6.57],["Middelburg",51.5,3.61],["Nijmegen",51.84,5.86],["Maastricht",50.85,5.69],["Leeuwarden",53.2,5.8],["Frisia",53.05,6,"land"],["Zeelandia",51.55,3.85,"land"],["Brabantia",51.55,5.25,"land"],["Mare Germanicum",52.9,3.3,"sea"],["Zuiderzee",52.72,5.42,"sea"]],"finland":[["Helsinki",60.17,24.94,"cap"],["Turku",60.45,22.27],["Tampere",61.5,23.76],["Oulu",65.01,25.47],["Vaasa",63.1,21.62],["Kuopio",62.89,27.68],["Jyväskylä",62.24,25.75],["Rovaniemi",66.5,25.73],["Joensuu",62.6,29.76],["Lappeenranta",61.06,28.19],["Lappi",67.6,26.6,"land"],["Karjala",62.3,30.4,"land"],["Pohjanlahti",63.2,20.4,"sea"],["Suomenlahti",59.75,25.8,"sea"]],"japan":[["東京",35.68,139.69,"cap"],["京都",35.01,135.77],["大阪",34.69,135.5],["名古屋",35.18,136.91],["仙台",38.27,140.87],["札幌",43.06,141.35],["福岡",33.59,130.4],["広島",34.39,132.46],["金沢",36.56,136.66],["長崎",32.75,129.87],["鹿児島",31.6,130.56],["新潟",37.92,139.04],["日本海",39.6,134.4,"sea"],["太平洋",32.4,141.6,"sea"],["瀬戸内海",34.12,133.2,"sea"]],"korea":[["서울",37.566,126.978,"cap"],["부산",35.18,129.08],["대구",35.87,128.6],["인천",37.46,126.7],["광주",35.16,126.85],["대전",36.35,127.38],["울산",35.54,129.31],["전주",35.82,127.15],["경주",35.86,129.22],["춘천",37.88,127.73],["강릉",37.75,128.9],["제주",33.5,126.53],["동해",37.2,130.4,"sea"],["황해",36.1,125.1,"sea"],["남해",34.25,127.9,"sea"]],"taiwan":[["臺北",25.03,121.56,"cap"],["基隆",25.13,121.74],["新竹",24.8,120.97],["臺中",24.15,120.67],["嘉義",23.48,120.45],["臺南",22.99,120.21],["高雄",22.63,120.3],["恆春",22,120.74],["宜蘭",24.75,121.75],["花蓮",23.98,121.6],["臺東",22.76,121.14],["澎湖",23.57,119.58],["中央山脈",23.55,121.05,"land"],["臺灣海峽",24.1,119.75,"sea"],["太平洋",23.2,122.25,"sea"],["巴士海峽",21.55,120.95,"sea"]],"hongkong":[["Cheung Chau<b class=\"z\">長洲</b>",22.21,114.028,"cap"],["Victoria<b class=\"z\">維多利亞城</b>",22.282,114.158],["Kowloon<b class=\"z\">九龍</b>",22.318,114.18],["Peng Chau<b class=\"z\">坪洲</b>",22.287,114.04],["Silver Mine Bay<b class=\"z\">銀礦灣</b>",22.268,114],["Tai O<b class=\"z\">大澳</b>",22.254,113.862],["Aberdeen<b class=\"z\">香港仔</b>",22.248,114.155],["Lantao Island",22.25,113.93,"land"],["Lamma Island",22.205,114.125,"land"],["Hong Kong Island",22.262,114.2,"land"],["West Lamma Channel",22.19,114.07,"sea"],["Adamasta Channel",22.165,113.99,"sea"],["South China Sea",22.08,114.1,"sea"]],"thailand":[["Bangkok<b class=\"z\">กรุงเทพฯ</b>",13.756,100.502,"cap"],["Ayutthaya",14.35,100.57],["Chiang Mai",18.79,98.98],["Sukhothai",17,99.82],["Nakhon Ratchasima",14.97,102.1],["Khon Kaen",16.44,102.83],["Udon Thani",17.41,102.79],["Hat Yai",7,100.47],["Phuket",7.88,98.39],["Surat Thani",9.14,99.33],["Chiang Rai",19.91,99.83],["Siam",15.6,101,"land"],["Gulf of Siam",10.6,101.4,"sea"],["Andaman Sea",9.6,96.8,"sea"]],"australia":[["Canberra",-35.28,149.13,"cap"],["Sydney",-33.87,151.21],["Melbourne",-37.81,144.96],["Brisbane",-27.47,153.03],["Perth",-31.95,115.86],["Adelaide",-34.93,138.6],["Hobart",-42.88,147.33],["Darwin",-12.46,130.84],["Alice Springs",-23.7,133.88],["Cairns",-16.92,145.77],["Nova Hollandia",-24.8,126.5,"land"],["Van Diemen's Land",-41.9,146.6,"land"],["Indian Ocean",-29,108.5,"sea"],["Coral Sea",-17.5,154,"sea"],["Tasman Sea",-38.8,157.5,"sea"],["Gulf of Carpentaria",-14.2,139.6,"sea"]],"usa":[["Washington",38.9,-77.04,"cap"],["New York",40.71,-74],["Boston",42.36,-71.06],["Philadelphia",39.95,-75.17],["Chicago",41.88,-87.63],["St. Louis",38.63,-90.2],["New Orleans",29.95,-90.07],["San Francisco",37.77,-122.42],["Denver",39.74,-104.99],["Salt Lake City",40.76,-111.89],["Seattle",47.6,-122.33],["Los Angeles",34.05,-118.24],["Atlanta",33.75,-84.39],["Kansas City",39.1,-94.58],["Great Plains",41.2,-101,"land"],["Rocky Mountains",42.6,-109.4,"land"],["Atlantic Ocean",33,-68,"sea"],["Pacific Ocean",33,-127.5,"sea"],["Gulf of Mexico",25.6,-90,"sea"]]};
 
+    // each dress carries the real period map it is modelled on, as a plate
+    // (public domain, via Wikimedia Commons)
+    const PLATES = {"britain":{"t":"The Kingdome of Great Britaine and Ireland","by":"John Speed","y":"1611","src":"https://commons.wikimedia.org/wiki/File:The_Kingdome_of_Great_Britaine_and_Ireland_-_John_Speed_-_Altea_Gallery_17281.jpg"},"scotland":{"t":"Scotia Regnum","by":"Joan Blaeu","y":"1654","src":"https://commons.wikimedia.org/wiki/File:Blaeu_-_Atlas_of_Scotland_1654_-_SCOTIA_REGNUM_-_Kingdom_of_Scotland.jpg"},"netherlands":{"t":"Belgii Foederati nova descriptio","by":"Rijksmuseum RP-P-AO-1-61","y":"1649","src":"https://commons.wikimedia.org/wiki/File:Kaart_van_de_Republiek_der_Zeven_Verenigde_Nederlanden_Belgii_Foederati_nova_descriptio_(titel_op_object),_RP-P-AO-1-61.jpg"},"finland":{"t":"Magni Ducatus Finlandiae … nova et accurata delineatio","by":"Matthäus Seutter","y":"c. 1730","src":"https://commons.wikimedia.org/wiki/File:Magni_Ducatus_Finlandiae_Russiae_partim,_partim_sueciae_subjecti_;_Sinus_item_Bothnici_ac_Finnici_nova_et_accurata_delineatio_Calamo_et_sumtibus_-_btv1b53040647h.jpg"},"japan":{"t":"改正日本輿地路程全圖","by":"長久保赤水 Nagakubo Sekisui","y":"1779","src":"https://commons.wikimedia.org/wiki/File:(Nihon_yochi_rotei_zenzu._LOC_77694708.jpg"},"korea":{"t":"大東輿地圖 Daedongyeojido","by":"金正浩 Kim Jeong-ho","y":"1861","src":"https://commons.wikimedia.org/wiki/File:Daedongyeojido-full.jpg"},"taiwan":{"t":"臺灣前後山全圖","by":"","y":"1880","src":"https://commons.wikimedia.org/wiki/File:臺灣前後山全圖.jpg"},"hongkong":{"t":"Admiralty Chart No. 3026, Macao to Pedro Blanco including Hong Kong","by":"Hydrographic Office","y":"1899","src":"https://commons.wikimedia.org/wiki/File:Admiralty_Chart_No_3026_China_S.E._Coast._Macao_to_Pedro_Blanco_including_Hong_Kong,_Published_1899,_Corrections_to_1929.jpg"},"thailand":{"t":"Carte du royaume de Siam et des pays circonvoisins","by":"P. Placide","y":"1686","src":"https://commons.wikimedia.org/wiki/File:Carte_du_royaume_de_Siam_et_des_pays_circonvoisins_-_par_le_Rd_P._Placide_;_C._Rousset,_sculp._-_btv1b84466960.jpg"},"australia":{"t":"Hollandia Nova detecta 1644","by":"Melchisédech Thévenot","y":"1663","src":"https://commons.wikimedia.org/wiki/File:Thevenot_-_Hollandia_Nova_detecta_1644.png"},"usa":{"t":"Map of the United States and Territories","by":"S. Augustus Mitchell Jr.","y":"1867","src":"https://commons.wikimedia.org/wiki/File:1867_Mitchell_Map_of_the_United_States_-_Geographicus_-_UnitedStates-mitchell-1867.jpg"}};
+    const esc = (x) => String(x).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+    const plate = (code) => {
+      const p = PLATES[code];
+      const who = [p.by, p.y].filter(Boolean).join(" · ");
+      return `<button type="button" class="mt-plate" aria-label="View the period map: ${esc(p.t)}, ${esc(p.y)}">
+        <img src="${base}/images/oldmaps/${code}-s.webp" alt="" /><span>${esc(who)}</span></button>`;
+    };
+    const enlarge = (code) => {
+      const p = PLATES[code];
+      const back = document.activeElement;
+      const box = document.createElement("div");
+      box.className = "mt-light";
+      box.setAttribute("role", "dialog");
+      box.setAttribute("aria-modal", "true");
+      box.setAttribute("aria-label", p.t);
+      box.innerHTML = `<figure><img src="${base}/images/oldmaps/${code}.webp" alt="${esc(p.t)}" />
+        <figcaption><b>${esc(p.t)}</b>${p.by ? " · " + esc(p.by) : ""} · ${esc(p.y)}
+        <a href="${p.src}" target="_blank" rel="noopener">Wikimedia Commons ↗</a> · public domain</figcaption></figure>
+        <button type="button" class="mt-light-x" aria-label="Close">×</button>`;
+      document.body.appendChild(box);
+      const close = () => { box.remove(); document.removeEventListener("keydown", onKey, true); back?.focus?.({ preventScroll: true }); };
+      const onKey = (e) => { if (e.key === "Escape") close(); };
+      document.addEventListener("keydown", onKey, true);
+      box.addEventListener("click", (e) => { if (!e.target.closest("a")) close(); });
+      box.querySelector(".mt-light-x").focus({ preventScroll: true });
+    };
+
     const ready = (fn) => (el.__aspen ? fn(el.__aspen) : el.addEventListener("aspen:map", () => fn(el.__aspen), { once: true }));
 
     ready(({ map, baseLayer, markers, groups }) => {
@@ -595,10 +652,16 @@ const { mapId } = Astro.props;
         frame.innerHTML = `<div class="mt-paper mt-noise" aria-hidden="true"></div>
           <i class="mt-b mt-bt"></i><i class="mt-b mt-bb"></i><i class="mt-b mt-bl"></i><i class="mt-b mt-br"></i>
           <div class="mt-fx" aria-hidden="true">${t.fx ? t.fx() : ""}</div>
-          ${t.deco ? `<div class="mt-deco" aria-hidden="true">${t.deco()}</div>` : ""}
+          ${PLATES[code] ? plate(code) : t.deco ? `<div class="mt-deco" aria-hidden="true">${t.deco()}</div>` : ""}
           <div class="mt-cart" role="status">${t.cart(count)}<button type="button" class="mt-x" aria-label="Back to the everyday map">×</button></div>`;
         el.appendChild(frame);
         frame.querySelector(".mt-x").addEventListener("click", () => clear(true));
+        const pb = frame.querySelector(".mt-plate");
+        if (pb) {
+          pb.addEventListener("click", () => enlarge(code));
+          L.DomEvent.disableClickPropagation(pb);
+          L.DomEvent.disableScrollPropagation(pb);
+        }
         L.DomEvent.disableClickPropagation(frame.querySelector(".mt-cart"));
         L.DomEvent.disableScrollPropagation(frame.querySelector(".mt-cart"));
 
