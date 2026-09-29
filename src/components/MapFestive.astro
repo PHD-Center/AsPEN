@@ -26,15 +26,15 @@ const { mapId } = Astro.props;
 <style is:global>
   /* ── shared frame ─────────────────────────────────────────────── */
   /* each theme sets --ink (rules, text), --card (cartouche paper), --tf (tiles),
-     --wash/--vig (paper tint and vignette), --nl (neatline inside the band) */
+     --vig (vignette), --nl (neatline inside the band), and for place names
+     --lf (lettering), --lbl (ink) and --halo (paper behind the letters) */
   .mt { --card: #f5ead0; --ink: #2b2116; }
   .mt-frame { position: absolute; inset: 0; z-index: 450; pointer-events: none; }
   .mt-frame > * { position: absolute; }
   .mt-paper {
     inset: 0; mix-blend-mode: multiply;
     background:
-      radial-gradient(ellipse at center, transparent 50%, var(--vig, transparent) 100%),
-      linear-gradient(var(--wash, transparent), var(--wash, transparent));
+      radial-gradient(ellipse at center, transparent 62%, var(--vig, transparent) 100%);
   }
   .mt-b { background: var(--bh); }
   .mt-bt { top: 0; left: 0; right: 0; height: var(--bw); }
@@ -76,7 +76,7 @@ const { mapId } = Astro.props;
   @keyframes mt-hero { from { transform: scale(.4); } 60% { transform: scale(1.55); } to { transform: scale(1.35); } }
   /* paper grain */
   .mt-noise::after {
-    content: ""; position: absolute; inset: 0; opacity: var(--grain, 1);
+    content: ""; position: absolute; inset: 0; opacity: calc(var(--grain, 1) * .45);
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .32  0 0 0 0 .15  0 0 0 .22 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   }
   /* East Asian maps name themselves on a vertical title slip with a seal */
@@ -97,8 +97,9 @@ const { mapId } = Astro.props;
   /* ── United Kingdom: an eighteenth-century county map ─────────── */
   .mt-britain {
     --bw: 10px; --accent: #225641; --ink: #2b2116; --rib: #225641;
-    --tf: sepia(.92) saturate(1.35) hue-rotate(-10deg) contrast(.92) brightness(1.05);
-    --wash: rgba(239, 226, 191, .28); --vig: rgba(112, 72, 24, .38);
+    --lf: "IM Fell English", Georgia, serif; --lbl: #2b2116; --halo: #efe2bf;
+    --tf: sepia(.85) saturate(1.3) hue-rotate(-10deg) contrast(1.15) brightness(.98);
+    --vig: rgba(112, 72, 24, .38);
     --nl: inset 0 0 0 3px #efe2bf, inset 0 0 0 4px #2b2116;
   }
   .mt-britain .mt-cart { font-family: "IM Fell English", Georgia, serif; padding: 14px 24px 12px; }
@@ -109,7 +110,8 @@ const { mapId } = Astro.props;
   /* ── Scotland: an Ordnance Survey first-edition engraving ─────── */
   .mt-scotland {
     --bw: 13px; --accent: #1f3a52; --ink: #1a1a1a; --card: #f6f4ee; --grain: .5;
-    --tf: grayscale(1) sepia(.2) contrast(1.1) brightness(1.05);
+    --lf: "Cormorant SC", Georgia, serif; --lbl: #1a1a1a; --halo: #f1efe8;
+    --tf: grayscale(1) sepia(.2) contrast(1.3) brightness(.98);
     --vig: rgba(60, 58, 50, .22);
   }
   .mt-scotland .mt-cart .t { font-family: "Cormorant SC", Georgia, serif; font-weight: 600; font-size: 20px; line-height: 1.2; letter-spacing: .03em; margin: 6px 0 4px; }
@@ -118,8 +120,9 @@ const { mapId } = Astro.props;
   /* ── Netherlands: a Golden Age atlas (Blaeu, Hondius) ─────────── */
   .mt-netherlands {
     --bw: 16px; --accent: #e8741f; --ink: #1d4f91; --rib: #c8661f; --card: #f6ecd2;
-    --tf: sepia(.5) saturate(1.5) hue-rotate(-8deg) contrast(.95) brightness(1.04);
-    --wash: rgba(240, 226, 192, .26); --vig: rgba(120, 80, 30, .32);
+    --lf: "Cormorant Garamond", Georgia, serif; --lbl: #1d3f73; --halo: #f0e2c0;
+    --tf: sepia(.45) saturate(1.45) hue-rotate(-8deg) contrast(1.15) brightness(.98);
+    --vig: rgba(120, 80, 30, .32);
     --nl: inset 0 0 0 3px #f0e2c0, inset 0 0 0 4px #1d4f91;
   }
   .mt-netherlands .mt-cart .t { font-family: "Cormorant Garamond", Georgia, serif; font-style: italic; font-weight: 700; font-size: 28px; line-height: 1; margin: 4px 0; }
@@ -129,7 +132,8 @@ const { mapId } = Astro.props;
   /* ── Finland: a seventeenth-century Nordic engraving ──────────── */
   .mt-finland {
     --bw: 12px; --accent: #3d5570; --ink: #3d5570; --card: #f4f4f0; --grain: .5;
-    --tf: grayscale(1) sepia(.3) hue-rotate(180deg) saturate(.8) brightness(1.04);
+    --lf: "Cormorant Garamond", Georgia, serif; --lbl: #2c4260; --halo: #eef0f0;
+    --tf: grayscale(1) sepia(.3) hue-rotate(180deg) saturate(.9) contrast(1.3) brightness(.97);
     --vig: rgba(60, 80, 105, .22);
   }
   .mt-finland .mt-cart .t { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 700; font-size: 24px; line-height: 1.1; margin: 4px 0; color: #2c4260; }
@@ -142,8 +146,9 @@ const { mapId } = Astro.props;
   /* ── Japan: an Edo woodblock map on washi, seigaiha border ────── */
   .mt-japan {
     --bw: 20px; --accent: #bc2d29; --ink: #1f4f5c; --card: #f7f0de;
-    --tf: sepia(.55) saturate(.75) brightness(1.06) contrast(.94);
-    --wash: rgba(244, 236, 216, .3);
+    --lf: "Shippori Mincho", serif; --lbl: #1f2a2e; --halo: #f4ecd8;
+    --tf: sepia(.5) saturate(.85) contrast(1.25) brightness(.98);
+   
     --bh:
       radial-gradient(circle at 100% 150%, #f4ecd8 24%, #1f4f5c 24%, #1f4f5c 28%, #f4ecd8 28%, #f4ecd8 36%, #1f4f5c 36%, #1f4f5c 40%, transparent 40%) 0 0 / 40px 20px,
       radial-gradient(circle at 0 150%, #f4ecd8 24%, #1f4f5c 24%, #1f4f5c 28%, #f4ecd8 28%, #f4ecd8 36%, #1f4f5c 36%, #1f4f5c 40%, transparent 40%) 0 0 / 40px 20px,
@@ -161,8 +166,9 @@ const { mapId } = Astro.props;
   /* ── Korea: a Joseon woodblock map on hanji (Daedongyeojido) ──── */
   .mt-korea {
     --bw: 16px; --accent: #b8312f; --ink: #3a3029; --card: #f5eedb;
-    --tf: grayscale(1) sepia(.5) contrast(1.1) brightness(1.02);
-    --wash: rgba(242, 234, 211, .3); --vig: rgba(90, 70, 40, .2);
+    --lf: "Nanum Myeongjo", serif; --lbl: #22201c; --halo: #f2ead3;
+    --tf: grayscale(1) sepia(.5) contrast(1.3) brightness(.97);
+    --vig: rgba(90, 70, 40, .2);
     --nl: inset 0 0 0 1px #3a3029;
   }
   .mt-korea .mt-cart { color: #22201c; }
@@ -173,8 +179,9 @@ const { mapId } = Astro.props;
   /* ── Taiwan: a Qing blue-green scroll map, mounted for hanging ── */
   .mt-taiwan {
     --bw: 18px; --accent: #9e1b1b; --ink: #2d4a3e; --card: #f3ead3;
-    --tf: sepia(.6) hue-rotate(45deg) saturate(1.4) brightness(1.02);
-    --wash: rgba(233, 222, 190, .28); --vig: rgba(70, 80, 50, .22);
+    --lf: "LXGW WenKai TC", "Noto Serif TC", serif; --lbl: #1f2a24; --halo: #eee6cc;
+    --tf: sepia(.6) hue-rotate(45deg) saturate(1.5) contrast(1.25) brightness(.97);
+    --vig: rgba(70, 80, 50, .22);
     --bh: #d3dbc8; --nl: inset 0 0 0 1px #6d7f68, inset 0 0 0 3px #efe7d0, inset 0 0 0 4px #6d7f68;
   }
   /* silk mounting: a thin wooden rod along the top, the roller with its knobs along the bottom */
@@ -198,7 +205,8 @@ const { mapId } = Astro.props;
   /* ── Hong Kong: an Admiralty chart, for the Cheung Chau Bun Festival ── */
   .mt-hongkong {
     --bw: 14px; --accent: #b3261e; --ink: #1c1c1c; --card: #f7f7f2; --grain: .5;
-    --tf: grayscale(.55) sepia(.12) brightness(1.05) contrast(.95);
+    --lf: "Libre Caslon Text", "Noto Serif HK", Georgia, serif; --lbl: #1c1c1c; --halo: #eef1f2;
+    --tf: grayscale(.5) sepia(.12) contrast(1.15) brightness(1);
     --vig: rgba(60, 75, 85, .18);
   }
   .mt-hongkong .mt-cart { padding: 12px 22px 10px; }
@@ -210,7 +218,8 @@ const { mapId } = Astro.props;
   /* ── Thailand: gold on lacquer, after the samut khoi ──────────── */
   .mt-thailand {
     --bw: 16px; --accent: #c9a14a; --ink: #c9a14a; --card: #231b17;
-    --tf: sepia(.75) saturate(1.2) hue-rotate(-4deg) contrast(.92) brightness(1.02);
+    --lf: Georgia, "Noto Serif Thai", serif; --lbl: #3b2a12; --halo: #efe0bb;
+    --tf: sepia(.7) saturate(1.25) hue-rotate(-4deg) contrast(1.12) brightness(.98);
     --vig: rgba(110, 60, 10, .32);
     --nl: inset 0 0 0 1px #c9a14a;
   }
@@ -221,8 +230,9 @@ const { mapId } = Astro.props;
   /* ── Australia: a VOC chart of Hollandia Nova ─────────────────── */
   .mt-australia {
     --bw: 16px; --accent: #1f5c47; --ink: #1f5c47; --ink2: #b08a2e;
-    --tf: sepia(.95) saturate(1.15) hue-rotate(-8deg) contrast(.9) brightness(1.04);
-    --wash: rgba(239, 226, 191, .3); --vig: rgba(112, 72, 24, .4);
+    --lf: Georgia, serif; --lbl: #3d2e1c; --halo: #efe2bf;
+    --tf: sepia(.9) saturate(1.2) hue-rotate(-8deg) contrast(1.12) brightness(.98);
+    --vig: rgba(112, 72, 24, .4);
     --nl: inset 0 0 0 3px #efe2bf, inset 0 0 0 4px #5a4630;
   }
   .mt-australia .mt-fx svg { display: block; }
@@ -233,8 +243,9 @@ const { mapId } = Astro.props;
   /* ── United States: an 1890s atlas plate ──────────────────────── */
   .mt-usa {
     --bw: 14px; --accent: #9b3a3f; --ink: #1c2e5a; --card: #f6f0e0;
-    --tf: sepia(.35) saturate(.8) hue-rotate(-8deg) contrast(.9) brightness(1.06);
-    --wash: rgba(246, 238, 215, .25); --vig: rgba(100, 80, 40, .18);
+    --lf: "Old Standard TT", Georgia, serif; --lbl: #1c2e5a; --halo: #f3ecd8;
+    --tf: sepia(.3) saturate(.9) hue-rotate(-8deg) contrast(1.08) brightness(1);
+    --vig: rgba(100, 80, 40, .18);
   }
   .mt-usa .mt-cart .stars { color: #9b3a3f; font-size: 9px; letter-spacing: .7em; margin-left: .7em; }
   .mt-usa .mt-cart .t {
@@ -259,13 +270,35 @@ const { mapId } = Astro.props;
     .mt .mt-deco { display: none; }
   }
 
-  /* the "type /xx" toast */
+  /* a short notice */
   .mt-toast {
     position: absolute; left: 50%; bottom: calc(var(--bw, 0px) + 12px); transform: translateX(-50%); z-index: 460;
     padding: 4px 10px; border-radius: 999px; background: rgba(16, 36, 32, .85); color: #e2eeeb;
     font: 600 11px Inter, system-ui, sans-serif; letter-spacing: .04em; pointer-events: none;
     animation: mt-in .4s ease both;
   }
+
+  /* place names, lettered like the period map */
+  .mt-lbl { pointer-events: none; }
+  .mt-lbl span {
+    position: absolute; transform: translate(-50%, -50%); white-space: nowrap; line-height: 1;
+    font-family: var(--lf, Georgia, serif); color: var(--lbl, var(--ink));
+    text-shadow: 0 0 2px var(--halo, #f4ead2), 0 0 3px var(--halo, #f4ead2), 0 0 6px var(--halo, #f4ead2);
+  }
+  .mt-lbl.city span, .mt-lbl.cap span { transform: translate(-4px, -50%); font-size: 12.5px; }
+  .mt-lbl.cap span { font-size: 14.5px; font-weight: 700; letter-spacing: .03em; }
+  .mt-lbl i {
+    display: inline-block; width: 5px; height: 5px; margin-right: 5px; vertical-align: 1px;
+    border: 1.2px solid currentColor; border-radius: 50%; background: var(--halo, #f4ead2);
+  }
+  .mt-lbl.cap span.under { transform: translate(-50%, 21px); }
+  .mt-lbl.cap span.under i { display: none; }
+  .mt-lbl.cap i { width: 7px; height: 7px; background: currentColor; box-shadow: 0 0 0 1.5px var(--halo, #f4ead2), 0 0 0 2.5px currentColor; }
+  .mt-lbl.sea span { font-style: italic; font-size: 13px; letter-spacing: .22em; opacity: .8; }
+  .mt-lbl.land span { font-size: 13px; letter-spacing: .38em; text-transform: uppercase; opacity: .6; }
+  .mt-japan .mt-lbl.sea span, .mt-korea .mt-lbl.sea span, .mt-taiwan .mt-lbl.sea span,
+  .mt-japan .mt-lbl.land span, .mt-korea .mt-lbl.land span, .mt-taiwan .mt-lbl.land span { font-style: normal; letter-spacing: .5em; }
+  .mt-lbl .z { display: block; margin-top: 2px; font-size: .82em; letter-spacing: .1em; opacity: .85; }
 
   @media (prefers-reduced-motion: reduce) {
     .mt-cart, .mt-toast, .mt .aspen-flag-marker.mt-hero > div, .mt-finland .flame { animation: none !important; }
@@ -354,7 +387,7 @@ const { mapId } = Astro.props;
         deco: () => compass(`<text y="-49" text-anchor="middle" font-family="IM Fell English SC, Georgia, serif" font-size="11" fill="#2b2116">N</text>`, "#2b2116", "#225641", "#efe2bf"),
       },
       scotland: {
-        group: "gb-sct", zoom: 5, day: on(10, 30), tiles: "World_Shaded_Relief", native: 13,
+        group: "gb-sct", zoom: 6, day: on(10, 30), tiles: "World_Shaded_Relief", native: 13,
         fonts: "Cormorant+SC:wght@600",
         // neatline with graduated ticks
         vars: band(50, 13, "#f6f4ee", `<g stroke='#1a1a1a'><path d='M0 .5H50M0 12.5H50'/><path d='M0 6.5H50' stroke-width='.6'/>` +
@@ -365,7 +398,7 @@ const { mapId } = Astro.props;
           <div class="t">Latha Naomh Anndrais sona dhuibh!</div><div class="k">St Andrew's Day · 30 November · ${n(c)}</div>`,
       },
       netherlands: {
-        group: "NL", zoom: 5, tiles: "World_Physical_Map", native: 8,
+        group: "NL", zoom: 7, tiles: "World_Physical_Map", native: 8,
         day: (y) => { const d = new Date(y, 3, 27); return d.getDay() === 0 ? new Date(y, 3, 26) : d; },
         fonts: "Cormorant+Garamond:ital,wght@1,700",
         // a small Delft flower between two rules
@@ -401,7 +434,7 @@ const { mapId } = Astro.props;
           <div class="k">National Foundation Day<br>3 October<br>${n(c)}</div>`,
       },
       taiwan: {
-        group: "TW", zoom: 6, day: on(9, 10), tiles: "World_Shaded_Relief", native: 13,
+        group: "TW", zoom: 7, day: on(9, 10), tiles: "World_Shaded_Relief", native: 13,
         fonts: "LXGW+WenKai+TC:wght@700",
         cart: (c) => `<div class="slip"><div class="t">國慶日快樂</div><span class="seal">雙十</span></div>
           <div class="k">雙十國慶<br>10 October<br>${n(c)}</div>`,
@@ -467,10 +500,16 @@ const { mapId } = Astro.props;
     // until the map is ready, hold any theme asked for
     if (!window.__dress) window.__dress = (n) => (window.__dressQ = window.__dressQ || []).push(n);
 
+    // place names per dress: [name, lat, lng, kind]; kind is cap, city (default), land or sea
+    const LABELS = {"britain":[["London",51.507,-0.128,"cap"],["Edinburgh",55.953,-3.189],["Dublin",53.35,-6.26],["York",53.96,-1.08],["Bristol",51.45,-2.59],["Oxford",51.75,-1.26],["Cambridge",52.205,0.12],["Manchester",53.48,-2.24],["Belfast",54.6,-5.93],["Plymouth",50.375,-4.14],["Norwich",52.63,1.3],["England",52.6,-1.55,"land"],["Wales",52.3,-3.75,"land"],["Scotland",56.9,-4.2,"land"],["Ireland",53.2,-8.1,"land"],["The German Ocean",55.2,3.2,"sea"],["The Irish Sea",53.9,-5.1,"sea"],["The British Channel",50.1,-2.2,"sea"]],"scotland":[["Edinburgh",55.953,-3.189,"cap"],["Glasgow",55.864,-4.252],["Aberdeen",57.15,-2.09],["Dundee",56.46,-2.97],["Inverness",57.48,-4.22],["Perth",56.4,-3.43],["St Andrews",56.34,-2.8],["Stirling",56.12,-3.94],["Fort William",56.82,-5.11],["Oban",56.41,-5.47],["Wick",58.44,-3.09],["Highlands",57.25,-4.7,"land"],["Hebrides",57.6,-7.2,"land"],["Southern Uplands",55.4,-3.6,"land"],["North Sea",57.2,-0.9,"sea"],["The Minch",58.1,-5.9,"sea"],["Firth of Forth",56.1,-2.65,"sea"]],"netherlands":[["Amsterdam",52.37,4.9,"cap"],["Rotterdam",51.92,4.48],["'s-Gravenhage",52.08,4.3],["Utrecht",52.09,5.12],["Leiden",52.16,4.49],["Haarlem",52.38,4.64],["Groningen",53.22,6.57],["Middelburg",51.5,3.61],["Nijmegen",51.84,5.86],["Maastricht",50.85,5.69],["Leeuwarden",53.2,5.8],["Frisia",53.05,6,"land"],["Zeelandia",51.55,3.85,"land"],["Brabantia",51.55,5.25,"land"],["Mare Germanicum",52.9,3.3,"sea"],["Zuiderzee",52.72,5.42,"sea"]],"finland":[["Helsinki",60.17,24.94,"cap"],["Turku",60.45,22.27],["Tampere",61.5,23.76],["Oulu",65.01,25.47],["Vaasa",63.1,21.62],["Kuopio",62.89,27.68],["Jyväskylä",62.24,25.75],["Rovaniemi",66.5,25.73],["Joensuu",62.6,29.76],["Lappeenranta",61.06,28.19],["Lappi",67.6,26.6,"land"],["Karjala",62.3,30.4,"land"],["Pohjanlahti",63.2,20.4,"sea"],["Suomenlahti",59.75,25.8,"sea"]],"japan":[["東京",35.68,139.69,"cap"],["京都",35.01,135.77],["大阪",34.69,135.5],["名古屋",35.18,136.91],["仙台",38.27,140.87],["札幌",43.06,141.35],["福岡",33.59,130.4],["広島",34.39,132.46],["金沢",36.56,136.66],["長崎",32.75,129.87],["鹿児島",31.6,130.56],["新潟",37.92,139.04],["日本海",39.6,134.4,"sea"],["太平洋",32.4,141.6,"sea"],["瀬戸内海",34.12,133.2,"sea"]],"korea":[["서울",37.566,126.978,"cap"],["부산",35.18,129.08],["대구",35.87,128.6],["인천",37.46,126.7],["광주",35.16,126.85],["대전",36.35,127.38],["울산",35.54,129.31],["전주",35.82,127.15],["경주",35.86,129.22],["춘천",37.88,127.73],["강릉",37.75,128.9],["제주",33.5,126.53],["동해",37.2,130.4,"sea"],["황해",36.1,125.1,"sea"],["남해",34.25,127.9,"sea"]],"taiwan":[["臺北",25.03,121.56,"cap"],["基隆",25.13,121.74],["新竹",24.8,120.97],["臺中",24.15,120.67],["嘉義",23.48,120.45],["臺南",22.99,120.21],["高雄",22.63,120.3],["恆春",22,120.74],["宜蘭",24.75,121.75],["花蓮",23.98,121.6],["臺東",22.76,121.14],["澎湖",23.57,119.58],["中央山脈",23.55,121.05,"land"],["臺灣海峽",24.1,119.75,"sea"],["太平洋",23.2,122.25,"sea"],["巴士海峽",21.55,120.95,"sea"]],"hongkong":[["Cheung Chau<b class=\"z\">長洲</b>",22.21,114.028,"cap"],["Victoria<b class=\"z\">維多利亞城</b>",22.282,114.158],["Kowloon<b class=\"z\">九龍</b>",22.318,114.18],["Peng Chau<b class=\"z\">坪洲</b>",22.287,114.04],["Silver Mine Bay<b class=\"z\">銀礦灣</b>",22.268,114],["Tai O<b class=\"z\">大澳</b>",22.254,113.862],["Aberdeen<b class=\"z\">香港仔</b>",22.248,114.155],["Lantao Island",22.25,113.93,"land"],["Lamma Island",22.205,114.125,"land"],["Hong Kong Island",22.262,114.2,"land"],["West Lamma Channel",22.19,114.07,"sea"],["Adamasta Channel",22.165,113.99,"sea"],["South China Sea",22.08,114.1,"sea"]],"thailand":[["Bangkok<b class=\"z\">กรุงเทพฯ</b>",13.756,100.502,"cap"],["Ayutthaya",14.35,100.57],["Chiang Mai",18.79,98.98],["Sukhothai",17,99.82],["Nakhon Ratchasima",14.97,102.1],["Khon Kaen",16.44,102.83],["Udon Thani",17.41,102.79],["Hat Yai",7,100.47],["Phuket",7.88,98.39],["Surat Thani",9.14,99.33],["Chiang Rai",19.91,99.83],["Siam",15.6,101,"land"],["Gulf of Siam",10.6,101.4,"sea"],["Andaman Sea",9.6,96.8,"sea"]],"australia":[["Canberra",-35.28,149.13,"cap"],["Sydney",-33.87,151.21],["Melbourne",-37.81,144.96],["Brisbane",-27.47,153.03],["Perth",-31.95,115.86],["Adelaide",-34.93,138.6],["Hobart",-42.88,147.33],["Darwin",-12.46,130.84],["Alice Springs",-23.7,133.88],["Cairns",-16.92,145.77],["Nova Hollandia",-24.8,126.5,"land"],["Van Diemen's Land",-41.9,146.6,"land"],["Indian Ocean",-29,108.5,"sea"],["Coral Sea",-17.5,154,"sea"],["Tasman Sea",-38.8,157.5,"sea"],["Gulf of Carpentaria",-14.2,139.6,"sea"]],"usa":[["Washington",38.9,-77.04,"cap"],["New York",40.71,-74],["Boston",42.36,-71.06],["Philadelphia",39.95,-75.17],["Chicago",41.88,-87.63],["St. Louis",38.63,-90.2],["New Orleans",29.95,-90.07],["San Francisco",37.77,-122.42],["Denver",39.74,-104.99],["Salt Lake City",40.76,-111.89],["Seattle",47.6,-122.33],["Los Angeles",34.05,-118.24],["Atlanta",33.75,-84.39],["Kansas City",39.1,-94.58],["Great Plains",41.2,-101,"land"],["Rocky Mountains",42.6,-109.4,"land"],["Atlantic Ocean",33,-68,"sea"],["Pacific Ocean",33,-127.5,"sea"],["Gulf of Mexico",25.6,-90,"sea"]]};
+
     const ready = (fn) => (el.__aspen ? fn(el.__aspen) : el.addEventListener("aspen:map", () => fn(el.__aspen), { once: true }));
 
     ready(({ map, baseLayer, markers, groups }) => {
       const home = { center: map.getCenter(), zoom: map.getZoom() };
+      const lp = map.createPane("mtLabels");
+      lp.style.zIndex = 550;
+      lp.style.pointerEvents = "none";
       map.on("popupopen", () => el.classList.add("mt-popped"));
       map.on("popupclose", () => el.classList.remove("mt-popped"));
       const loaded = new Set();
@@ -500,12 +539,45 @@ const { mapId } = Astro.props;
         if (fly) still ? map.setView(home.center, home.zoom) : map.flyTo(home.center, home.zoom, { duration: 1.2 });
       };
 
+      const lettering = (code) => {
+        const list = LABELS[code];
+        if (!list) return;
+        layers.push(L.layerGroup(list.map(([name, lat, lng, kind = "city"]) => L.marker([lat, lng], {
+          pane: "mtLabels", interactive: false, keyboard: false,
+          icon: L.divIcon({ className: "mt-lbl " + kind, iconSize: [0, 0],
+            html: "<span>" + (kind === "city" || kind === "cap" ? "<i></i>" : "") + name + "</span>" }),
+        }))).addTo(map));
+        setTimeout(declutter, 60);
+        setTimeout(declutter, 900); // again once the lettering's web font is in
+      };
+      // Names are listed most important first; any that would collide with an
+      // earlier one, or sit under a flag, is left out at this zoom.
+      const declutter = () => {
+        const flags = [...el.querySelectorAll(".aspen-flag-marker img")].map((i) => i.getBoundingClientRect());
+        const kept = [...flags];
+        const hit = (a, b) => !(a.right + 3 < b.left || a.left - 3 > b.right || a.bottom + 2 < b.top || a.top - 2 > b.bottom);
+        el.querySelectorAll(".mt-lbl span").forEach((sp) => {
+          sp.style.visibility = "";
+          sp.classList.remove("under");
+          let r = sp.getBoundingClientRect();
+          // a capital under its own flag is lettered just beneath the flag
+          if (sp.parentElement.classList.contains("cap") && flags.some((k) => hit(r, k))) {
+            sp.classList.add("under");
+            r = sp.getBoundingClientRect();
+          }
+          if (kept.some((k) => hit(r, k))) sp.style.visibility = "hidden";
+          else kept.push(r);
+        });
+      };
+      map.on("zoomend moveend", () => { if (current) declutter(); });
+
       const apply = (code) => {
         const t = THEMES[code];
         clear(false);
         current = code;
         loadFont(t.fonts);
         el.classList.add("mt", "mt-" + code);
+        lettering(code);
         // theme values too long or computed for the stylesheet
         Object.entries(t.vars || {}).forEach(([k, v]) => { el.style.setProperty(k, v); vars.push(k); });
 

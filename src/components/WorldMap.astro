@@ -256,7 +256,7 @@ const dark = variant === "dark";
         .join("");
 
       m.bindPopup(
-        `<div style="font-family:Inter,system-ui,sans-serif;min-width:240px;max-width:320px">
+        `<div style="font-family:Inter,system-ui,sans-serif;min-width:min(240px,calc(100vw - 150px));max-width:min(320px,calc(100vw - 150px))">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;padding-bottom:6px;border-bottom:2px solid ${P.accentRule}">
             <img src="${flagUrl}" srcset="${flagUrl2x} 2x" alt="" style="width:24px;height:16px;border:1px solid ${dark ? "#284640" : "#ddd"};border-radius:2px" />
             <strong style="color:${P.head};font-size:15px">${g.country}</strong>
@@ -264,7 +264,8 @@ const dark = variant === "dark";
           </div>
           <div>${list}</div>
         </div>`,
-        { maxWidth: 340, className: dark ? "aspen-popup-dark" : "" }
+        // narrow screens: keep the popup inside the map, clear of the edges
+        { maxWidth: 340, autoPanPadding: [14, 14], className: dark ? "aspen-popup-dark" : "" }
       );
       if (g.note) bindNote(m, g, false);
       return m;
@@ -293,6 +294,13 @@ const dark = variant === "dark";
       const box = map.getContainer();
       box.addEventListener("mouseenter", () => { paused = true; clear(); });
       box.addEventListener("mouseleave", () => { paused = false; });
+      // An open popup owns the frame: no note may sit on top of it (on touch
+      // screens there is no hover to pause the gaze, so this is the only cue).
+      let popupOpen = false;
+      map.on("popupopen", () => { popupOpen = true; paused = true; clear(); noted.forEach((m) => m.closeTooltip()); });
+      map.on("popupclose", () => { popupOpen = false; paused = false; });
+      // a tap on a flag opens its note too; while its popup is up, drop it
+      map.on("tooltipopen", (e) => { if (popupOpen) setTimeout(() => map.closeTooltip(e.tooltip), 0); });
       new IntersectionObserver((es) => {
         if (es[0].isIntersecting) { if (!timer) { step(); timer = setInterval(step, 3200); } }
         else { clearInterval(timer); timer = null; clear(); }
