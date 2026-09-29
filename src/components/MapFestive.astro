@@ -52,6 +52,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
     border: 1px solid var(--ink);
     box-shadow: 0 0 0 3px var(--card), 0 0 0 4px var(--ink2, var(--ink)), 0 6px 18px rgba(40, 30, 12, .28);
   }
+  .mt-cart .k + .k { margin-top: 2px; }
   .mt-cart .ribbon {
     display: inline-block; margin-top: 6px; padding: 2px 14px; color: var(--card); background: var(--rib, var(--ink));
     font-style: italic; font-size: 13px; clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%);
@@ -214,9 +215,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
     --vig: rgba(60, 75, 85, .18);
   }
   .mt-hongkong .mt-cart { padding: 12px 22px 10px; }
-  .mt-hongkong .mt-cart .en { font: 700 14px/1.25 "Libre Caslon Text", Georgia, serif; letter-spacing: .12em; }
   .mt-hongkong .mt-cart .t { font-family: "Noto Serif HK", serif; font-weight: 700; font-size: 20px; line-height: 1.3; letter-spacing: .2em; margin: 4px 0 6px; }
   .mt-hongkong .mt-cart .k { font: italic 11.5px/1.4 "Libre Caslon Text", Georgia, serif; color: #3a3a3a; padding-top: 6px; border-top: 1px solid #1c1c1c; }
+  .mt-hongkong .mt-cart .k + .k { padding-top: 0; border-top: 0; }
   .mt-hongkong .mt-bunshan { width: 70px; height: 100px; }
 
   /* ── Thailand: gold on lacquer, after the samut khoi ──────────── */
@@ -406,6 +407,20 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         <path d="M35 95V3M35 3L44 5.5L35 8M17 91H53M20 91V96M50 91V96"/><g fill="#f7f7f2">${b}</g></svg>`;
     })();
 
+    const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const dm = (d) => (d ? d.getDate() + " " + MONTHS[d.getMonth()] : "");
+    const yr = () => new Date().getFullYear();
+    // Buddha's Birthday: the 8th day of the 4th lunar month, found in the given year
+    const lunar48 = (y) => {
+      try {
+        const f = new Intl.DateTimeFormat("en-u-ca-chinese", { month: "numeric", day: "numeric" });
+        for (let d = new Date(y, 3, 1); d < new Date(y, 5, 30); d.setDate(d.getDate() + 1)) {
+          const p = f.formatToParts(d);
+          if (p.find((x) => x.type === "month")?.value === "4" && p.find((x) => x.type === "day")?.value === "8") return new Date(d);
+        }
+      } catch (_) { /* no lunar calendar in this browser */ }
+      return null;
+    };
     const n = (count) => `${count} AsPEN ${count === 1 ? "database" : "databases"}`;
     const THEMES = {
       britain: {
@@ -413,8 +428,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         fonts: "IM+Fell+English:ital@0;1&family=IM+Fell+English+SC",
         // degree bar: two rules with alternate degrees filled
         vars: band(60, 10, "#efe2bf", `<path d='M0 .5H60M0 9.5H60' stroke='#2b2116'/><rect y='4' width='30' height='2' fill='#2b2116'/>`),
-        cart: (c) => `<div class="k">A New Map of the</div><div class="t">United Kingdom</div>
-          <div class="k">Shewing ${n(c)}</div><span class="ribbon">The King's Official Birthday</span>`,
+        cart: (c) => `<div class="t">The King's Official Birthday</div><div class="k">United Kingdom · ${dm(THEMES.britain.day(yr()))}</div><div class="k">${n(c)}</div>`,
         deco: () => compass(`<text y="-49" text-anchor="middle" font-family="IM Fell English SC, Georgia, serif" font-size="11" fill="#2b2116">N</text>`, "#2b2116", "#225641", "#efe2bf"),
       },
       scotland: {
@@ -426,7 +440,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         cart: (c) => `<svg viewBox="0 0 26 30" width="22" height="26" aria-hidden="true"><clipPath id="mt-shield"><path d="M1 1H25V13C25 21 13 29 13 29C13 29 1 21 1 13Z"/></clipPath>
           <g clip-path="url(#mt-shield)"><rect width="26" height="30" fill="#1f3a52"/><path d="M0 0L26 30M26 0L0 30" stroke="#f6f4ee" stroke-width="4"/></g>
           <path d="M1 1H25V13C25 21 13 29 13 29C13 29 1 21 1 13Z" fill="none" stroke="#1a1a1a" stroke-width=".8"/></svg>
-          <div class="t">Latha Naomh Anndrais sona dhuibh!</div><div class="k">St Andrew's Day · 30 November · ${n(c)}</div>`,
+          <div class="t">Latha Naomh Anndrais</div><div class="k">St Andrew's Day · 30 November</div><div class="k">${n(c)}</div>`,
       },
       netherlands: {
         group: "NL", zoom: 7, tiles: "World_Physical_Map", native: 8,
@@ -436,7 +450,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         vars: band(48, 16, "#f0e2c0", `<path d='M0 .5H48M0 15.5H48' stroke='#1d4f91'/><g transform='translate(24 8)' fill='#1d4f91'>` +
           [0, 90, 180, 270].map((a) => `<ellipse cy='-2.9' rx='1.25' ry='2.3' transform='rotate(${a})'/>`).join("") +
           [45, 135, 225, 315].map((a) => `<circle cy='-3.7' r='.6' transform='rotate(${a})'/>`).join("") + `</g>`),
-        cart: (c) => `<div class="t">Fijne Koningsdag!</div><div style="font-size:12px">King's Day · ${THEMES.netherlands.day(new Date().getFullYear()).getDate()} April · ${n(c)}</div><span class="ribbon">ORANJE BOVEN</span>`,
+        cart: (c) => `<div class="t">Koningsdag</div><div class="k">King's Day · ${dm(THEMES.netherlands.day(yr()))}</div><div class="k">${n(c)}</div>`,
         deco: () => compass(fleur("#1d4f91"), "#1d4f91", "#1d4f91", "#f0e2c0"),
       },
       finland: {
@@ -444,7 +458,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         fonts: "Cormorant+Garamond:wght@700",
         // engraved rules with a small lozenge now and then
         vars: band(72, 12, "#eef0ec", `<path d='M0 .5H72M0 11.5H72' stroke='#3d5570'/><path d='M36 3L39 6L36 9L33 6Z' fill='#3d5570'/>`),
-        cart: (c) => `<div class="k">Independence Day · 6 December</div><div class="t">Hyvää itsenäisyyspäivää!</div><div class="k">${n(c)} in Finland</div>`,
+        cart: (c) => `<div class="t">Itsenäisyyspäivä</div><div class="k">Independence Day · 6 December</div><div class="k">${n(c)}</div>`,
         deco: () => `<svg class="mt-candles" viewBox="0 0 48 56" aria-hidden="true" fill="#f4f4f0" stroke="#3d5570" stroke-width="1">
           <rect x="8" y="26" width="10" height="28" rx="1"/><rect x="30" y="26" width="10" height="28" rx="1"/><path d="M13 26V22M35 26V22"/>
           <path class="flame" d="M13 21 C9 16 13 12 13 7 C16 12 17 16 13 21 Z"/><path class="flame b" d="M35 21 C31 16 35 12 35 7 C38 12 39 16 35 21 Z"/></svg>`,
@@ -453,7 +467,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         group: "JP", zoom: 5, day: on(1, 11), tiles: "World_Shaded_Relief", native: 13,
         fonts: "Shippori+Mincho:wght@700",
         cart: (c) => `<div class="slip"><div class="t">建国記念の日</div><span class="hanko">祝</span></div>
-          <div class="k">National Foundation Day<br>11 February<br>${n(c)}</div>`,
+          <div class="k">National Foundation Day · 11 February</div><div class="k">${n(c)}</div>`,
       },
       korea: {
         group: "KR", zoom: 6, day: on(9, 3), tiles: "World_Shaded_Relief", native: 13,
@@ -462,7 +476,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         vars: band(48, 16, "#f2ead3", `<path d='M0 3.5H48M0 12.5H48M.5 3.5V12.5M4.5 3.5V12.5M8.5 3.5V12.5' stroke='#3a3029'/>`),
         cart: (c) => `<div class="slip"><div class="t">개천절</div><svg class="taegeuk" viewBox="-20 -20 40 40" aria-hidden="true"><circle r="19" fill="#2b4c8c"/>
           <path d="M-19 0 A19 19 0 0 1 19 0 A9.5 9.5 0 0 0 0 0 A9.5 9.5 0 0 1 -19 0 Z" fill="#b8312f"/></svg></div>
-          <div class="k">National Foundation Day<br>3 October<br>${n(c)}</div>`,
+          <div class="k">National Foundation Day · 3 October</div><div class="k">${n(c)}</div>`,
       },
       taiwan: {
         group: "TW", zoom: 7, day: on(9, 10), tiles: "World_Shaded_Relief", native: 13,
@@ -470,8 +484,8 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         // 回紋: a key-fret border in deep green on the celadon silk
         vars: band(24, 18, "#d3dbc8", `<g fill='none' stroke='#2d4a3e' stroke-width='1.1'><path d='M0 2.5H24M0 15.5H24'/>` +
           `<path d='M0 12.5H3V5.5H10V11.5H6V8.5H8M12 12.5H15V5.5H22V11.5H18V8.5H20' stroke-linecap='square'/></g>`),
-        cart: (c) => `<div class="slip"><div class="t">國慶日快樂</div><span class="seal">雙十</span></div>
-          <div class="k">雙十國慶<br>10 October<br>${n(c)}</div>`,
+        cart: (c) => `<div class="slip"><div class="t">雙十國慶</div><span class="seal">慶</span></div>
+          <div class="k">National Day · 10 October</div><div class="k">${n(c)}</div>`,
       },
       hongkong: {
         group: "HK", zoom: 10, center: [22.2106, 114.0285], tiles: "Ocean/World_Ocean_Base", native: 13,
@@ -488,8 +502,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         fonts: "Libre+Caslon+Text:ital,wght@0,700;1,400&family=Noto+Serif+HK:wght@700",
         // chart border: a minute scale between fine rules
         vars: band(32, 14, "#f7f7f2", `<path d='M0 .5H32M0 13.5H32M0 5.5H32M0 8.5H32' stroke='#1c1c1c'/><rect y='5' width='16' height='4' fill='#1c1c1c'/>`),
-        cart: (c) => `<div class="en">CHEUNG CHAU BUN FESTIVAL</div><div class="t">長洲太平清醮</div>
-          <div class="k">Buddha's Birthday · 8th day of the 4th lunar month · ${n(c)}</div>`,
+        cart: (c) => `<div class="t">長洲太平清醮</div><div class="k">Cheung Chau Bun Festival · ${dm(lunar48(yr()))}</div><div class="k">${n(c)}</div>`,
         deco: () => bunshan,
       },
       thailand: {
@@ -499,7 +512,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         vars: band(44, 16, "#5e1714", `<path d='M0 1.5H44M0 14.5H44' stroke='#c9a14a' stroke-width='.8' stroke-opacity='.8'/>`,
           `<g fill='none' stroke='#c9a14a' stroke-width='.8'><path d='M22 13 C18.5 11 18.8 7 21 4.5 C21.6 3.8 22.4 3.2 23.4 3 C22.6 4 22.5 5 23.2 5.8 C25.2 8 25.3 11.3 22 13 Z'/>` +
           `<path d='M22 11.5 C20.8 10 21 8 22 6.8' stroke-width='.6'/></g>`),
-        cart: (c) => `<div class="t">วันชาติ</div><div class="k">National Day · 5 December · ${n(c)}</div>`,
+        cart: (c) => `<div class="t">วันชาติ</div><div class="k">National Day · 5 December</div><div class="k">${n(c)}</div>`,
       },
       australia: {
         group: "AU", zoom: 4, day: on(0, 26), tiles: "World_Physical_Map", native: 8,
@@ -508,7 +521,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         vars: band(64, 16, "#efe2bf", `<g fill='#5a4630'><path d='M0 .5H64M0 15.5H64M22 11 C28 9.5 36 8 44 5' fill='none' stroke='#5a4630' stroke-width='.8'/>` +
           `<path d='M27 9.8 C31 12.8 37 13.2 41 12.4 C37 11.2 31 10.6 27 9.8 Z'/>` +
           [[25, 8.6], [30.5, 6.8], [35.5, 5.4], [40, 3.9], [44.5, 4.6]].map(([x, y]) => `<circle cx='${x}' cy='${y}' r='1.5'/>`).join("") + `</g>`),
-        cart: (c) => `<div class="t">Australia Day</div><div class="k">26 January · ${n(c)}</div>`,
+        cart: (c) => `<div class="t">Australia Day</div><div class="k">Australia · 26 January</div><div class="k">${n(c)}</div>`,
         // rhumb lines out of a small rose, as on a portolan
         fx: () => {
           let s = "";
@@ -527,7 +540,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         fonts: "Old+Standard+TT:ital,wght@1,700",
         // plain double rule with fine ticks
         vars: band(12, 14, "#f3ecd9", `<path d='M0 1.5H12M0 12.5H12M.5 5V9' stroke='#1c2e5a'/>`),
-        cart: (c) => `<div class="stars">★ ★ ★</div><div class="t">Happy Fourth of July</div><div class="k">Independence Day · ${n(c)}</div>`,
+        cart: (c) => `<div class="stars">★ ★ ★</div><div class="t">Independence Day</div><div class="k">United States · 4 July</div><div class="k">${n(c)}</div>`,
       },
     };
 
