@@ -64,7 +64,10 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   .mt-deco { left: calc(var(--bw) + 14px); bottom: calc(var(--bw) + 14px); }
   .mt .leaflet-top.leaflet-left .leaflet-control { margin-left: calc(var(--bw) + 8px); margin-top: calc(var(--bw) + 8px); }
   .mt .leaflet-bottom.leaflet-right .leaflet-control { margin-right: var(--bw); margin-bottom: var(--bw); }
+  /* tiles are graded through the period map's own ink → paper ramp (an SVG
+     gradient map built in the script from colours sampled off each sheet) */
   .mt .leaflet-tile-pane { filter: var(--tf, none); }
+  .mt .mt-relief { mix-blend-mode: multiply; opacity: .6; }
   .mt .leaflet-popup-content-wrapper, .mt .leaflet-popup-tip { background: #f7f1e1; }
   .mt .aspen-flag-marker img { filter: sepia(.3); }
   .mt .aspen-flag-marker.mt-hero { z-index: 1000 !important; }
@@ -99,7 +102,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   .mt-britain {
     --bw: 10px; --accent: #225641; --ink: #2b2116; --rib: #225641;
     --lf: "IM Fell English", Georgia, serif; --lbl: #2b2116; --halo: #efe2bf;
-    --tf: sepia(.85) saturate(1.3) hue-rotate(-10deg) contrast(1.15) brightness(.98);
+    --tf: url(#mt-tone-britain);
     --vig: rgba(112, 72, 24, .38);
     --nl: inset 0 0 0 3px #efe2bf, inset 0 0 0 4px #2b2116;
   }
@@ -112,7 +115,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   .mt-scotland {
     --bw: 13px; --accent: #1f3a52; --ink: #1a1a1a; --card: #f6f4ee; --grain: .5;
     --lf: "Cormorant SC", Georgia, serif; --lbl: #1a1a1a; --halo: #f1efe8;
-    --tf: grayscale(1) sepia(.2) contrast(1.3) brightness(.98);
+    --tf: url(#mt-tone-scotland);
     --vig: rgba(60, 58, 50, .22);
   }
   .mt-scotland .mt-cart .t { font-family: "Cormorant SC", Georgia, serif; font-weight: 600; font-size: 20px; line-height: 1.2; letter-spacing: .03em; margin: 6px 0 4px; }
@@ -122,7 +125,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   .mt-netherlands {
     --bw: 16px; --accent: #e8741f; --ink: #1d4f91; --rib: #c8661f; --card: #f6ecd2;
     --lf: "Cormorant Garamond", Georgia, serif; --lbl: #1d3f73; --halo: #f0e2c0;
-    --tf: sepia(.45) saturate(1.45) hue-rotate(-8deg) contrast(1.15) brightness(.98);
+    --tf: url(#mt-tone-netherlands);
     --vig: rgba(120, 80, 30, .32);
     --nl: inset 0 0 0 3px #f0e2c0, inset 0 0 0 4px #1d4f91;
   }
@@ -134,7 +137,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   .mt-finland {
     --bw: 12px; --accent: #3d5570; --ink: #3d5570; --card: #f4f4f0; --grain: .5;
     --lf: "Cormorant Garamond", Georgia, serif; --lbl: #2c4260; --halo: #eef0f0;
-    --tf: grayscale(1) sepia(.3) hue-rotate(180deg) saturate(.9) contrast(1.3) brightness(.97);
+    --tf: url(#mt-tone-finland);
     --vig: rgba(60, 80, 105, .22);
   }
   .mt-finland .mt-cart .t { font-family: "Cormorant Garamond", Georgia, serif; font-weight: 700; font-size: 24px; line-height: 1.1; margin: 4px 0; color: #2c4260; }
@@ -148,7 +151,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   .mt-japan {
     --bw: 20px; --accent: #bc2d29; --ink: #1f4f5c; --card: #f7f0de;
     --lf: "Shippori Mincho", serif; --lbl: #1f2a2e; --halo: #f4ecd8;
-    --tf: sepia(.5) saturate(.85) contrast(1.25) brightness(.98);
+    --tf: url(#mt-tone-japan);
    
     --bh:
       radial-gradient(circle at 100% 150%, #f4ecd8 24%, #1f4f5c 24%, #1f4f5c 28%, #f4ecd8 28%, #f4ecd8 36%, #1f4f5c 36%, #1f4f5c 40%, transparent 40%) 0 0 / 40px 20px,
@@ -168,7 +171,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   .mt-korea {
     --bw: 16px; --accent: #b8312f; --ink: #3a3029; --card: #f5eedb;
     --lf: "Nanum Myeongjo", serif; --lbl: #22201c; --halo: #f2ead3;
-    --tf: grayscale(1) sepia(.5) contrast(1.3) brightness(.97);
+    --tf: url(#mt-tone-korea);
     --vig: rgba(90, 70, 40, .2);
     --nl: inset 0 0 0 1px #3a3029;
   }
@@ -181,7 +184,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   .mt-taiwan {
     --bw: 18px; --accent: #9e1b1b; --ink: #2d4a3e; --card: #f3ead3;
     --lf: "LXGW WenKai TC", "Noto Serif TC", serif; --lbl: #1f2a24; --halo: #eee6cc;
-    --tf: sepia(.6) hue-rotate(45deg) saturate(1.5) contrast(1.25) brightness(.97);
+    --tf: url(#mt-tone-taiwan);
     --vig: rgba(70, 80, 50, .22);
     --nl: inset 0 0 0 1px #6d7f68, inset 0 0 0 3px #efe7d0, inset 0 0 0 4px #6d7f68;
   }
@@ -207,7 +210,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   .mt-hongkong {
     --bw: 14px; --accent: #b3261e; --ink: #1c1c1c; --card: #f7f7f2; --grain: .5;
     --lf: "Libre Caslon Text", "Noto Serif HK", Georgia, serif; --lbl: #1c1c1c; --halo: #eef1f2;
-    --tf: grayscale(.5) sepia(.12) contrast(1.15) brightness(1);
+    --tf: url(#mt-tone-hongkong);
     --vig: rgba(60, 75, 85, .18);
   }
   .mt-hongkong .mt-cart { padding: 12px 22px 10px; }
@@ -220,7 +223,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   .mt-thailand {
     --bw: 16px; --accent: #c9a14a; --ink: #c9a14a; --card: #231b17;
     --lf: Georgia, "Noto Serif Thai", serif; --lbl: #3b2a12; --halo: #efe0bb;
-    --tf: sepia(.7) saturate(1.25) hue-rotate(-4deg) contrast(1.12) brightness(.98);
+    --tf: url(#mt-tone-thailand);
     --vig: rgba(110, 60, 10, .32);
     --nl: inset 0 0 0 1px #c9a14a;
   }
@@ -232,7 +235,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   .mt-australia {
     --bw: 16px; --accent: #1f5c47; --ink: #1f5c47; --ink2: #b08a2e;
     --lf: Georgia, serif; --lbl: #3d2e1c; --halo: #efe2bf;
-    --tf: sepia(.9) saturate(1.2) hue-rotate(-8deg) contrast(1.12) brightness(.98);
+    --tf: url(#mt-tone-australia);
     --vig: rgba(112, 72, 24, .4);
     --nl: inset 0 0 0 3px #efe2bf, inset 0 0 0 4px #5a4630;
   }
@@ -245,7 +248,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   .mt-usa {
     --bw: 14px; --accent: #9b3a3f; --ink: #1c2e5a; --card: #f6f0e0;
     --lf: "Old Standard TT", Georgia, serif; --lbl: #1c2e5a; --halo: #f3ecd8;
-    --tf: sepia(.3) saturate(.9) hue-rotate(-8deg) contrast(1.08) brightness(1);
+    --tf: url(#mt-tone-usa);
     --vig: rgba(100, 80, 40, .18);
   }
   .mt-usa .mt-cart .stars { color: #9b3a3f; font-size: 9px; letter-spacing: .7em; margin-left: .7em; }
@@ -341,6 +344,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
     const SRC = {
       "World_Physical_Map": ESRI_A + ", US National Park Service",
       "World_Shaded_Relief": ESRI_A + ", USGS",
+      "Canvas/World_Light_Gray_Base": ESRI_A + ', HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, USGS',
       "Ocean/World_Ocean_Base": ESRI_A + ", GEBCO, NOAA, National Geographic, Garmin, HERE, Geonames.org, and other contributors",
     };
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -519,7 +523,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
           .map(([x, y, r, p]) => star(x, y, r, p, "#f5ead0", "#1f5c47")).join("")}</svg>`,
       },
       usa: {
-        group: "US", zoom: 4, day: on(6, 4),
+        group: "US", zoom: 4, day: on(6, 4), tiles: "World_Physical_Map", native: 8,
         fonts: "Old+Standard+TT:ital,wght@1,700",
         // plain double rule with fine ticks
         vars: band(12, 14, "#f3ecd9", `<path d='M0 1.5H12M0 12.5H12M.5 5V9' stroke='#1c2e5a'/>`),
@@ -562,6 +566,24 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       box.addEventListener("click", (e) => { if (!e.target.closest("a")) close(); });
       box.querySelector(".mt-light-x").focus({ preventScroll: true });
     };
+
+    // ink · mid · paper for each dress, sampled from its period map
+    const TONES = {"britain":["#3b2e1e","#a8905f","#ecdcb2"],"scotland":["#3e352b","#ccbba6","#efe4d4"],"netherlands":["#4e4034","#c2ad8f","#efe0cc"],"finland":["#4a4239","#c0ae9d","#eee3cf"],"japan":["#6e3a33","#e2c49c","#fcebcb"],"korea":["#3a3630","#cec7b6","#f7f3ea"],"taiwan":["#4a3c29","#a88a64","#dcc59f"],"hongkong":["#3f3d36","#d9d2bc","#fbf3dc"],"thailand":["#3e342b","#b5a082","#d9c6a6"],"australia":["#4a4034","#cfc2ad","#e6dac6"],"usa":["#3f3c35","#cac5ba","#efe8dc"]};
+    // the physical map has dark green land; lift it so it lands in the mid-tones
+    const LIFT = { britain: .27, netherlands: .27, thailand: .27, australia: .27, usa: .27 };
+    const hex = (h) => [1, 3, 5].map((i) => (parseInt(h.slice(i, i + 2), 16) / 255).toFixed(3));
+    if (!document.getElementById("mt-tones")) {
+      const defs = Object.entries(TONES).map(([k, cs]) => {
+        const ch = [0, 1, 2].map((c) => cs.map((x) => hex(x)[c]).join(" "));
+        return `<filter id="mt-tone-${k}" color-interpolation-filters="sRGB">
+          <feColorMatrix type="matrix" values="${[0, 1, 2].map(() => `-2.787 .7152 3.072 0 ${(-.15 + (LIFT[k] || 0)).toFixed(2)}`).join("  ")}  0 0 0 1 0"/>
+          <feComponentTransfer><feFuncR type="table" tableValues="${ch[0]}"/><feFuncG type="table" tableValues="${ch[1]}"/><feFuncB type="table" tableValues="${ch[2]}"/></feComponentTransfer>
+        </filter>`;
+      }).join("");
+      const svg = document.createElement("div");
+      svg.innerHTML = `<svg id="mt-tones" width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">${defs}</svg>`;
+      document.body.appendChild(svg.firstChild);
+    }
 
     const ready = (fn) => (el.__aspen ? fn(el.__aspen) : el.addEventListener("aspen:map", () => fn(el.__aspen), { once: true }));
 
@@ -643,6 +665,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
         if (t.tiles) {
           map.removeLayer(baseLayer);
+          if (t.relief) {
+            layers.push(L.tileLayer(ESRI + "World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}", {
+              maxZoom: 10, maxNativeZoom: 13, zIndex: 2, className: "mt-relief",
+            }).addTo(map));
+          }
           layers.push(L.tileLayer(ESRI + t.tiles + "/MapServer/tile/{z}/{y}/{x}", {
             attribution: SRC[t.tiles] || ESRI_A, maxZoom: 10, maxNativeZoom: t.native, zIndex: 1,
           }).addTo(map));
