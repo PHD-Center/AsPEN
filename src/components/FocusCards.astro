@@ -1,8 +1,11 @@
 ---
 // Two teaser cards for the Infrastructure theme page, each a miniature of
-// the focus-area page it opens: a dark console for vaccine safety, a
-// chalkboard for NeuroGEN. Counts are computed from the same data the pages
-// use, so a card can never disagree with the page behind it.
+// the focus-area page it opens: a chalkboard for NeuroGEN, a console for
+// vaccine safety. They share one ground (brand-900), one keyline and one
+// mint accent so they read as a pair in the site's own colours; only the
+// texture (chalk dust vs grid) and the lettering tell them apart. Counts are
+// computed from the same data the pages use, so a card can never disagree
+// with the page behind it.
 import databasesRaw from "../data/databases.json";
 import { DATABASES as VACCINE_DBS } from "../data/vaccine-suitability";
 
@@ -24,8 +27,8 @@ const vxRegions = new Set(VACCINE_DBS.map((d) => d.region)).size;
     {areas.map((area) => (
       <Fragment>
     {area === "vaccine" && (
-      <a href={`${base}/focus/vaccine/`} class="fc-vx group relative block overflow-hidden rounded-xl p-6 text-[#e2eeeb] transition hover:-translate-y-0.5 hover:shadow-xl">
-        <span class="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[radial-gradient(closest-side,rgba(86,226,202,0.18),transparent)]" aria-hidden="true"></span>
+      <a href={`${base}/focus/vaccine/`} class="fc fc-vx group">
+        <span class="fc-glow" aria-hidden="true"></span>
         <p class="fc-mono relative text-[10px] tracking-[0.22em] text-[#92ebda]">DISEASE X <span class="text-[#3a5d56]">//</span> CASE FILE 001</p>
         <h3 class="relative mt-3 text-2xl font-bold text-white">Vaccine safety</h3>
         <p class="relative mt-2 text-sm leading-relaxed text-[#b3cac5]">
@@ -35,34 +38,33 @@ const vxRegions = new Set(VACCINE_DBS.map((d) => d.region)).size;
           <span><span class="fc-dot inline-block w-1.5 h-1.5 rounded-full bg-[#56e2ca] align-middle mr-1.5" aria-hidden="true"></span>{vxRegions} REGIONS</span>
           <span>{VACCINE_DBS.length} DATABASES</span>
         </p>
-        <span class="fc-mono relative mt-5 inline-flex items-center gap-1 text-xs font-bold tracking-wider text-[#92ebda]">
+        <span class="fc-cta fc-mono">
           ENTER THE CONSOLE <span aria-hidden="true" class="transition-transform group-hover:translate-x-1">→</span>
         </span>
       </a>
     )}
 
     {area === "neurogen" && (
-      <a href={`${base}/focus/neurogen/`} class="fc-ng group relative block overflow-hidden rounded-xl p-[10px] transition hover:-translate-y-0.5 hover:shadow-xl">
-        <div class="fc-board relative h-full rounded-md p-5 text-[#f1f0e8]">
-          <!-- a tiny chalk graph -->
-          <svg class="absolute right-4 top-4 w-[120px] h-[88px] opacity-80" viewBox="0 0 120 88" aria-hidden="true">
-            <g stroke="#f1f0e8" stroke-width="1.3" stroke-linecap="round" fill="none" opacity=".75">
-              <line x1="60" y1="46" x2="16" y2="30" /><line x1="60" y1="46" x2="34" y2="10" /><line x1="60" y1="46" x2="72" y2="8" />
-              <line x1="60" y1="46" x2="106" y2="24" /><line x1="60" y1="46" x2="108" y2="62" /><line x1="60" y1="46" x2="84" y2="82" />
-              <line x1="60" y1="46" x2="12" y2="66" />
-            </g>
-            <g fill="#f1f0e8"><circle cx="16" cy="30" r="2.6" /><circle cx="34" cy="10" r="2.6" /><circle cx="72" cy="8" r="2.6" /><circle cx="106" cy="24" r="2.6" /><circle cx="108" cy="62" r="2.6" /><circle cx="84" cy="82" r="2.6" /><circle cx="12" cy="66" r="2.6" /></g>
-            <circle cx="60" cy="46" r="10" stroke="#f4e285" stroke-width="1.6" fill="#223128" />
-          </svg>
-          <p class="fc-hand relative text-4xl leading-none">NeuroGEN</p>
-          <p class="fc-hand relative mt-1 text-xl text-[#d9d6c8] max-w-[70%] leading-tight">Neurological &amp; Mental Disorders</p>
-          <p class="fc-hand relative mt-4 text-2xl">
-            {ng.length} databases · {ngRegions} regions · <span class="text-[#f4e285]">≈ 320M people</span>
-          </p>
-          <span class="relative mt-4 inline-flex items-center gap-1 text-xs font-semibold tracking-wide text-[#f4e285]">
-            Open the board <span aria-hidden="true" class="transition-transform group-hover:translate-x-1">→</span>
-          </span>
-        </div>
+      <a href={`${base}/focus/neurogen/`} class="fc fc-ng group">
+        <span class="fc-glow" aria-hidden="true"></span>
+        <!-- a tiny chalk graph -->
+        <svg class="absolute right-5 top-5 w-[120px] h-[88px] opacity-80" viewBox="0 0 120 88" aria-hidden="true">
+          <g stroke="#e8efe9" stroke-width="1.3" stroke-linecap="round" fill="none" opacity=".7">
+            <line x1="60" y1="46" x2="16" y2="30" /><line x1="60" y1="46" x2="34" y2="10" /><line x1="60" y1="46" x2="72" y2="8" />
+            <line x1="60" y1="46" x2="106" y2="24" /><line x1="60" y1="46" x2="108" y2="62" /><line x1="60" y1="46" x2="84" y2="82" />
+            <line x1="60" y1="46" x2="12" y2="66" />
+          </g>
+          <g fill="#e8efe9"><circle cx="16" cy="30" r="2.6" /><circle cx="34" cy="10" r="2.6" /><circle cx="72" cy="8" r="2.6" /><circle cx="106" cy="24" r="2.6" /><circle cx="108" cy="62" r="2.6" /><circle cx="84" cy="82" r="2.6" /><circle cx="12" cy="66" r="2.6" /></g>
+          <circle cx="60" cy="46" r="10" stroke="#92ebda" stroke-width="1.6" fill="#102420" />
+        </svg>
+        <p class="fc-hand relative text-4xl leading-none text-[#eef3ef]">NeuroGEN</p>
+        <p class="fc-hand relative mt-1 text-xl text-[#b3cac5] max-w-[70%] leading-tight">Neurological &amp; Mental Disorders</p>
+        <p class="fc-hand relative mt-4 text-2xl text-[#eef3ef]">
+          {ng.length} databases · {ngRegions} regions · <span class="text-[#92ebda]">≈ 320M people</span>
+        </p>
+        <span class="fc-cta">
+          Open the board <span aria-hidden="true" class="transition-transform group-hover:translate-x-1">→</span>
+        </span>
       </a>
     )}
       </Fragment>
@@ -74,22 +76,37 @@ const vxRegions = new Set(VACCINE_DBS.map((d) => d.region)).size;
   .fc-mono { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
   .fc-hand { font-family: "Caveat", "Segoe Print", "Bradley Hand", cursive; }
 
-  .fc-vx {
-    background-color: #102420;
-    background-image:
-      linear-gradient(to right, rgba(40, 70, 64, 0.6) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(40, 70, 64, 0.6) 1px, transparent 1px);
-    background-size: 28px 28px;
-    border: 1px solid #284640;
+  /* the shared card: brand-900 ground, one keyline, one soft mint glow */
+  .fc {
+    position: relative; display: flex; flex-direction: column; height: 100%; overflow: hidden;
+    padding: 1.5rem; border-radius: .75rem; color: #e2eeeb;
+    background-color: #102420; border: 1px solid #284640;
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
   }
-  .fc-ng { background: linear-gradient(180deg, #6b4a2f, #4a3220); }
-  .fc-board {
-    background-color: #223128;
-    background-image: radial-gradient(ellipse at 30% 30%, rgba(241, 240, 232, 0.06), transparent 60%);
-    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.45);
+  .fc:hover { transform: translateY(-2px); border-color: #3a8a6e; box-shadow: 0 14px 30px rgba(16, 36, 32, .28); }
+  .fc-glow {
+    position: absolute; top: -4rem; right: -4rem; width: 14rem; height: 14rem; border-radius: 50%; pointer-events: none;
+    background: radial-gradient(closest-side, rgba(86, 226, 202, .16), transparent);
+  }
+  .fc-cta {
+    position: relative; margin-top: auto; padding-top: 1.25rem;
+    display: inline-flex; align-items: center; gap: .25rem;
+    font-size: .75rem; font-weight: 700; letter-spacing: .06em; color: #92ebda;
+  }
+  /* textures: a console grid, and chalk dust on the same ground */
+  .fc-vx {
+    background-image:
+      linear-gradient(to right, rgba(40, 70, 64, .55) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(40, 70, 64, .55) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .fc-ng {
+    background-image:
+      radial-gradient(ellipse at 28% 30%, rgba(232, 239, 233, .06), transparent 60%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   }
 
   @keyframes fc-breathe { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
   .fc-dot { animation: fc-breathe 2.4s ease-in-out infinite; }
-  @media (prefers-reduced-motion: reduce) { .fc-dot { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .fc-dot { animation: none; } .fc { transition: none; } }
 </style>
