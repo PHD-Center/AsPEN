@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PageHeader from "../../../components/PageHeader.astro";
+import FocusCards from "../../../components/FocusCards.astro";
 import pubsRaw from "../../../data/publications.json";
 import affiliations from "../../../data/affiliations.json";
 import { THEMES } from "../../../data/themes";
@@ -57,6 +58,16 @@ const orphanPubs = pubs.filter((p) => !themeIds.has((p as { theme?: string }).th
     title="Research themes"
     description="AsPEN's portfolio grouped into seven clinical and methodological strands. Each card links to the full chronological list of papers in that theme."
   />
+
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  </Fragment>
+
+  <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pt-10">
+    <FocusCards areas={["neurogen", "vaccine"]} />
+  </section>
 
   <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10 space-y-8">
     <div class="flex items-center justify-between gap-3 flex-wrap text-sm">
