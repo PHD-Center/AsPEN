@@ -233,23 +233,6 @@
   },
   {
     "year": 2025,
-    "authors": "Yang ASH, Tsai DHT, Chen LW, Cheng WM, Wang CC, Shao SC, Song WW, Kouhkamari MH, Huang WC, Bowditch S, Lai ECC.",
-    "title": "Epidemiology and Burden of Illness of Lennox-Gastaut Syndrome in Taiwan: A Retrospective Cohort Study",
-    "journal": "Risk Management and Healthcare Policy",
-    "doi": "10.2147/RMHP.S519367",
-    "pmid": "41000540",
-    "tags": [
-      "epilepsy",
-      "lennox gastaut",
-      "phenotype validation",
-      "NHIRD",
-      "CGRD"
-    ],
-    "theme": "neuropsychiatric",
-    "pmcid": "PMC12459616"
-  },
-  {
-    "year": 2025,
     "authors": "Brett J, Cesta CE, Gillies MB, Bateman BT, Chan AYL, Cheng MC, ..., Man KKC, Zoega H.",
     "title": "Global trends in analgesic opioid use in pregnancy",
     "journal": "Anesthesiology",
@@ -608,23 +591,6 @@
   },
   {
     "year": 2021,
-    "authors": "Wang GH, Man KKC, Chang WH, Liao TC, Lai ECC.",
-    "title": "Use of antipsychotic drugs and cholinesterase inhibitors and risk of falls and  fractures: self-controlled case series",
-    "journal": "BMJ",
-    "doi": "10.1136/bmj.n1925",
-    "pmid": "34503972",
-    "tags": [
-      "antipsychotics",
-      "cholinesterase",
-      "falls",
-      "sccs",
-      "multinational"
-    ],
-    "theme": "neuropsychiatric",
-    "pmcid": "PMC8427404"
-  },
-  {
-    "year": 2021,
     "authors": "Liu JM, Shen CY, Lau WCY, Shao SC, Man KKC, Hsu RJ, Wu CT, Lai ECC.",
     "title": "Association between Androgen Deprivation Therapy and Risk of Dementia in Men with  Prostate Cancer",
     "journal": "Cancers (Basel)",
@@ -682,51 +648,5 @@
     ],
     "theme": "diabetes-cardiometabolic",
     "pmcid": "PMC6456811"
-  },
-  {
-    "year": 2023,
-    "authors": "Huang WC, Yang ASY, Tsai DHT, Shao SC, Lin SJ, Lai ECC.",
-    "title": "Association between recently raised anticholinergic burden and risk of acute cardiovascular events: nationwide case-case-time-control study",
-    "journal": "BMJ",
-    "doi": "10.1136/bmj-2023-076045",
-    "pmid": "37758279",
-    "pmcid": "PMC10523277",
-    "tags": [
-      "anticholinergic",
-      "cardiovascular",
-      "older adults",
-      "case case time control"
-    ],
-    "theme": "older-adults"
-  },
-  {
-    "year": 2026,
-    "authors": "Li BMH, Wei SY, Chuang MT, Lai ECC.",
-    "title": "Benzodiazepine use in pregnancy and the risk of pregnancy outcomes",
-    "journal": "JAMA Internal Medicine",
-    "doi": "10.1001/jamainternmed.2025.6882",
-    "pmid": "41428288",
-    "pmcid": "PMC12723596",
-    "tags": [
-      "benzodiazepines",
-      "pregnancy",
-      "preterm birth"
-    ],
-    "theme": "pregnancy-paediatric"
-  },
-  {
-    "year": 2025,
-    "authors": "Tsai MJ, Su CTT, Sung SF, Yang HY, Cheng MCY, Chuang ATM, Shao SC, Lai ECC.",
-    "title": "Transient anticholinergic burden and out-of-hospital cardiac arrest: a case-crossover study",
-    "journal": "European Heart Journal",
-    "doi": "10.1093/eurheartj/ehaf723",
-    "pmid": "40996095",
-    "tags": [
-      "anticholinergic",
-      "cardiovascular",
-      "case crossover",
-      "cardiac arrest"
-    ],
-    "theme": "cardiovascular"
   }
 ]
