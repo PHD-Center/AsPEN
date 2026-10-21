@@ -1,0 +1,64 @@
+---
+// A way back to the Alliance portal for visitors who arrived from it.
+//
+// The portal links here with `?via=portal`. On that first page the flag is
+// kept in sessionStorage, so the chip stays while the visitor moves around
+// this site and disappears when the tab is closed or the chip is dismissed.
+// A plain referrer from the portal counts too. The query parameter is
+// removed from the address bar so copied links stay clean.
+const PORTAL = "https://phd-center.github.io/portal/";
+---
+
+<a id="portal-return" href={PORTAL} class="pr-chip" hidden>
+  <span aria-hidden="true">←</span>
+  <span>Alliance portal</span>
+  <button type="button" class="pr-x" aria-label="Hide this link">×</button>
+</a>
+
+<style>
+  .pr-chip {
+    position: fixed; left: 1rem; bottom: 1rem; z-index: 40;
+    display: inline-flex; align-items: center; gap: .45rem;
+    padding: .45rem .55rem .45rem .8rem; border-radius: 999px;
+    background: #102420; color: #e2eeeb; font-size: .8rem; font-weight: 600; letter-spacing: .01em;
+    border: 1px solid #3a8a6e; box-shadow: 0 6px 18px rgba(16, 36, 32, .28);
+    text-decoration: none; transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .pr-chip[hidden] { display: none; }
+  .pr-chip:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(16, 36, 32, .32); }
+  .pr-chip:focus-visible { outline: 2px solid #92ebda; outline-offset: 3px; }
+  .pr-x {
+    width: 1.35rem; height: 1.35rem; border-radius: 999px; border: 0; cursor: pointer;
+    background: rgba(146, 235, 218, .15); color: #92ebda; font: 400 .95rem/1 system-ui, sans-serif;
+  }
+  .pr-x:hover { background: rgba(146, 235, 218, .3); }
+  @media (prefers-reduced-motion: reduce) { .pr-chip { transition: none; } }
+  @media print { .pr-chip { display: none !important; } }
+</style>
+
+<script is:inline>
+  (() => {
+    const chip = document.getElementById("portal-return");
+    if (!chip) return;
+    const KEY = "aspen:via-portal";
+    let store = null;
+    try { store = window.sessionStorage; } catch (_) { /* storage may be blocked */ }
+    const url = new URL(location.href);
+    const fromQuery = url.searchParams.get("via") === "portal";
+    const fromReferrer = /^https:\/\/phd-center\.github\.io\/portal\/?/.test(document.referrer || "");
+    let on = fromQuery || fromReferrer;
+    try { if (on && store) store.setItem(KEY, "1"); else if (store && store.getItem(KEY) === "1") on = true; } catch (_) { /* ignore */ }
+    if (fromQuery) {
+      url.searchParams.delete("via");
+      history.replaceState(history.state, "", url.pathname + (url.search || "") + url.hash);
+    }
+    if (!on) return;
+    chip.hidden = false;
+    chip.querySelector(".pr-x").addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      chip.hidden = true;
+      try { store && store.removeItem(KEY); } catch (_) { /* ignore */ }
+    });
+  })();
+</script>
