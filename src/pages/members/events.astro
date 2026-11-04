@@ -36,6 +36,13 @@ const past = events
   .filter((e) => (e.endDate ?? e.date) < todayIso)
   .sort((a, b) => b.date.localeCompare(a.date));
 
+// ISPE's own webinars are listed under their own heading in the past list.
+const isIspeWebinar = (e: EventEntry) => e.type === "webinar" && /^ISPE /.test(e.title);
+const pastGroups = [
+  { heading: "Past", items: past.filter((e) => !isIspeWebinar(e)).slice(0, 10) },
+  { heading: "ISPE webinars", items: past.filter(isIspeWebinar).map((e) => ({ ...e, title: e.title.replace(/^ISPE webinar: /, "") })) },
+].filter((g) => g.items.length > 0);
+
 // Type chip colours; kept restrained so a long list doesn't look like a circus.
 const TYPE_TONE: Record<string, string> = {
   conference: "bg-brand-100 text-brand-800 border-brand-200",
@@ -82,7 +89,7 @@ const ICS_URL = `${SITE_BASE}/events.ics`;
 
 <BaseLayout
   title="Events · AsPEN members"
-  description="Upcoming ICPE, ISPE Asian, AsPEN webinars, and submission deadlines. Subscribe in Google Calendar / Outlook."
+  description="Upcoming ICPE, ACPE, ISPE webinars, and submission deadlines. Subscribe in Google Calendar / Outlook."
 >
   <PageHeader
     eyebrow="Members → Events"
@@ -227,14 +234,14 @@ const ICS_URL = `${SITE_BASE}/events.ics`;
         )}
       </div>
 
-      <!-- ── Past events ─────────────────────────────────────── -->
-      {past.length > 0 && (
+      <!-- ── Past events (ISPE webinars under their own heading) ── -->
+      {pastGroups.map((g) => (
         <div>
           <h2 class="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-3">
-            Past · <span class="tabular-nums">{past.length}</span>
+            {g.heading} · <span class="tabular-nums">{g.items.length}</span>
           </h2>
           <ul class="space-y-2 list-none pl-0">
-            {past.slice(0, 10).map((e) => {
+            {g.items.map((e) => {
               const tone = TYPE_TONE[e.type ?? "other"] ?? TYPE_TONE.other;
               const label = TYPE_LABEL[e.type ?? "other"] ?? "Other";
               return (
@@ -253,13 +260,8 @@ const ICS_URL = `${SITE_BASE}/events.ics`;
               );
             })}
           </ul>
-          {past.length > 10 && (
-            <p class="mt-3 text-xs text-slate-500 italic">
-              Showing the 10 most recent past events. Older events live in <code class="font-mono text-[10px] bg-slate-100 border border-slate-200 rounded px-1 py-0.5">events.json</code> on the repo.
-            </p>
-          )}
         </div>
-      )}
+      ))}
 
     </div>
   </section>
