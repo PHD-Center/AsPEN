@@ -1,9 +1,51 @@
 [
   {
+    "date": "2026-01-08",
+    "title": "ISPE webinar: Gene Therapy Long-term Follow-up Studies: Regulatory, Scientific, and Operational Requirements",
+    "type": "webinar",
+    "location": "Online · recording on YouTube",
+    "url": "https://www.youtube.com/watch?v=OsBgthTkZPI"
+  },
+  {
+    "date": "2026-03-10",
+    "title": "ISPE webinar: Medication Adherence Matters: From Data to Action",
+    "type": "webinar",
+    "location": "Online · recording on YouTube",
+    "url": "https://www.youtube.com/watch?v=fJtBRU46ZV8"
+  },
+  {
+    "date": "2026-05-12",
+    "title": "ISPE Health Equity SIG webinar: The ETIE framework: leveraging determinants of health and equity in pharmacoepidemiology",
+    "type": "webinar",
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/the-etie-framework-leveraging-determinants-of-health-and-equity-in-pharmacoepidemiology"
+  },
+  {
+    "date": "2026-06-03",
+    "title": "ISPE webinar: Avoiding Immortal Time in Studies of Medication Use During Pregnancy",
+    "type": "webinar",
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/avoiding-immortal-time-in-studies-of-medication-use-during-pregnancy"
+  },
+  {
     "date": "2026-06-12",
     "title": "ACPE 2026 abstract submission deadline",
     "type": "deadline",
     "url": "https://www.asianpharmacoepi.org/abstracts/"
+  },
+  {
+    "date": "2026-06-18",
+    "title": "ISPE Environmental Pharmacoepidemiology SIG webinar: Climate-Related Supply Chain Challenges and Drug Shortages",
+    "type": "webinar",
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/climate-related-supply-chain-challenges-and-drug-shortages"
+  },
+  {
+    "date": "2026-06-25",
+    "title": "ISPE webinar: The Fall of Vioxx (rofecoxib) and the Birth of Modern Pharmacoepidemiology",
+    "type": "webinar",
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/the-fall-of-vioxx-rofecoxib-and-the-birth-of-modern-pharmacoepidemiology"
   },
   {
     "date": "2026-08-29",
@@ -12,5 +54,49 @@
     "type": "conference",
     "location": "Allianz Milan Convention Center, Milan, Italy",
     "url": "https://ispe2026.eventscribe.net/aaStatic.asp?SFP=TFRMUktaRU1AMjQ5MDc"
+  },
+  {
+    "date": "2026-09-04",
+    "title": "ACPE 2026 early-bird registration deadline",
+    "type": "deadline",
+    "url": "https://www.asianpharmacoepi.org/registration/"
+  },
+  {
+    "date": "2026-10-08",
+    "title": "ISPE webinar: Agentic AI in Pharmacoepidemiology: From Concept to Workflow",
+    "type": "webinar",
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/from-concept-to-workflow-agentic-artificial-intelligence-for-pharmacoepidemiology"
+  },
+  {
+    "date": "2026-10-30",
+    "endDate": "2026-11-01",
+    "title": "ACPE 2026 · 18th Asian Conference on Pharmacoepidemiology",
+    "type": "conference",
+    "location": "Monash University (CMUS), Melbourne, Australia",
+    "url": "https://www.asianpharmacoepi.org/"
+  },
+  {
+    "date": "2026-11-09",
+    "endDate": "2026-11-13",
+    "title": "1st LatAM Course in Pharmacoepidemiology (ISPE)",
+    "type": "training",
+    "location": "Lima, Peru",
+    "url": "https://cqfp.pe/1ercursolatamfarmacoepi/"
+  },
+  {
+    "date": "2026-12-10",
+    "title": "ISPE webinar: PDS Best Paper of 2025 (opioid use after hip fracture, a self-controlled case series) & chat with the PDS editors",
+    "type": "webinar",
+    "location": "Online (Zoom), 10–11 am EST",
+    "url": "https://us06web.zoom.us/webinar/register/WN_qgwTQLlbQJ-vOZg1Z-WVmA"
+  },
+  {
+    "date": "2027-08-21",
+    "endDate": "2027-08-25",
+    "title": "ISPE AM 2027 · 43rd Annual Meeting",
+    "type": "conference",
+    "location": "Seattle Convention Center, Seattle, WA, USA",
+    "url": "https://www.pharmacoepi.org/meetings/annual-conference/"
   }
 ]
