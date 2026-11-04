@@ -1,31 +1,59 @@
 [
   {
+    "date": "2022-01-28",
+    "title": "ISPE webinar: LADIG: opportunities, challenges, and lessons for strengthening drug regulatory systems",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording on YouTube",
+    "url": "https://www.youtube.com/watch?v=PENv99wahkc"
+  },
+  {
+    "date": "2023-09-18",
+    "title": "ISPE webinar: PDS Best Paper of 2022: Novel methods for pregnancy drug safety surveillance in the FDA Sentinel System",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording on YouTube",
+    "url": "https://www.youtube.com/watch?v=8zmIZrHiON8"
+  },
+  {
     "date": "2026-01-08",
     "title": "ISPE webinar: Gene Therapy Long-term Follow-up Studies: Regulatory, Scientific, and Operational Requirements",
     "type": "webinar",
     "location": "Online · recording on YouTube",
-    "url": "https://www.youtube.com/watch?v=OsBgthTkZPI"
+    "url": "https://www.youtube.com/watch?v=OsBgthTkZPI",
+    "ispe": true
   },
   {
     "date": "2026-03-10",
     "title": "ISPE webinar: Medication Adherence Matters: From Data to Action",
     "type": "webinar",
     "location": "Online · recording on YouTube",
-    "url": "https://www.youtube.com/watch?v=fJtBRU46ZV8"
+    "url": "https://www.youtube.com/watch?v=fJtBRU46ZV8",
+    "ispe": true
+  },
+  {
+    "date": "2026-03-19",
+    "title": "ISPE video: The Evolving Meeting and Society",
+    "type": "webinar",
+    "ispe": true,
+    "location": "YouTube",
+    "url": "https://www.youtube.com/watch?v=_j51nOQgfMo"
   },
   {
     "date": "2026-05-12",
     "title": "ISPE Health Equity SIG webinar: The ETIE framework: leveraging determinants of health and equity in pharmacoepidemiology",
     "type": "webinar",
     "location": "Online · recording in the ISPE Education Center",
-    "url": "https://webed.pharmacoepi.org/products/the-etie-framework-leveraging-determinants-of-health-and-equity-in-pharmacoepidemiology"
+    "url": "https://webed.pharmacoepi.org/products/the-etie-framework-leveraging-determinants-of-health-and-equity-in-pharmacoepidemiology",
+    "ispe": true
   },
   {
     "date": "2026-06-03",
     "title": "ISPE webinar: Avoiding Immortal Time in Studies of Medication Use During Pregnancy",
     "type": "webinar",
     "location": "Online · recording in the ISPE Education Center",
-    "url": "https://webed.pharmacoepi.org/products/avoiding-immortal-time-in-studies-of-medication-use-during-pregnancy"
+    "url": "https://webed.pharmacoepi.org/products/avoiding-immortal-time-in-studies-of-medication-use-during-pregnancy",
+    "ispe": true
   },
   {
     "date": "2026-06-12",
@@ -38,14 +66,16 @@
     "title": "ISPE Environmental Pharmacoepidemiology SIG webinar: Climate-Related Supply Chain Challenges and Drug Shortages",
     "type": "webinar",
     "location": "Online · recording in the ISPE Education Center",
-    "url": "https://webed.pharmacoepi.org/products/climate-related-supply-chain-challenges-and-drug-shortages"
+    "url": "https://webed.pharmacoepi.org/products/climate-related-supply-chain-challenges-and-drug-shortages",
+    "ispe": true
   },
   {
     "date": "2026-06-25",
     "title": "ISPE webinar: The Fall of Vioxx (rofecoxib) and the Birth of Modern Pharmacoepidemiology",
     "type": "webinar",
     "location": "Online · recording in the ISPE Education Center",
-    "url": "https://webed.pharmacoepi.org/products/the-fall-of-vioxx-rofecoxib-and-the-birth-of-modern-pharmacoepidemiology"
+    "url": "https://webed.pharmacoepi.org/products/the-fall-of-vioxx-rofecoxib-and-the-birth-of-modern-pharmacoepidemiology",
+    "ispe": true
   },
   {
     "date": "2026-08-29",
@@ -66,7 +96,8 @@
     "title": "ISPE webinar: Agentic AI in Pharmacoepidemiology: From Concept to Workflow",
     "type": "webinar",
     "location": "Online · recording in the ISPE Education Center",
-    "url": "https://webed.pharmacoepi.org/products/from-concept-to-workflow-agentic-artificial-intelligence-for-pharmacoepidemiology"
+    "url": "https://webed.pharmacoepi.org/products/from-concept-to-workflow-agentic-artificial-intelligence-for-pharmacoepidemiology",
+    "ispe": true
   },
   {
     "date": "2026-10-30",
@@ -89,7 +120,8 @@
     "title": "ISPE webinar: PDS Best Paper of 2025 (opioid use after hip fracture, a self-controlled case series) & chat with the PDS editors",
     "type": "webinar",
     "location": "Online (Zoom), 10–11 am EST",
-    "url": "https://us06web.zoom.us/webinar/register/WN_qgwTQLlbQJ-vOZg1Z-WVmA"
+    "url": "https://us06web.zoom.us/webinar/register/WN_qgwTQLlbQJ-vOZg1Z-WVmA",
+    "ispe": true
   },
   {
     "date": "2027-08-21",
