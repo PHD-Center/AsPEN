@@ -18,6 +18,7 @@ I'd like to apply for AsPEN membership.
   · Country / region:
   · Role (academic / regulator / industry / student):
   · ISPE membership (required): member since / membership number:
+  · Recommending AsPEN member (required): name and affiliation:
   · Brief background and research interests:
   · How you found AsPEN:
 
@@ -32,7 +33,7 @@ const mailtoHref = `mailto:${danielEmail}${edEmail ? `?cc=${encodeURIComponent(e
   <PageHeader
     eyebrow="Get involved"
     title="AsPEN membership"
-    description="AsPEN is an ISPE Special Interest Group. Membership is open to current ISPE members and is vetted before approval."
+    description="AsPEN is an ISPE Special Interest Group. Membership is open to current ISPE members recommended by an existing AsPEN member, and is vetted before approval."
   />
 
   <section class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12 space-y-12">
@@ -40,7 +41,7 @@ const mailtoHref = `mailto:${danielEmail}${edEmail ? `?cc=${encodeURIComponent(e
     <div class="grid md:grid-cols-[2fr_1fr] gap-8 items-start">
       <div class="prose prose-slate max-w-none">
         <h2 class="text-xl font-semibold text-slate-900">Who can join</h2>
-        <p>Academic investigators, regulators, industry researchers, clinicians, and graduate students working, or interested, in pharmacoepidemiology in the Asia-Pacific region. <strong>Current ISPE membership is required.</strong> AsPEN is a Special Interest Group of ISPE, so every AsPEN member must be an ISPE member; student membership rates apply.</p>
+        <p>Academic investigators, regulators, industry researchers, clinicians, and graduate students working, or interested, in pharmacoepidemiology in the Asia-Pacific region. <strong>Two things are required: current ISPE membership and a recommendation from a current AsPEN member.</strong> AsPEN is a Special Interest Group of ISPE, so every AsPEN member must be an ISPE member; student membership rates apply. The recommending member vouches for you in the application and is the usual route in: most members join through a collaborator who is already part of the network.</p>
 
         <h2 class="text-xl font-semibold text-slate-900 mt-8">What membership unlocks</h2>
         <p class="text-sm text-slate-600 italic mb-3">Available today, on the public site:</p>
@@ -60,8 +61,8 @@ const mailtoHref = `mailto:${danielEmail}${edEmail ? `?cc=${encodeURIComponent(e
 
         <h2 class="text-xl font-semibold text-slate-900 mt-8">How vetting works</h2>
         <ol class="text-sm">
-          <li>You send the application email below.</li>
-          <li>The Chair / Academic &amp; Education office reviews; typically within two weeks.</li>
+          <li>You send the application email below, naming the current AsPEN member who recommends you.</li>
+          <li>The Chair / Academic &amp; Education office confirms the recommendation with that member and reviews the application; typically within two weeks.</li>
           <li>Once approved, your name appears in the member list (Phase 2) and you receive the welcome email with onboarding details.</li>
         </ol>
       </div>
@@ -79,7 +80,7 @@ const mailtoHref = `mailto:${danielEmail}${edEmail ? `?cc=${encodeURIComponent(e
           Apply to join AsPEN
         </a>
         <p class="mt-4 text-xs text-slate-500">
-          ISPE membership is required. Members can also join the SIG directly via the <a class="text-brand-700 hover:underline" href="https://www.pharmacoepi.org/communities/sigs/aspen/" target="_blank" rel="noopener">ISPE community page</a>.
+          ISPE membership and a recommendation from a current AsPEN member are required. ISPE members can also join the SIG directly via the <a class="text-brand-700 hover:underline" href="https://www.pharmacoepi.org/communities/sigs/aspen/" target="_blank" rel="noopener">ISPE community page</a>.
         </p>
         <p class="mt-4 pt-4 border-t border-slate-200 text-xs text-slate-500">
           Already approved? <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Sign in →</a>
