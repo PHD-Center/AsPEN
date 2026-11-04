@@ -86,27 +86,6 @@ const DESIGN_TONES: Record<string, string> = {
     </div>
 
     <div data-state="ready" class="hidden space-y-5">
-      <!-- ── Propose a study (now lives inside the template builders) ──── -->
-      <!--
-        The standalone propose form here was retired in favour of submitting
-        from a protocol-template builder (which captures the design properly
-        and lets the chair see what was drafted). The link below is the new
-        entry-point for members; admins can also submit straight onto the
-        Kanban via the same Send-to-AsPEN button on each template page.
-      -->
-      <div class="border border-brand-200 bg-brand-50/40 rounded-lg p-4 flex items-start gap-3">
-        <span class="text-2xl leading-none">💡</span>
-        <div class="text-sm text-slate-700 leading-relaxed">
-          <p class="font-semibold">Propose a new study</p>
-          <p class="mt-1 text-xs text-slate-600">
-            Open a protocol-template builder, fill in what you have, then click <strong>📤 Send to AsPEN office</strong>. Goes to the chair's queue if you're a member; admins land it directly on the Kanban.
-          </p>
-          <p class="mt-2">
-            <a href={`${base}/members/templates/`} class="text-xs font-semibold text-brand-700 hover:underline">Browse templates (ACNU · SCCS · CCO · DA) →</a>
-          </p>
-        </div>
-      </div>
-
       <!-- Toolbar: search + design filter + show-only-mine toggle -->
       <div class="sticky top-0 z-20 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 bg-white/95 backdrop-blur border-b border-slate-200 flex flex-wrap items-center gap-3">
         <input type="search" data-filter-search placeholder="Search title, lead, site…"
