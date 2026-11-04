@@ -102,7 +102,8 @@ const buildVEvent = (e: EventEntry, dtstamp: string): string[] => {
 export const GET: APIRoute = () => {
   // Build-time "now"; fine since this is prerendered.
   const dtstamp = toIcsTimestamp(new Date());
-  const events = eventsRaw as EventEntry[];
+  // The feed starts at the ACPE 2026 abstract deadline; older entries stay on the page only.
+  const events = (eventsRaw as EventEntry[]).filter((e) => e.date >= "2026-06-12");
 
   const header = [
     "BEGIN:VCALENDAR",

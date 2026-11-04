@@ -14,6 +14,8 @@ type EventEntry = {
   location?: string;
   url?: string;
   description?: string;
+  /** ISPE's own webinar or video; listed under its own heading. */
+  ispe?: boolean;
 };
 
 // Build-time sort:
@@ -37,10 +39,10 @@ const past = events
   .sort((a, b) => b.date.localeCompare(a.date));
 
 // ISPE's own webinars are listed under their own heading in the past list.
-const isIspeWebinar = (e: EventEntry) => e.type === "webinar" && /^ISPE /.test(e.title);
+const isIspeWebinar = (e: EventEntry) => e.ispe === true;
 const pastGroups = [
   { heading: "Past", items: past.filter((e) => !isIspeWebinar(e)).slice(0, 10) },
-  { heading: "ISPE webinars", items: past.filter(isIspeWebinar).map((e) => ({ ...e, title: e.title.replace(/^ISPE webinar: /, "") })) },
+  { heading: "ISPE webinars", items: past.filter(isIspeWebinar).map((e) => ({ ...e, title: e.title.replace(/^ISPE (webinar|video): /, "") })) },
 ].filter((g) => g.items.length > 0);
 
 // Type chip colours; kept restrained so a long list doesn't look like a circus.
