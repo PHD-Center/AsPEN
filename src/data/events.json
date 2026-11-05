@@ -359,6 +359,14 @@
     "url": "https://webed.pharmacoepi.org/products/ispe-2025-208ab-aug-22-1430-real-world-evidence-generation-for-rare-disease"
   },
   {
+    "date": "2025-08-22",
+    "title": "ISPE course: Applied Sensitivity Analyses",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2025 Annual Meeting, Washington DC · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/ispe-2025-207ab-aug-22-1430-applied-sensitivity-analyses"
+  },
+  {
     "date": "2025-08-23",
     "title": "ISPE course: Emerging Topic: How to Study Health Disparities in Pharmacoepidemiology",
     "type": "training",
@@ -628,6 +636,34 @@
     "url": "https://webed.pharmacoepi.org/products/ispe-2026pharmacoepidemiologic-approaches-to-studying-drug-interactions"
   },
   {
+    "date": "2026-08-29",
+    "title": "ISPE course: Environmental Pharmacoepidemiology: Overview, Methods, and Applications",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
+  },
+  {
+    "date": "2026-08-29",
+    "title": "ISPE course: Foundations in Causal Inference",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
+  },
+  {
+    "date": "2026-08-29",
+    "title": "ISPE course: Pharmacovigilance and Signal Detection",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
+  },
+  {
+    "date": "2026-08-29",
+    "title": "ISPE course: Using Pharmacoepidemiology Database Resources to Address Drug Safety Research",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
+  },
+  {
     "date": "2026-08-30",
     "title": "ISPE course: The Pharmacoepidemiologist’s Toolbox for Professional Empowerment",
     "type": "training",
@@ -642,6 +678,90 @@
     "course": true,
     "location": "ISPE 2026 Annual Meeting, Milan · recording in the ISPE Education Center",
     "url": "https://webed.pharmacoepi.org/products/ispe-2026an-introduction-to-ai-for-pharmacoepidemiologists"
+  },
+  {
+    "date": "2026-08-30",
+    "title": "ISPE course: Applied Sensitivity Analyses",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
+  },
+  {
+    "date": "2026-08-30",
+    "title": "ISPE course: Integrating Pharmacogenomics into Pharmacoepidemiologic Research: Frontiers in Oncology and Chronic Disease",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
+  },
+  {
+    "date": "2026-08-30",
+    "title": "ISPE course: Introduction to Drug Utilization",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
+  },
+  {
+    "date": "2026-08-30",
+    "title": "ISPE course: Methods and Case Studies for Designing and Evaluating Risk Minimisation Interventions and Communications",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
+  },
+  {
+    "date": "2026-08-30",
+    "title": "ISPE course: Target Trial Emulation for Causal Inference in Practice",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
+  },
+  {
+    "date": "2026-08-30",
+    "title": "ISPE course: Modern Pregnancy Pharmacoepidemiology",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
+  },
+  {
+    "date": "2026-08-30",
+    "title": "ISPE course: Intermediate/Advanced Topics in Vaccine Safety and Effectiveness",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
+  },
+  {
+    "date": "2026-08-30",
+    "title": "ISPE course: Advanced Drug Utilization",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
+  },
+  {
+    "date": "2026-08-30",
+    "title": "ISPE course: Let’s Get Personal: Defining and Estimating the Effects of Dynamic Treatment Strategies Using Real-World Data",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
+  },
+  {
+    "date": "2026-08-30",
+    "title": "ISPE course: New Frontiers in Pharmacoepidemiology: Cutting-edge Approaches to Data Collection and Integration",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
+  },
+  {
+    "date": "2026-08-30",
+    "title": "ISPE course: Real-world Evidence Generation for Rare Disease and Orphan Drug Development",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
+  },
+  {
+    "date": "2026-08-30",
+    "title": "ISPE course: Weighing the Benefits & Risks: The Science and Methods of Benefit-Risk Assessment in Drug Development",
+    "type": "training",
+    "course": true,
+    "location": "ISPE 2026 Annual Meeting, Milan"
   },
   {
     "date": "2026-09-04",
