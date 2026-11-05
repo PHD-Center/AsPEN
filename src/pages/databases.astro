@@ -64,8 +64,9 @@ const mapGroups = Array.from(mapGroupedMap.entries()).map(([key, dbs]) => {
   };
 });
 
-// Historical sites that appear on the map but live in the "Other sites" prose
-// section rather than databases.json, since they're not active partners.
+// Sites from the 2015 survey that appear on the map but live in the "Also
+// documented in the network" prose section rather than databases.json, since
+// they have not featured in the network's recent multi-country studies.
 // Thailand also has an active database (HDC), so these merge into that marker
 // instead of adding a second pin at the same coordinates.
 const otherMapEntries: Record<string, { name: string; type: string; coverage?: string }[]> = {
@@ -137,7 +138,7 @@ for (const d of databases) {
 }
 
 // Other sites listed in the 2015 AsPEN database survey (Lai ECC et al., Epidemiology 2015)
-// that are not part of the current active network. Reference only; not on the map.
+// that have not featured in recent multi-country studies. Reference only; not on the map.
 const otherSites = [
   { country: "Singapore", flag: "🇸🇬", name: "National Electronic Health Record (NEHR)",     note: "Singapore's national EHR; listed in the 2015 AsPEN survey." },
   { country: "Thailand",  flag: "🇹🇭", name: "Buddhachinaraj Hospital Database (BHD)",       note: "Tertiary referral hospital EHR." },
@@ -920,9 +921,9 @@ const otherSites = [
     </script>
 
     <div class="mt-12" id="other-sites">
-      <h2 class="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2 scroll-mt-24">Other sites</h2>
+      <h2 class="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2 scroll-mt-24">Also documented in the network</h2>
       <p class="text-sm text-slate-600 max-w-3xl leading-relaxed">
-        Additional data sources documented that are not part of the current active network include Singapore's <strong>National Electronic Health Record (NEHR)</strong>, and two Thai sites, <strong>Buddhachinaraj Hospital Database (BHD)</strong> (a tertiary referral hospital EHR) and the <strong>Hospital Information network</strong> across 21 community hospitals in Ubon Ratchathani.
+        The 2015 AsPEN database survey (Lai ECC et al., <em>Epidemiology</em> 2015) also documented Singapore's <strong>National Electronic Health Record (NEHR)</strong> and two Thai sites, the <strong>Buddhachinaraj Hospital Database (BHD)</strong>, a tertiary referral hospital EHR, and the <strong>Hospital Information network</strong> across 21 community hospitals in Ubon Ratchathani. They are listed here for reference; the cards above cover the databases used in the network's recent multi-country studies.
       </p>
     </div>
 
