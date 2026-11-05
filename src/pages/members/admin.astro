@@ -1036,6 +1036,7 @@ const STAGES = [
                   <div class="min-w-0">
                     <p class="text-sm font-semibold text-slate-900 truncate">${esc(m.name || m.email)}${badge}</p>
                     <p class="text-xs text-slate-600 truncate">${[m.affiliation, m.country, m.role].filter(Boolean).map(esc).join(" · ") || esc(m.email)}</p>
+                    <p class="text-[11px] font-mono text-slate-500 truncate">${[m.email, ...(m.altEmails || [])].map(esc).join(" · ")}</p>
                   </div>
                   <div class="flex items-center gap-2 shrink-0">
                     <label class="inline-flex items-center gap-1 text-xs text-slate-600 cursor-pointer ${m.superAdmin ? "opacity-50 cursor-not-allowed" : ""}" onclick="event.stopPropagation()">
@@ -1055,10 +1056,17 @@ const STAGES = [
                   </div>
                 </summary>
                 <form data-edit-form data-email="${esc(m.email)}" class="px-4 pb-4 pt-1 grid sm:grid-cols-2 gap-3 bg-slate-50 border-t border-slate-100">
-                  <p class="sm:col-span-2 text-[11px] text-slate-500">
-                    <span class="uppercase tracking-widest font-semibold text-slate-600">Email</span>
-                    <span class="ml-2 font-mono text-slate-700 break-all">${esc(m.email)}</span>
-                  </p>
+                  <label class="block sm:col-span-2">
+                    <span class="text-[11px] uppercase tracking-widest text-brand-700 font-semibold">Sign-in email</span>
+                    <input type="email" name="newEmail" value="${esc(m.email)}" required${m.superAdmin ? ' readonly title="Pinned in the deployment config"' : ""}
+                           class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm font-mono focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500${m.superAdmin ? " bg-slate-100 text-slate-500" : ""}" />
+                  </label>
+                  <label class="block sm:col-span-2">
+                    <span class="text-[11px] uppercase tracking-widest text-brand-700 font-semibold">Additional emails</span>
+                    <textarea name="altEmails" rows="2" placeholder="One address per line"
+                              class="mt-1 w-full border border-slate-300 rounded px-3 py-2 text-sm font-mono focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">${(m.altEmails || []).map(esc).join("\n")}</textarea>
+                    <span class="mt-1 block text-[11px] text-slate-500">The member can sign in with any of these as well as the sign-in email.</span>
+                  </label>
                   <label class="block sm:col-span-2">
                     <span class="text-[11px] uppercase tracking-widest text-brand-700 font-semibold">Name</span>
                     <input type="text" name="name" value="${esc(m.name || "")}" required
@@ -1202,18 +1210,27 @@ const STAGES = [
         if (!(f instanceof HTMLFormElement) || !f.dataset.email) return;
         e.preventDefault();
         const data = new FormData(f);
+        const oldEmail = f.dataset.email.trim().toLowerCase();
+        const newEmail = String(data.get("newEmail") || "").trim().toLowerCase();
+        const altEmails = Array.from(new Set(
+          String(data.get("altEmails") || "").split(/[\s,;]+/).map((x) => x.trim().toLowerCase()).filter(Boolean),
+        )).filter((x) => x !== (newEmail || oldEmail));
         const body = {
           email:       f.dataset.email,
           name:        String(data.get("name") || "").trim(),
           affiliation: String(data.get("affiliation") || "").trim(),
           country:     String(data.get("country") || "").trim().toUpperCase(),
           role:        String(data.get("role") || "").trim(),
+          altEmails,
         };
+        const emailChanged = newEmail !== "" && newEmail !== oldEmail;
+        if (emailChanged) body.newEmail = newEmail;
         if (!body.name) {
           const msg = f.querySelector("[data-edit-msg]");
           if (msg) { msg.textContent = "Name required."; msg.className = "text-xs text-rose-700"; }
           return;
         }
+        if (emailChanged && !confirm(`Change the sign-in email from ${oldEmail} to ${newEmail}?\n\nIf this member is signed in now, they will have to sign in again with the new address.`)) return;
         const btn = f.querySelector("button[type='submit']");
         btn.disabled = true;
         const msg = f.querySelector("[data-edit-msg]");
@@ -1225,7 +1242,14 @@ const STAGES = [
             body: JSON.stringify(body),
           });
           const d = await r.json().catch(() => ({}));
-          if (r.ok && d.ok) {
+          // An older sign-in service ignores the address fields without
+          // complaining, so check that what came back is what was sent.
+          const savedAlt = ((d.member && d.member.altEmails) || []).join("\n");
+          const savedEmail = String((d.member && d.member.email) || "").toLowerCase();
+          const emailsApplied = savedEmail === (emailChanged ? newEmail : oldEmail) && savedAlt === altEmails.join("\n");
+          if (r.ok && d.ok && !emailsApplied) {
+            if (msg) { msg.textContent = "Details saved, but the email changes were not applied. The sign-in service needs to be updated first."; msg.className = "text-xs text-rose-700"; }
+          } else if (r.ok && d.ok) {
             if (msg) { msg.textContent = "Saved."; msg.className = "text-xs text-brand-700"; }
             // Reload to reflect new sort position + summary text.
             setTimeout(loadMembers, 350);

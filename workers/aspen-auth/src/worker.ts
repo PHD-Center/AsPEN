@@ -62,7 +62,10 @@ function isSuperAdmin(email: string, env: Env): boolean {
 }
 
 interface Member {
+  /** Primary address. Sessions, studies and delete requests are keyed by it. */
   email: string;
+  /** Further addresses the same person can sign in with (lowercased). */
+  altEmails?: string[];
   name: string;
   affiliation?: string;
   country?: string;
@@ -74,8 +77,20 @@ interface Member {
   admin?: boolean;
 }
 
+/** Every address a member can sign in with, primary first, all lowercased. */
+function memberEmails(m: Member): string[] {
+  const extra = Array.isArray(m.altEmails) ? m.altEmails : [];
+  return [m.email, ...extra].map((e) => String(e ?? "").trim().toLowerCase()).filter(Boolean);
+}
+
+/** The member who owns `email`, whether it is their primary or an additional address. */
+function findMemberByAnyEmail(members: Member[], email: string): Member | undefined {
+  const lc = email.trim().toLowerCase();
+  return members.find((m) => memberEmails(m).includes(lc));
+}
+
 interface JwtPayload {
-  sub: string;       // member email (lowercased)
+  sub: string;       // member's primary email (lowercased)
   purpose: "magic" | "session";
   iat: number;
   exp: number;
@@ -185,12 +200,14 @@ async function handleRequestLogin(req: Request, env: Env): Promise<Response> {
   if (!isLikelyEmail(email)) return jsonResponse({ ok: true });
 
   const { members } = await fetchMembersJson(env);
-  const member = members.find((m) => m.email.toLowerCase() === email);
+  const member = findMemberByAnyEmail(members, email);
 
   if (member && (member.status === "active" || member.status === "invited")) {
     const minutes = parseInt(env.MAGIC_LINK_MINUTES, 10) || 15;
+    // The link is mailed to the address that was typed; the session it
+    // opens is always for the member's primary address.
     const token = await signJwt(
-      { sub: email, purpose: "magic" },
+      { sub: member.email.toLowerCase(), purpose: "magic" },
       env.JWT_SECRET,
       minutes * 60,
     );
@@ -218,13 +235,13 @@ async function handleLogin(req: Request, env: Env): Promise<Response> {
   if (!isLikelyEmail(email) || !password) return fail();
 
   const { members } = await fetchMembersJson(env);
-  const member = members.find((m) => m.email.toLowerCase() === email);
+  const member = findMemberByAnyEmail(members, email);
   if (!member || member.status !== "active" || !member.passwordHash) return fail();
 
   const ok = await verifyPassword(password, member.passwordHash);
   if (!ok) return fail();
 
-  return issueSessionResponse(email, env);
+  return issueSessionResponse(member.email.toLowerCase(), env);
 }
 
 async function handleVerify(req: Request, env: Env): Promise<Response> {
@@ -271,6 +288,7 @@ async function handleMe(req: Request, env: Env): Promise<Response> {
     ok: true,
     member: {
       email: member.email,
+      altEmails: member.altEmails ?? [],
       name: member.name,
       affiliation: member.affiliation,
       country: member.country,
@@ -350,7 +368,7 @@ async function handleUpdateOwnProfile(req: Request, env: Env): Promise<Response>
 
   const { members, sha } = await fetchMembersJson(env);
   // Check new email isn't taken by another member.
-  if (wantsEmailChange && members.some((m) => m.email.toLowerCase() === newEmailLc && m.email.toLowerCase() !== oldEmail)) {
+  if (wantsEmailChange && members.some((m) => memberEmails(m).includes(newEmailLc) && m.email.toLowerCase() !== oldEmail)) {
     return jsonResponse({ ok: false, error: "That email is already taken by another member." }, 400);
   }
 
@@ -380,6 +398,11 @@ async function handleUpdateOwnProfile(req: Request, env: Env): Promise<Response>
   }
   if (wantsEmailChange) {
     m.email = newEmailRaw;
+    // Promoting one of your own additional addresses: drop it from the extras.
+    if (m.altEmails) {
+      const rest = m.altEmails.filter((e) => e.toLowerCase() !== newEmailLc);
+      m.altEmails = rest.length ? rest : undefined;
+    }
   }
 
   members[idx] = m;
@@ -390,35 +413,7 @@ async function handleUpdateOwnProfile(req: Request, env: Env): Promise<Response>
   // or author reference. Each is a separate atomic PUT — best-effort, but
   // logged so the chair can audit via git history if anything goes wrong.
   if (wantsEmailChange) {
-    try {
-      const { list: studies, sha: studiesSha } = await fetchStudies(env);
-      let changed = false;
-      for (const s of studies) {
-        if (s.lead?.email?.toLowerCase() === oldEmail) { s.lead.email = newEmailLc; changed = true; }
-        if (s.createdBy?.toLowerCase() === oldEmail) { s.createdBy = newEmailLc; changed = true; }
-        for (const i of s.interested || []) {
-          if (i.email?.toLowerCase() === oldEmail) { i.email = newEmailLc; changed = true; }
-        }
-      }
-      if (changed) {
-        await putJsonFile(env, "studies.json",
-          JSON.stringify(studies, null, 2) + "\n", studiesSha,
-          `Email change cascade: ${oldEmail} → ${newEmailLc} (studies.json)`);
-      }
-    } catch (e) { console.error("cascade studies", e); }
-
-    try {
-      const { list: dreqs, sha: dreqsSha } = await fetchDeleteRequests(env);
-      let changed = false;
-      for (const d of dreqs) {
-        if (d.requestedBy?.toLowerCase() === oldEmail) { d.requestedBy = newEmailLc; changed = true; }
-      }
-      if (changed) {
-        await putJsonFile(env, "delete-requests.json",
-          JSON.stringify(dreqs, null, 2) + "\n", dreqsSha,
-          `Email change cascade: ${oldEmail} → ${newEmailLc} (delete-requests.json)`);
-      }
-    } catch (e) { console.error("cascade delete-requests", e); }
+    await cascadeEmailChange(env, oldEmail, newEmailLc);
 
     // Re-issue session cookie with the new email as sub — otherwise the
     // current cookie's sub no longer matches a member and the user gets
@@ -435,6 +430,41 @@ async function handleUpdateOwnProfile(req: Request, env: Env): Promise<Response>
   }
 
   return jsonResponse({ ok: true });
+}
+
+// Rewrite a member's primary email wherever other JSON files use it as a
+// key or author reference. Each file is a separate atomic PUT; best-effort,
+// but logged so the chair can audit via git history if anything goes wrong.
+async function cascadeEmailChange(env: Env, oldEmail: string, newEmailLc: string): Promise<void> {
+  try {
+    const { list: studies, sha: studiesSha } = await fetchStudies(env);
+    let changed = false;
+    for (const s of studies) {
+      if (s.lead?.email?.toLowerCase() === oldEmail) { s.lead.email = newEmailLc; changed = true; }
+      if (s.createdBy?.toLowerCase() === oldEmail) { s.createdBy = newEmailLc; changed = true; }
+      for (const i of s.interested || []) {
+        if (i.email?.toLowerCase() === oldEmail) { i.email = newEmailLc; changed = true; }
+      }
+    }
+    if (changed) {
+      await putJsonFile(env, "studies.json",
+        JSON.stringify(studies, null, 2) + "\n", studiesSha,
+        `Email change cascade: ${oldEmail} → ${newEmailLc} (studies.json)`);
+    }
+  } catch (e) { console.error("cascade studies", e); }
+
+  try {
+    const { list: dreqs, sha: dreqsSha } = await fetchDeleteRequests(env);
+    let changed = false;
+    for (const d of dreqs) {
+      if (d.requestedBy?.toLowerCase() === oldEmail) { d.requestedBy = newEmailLc; changed = true; }
+    }
+    if (changed) {
+      await putJsonFile(env, "delete-requests.json",
+        JSON.stringify(dreqs, null, 2) + "\n", dreqsSha,
+        `Email change cascade: ${oldEmail} → ${newEmailLc} (delete-requests.json)`);
+    }
+  } catch (e) { console.error("cascade delete-requests", e); }
 }
 
 function handleLogout(): Response {
@@ -1590,13 +1620,76 @@ async function handleAdminMembersUpsert(req: Request, env: Env): Promise<Respons
     role?: string;
     status?: Member["status"];
     admin?: boolean;
+    /** Replace the member's primary address (`email` names who to edit). */
+    newEmail?: string;
+    /** Replace the member's list of additional sign-in addresses. */
+    altEmails?: string[];
   }>(req);
 
   const email = String(body?.email || "").trim().toLowerCase();
   if (!isLikelyEmail(email)) return jsonResponse({ ok: false, error: "Invalid email." }, 400);
 
   const { members, sha } = await fetchMembersJson(env);
-  const existing = members.find((m) => m.email.toLowerCase() === email);
+  const existingIdx = members.findIndex((m) => m.email.toLowerCase() === email);
+  const existing = existingIdx >= 0 ? members[existingIdx] : undefined;
+
+  if (!existing) {
+    const owner = findMemberByAnyEmail(members, email);
+    if (owner) {
+      return jsonResponse({ ok: false, error: `${email} is already an additional email of ${owner.name || owner.email}.` }, 400);
+    }
+  }
+
+  // ── Email edits ──
+  const newEmailLc = typeof body?.newEmail === "string" ? body.newEmail.trim().toLowerCase() : "";
+  const wantsPrimaryChange = Boolean(existing) && newEmailLc !== "" && newEmailLc !== email;
+  const wantsAltChange = Array.isArray(body?.altEmails);
+  const targetIsSuper = isSuperAdmin(email, env);
+
+  if ((wantsPrimaryChange || wantsAltChange) && targetIsSuper && !isSuperAdmin(acting.email, env)) {
+    return jsonResponse({ ok: false, error: "Only a super admin can change a super admin's email addresses." }, 403);
+  }
+  if (wantsPrimaryChange) {
+    if (!isLikelyEmail(newEmailLc)) {
+      return jsonResponse({ ok: false, error: "New email doesn't look valid." }, 400);
+    }
+    if (targetIsSuper) {
+      return jsonResponse({ ok: false, error: "A super admin's primary email is pinned in deployment config (SUPERADMIN_EMAILS). Add an additional email instead." }, 400);
+    }
+    if (email === acting.email.toLowerCase()) {
+      return jsonResponse({ ok: false, error: "Change your own sign-in email from Account settings on /members/." }, 400);
+    }
+  }
+
+  const finalPrimary = wantsPrimaryChange ? newEmailLc : email;
+  let alt: string[] = existing ? memberEmails(existing).slice(1) : [];
+  if (wantsAltChange) {
+    alt = [];
+    for (const raw of body!.altEmails!) {
+      const e = String(raw ?? "").trim().toLowerCase();
+      if (!e) continue;
+      if (!isLikelyEmail(e)) {
+        return jsonResponse({ ok: false, error: `"${e.slice(0, 80)}" doesn't look like an email address.` }, 400);
+      }
+      if (!alt.includes(e)) alt.push(e);
+    }
+    if (alt.length > 10) {
+      return jsonResponse({ ok: false, error: "At most 10 additional emails per member." }, 400);
+    }
+  }
+  alt = alt.filter((e) => e !== finalPrimary);
+
+  if (wantsPrimaryChange || wantsAltChange) {
+    for (const e of [finalPrimary, ...alt]) {
+      const owner = members.find((m, i) => i !== existingIdx && memberEmails(m).includes(e));
+      if (owner) {
+        return jsonResponse({ ok: false, error: `${e} already belongs to ${owner.name || owner.email}.` }, 400);
+      }
+      if (!targetIsSuper && isSuperAdmin(e, env)) {
+        return jsonResponse({ ok: false, error: `${e} is reserved for a super admin.` }, 400);
+      }
+    }
+  }
 
   const status: Member["status"] =
     body?.status === "active" || body?.status === "invited" || body?.status === "removed"
@@ -1617,6 +1710,8 @@ async function handleAdminMembersUpsert(req: Request, env: Env): Promise<Respons
   if (typeof body?.role === "string")        next.role = body.role.trim() || undefined;
   next.status = status;
   if (typeof body?.admin === "boolean")      next.admin = body.admin || undefined;
+  if (wantsPrimaryChange)                    next.email = finalPrimary;
+  if (wantsPrimaryChange || wantsAltChange)  next.altEmails = alt.length ? alt : undefined;
 
   // Super-admin safety rails — these accounts can never be demoted or removed.
   if (isSuperAdmin(email, env)) {
@@ -1637,16 +1732,20 @@ async function handleAdminMembersUpsert(req: Request, env: Env): Promise<Respons
 
   // Replace or append
   if (existing) {
-    const idx = members.findIndex((m) => m.email.toLowerCase() === email);
-    members[idx] = next;
+    members[existingIdx] = next;
   } else {
     members.push(next);
   }
 
   await putMembersJson(env, members, sha,
-    `Admin ${acting.email}: ${existing ? "update" : "add"} ${email}`);
+    `Admin ${acting.email}: ${existing ? "update" : "add"} ${email}${wantsPrimaryChange ? ` → ${finalPrimary}` : ""}`);
 
-  return jsonResponse({ ok: true, member: { ...next, hasPassword: Boolean(next.passwordHash) } });
+  // Sessions already open under the old address stop matching a member, so
+  // that person signs in again with the new one.
+  if (wantsPrimaryChange) await cascadeEmailChange(env, email, finalPrimary);
+
+  const { passwordHash: _hash, ...publicFields } = next;
+  return jsonResponse({ ok: true, member: { ...publicFields, altEmails: next.altEmails ?? [], hasPassword: Boolean(_hash) } });
 }
 
 // Hard-delete a member from members.json. Replaces the old soft-delete
@@ -1729,7 +1828,7 @@ async function handleAdminMembersResendInvite(req: Request, env: Env): Promise<R
   if (!isLikelyEmail(email)) return jsonResponse({ ok: false, error: "Invalid email." }, 400);
 
   const { members } = await fetchMembersJson(env);
-  const target = members.find((m) => m.email.toLowerCase() === email);
+  const target = findMemberByAnyEmail(members, email);
   if (!target) return jsonResponse({ ok: false, error: "Member not found." }, 404);
   if (target.status === "removed") {
     return jsonResponse({ ok: false, error: "Member status is 'removed' — restore them first." }, 400);
@@ -1737,7 +1836,7 @@ async function handleAdminMembersResendInvite(req: Request, env: Env): Promise<R
 
   const minutes = parseInt(env.MAGIC_LINK_MINUTES, 10) || 15;
   const token = await signJwt(
-    { sub: email, purpose: "magic" },
+    { sub: target.email.toLowerCase(), purpose: "magic" },
     env.JWT_SECRET,
     minutes * 60,
   );
