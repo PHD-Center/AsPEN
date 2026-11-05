@@ -47,12 +47,12 @@ const STAGES = [
 
 <BaseLayout
   title="Admin · AsPEN members"
-  description="AsPEN office admin tools: review uploads, manage active studies, manage members."
+  description="AsPEN office admin tools: manage members and active studies."
 >
   <PageHeader
     eyebrow="Members → Admin"
     title="Office admin"
-    description="Review uploads, curate the active-studies tracker, and manage members."
+    description="Manage members and curate the active-studies tracker."
   />
 
   <section class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10 space-y-6">
@@ -77,37 +77,14 @@ const STAGES = [
     <div data-state="ready" class="hidden space-y-6">
       <!-- ── Tab switcher ────────────────────────────────────── -->
       <div role="tablist" class="flex gap-0.5 p-0.5 bg-slate-100 rounded-lg text-sm font-semibold">
-        <button type="button" role="tab" data-tab="uploads" aria-selected="true"
+        <button type="button" role="tab" data-tab="members" aria-selected="true"
                 class="flex-1 px-3 py-2 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
-          Review queue <span data-uploads-count class="hidden ml-1 bg-brand-700 text-white text-[10px] rounded-full px-1.5 py-0.5 tabular-nums"></span>
+          Members
         </button>
         <button type="button" role="tab" data-tab="studies" aria-selected="false" data-superadmin-only
                 class="hidden flex-1 px-3 py-2 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
           Studies <span data-studies-count class="hidden ml-1 bg-brand-700 text-white text-[10px] rounded-full px-1.5 py-0.5 tabular-nums"></span>
         </button>
-        <button type="button" role="tab" data-tab="members" aria-selected="false"
-                class="flex-1 px-3 py-2 rounded-md transition aria-selected:bg-white aria-selected:shadow-sm aria-selected:text-brand-700 text-slate-600 hover:text-slate-900">
-          Members
-        </button>
-      </div>
-
-      <!-- ── Pane: Pending uploads + delete requests ────────── -->
-      <div data-pane="uploads" class="space-y-8">
-        <!-- Delete requests first (usually faster to action) -->
-        <div data-delete-requests-wrap class="hidden">
-          <p class="text-xs uppercase tracking-widest text-rose-600 font-semibold mb-2">
-            Delete requests · <span data-delete-requests-count>0</span>
-          </p>
-          <div data-delete-requests class="space-y-2"></div>
-        </div>
-
-        <!-- Then upload submissions -->
-        <div>
-          <p data-uploads-header class="hidden text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">
-            Upload submissions
-          </p>
-          <div data-queue class="space-y-4"></div>
-        </div>
       </div>
 
       <!-- ── Pane: Studies (Active Studies Tracker) ──────────── -->
@@ -234,7 +211,7 @@ const STAGES = [
       </div>
 
       <!-- ── Pane: Members ───────────────────────────────────── -->
-      <div data-pane="members" class="hidden space-y-6">
+      <div data-pane="members" class="space-y-6">
         <details class="border border-slate-200 rounded-lg bg-white">
           <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-50/40 rounded-lg">
             ＋ Add a member
@@ -302,7 +279,7 @@ const STAGES = [
             </label>
             <label class="flex items-center gap-2 sm:col-span-2 text-xs text-slate-700">
               <input type="checkbox" name="admin" class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
-              Admin (can review uploads, manage members, curate active studies)
+              Admin (can manage members and curate active studies)
             </label>
             <div class="sm:col-span-2">
               <button type="submit" class="inline-flex items-center gap-2 bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2 rounded text-sm transition disabled:opacity-60">
@@ -340,7 +317,6 @@ const STAGES = [
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
       }[c]));
       const fmtDate = (iso) => { try { return new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }); } catch { return iso; } };
-      const fmtSize = (n) => !n ? "" : n < 1024 ? n + " B" : n < 1024*1024 ? (n/1024).toFixed(1)+" KB" : (n/1024/1024).toFixed(1)+" MB";
 
       // Tab switching
       const tabs = Array.from(document.querySelectorAll("[data-tab]"));
@@ -350,162 +326,6 @@ const STAGES = [
         panes.forEach((p) => p.classList.toggle("hidden", p.dataset.pane !== name));
       };
       tabs.forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
-
-      // ── Pending uploads ──
-      const queueRoot = document.querySelector("[data-queue]");
-      const renderQueue = (items) => {
-        if (items.length === 0) {
-          queueRoot.innerHTML = '<p class="text-sm text-slate-500 italic text-center py-8 border border-slate-200 rounded-lg bg-white">No pending uploads.</p>';
-        } else {
-          queueRoot.innerHTML = items.map((it) => {
-            const meta = it.meta || {};
-            const files = it.files || [];
-            const subfolderLabel = meta.subfolder ? ` / ${esc(meta.subfolder)}` : "";
-            const renamePlaceholder = "Optional rename (single file only)";
-            return `
-              <article class="border border-slate-200 rounded-2xl bg-white shadow-sm p-5 space-y-3">
-                <header class="flex items-start justify-between gap-3">
-                  <div>
-                    <p class="text-[10px] uppercase tracking-widest text-brand-700 font-bold">${esc(meta.category || "?")}${subfolderLabel}</p>
-                    <p class="mt-1 text-sm font-semibold text-slate-900">${esc(meta.uploaderName || meta.uploader || "Unknown uploader")}</p>
-                    <p class="text-xs text-slate-500">${esc(meta.uploader || "")} · ${esc(fmtDate(meta.uploadedAt))}</p>
-                  </div>
-                </header>
-                ${meta.description ? `<p class="text-sm text-slate-700 leading-relaxed bg-slate-50 border border-slate-200 rounded p-3">${esc(meta.description)}</p>` : ""}
-                <div class="text-xs space-y-1">
-                  ${files.map((f) => `
-                    <div class="flex items-center justify-between gap-2">
-                      <a href="${esc(WORKER_URL)}/api/content/${esc(f.path)}" target="_blank" rel="noopener" class="text-brand-700 hover:underline truncate">${esc(f.path.split("/").pop())}</a>
-                      <span class="text-slate-500 tabular-nums">${esc(fmtSize(f.size))}</span>
-                    </div>
-                  `).join("")}
-                </div>
-                <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
-                  <input type="text" data-rename placeholder="${esc(renamePlaceholder)}" class="flex-1 border border-slate-300 rounded px-3 py-1.5 text-xs focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-                  <button type="button" data-action="approve" data-id="${esc(it.id)}" class="bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold px-3 py-1.5 rounded transition">Approve</button>
-                  <button type="button" data-action="reject" data-id="${esc(it.id)}" class="bg-white hover:bg-rose-50 border border-rose-300 text-rose-700 text-xs font-semibold px-3 py-1.5 rounded transition">Reject</button>
-                </div>
-                <p data-row-msg class="hidden text-xs"></p>
-              </article>
-            `;
-          }).join("");
-        }
-      };
-
-      let uploadsCount = 0;
-      let deletesCount = 0;
-      const updateBadge = () => {
-        const badge = document.querySelector("[data-uploads-count]");
-        const total = uploadsCount + deletesCount;
-        if (total > 0) { badge.textContent = String(total); badge.classList.remove("hidden"); }
-        else badge.classList.add("hidden");
-      };
-
-      const loadUploads = async () => {
-        try {
-          const r = await fetch(`${WORKER_URL}/api/pending`, { credentials: "include" });
-          if (!r.ok) return;
-          const data = await r.json();
-          const items = (data && data.items) || [];
-          renderQueue(items);
-          document.querySelector("[data-uploads-header]")?.classList.toggle("hidden", items.length === 0);
-          uploadsCount = items.length;
-          updateBadge();
-        } catch {}
-      };
-
-      // ── Delete requests ──
-      const dreqWrap = document.querySelector("[data-delete-requests-wrap]");
-      const dreqRoot = document.querySelector("[data-delete-requests]");
-      const dreqCount = document.querySelector("[data-delete-requests-count]");
-
-      const renderDeleteRequests = (reqs) => {
-        const open = reqs.filter((r) => r.status === "open");
-        dreqCount.textContent = open.length;
-        if (open.length === 0) {
-          dreqWrap.classList.add("hidden");
-          return;
-        }
-        dreqWrap.classList.remove("hidden");
-        dreqRoot.innerHTML = open.map((r) => `
-          <article class="border border-rose-200 rounded-lg p-3 bg-rose-50/40">
-            <p class="text-sm font-semibold text-slate-900 break-all">${esc(r.path)}</p>
-            <p class="text-xs text-slate-500 mt-0.5">requested by ${esc(r.requestedByName || r.requestedBy)} · ${esc(fmtDate(r.requestedAt))}</p>
-            <p class="text-sm text-slate-700 leading-relaxed mt-2 whitespace-pre-line bg-white border border-slate-200 rounded p-2">${esc(r.reason)}</p>
-            <div class="mt-2 flex gap-2">
-              <button type="button" data-dreq-approve data-path="${esc(r.path)}" data-requested-at="${esc(r.requestedAt)}" class="text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded transition">Delete file</button>
-              <button type="button" data-dreq-dismiss data-path="${esc(r.path)}" data-requested-at="${esc(r.requestedAt)}" class="text-xs font-semibold text-slate-500 hover:text-slate-700 hover:underline">Dismiss request</button>
-            </div>
-          </article>
-        `).join("");
-      };
-
-      const loadDeleteRequests = async () => {
-        try {
-          const r = await fetch(`${WORKER_URL}/api/delete-requests`, { credentials: "include" });
-          if (!r.ok) return;
-          const data = await r.json();
-          const reqs = (data && data.requests) || [];
-          renderDeleteRequests(reqs);
-          deletesCount = reqs.filter((r) => r.status === "open").length;
-          updateBadge();
-        } catch {}
-      };
-
-      dreqRoot?.addEventListener("click", async (e) => {
-        const t = e.target;
-        if (!(t instanceof HTMLElement)) return;
-        const path = t.dataset.path;
-        const requestedAt = t.dataset.requestedAt;
-        if (!path || !requestedAt) return;
-        let action;
-        if (t.hasAttribute("data-dreq-approve")) {
-          if (!confirm(`Permanently delete "${path}"?`)) return;
-          action = "approve";
-        } else if (t.hasAttribute("data-dreq-dismiss")) {
-          if (!confirm("Dismiss this request? File stays as-is.")) return;
-          action = "dismiss";
-        } else return;
-        t.disabled = true;
-        const r = await fetch(`${WORKER_URL}/api/admin/delete-requests`, {
-          method: "POST", credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path, requestedAt, action }),
-        });
-        const d = await r.json().catch(() => ({}));
-        if (r.ok && d.ok) {
-          loadDeleteRequests();
-        } else {
-          alert(d.error || "Failed.");
-          t.disabled = false;
-        }
-      });
-
-      queueRoot.addEventListener("click", async (e) => {
-        const t = e.target;
-        if (!(t instanceof HTMLElement) || !t.dataset.action) return;
-        const action = t.dataset.action;
-        const id = t.dataset.id;
-        const card = t.closest("article");
-        const renameInput = card?.querySelector("[data-rename]");
-        const rename = renameInput instanceof HTMLInputElement ? renameInput.value.trim() : "";
-        const msgEl = card?.querySelector("[data-row-msg]");
-        if (action === "reject" && !confirm("Reject and delete this submission?")) return;
-        if (msgEl) { msgEl.textContent = action === "approve" ? "Approving…" : "Rejecting…"; msgEl.classList.remove("hidden"); }
-        const r = await fetch(`${WORKER_URL}/api/review`, {
-          method: "POST", credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, action, rename: rename || undefined }),
-        });
-        const data = await r.json().catch(() => ({}));
-        if (r.ok && data.ok) {
-          if (msgEl) msgEl.textContent = action === "approve" ? "Approved → " + (data.destinations || []).join(", ") : "Rejected.";
-          setTimeout(loadUploads, 1200);
-        } else if (msgEl) {
-          msgEl.textContent = data.error || "Failed.";
-          msgEl.classList.add("text-rose-700");
-        }
-      });
 
       // ── Studies (Active Studies Tracker) ─────────────────
       const studyForm    = document.querySelector("[data-study-form]");
@@ -1019,7 +839,7 @@ const STAGES = [
         document.querySelector("[data-member-count]").textContent = members.length;
         memberRows.innerHTML = members.map((m) => {
           // Badges: SUPER ADMIN (= super admin, enforced server-side, can't
-          // be modified) takes precedence over ADMIN (= can review uploads,
+          // be modified) takes precedence over ADMIN (= can curate studies,
           // manage members, etc.).
           const badge = m.superAdmin
             ? ' <span class="ml-1 text-[9px] uppercase tracking-widest font-bold text-white bg-brand-700 border border-brand-700 rounded px-1.5 py-0.5 align-middle">super admin</span>'
@@ -1323,8 +1143,6 @@ const STAGES = [
           if (me.member.isSuperAdmin) {
             document.querySelectorAll("[data-superadmin-only]").forEach(el => el.classList.remove("hidden"));
           }
-          loadUploads();
-          loadDeleteRequests();
           if (me.member.isSuperAdmin) { loadStudies(); loadProposals(); }
           loadMembers();
         } catch { setState("signed-out"); }
