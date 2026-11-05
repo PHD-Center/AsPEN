@@ -6,7 +6,7 @@
 // Why public (no auth):
 //   Calendar clients fetch the feed periodically with no Authorization header
 //   and no cookie; so any "Bearer required" path is unusable. The events
-//   themselves (ICPE / ISPE Asian conference dates, AsPEN teleconference) are
+//   themselves (ISPE / ACPE conference dates, AsPEN teleconference) are
 //   public knowledge already; nothing in the feed is sensitive.
 //
 // Build mode: this is a static endpoint; Astro emits a single .ics file at

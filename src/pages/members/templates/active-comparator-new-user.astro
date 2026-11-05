@@ -1048,7 +1048,7 @@ const TIMELINE_PRESETS: Record<string, string> = {
             </label>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Dissemination</span>
-              <textarea name="dissemination" rows="2" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Primary manuscript to a peer-reviewed pharmacoepidemiology journal; presentation at ICPE / ISPE Asian conference; registration on ENCePP EU PAS Register and/or ClinicalTrials.gov where applicable.</textarea>
+              <textarea name="dissemination" rows="2" class="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500">Primary manuscript to a peer-reviewed pharmacoepidemiology journal; presentation at ISPE / ACPE; registration on ENCePP EU PAS Register and/or ClinicalTrials.gov where applicable.</textarea>
             </label>
             <label class="flex flex-col gap-1">
               <span class="text-xs uppercase tracking-widest text-brand-700 font-semibold">Key references (one per line)</span>
@@ -1505,7 +1505,7 @@ ${numbered(milestones)}
 
 **Ethics.** ${orFb(s.ethics, "Each participating site obtains local IRB / ethics approval before data extraction.")}
 
-**Dissemination.** ${orFb(s.dissemination, "Primary manuscript to a peer-reviewed pharmacoepidemiology journal; conference presentation at ICPE / ISPE Asian conference.")}
+**Dissemination.** ${orFb(s.dissemination, "Primary manuscript to a peer-reviewed pharmacoepidemiology journal; conference presentation at ISPE / ACPE.")}
 
 ## 12. Key references
 
@@ -1890,7 +1890,7 @@ _Drafted with the AsPEN protocol builder (${today})._
 
         children.push(h1("11. Ethics, data sharing, dissemination"));
         children.push(p([text("Ethics. ", { bold: true }), text(s.ethics || "Each participating site obtains local IRB / ethics approval before data extraction.")]));
-        children.push(p([text("Dissemination. ", { bold: true }), text(s.dissemination || "Primary manuscript to a peer-reviewed pharmacoepidemiology journal; conference presentation at ICPE / ISPE Asian conference.")]));
+        children.push(p([text("Dissemination. ", { bold: true }), text(s.dissemination || "Primary manuscript to a peer-reviewed pharmacoepidemiology journal; conference presentation at ISPE / ACPE.")]));
 
         children.push(h1("12. Key references"));
         refs.length ? refs.forEach((l) => children.push(numItem(l))) : children.push(para("(none)"));
