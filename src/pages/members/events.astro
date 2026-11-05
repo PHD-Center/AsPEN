@@ -16,6 +16,8 @@ type EventEntry = {
   description?: string;
   /** ISPE's own webinar or video; listed under its own heading. */
   ispe?: boolean;
+  /** Shown in place of the exact date when only the year is known. */
+  dateText?: string;
 };
 
 // Build-time sort:
@@ -91,7 +93,7 @@ const ICS_URL = `${SITE_BASE}/events.ics`;
 
 <BaseLayout
   title="Events · AsPEN members"
-  description="Upcoming ICPE, ACPE, ISPE webinars, and submission deadlines. Subscribe in Google Calendar / Outlook."
+  description="Upcoming ISPE and ACPE meetings, ISPE webinars, and submission deadlines. Subscribe in Google Calendar / Outlook."
 >
   <PageHeader
     eyebrow="Members → Events"
@@ -205,7 +207,7 @@ const ICS_URL = `${SITE_BASE}/events.ics`;
         </h2>
         {upcoming.length === 0 ? (
           <p class="text-sm text-slate-500 italic border border-slate-200 rounded-lg bg-slate-50 px-4 py-6">
-            No upcoming events on the calendar yet. The AsPEN office will post ICPE / Asian conference / teleconference dates here.
+            No upcoming events on the calendar yet. The AsPEN office will post ISPE / ACPE / teleconference dates here.
           </p>
         ) : (
           <ul class="space-y-3 list-none pl-0">
@@ -250,7 +252,7 @@ const ICS_URL = `${SITE_BASE}/events.ics`;
                 <li class="border border-slate-200 rounded p-3 bg-slate-50/50">
                   <div class="flex items-center gap-2 flex-wrap text-xs">
                     <span class={`text-[10px] uppercase tracking-widest font-bold border px-1.5 py-0.5 rounded ${tone} opacity-70`}>{label}</span>
-                    <p class="font-mono text-slate-600 tabular-nums">{fmtRange(e.date, e.endDate)}</p>
+                    <p class="font-mono text-slate-600 tabular-nums">{e.dateText ?? fmtRange(e.date, e.endDate)}</p>
                   </div>
                   <p class="mt-1 text-sm text-slate-700">
                     {e.url ? (

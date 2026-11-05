@@ -8,12 +8,267 @@
     "url": "https://www.youtube.com/watch?v=PENv99wahkc"
   },
   {
-    "date": "2023-09-18",
+    "date": "2022-03-03",
+    "title": "ISPE webinar: Immeasurable Time Bias in Pharmacoepidemiologic Studies (SISPE)",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/sispe-webinar-immeasurable-time-bias-in-pharmacoepidemiologic-studies-mar-3-2022"
+  },
+  {
+    "date": "2022-03-15",
+    "title": "ISPE webinar: Using Individual Case Safety Reports in FAERS for Regulatory Decision Making",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/using-individual-case-safety-reports-in-faers-for-regulatory-decision-making",
+    "dateText": "2022"
+  },
+  {
+    "date": "2022-06-15",
+    "title": "ISPE webinar: Utilizing Social Media to Advance Your Career in Pharmacoepidemiology (SISPE)",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/sispe-webinar-utilizing-social-media-to-advance-your-career-in-pharmacoepidemiology",
+    "dateText": "2022"
+  },
+  {
+    "date": "2022-09-25",
+    "title": "ISPE webinar: Pediatric Infection with Severe Acute Respiratory Syndrome Coronavirus 2 (SARS-CoV-2) and Potential Health Policy Consequences",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/pediatric-infection-with-severe-acute-respiratory-syndrome-coronavirus-2-sars-cov-2-and-potential-health-policy-consequences",
+    "dateText": "2022"
+  },
+  {
+    "date": "2022-09-26",
+    "title": "ISPE webinar: Is There a Role for Pharmacoepidemiology in Deprescribing Research?",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/is-there-a-role-for-pharmacoepidemiology-in-deprescribing-research",
+    "dateText": "2022"
+  },
+  {
+    "date": "2023-01-17",
+    "title": "ISPE webinar: Overview of Negative Control Approaches and Its Use as Empirical Calibration (SISPE)",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/sispe-webinar-overview-of-negative-control-approaches-and-its-use-as-empirical-calibration-jan-17-2023"
+  },
+  {
+    "date": "2023-02-16",
+    "title": "ISPE webinar: Use of Pharmacoepidemiologic Studies and Evidences in Pharmacoeconomic Evaluations (SISPE and ISPOR Student Network)",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/sispe-ispor-sn-joint-webinar-use-of-pharmacoepidemiologic-studies-and-evidences-in-pharmacoeconomic-evaluations-feb-16-2023"
+  },
+  {
+    "date": "2023-03-30",
+    "title": "ISPE webinar: Career Special: Interviews with Pharmacoepi Leaders, Part 1: Industry (SISPE)",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/sispe-career-special-interviews-with-pharmacoepi-leaders-part-1-industry-march-2023"
+  },
+  {
+    "date": "2023-05-16",
+    "title": "ISPE webinar: Measures of Drug Utilization Based on Individual-Level Drug Dispensing Data",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/measures-of-drug-utilization-based-on-individual-level-drug-dispensing-data-may-16-2023"
+  },
+  {
+    "date": "2023-05-25",
+    "title": "ISPE webinar: Methodological Challenges for Pharmacoepidemiologic Studies of Geriatric Cancer Care (SISPE)",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/sispe-webinar-methodological-challenges-for-pharmacoepidemiologic-studies-of-geriatric-cancer-care-may-25-2023"
+  },
+  {
+    "date": "2023-06-23",
+    "title": "ISPE webinar: Methodological Considerations for Designing Pharmacoepidemiology Studies in the COVID-19 Era",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/methodological-considerations-for-designing-pharmacoepidemiology-studies-in-the-covid-19-era-june-23-2023"
+  },
+  {
+    "date": "2023-09-15",
     "title": "ISPE webinar: PDS Best Paper of 2022: Novel methods for pregnancy drug safety surveillance in the FDA Sentinel System",
     "type": "webinar",
     "ispe": true,
     "location": "Online · recording on YouTube",
     "url": "https://www.youtube.com/watch?v=8zmIZrHiON8"
+  },
+  {
+    "date": "2023-10-12",
+    "title": "ISPE webinar: Designing and Conducting Pragmatic Randomized Trials in Electronic Databases in Pharmacoepidemiology",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/designing-and-conducting-pragmatic-randomized-trials-in-electronic-databases-in-pharmacoepidemiology-oct-12-2023"
+  },
+  {
+    "date": "2023-11-15",
+    "title": "ISPE webinar: Methods and Applications of Synthetic Data in Pharmacoepidemiology",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/methods-and-applications-of-synthetic-data-in-pharmacoepidemiology-nov-15-2023"
+  },
+  {
+    "date": "2023-12-06",
+    "title": "ISPE webinar: Career Opportunities in the Vaccine Field: A Joint Symposium by Vaccine SIG and Student Council",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/career-opportunities-in-the-vaccine-field-a-joint-symposium-by-vaccine-sig-and-student-council-december-6-2023"
+  },
+  {
+    "date": "2023-12-13",
+    "title": "ISPE webinar: Mind the Gap: A Discussion of Bias and Fairness in Machine Learning for Medicine and Pharmacoepidemiology",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/mind-the-gap-a-discussion-of-bias-and-fairness-in-machine-learning-for-medicine-and-pharmacoepidemiology-december-13-2023"
+  },
+  {
+    "date": "2024-01-18",
+    "title": "ISPE webinar: Let’s Git it Started: An Introduction to Reproducible Analytic Workflows in Real-World Evidence Using Git (Student Council)",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/lets-git-it-started-an-introduction-to-reproducible-analytic-workflows-in-real-world-evidence-using-git-sponsored-by-the-student-council-january-18-2024"
+  },
+  {
+    "date": "2024-03-04",
+    "title": "ISPE webinar: Looking Under the Bonnet: Driving AI/ML into Routine Safety Surveillance – Opportunities and Challenges",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/looking-under-the-bonnet-driving-aiml-into-routine-safety-surveillance-opportunities-and-challenges-march-4-2024"
+  },
+  {
+    "date": "2024-03-13",
+    "title": "ISPE webinar: A Comprehensive Look at Electronic Health Record Databases in Asia",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/a-comprehensive-look-at-electronic-health-record-databases-in-asia-march-13-2024"
+  },
+  {
+    "date": "2024-03-15",
+    "title": "ISPE webinar: Data Strategy for RWE, Part 1: Introduction to Data Strategy",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/data-strategy-for-rwe-pt-1-introduction-to-data-strategy",
+    "dateText": "2024"
+  },
+  {
+    "date": "2024-03-16",
+    "title": "ISPE webinar: Data Strategy for RWE, Part 2: Aligning Data Architecture with Data Strategy",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/data-strategy-for-rwe-pt-2-aligning-data-architecture-with-data-strategy",
+    "dateText": "2024"
+  },
+  {
+    "date": "2024-03-28",
+    "title": "ISPE webinar: Pharmacoepi Career Workshop: How to Get Your First Job in Academia or Industry (SISPE)",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/pharmacoepi-career-workshop-how-to-get-your-first-job-in-academia-or-industry-a-sispe-webinar-march-28-2024"
+  },
+  {
+    "date": "2024-05-16",
+    "title": "ISPE webinar: Career Webinar: Panel Discussion from Real-world Evidence Experts in Academia, Regulatory, and Industry",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/career-webinar-panel-discussion-from-real-world-evidence-experts-in-academia-regulatory-and-industry-may-16-2024"
+  },
+  {
+    "date": "2024-06-06",
+    "title": "ISPE webinar: Avoidable Sources of Bias in Real-world Evidence Studies of Treatment Effects",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/avoidable-sources-of-bias-in-real-world-evidence-studies-of-treatment-effects-june-6-2024"
+  },
+  {
+    "date": "2024-06-15",
+    "title": "ISPE webinar: Data Strategy for RWE, Part 3: Data Governance and Data Strategy",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/data-strategy-for-rwe-pt-3-data-governance-and-data-strategy",
+    "dateText": "2024"
+  },
+  {
+    "date": "2024-09-27",
+    "title": "ISPE webinar: Combining Super Learner with High-dimensional Propensity Score to Improve Confounding Adjustment: A Real-world Application in Chronic Lymphocytic Leukemia",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/combining-super-learner-with-high-dimensional-propensity-score-to-improve-confounding-adjustment-a-real-world-application-in-chronic-lymphocytic-leukemia-9272024"
+  },
+  {
+    "date": "2024-10-11",
+    "title": "ISPE webinar: Epidemiological Methods in Health Equity and Diversity (Health Equity SIG)",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/epidemiological-methods-in-health-equity-and-diversity-sponsored-by-ispes-health-equity-sig-10112024"
+  },
+  {
+    "date": "2025-01-14",
+    "title": "ISPE webinar: Leveraging Community Engagement to Improve the Quality of Race and Ethnicity Data in Real-World Databases: Implementing the RAISE Action Framework",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/leveraging-community-engagement-to-improve-the-quality-of-race-and-ethnicity-data-in-real-world-databases-implementing-the-raise-action-framework-11425"
+  },
+  {
+    "date": "2025-03-20",
+    "title": "ISPE webinar: The Global Drug Shortage Challenge: Methodological Considerations and Implications for Policy and Research",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/the-global-drug-shortage-challenge-methodological-considerations-and-implications-for-policy-and-research-32025"
+  },
+  {
+    "date": "2025-06-05",
+    "title": "ISPE webinar: Transparency and Reproducibility in Pharmacoepidemiology",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/transparency-and-reproducibility-in-pharmacoepidemiology-webinar"
+  },
+  {
+    "date": "2025-07-31",
+    "title": "ISPE webinar: Clone-censor-weight approach for target trial emulation",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/clone-censor-weight-approach-for-target-trial-emulation-jul-31-2025"
+  },
+  {
+    "date": "2025-10-10",
+    "title": "ISPE webinar: PDS Best Paper of 2024: Lack of evidence for vaccine-associated enhanced disease from COVID-19 vaccines among adults in the Vaccine Safety Datalink",
+    "type": "webinar",
+    "ispe": true,
+    "location": "Online · recording in the ISPE Education Center",
+    "url": "https://webed.pharmacoepi.org/products/pds-best-paper-of-2024-lack-of-evidence-for-vaccine-associated-enhanced-disease-from-covid-19-vaccines-among-adults-in-the-vaccine-safety-datalink-101025"
   },
   {
     "date": "2026-01-08",
