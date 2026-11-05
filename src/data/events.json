@@ -4,7 +4,7 @@
     "title": "ISPE webinar: LADIG: opportunities, challenges, and lessons for strengthening drug regulatory systems",
     "type": "webinar",
     "ispe": true,
-    "location": "Online · recording on YouTube",
+    "location": "Online",
     "url": "https://www.youtube.com/watch?v=PENv99wahkc"
   },
   {
@@ -466,14 +466,14 @@
     "date": "2025-08-24",
     "title": "ISPE 2025 symposium: The Clone-Censor-Weight Approach: From Basic Principles to Its Transformation in Diverse Exposure and Outcome Scenarios",
     "type": "conference",
-    "location": "Washington DC · recording on YouTube",
+    "location": "Washington DC",
     "url": "https://www.youtube.com/watch?v=c8My-6HGmJg"
   },
   {
     "date": "2025-08-25",
     "title": "ISPE 2025 symposium: How Should We Interpret Self-controlled Study Designs in the Era of Causal Inference?",
     "type": "conference",
-    "location": "Washington DC · recording on YouTube",
+    "location": "Washington DC",
     "url": "https://www.youtube.com/watch?v=R5UFi7Pbh8A"
   },
   {
@@ -640,28 +640,32 @@
     "title": "ISPE course: Environmental Pharmacoepidemiology: Overview, Methods, and Applications",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=oLsR01aVeEU"
   },
   {
     "date": "2026-08-29",
     "title": "ISPE course: Foundations in Causal Inference",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=qF6ru1l8I5w"
   },
   {
     "date": "2026-08-29",
     "title": "ISPE course: Pharmacovigilance and Signal Detection",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=FMtQDcB6zvE"
   },
   {
     "date": "2026-08-29",
     "title": "ISPE course: Using Pharmacoepidemiology Database Resources to Address Drug Safety Research",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=sb7ekVWreUw"
   },
   {
     "date": "2026-08-30",
@@ -684,84 +688,96 @@
     "title": "ISPE course: Applied Sensitivity Analyses",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=LBSrPsPJgEw"
   },
   {
     "date": "2026-08-30",
     "title": "ISPE course: Integrating Pharmacogenomics into Pharmacoepidemiologic Research: Frontiers in Oncology and Chronic Disease",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=sjAhFiHywHM"
   },
   {
     "date": "2026-08-30",
     "title": "ISPE course: Introduction to Drug Utilization",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=dRdKfEBLO9Y"
   },
   {
     "date": "2026-08-30",
     "title": "ISPE course: Methods and Case Studies for Designing and Evaluating Risk Minimisation Interventions and Communications",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=1e2xwRplTUQ"
   },
   {
     "date": "2026-08-30",
     "title": "ISPE course: Target Trial Emulation for Causal Inference in Practice",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=hw3QxEjU7NA"
   },
   {
     "date": "2026-08-30",
     "title": "ISPE course: Modern Pregnancy Pharmacoepidemiology",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=cFBDgs-FwPA"
   },
   {
     "date": "2026-08-30",
     "title": "ISPE course: Intermediate/Advanced Topics in Vaccine Safety and Effectiveness",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=wbVnS-o1sx8"
   },
   {
     "date": "2026-08-30",
     "title": "ISPE course: Advanced Drug Utilization",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=kvHtuaqxitQ"
   },
   {
     "date": "2026-08-30",
     "title": "ISPE course: Let’s Get Personal: Defining and Estimating the Effects of Dynamic Treatment Strategies Using Real-World Data",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=45VapEO_RJg"
   },
   {
     "date": "2026-08-30",
     "title": "ISPE course: New Frontiers in Pharmacoepidemiology: Cutting-edge Approaches to Data Collection and Integration",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=hriP2O2VFDI"
   },
   {
     "date": "2026-08-30",
     "title": "ISPE course: Real-world Evidence Generation for Rare Disease and Orphan Drug Development",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=j6ULOMKloH8"
   },
   {
     "date": "2026-08-30",
     "title": "ISPE course: Weighing the Benefits & Risks: The Science and Methods of Benefit-Risk Assessment in Drug Development",
     "type": "training",
     "course": true,
-    "location": "ISPE 2026 Annual Meeting, Milan"
+    "location": "ISPE 2026 Annual Meeting, Milan",
+    "url": "https://www.youtube.com/watch?v=k4TG500HQQ8"
   },
   {
     "date": "2026-09-04",

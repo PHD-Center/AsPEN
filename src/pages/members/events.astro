@@ -48,9 +48,9 @@ const past = events
 const isIspeWebinar = (e: EventEntry) => e.ispe === true;
 const isIspeCourse = (e: EventEntry) => e.course === true;
 const pastGroups = [
-  { heading: "Past", items: past.filter((e) => !isIspeWebinar(e) && !isIspeCourse(e)).slice(0, 10) },
-  { heading: "ISPE webinars", items: past.filter(isIspeWebinar).map((e) => ({ ...e, title: e.title.replace(/^ISPE (webinar|video): /, "") })) },
-  { heading: "ISPE pre-conference courses", items: past.filter(isIspeCourse).map((e) => ({ ...e, title: e.title.replace(/^ISPE course: /, "") })) },
+  { heading: "Past", collapsed: false, items: past.filter((e) => !isIspeWebinar(e) && !isIspeCourse(e)).slice(0, 10) },
+  { heading: "ISPE webinars", collapsed: true, items: past.filter(isIspeWebinar).map((e) => ({ ...e, title: e.title.replace(/^ISPE (webinar|video): /, "") })) },
+  { heading: "ISPE pre-conference courses", collapsed: true, items: past.filter(isIspeCourse).map((e) => ({ ...e, title: e.title.replace(/^ISPE course: /, "") })) },
 ].filter((g) => g.items.length > 0);
 
 // Type chip colours; kept restrained so a long list doesn't look like a circus.
@@ -244,12 +244,10 @@ const ICS_URL = `${SITE_BASE}/events.ics`;
         )}
       </div>
 
-      <!-- ── Past events (ISPE webinars under their own heading) ── -->
-      {pastGroups.map((g) => (
-        <div>
-          <h2 class="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-3">
-            {g.heading} · <span class="tabular-nums">{g.items.length}</span>
-          </h2>
+      <!-- ── Past events. The ISPE lists are long, so each sits in a box
+           that stays closed until it is clicked. ─────────────────────── -->
+      {pastGroups.map((g) => {
+        const list = (
           <ul class="space-y-2 list-none pl-0">
             {g.items.map((e) => {
               const tone = TYPE_TONE[e.type ?? "other"] ?? TYPE_TONE.other;
@@ -271,8 +269,26 @@ const ICS_URL = `${SITE_BASE}/events.ics`;
               );
             })}
           </ul>
-        </div>
-      ))}
+        );
+        return g.collapsed ? (
+          <details class="group border border-brand-200 bg-brand-50/40 rounded-lg">
+            <summary class="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-brand-700 hover:bg-brand-100/40 rounded-lg flex items-center gap-2">
+              <span class="inline-block text-xs transition-transform group-open:rotate-90" aria-hidden="true">▶</span>
+              {g.heading} · <span class="tabular-nums">{g.items.length}</span>
+            </summary>
+            <div class="px-4 pb-4 pt-3 border-t border-brand-100">
+              {list}
+            </div>
+          </details>
+        ) : (
+          <div>
+            <h2 class="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-3">
+              {g.heading} · <span class="tabular-nums">{g.items.length}</span>
+            </h2>
+            {list}
+          </div>
+        );
+      })}
 
     </div>
   </section>
