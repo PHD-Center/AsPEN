@@ -10,6 +10,7 @@ Thumbs.db
 # Reference papers (kept locally, not committed)
 *.pdf
 *.docx
+*.xlsx
 !public/**/*.pdf
 
 # Sensitive — never commit
