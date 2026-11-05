@@ -18,6 +18,8 @@ type EventEntry = {
   ispe?: boolean;
   /** Shown in place of the exact date when only the year is known. */
   dateText?: string;
+  /** Link to the session recordings, shown after the event has passed. */
+  recordings?: string;
 };
 
 // Build-time sort:
@@ -259,6 +261,7 @@ const ICS_URL = `${SITE_BASE}/events.ics`;
                       <a href={e.url} target="_blank" rel="noopener" class="hover:text-brand-700 hover:underline">{e.title}</a>
                     ) : e.title}
                     {e.location && (<span class="text-slate-500"> · {e.location}</span>)}
+                    {e.recordings && (<span class="text-slate-500"> · <a href={e.recordings} target="_blank" rel="noopener" class="text-brand-700 font-semibold hover:underline">Session recordings</a></span>)}
                   </p>
                 </li>
               );
