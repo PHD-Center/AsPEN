@@ -31,6 +31,8 @@ interface EventEntry {
   location?: string;
   url?: string;
   description?: string;
+  /** Recorded ISPE pre-conference course; kept out of the feed. */
+  course?: boolean;
 }
 
 // RFC 5545 §3.3.11; TEXT field escaping. Backslash MUST come first.
@@ -103,7 +105,8 @@ export const GET: APIRoute = () => {
   // Build-time "now"; fine since this is prerendered.
   const dtstamp = toIcsTimestamp(new Date());
   // The feed starts at the ACPE 2026 abstract deadline; older entries stay on the page only.
-  const events = (eventsRaw as EventEntry[]).filter((e) => e.date >= "2026-06-12");
+  // Course recordings are not calendar events, so they stay on the page only as well.
+  const events = (eventsRaw as EventEntry[]).filter((e) => e.date >= "2026-06-12" && !e.course);
 
   const header = [
     "BEGIN:VCALENDAR",
