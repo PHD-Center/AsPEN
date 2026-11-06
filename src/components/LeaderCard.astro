@@ -1,0 +1,69 @@
+---
+// Round-portrait card for one person in the governance chart.
+export interface Leader {
+  name: string;
+  role: string;
+  inst: string;
+  photo?: string;
+  /** CSS object-position override, e.g. "70% 20%"; defaults to "center top" */
+  pos?: string;
+  /** 16-digit ORCID iD with hyphens, e.g. "0000-0003-1010-7525" */
+  orcid?: string;
+  /** Personal / institutional / Scholar profile URL */
+  profile?: string;
+}
+interface Props {
+  m: Leader;
+}
+const { m } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("");
+---
+
+<article class="group flex flex-col items-center gap-3 p-4 rounded-xl bg-white border border-slate-200 hover:border-brand-400 hover:shadow-md transition w-full h-full text-center">
+  <div class="shrink-0 w-20 h-20 rounded-full overflow-hidden bg-brand-50 border border-brand-100 ring-2 ring-white shadow-sm">
+    {m.photo ? (
+      <img
+        src={`${base}/images/${m.photo}`}
+        alt={m.name}
+        class="block w-full h-full object-cover"
+        style={`object-position: ${m.pos ?? "center top"}`}
+      />
+    ) : (
+      <div class="w-full h-full grid place-items-center text-brand-700 text-xl font-bold">{initials(m.name)}</div>
+    )}
+  </div>
+  <div class="leading-tight">
+    <p class="font-bold text-slate-900 text-base whitespace-nowrap">{m.name}</p>
+    <p class="text-sm text-brand-700 font-medium mt-1 whitespace-nowrap">{m.role}</p>
+    <p class="text-xs text-slate-500 mt-0.5">{m.inst}</p>
+  </div>
+  {(m.orcid || m.profile) && (
+    <div class="mt-1 flex items-center justify-center gap-2">
+      {m.orcid && (
+        <a
+          href={`https://orcid.org/${m.orcid}`}
+          target="_blank"
+          rel="noopener"
+          class="inline-flex items-center justify-center w-6 h-6 rounded-full hover:scale-110 transition"
+          aria-label={`${m.name} ORCID profile`}
+          title={`ORCID: ${m.orcid}`}
+        >
+          <svg width="20" height="20" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#A6CE39"/><text x="128" y="170" text-anchor="middle" font-family="Arial,sans-serif" font-size="124" font-weight="900" fill="#fff">iD</text></svg>
+        </a>
+      )}
+      {m.profile && (
+        <a
+          href={m.profile}
+          target="_blank"
+          rel="noopener"
+          class="inline-flex items-center justify-center w-6 h-6 rounded-full text-slate-500 hover:text-brand-700 hover:scale-110 transition"
+          aria-label={`${m.name} profile page`}
+          title="Profile page"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+      )}
+    </div>
+  )}
+</article>

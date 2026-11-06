@@ -1,56 +1,58 @@
 ---
-// AsPEN Governance; 3-tier org chart
+// AsPEN Governance; org chart
 // Tier 1: Chair (top, centered)
-// Tier 2: Operations | Academic & Education (two branches)
-// Tier 3: Edward | Daniel (sub-branches under Education only)
+// Tier 2: Chair-Elect | Immediate Past Chair | Asia RIG
+// Tier 3: Operations | Academic & Education (two branches)
+// Tier 4: Education Lead (under Education only)
+import LeaderCard from "./LeaderCard.astro";
+import type { Leader } from "./LeaderCard.astro";
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-interface Member {
-  name: string;
-  role: string;
-  inst: string;
-  photo?: string;
-  /** CSS object-position override, e.g. "70% 20%"; defaults to "center top" */
-  pos?: string;
-  /** 16-digit ORCID iD with hyphens, e.g. "0000-0003-1010-7525" */
-  orcid?: string;
-  /** Personal / institutional / Scholar profile URL */
-  profile?: string;
-}
-
-const chair: Member = {
-  name: "Ju-Young Shin",
+const chair: Leader = {
+  name: "Daniel Tsai",
   role: "Chair",
-  inst: "SKKU · SNU",
-  photo: "Judy.jpg",
-  orcid: "0000-0003-1010-7525",
-  profile: "https://skb.skku.edu/eng_pharm/intro/faculty_pharmacy.do?mode=view&perId=LZStrIYVgqgzg6gKgdgTwMYFMCyBFAmkgnMAZQCk4AOAaQwF4qg%20&",
+  inst: "NCKU",
+  photo: "Daniel.jpeg",
+  orcid: "0000-0003-2841-0338",
+  profile: "https://www.researchgate.net/profile/Daniel-Tsai-8",
 };
 
-const educationLeads: Member[] = [
+const officers: Leader[] = [
   {
-    name: "Edward Lai",
-    role: "Education Lead",
-    inst: "NCKU",
-    photo: "Edward.jpeg",
-    // Edward.jpeg is 1365×1923 (portrait); object-cover crops top/bottom in the
-    // 80×80 round frame. "center 10%" lines his head up with Daniel's
-    // (Daniel.jpeg is 1:1 so no crop, head sits ~12% from top by default).
-    pos: "center 10%",
-    orcid: "0000-0002-5852-7652",
-    profile: "https://researchoutput.ncku.edu.tw/en/persons/edward-lai/",
+    name: "Shiori Nishimura",
+    role: "Chair-Elect",
+    inst: "Yokohama City University",
   },
   {
-    name: "Daniel Tsai",
-    role: "Education Co-Lead",
-    inst: "NCKU",
-    photo: "Daniel.jpeg",
-    pos: "center top",
-    orcid: "0000-0003-2841-0338",
-    profile: "https://www.researchgate.net/profile/Daniel-Tsai-8",
+    name: "Ju-Young Shin",
+    role: "Immediate Past Chair",
+    inst: "SNU · SKKU",
+    photo: "Judy.jpg",
+    orcid: "0000-0003-1010-7525",
+    profile: "https://skb.skku.edu/eng_pharm/intro/faculty_pharmacy.do?mode=view&perId=LZStrIYVgqgzg6gKgdgTwMYFMCyBFAmkgnMAZQCk4AOAaQwF4qg%20&",
+  },
+  {
+    name: "Hiraku Kumamaru",
+    role: "Asia RIG",
+    inst: "Yokohama City University",
+    photo: "Hiraku.jpg",
+    orcid: "0000-0002-9759-6191",
+    profile: "https://www-user.yokohama-cu.ac.jp/~ycuds/hds/researchers/kumamaru.html",
   },
 ];
+
+const educationLead: Leader = {
+  name: "Edward Lai",
+  role: "Education Lead",
+  inst: "NCKU",
+  photo: "Edward.jpeg",
+  // Edward.jpeg is 1365×1923 (portrait); object-cover crops top/bottom in the
+  // 80×80 round frame. "center 10%" keeps his head inside it.
+  pos: "center 10%",
+  orcid: "0000-0002-5852-7652",
+  profile: "https://researchoutput.ncku.edu.tw/en/persons/edward-lai/",
+};
 
 const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("");
 ---
@@ -93,10 +95,16 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
     </div>
   </article>
 
+  <!-- ── TIER 2 · Officers ───────────────────────────────────── -->
+  <div class="flex justify-center"><div class="w-px h-8 bg-slate-300"></div></div>
+  <div class="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-3">
+    {officers.map((m) => <LeaderCard m={m} />)}
+  </div>
+
   <!-- vertical drop from leadership to branches -->
   <div class="flex justify-center"><div class="w-px h-8 bg-slate-300"></div></div>
 
-  <!-- ── TIER 2 · OPS | EDUCATION ────────────────────────────── -->
+  <!-- ── TIER 3 · OPS | EDUCATION ────────────────────────────── -->
   <div class="relative max-w-4xl mx-auto">
     <!-- horizontal T-connector across both branches (desktop only) -->
     <div class="hidden md:block absolute top-0 left-1/4 right-1/4 h-px bg-slate-300"></div>
@@ -111,7 +119,7 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
           <div class="p-5 pl-7">
             <p class="text-[10px] uppercase tracking-[0.25em] text-brand-700 font-bold">Operations & Coordination</p>
             <p class="text-sm text-slate-700 mt-3 leading-relaxed">
-              Day-to-day operations are coordinated by the Chair with the <strong>SKKU team</strong>; handling ISPE liaison, multi-country study governance, and collaborative protocols.
+              Day-to-day operations are coordinated by the Chair; handling ISPE liaison, multi-country study governance, and collaborative protocols.
             </p>
           </div>
         </article>
@@ -134,74 +142,17 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
     </div>
   </div>
 
-  <!-- ── TIER 3 · Member cards under Education only ─────────── -->
+  <!-- ── TIER 4 · Education Lead, under Education only ───────── -->
   <div class="max-w-4xl mx-auto">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
       <!-- empty column under Operations -->
       <div class="hidden md:block"></div>
 
-      <!-- Education sub-tree -->
       <div class="flex flex-col items-center">
         <!-- vertical drop from Education card -->
         <div class="w-px h-8 bg-slate-300"></div>
-
-        <!-- horizontal T to two members (desktop) -->
-        <div class="relative w-full">
-          <div class="hidden md:block absolute top-0 left-1/4 right-1/4 h-px bg-slate-300"></div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-0">
-            {educationLeads.map((m) => (
-              <div class="flex flex-col items-center">
-                <div class="hidden md:block w-px h-6 bg-slate-300"></div>
-                <article class="group flex flex-col items-center gap-3 p-4 rounded-xl bg-white border border-slate-200 hover:border-brand-400 hover:shadow-md transition w-full h-full text-center">
-                  <div class="shrink-0 w-20 h-20 rounded-full overflow-hidden bg-brand-50 border border-brand-100 ring-2 ring-white shadow-sm">
-                    {m.photo ? (
-                      <img
-                        src={`${base}/images/${m.photo}`}
-                        alt={m.name}
-                        class="block w-full h-full object-cover"
-                        style={`object-position: ${m.pos ?? "center top"}`}
-                      />
-                    ) : (
-                      <div class="w-full h-full grid place-items-center text-brand-700 text-sm font-bold">{initials(m.name)}</div>
-                    )}
-                  </div>
-                  <div class="leading-tight">
-                    <p class="font-bold text-slate-900 text-base whitespace-nowrap">{m.name}</p>
-                    <p class="text-sm text-brand-700 font-medium mt-1 whitespace-nowrap">{m.role}</p>
-                    <p class="text-xs text-slate-500 mt-0.5">{m.inst}</p>
-                  </div>
-                  {(m.orcid || m.profile) && (
-                    <div class="mt-1 flex items-center justify-center gap-2">
-                      {m.orcid && (
-                        <a
-                          href={`https://orcid.org/${m.orcid}`}
-                          target="_blank"
-                          rel="noopener"
-                          class="inline-flex items-center justify-center w-6 h-6 rounded-full hover:scale-110 transition"
-                          aria-label={`${m.name} ORCID profile`}
-                          title={`ORCID: ${m.orcid}`}
-                        >
-                          <svg width="20" height="20" viewBox="0 0 256 256" aria-hidden="true"><circle cx="128" cy="128" r="128" fill="#A6CE39"/><text x="128" y="170" text-anchor="middle" font-family="Arial,sans-serif" font-size="124" font-weight="900" fill="#fff">iD</text></svg>
-                        </a>
-                      )}
-                      {m.profile && (
-                        <a
-                          href={m.profile}
-                          target="_blank"
-                          rel="noopener"
-                          class="inline-flex items-center justify-center w-6 h-6 rounded-full text-slate-500 hover:text-brand-700 hover:scale-110 transition"
-                          aria-label={`${m.name} profile page`}
-                          title="Profile page"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                        </a>
-                      )}
-                    </div>
-                  )}
-                </article>
-              </div>
-            ))}
-          </div>
+        <div class="w-full sm:w-1/2">
+          <LeaderCard m={educationLead} />
         </div>
       </div>
     </div>
