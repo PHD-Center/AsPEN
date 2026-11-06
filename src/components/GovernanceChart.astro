@@ -1,9 +1,9 @@
 ---
 // AsPEN Governance; org chart
 // Tier 1: Chair (top, centered)
-// Tier 2: Chair-Elect | Immediate Past Chair | Asia RIG
-// Tier 3: Operations | Academic & Education (two branches)
-// Tier 4: Education Lead (under Education only)
+// Tier 2: Academic & Education | Operations & Coordination | Network & Partnerships
+// Tier 3: Education Lead (under Academic & Education only)
+// Everyone else in the leadership is introduced in the About page's Leadership section.
 import LeaderCard from "./LeaderCard.astro";
 import type { Leader } from "./LeaderCard.astro";
 
@@ -18,30 +18,6 @@ const chair: Leader = {
   profile: "https://www.researchgate.net/profile/Daniel-Tsai-8",
 };
 
-const officers: Leader[] = [
-  {
-    name: "Shiori Nishimura",
-    role: "Chair-Elect",
-    inst: "Yokohama City University",
-  },
-  {
-    name: "Ju-Young Shin",
-    role: "Immediate Past Chair",
-    inst: "SNU · SKKU",
-    photo: "Judy.jpg",
-    orcid: "0000-0003-1010-7525",
-    profile: "https://skb.skku.edu/eng_pharm/intro/faculty_pharmacy.do?mode=view&perId=LZStrIYVgqgzg6gKgdgTwMYFMCyBFAmkgnMAZQCk4AOAaQwF4qg%20&",
-  },
-  {
-    name: "Hiraku Kumamaru",
-    role: "Asia RIG",
-    inst: "Yokohama City University",
-    photo: "Hiraku.jpg",
-    orcid: "0000-0002-9759-6191",
-    profile: "https://www-user.yokohama-cu.ac.jp/~ycuds/hds/researchers/kumamaru.html",
-  },
-];
-
 const educationLead: Leader = {
   name: "Edward Lai",
   role: "Education Lead",
@@ -53,6 +29,26 @@ const educationLead: Leader = {
   orcid: "0000-0002-5852-7652",
   profile: "https://researchoutput.ncku.edu.tw/en/persons/edward-lai/",
 };
+
+// The three working branches under the Chair. A branch may name its lead.
+const branches: { title: string; text: string; bar: string; lead?: Leader }[] = [
+  {
+    title: "Academic & Education",
+    text: "Develops educational resources, organises webinars and workshops, and mentors early-career epidemiologists across AsPEN member sites; supporting capacity building and knowledge exchange.",
+    bar: "from-accent-500 to-brand-500",
+    lead: educationLead,
+  },
+  {
+    title: "Operations & Coordination",
+    text: "Day-to-day operations are coordinated by the Chair; handling ISPE liaison, multi-country study governance, and collaborative protocols.",
+    bar: "from-brand-500 to-brand-700",
+  },
+  {
+    title: "Network & Partnerships",
+    text: "Links AsPEN with partner networks and regional groups, and supports new member sites joining multi-country studies.",
+    bar: "from-brand-700 to-accent-500",
+  },
+];
 
 const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("");
 ---
@@ -95,66 +91,34 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
     </div>
   </article>
 
-  <!-- ── TIER 2 · Officers ───────────────────────────────────── -->
-  <div class="flex justify-center"><div class="w-px h-8 bg-slate-300"></div></div>
-  <div class="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-3">
-    {officers.map((m) => <LeaderCard m={m} />)}
-  </div>
-
-  <!-- vertical drop from leadership to branches -->
+  <!-- vertical drop from the chair to the branches -->
   <div class="flex justify-center"><div class="w-px h-8 bg-slate-300"></div></div>
 
-  <!-- ── TIER 3 · OPS | EDUCATION ────────────────────────────── -->
+  <!-- ── TIER 2 · three branches; TIER 3 · a branch's lead under it ── -->
   <div class="relative max-w-4xl mx-auto">
-    <!-- horizontal T-connector across both branches (desktop only) -->
-    <div class="hidden md:block absolute top-0 left-1/4 right-1/4 h-px bg-slate-300"></div>
+    <!-- horizontal connector across the three branches (desktop only) -->
+    <div class="hidden md:block absolute top-0 left-[16.666%] right-[16.666%] h-px bg-slate-300"></div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-      <!-- Operations branch -->
-      <div class="flex flex-col items-center">
-        <div class="hidden md:block w-px h-8 bg-slate-300"></div>
-        <div class="md:hidden w-px h-5 bg-slate-300"></div>
-        <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm w-full">
-          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-brand-500 to-brand-700"></div>
-          <div class="p-5 pl-7">
-            <p class="text-[10px] uppercase tracking-[0.25em] text-brand-700 font-bold">Operations & Coordination</p>
-            <p class="text-sm text-slate-700 mt-3 leading-relaxed">
-              Day-to-day operations are coordinated by the Chair; handling ISPE liaison, multi-country study governance, and collaborative protocols.
-            </p>
-          </div>
-        </article>
-      </div>
-
-      <!-- Education branch -->
-      <div class="flex flex-col items-center">
-        <div class="hidden md:block w-px h-8 bg-slate-300"></div>
-        <div class="md:hidden w-px h-5 bg-slate-300"></div>
-        <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm w-full">
-          <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-accent-500 to-brand-500"></div>
-          <div class="p-5 pl-7">
-            <p class="text-[10px] uppercase tracking-[0.25em] text-brand-700 font-bold">Academic & Education</p>
-            <p class="text-sm text-slate-700 mt-3 leading-relaxed">
-              Develops educational resources, organises webinars and workshops, and mentors early-career epidemiologists across AsPEN member sites; supporting capacity building and knowledge exchange.
-            </p>
-          </div>
-        </article>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── TIER 4 · Education Lead, under Education only ───────── -->
-  <div class="max-w-4xl mx-auto">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-      <!-- empty column under Operations -->
-      <div class="hidden md:block"></div>
-
-      <div class="flex flex-col items-center">
-        <!-- vertical drop from Education card -->
-        <div class="w-px h-8 bg-slate-300"></div>
-        <div class="w-full sm:w-1/2">
-          <LeaderCard m={educationLead} />
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      {branches.map((b) => (
+        <div class="flex flex-col items-center">
+          <div class="hidden md:block w-px h-8 bg-slate-300"></div>
+          <div class="md:hidden w-px h-5 bg-slate-300"></div>
+          <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm w-full md:min-h-[14.5rem]">
+            <div class={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b ${b.bar}`}></div>
+            <div class="p-5 pl-7">
+              <p class="text-[10px] uppercase tracking-[0.25em] text-brand-700 font-bold">{b.title}</p>
+              <p class="text-sm text-slate-700 mt-3 leading-relaxed">{b.text}</p>
+            </div>
+          </article>
+          {b.lead && (
+            <>
+              <div class="w-px h-8 bg-slate-300"></div>
+              <div class="w-full"><LeaderCard m={b.lead} /></div>
+            </>
+          )}
         </div>
-      </div>
+      ))}
     </div>
   </div>
 </div>
