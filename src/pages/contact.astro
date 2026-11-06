@@ -81,24 +81,48 @@ const linkedinGroups = [
         AsPEN provides one coordinated channel across 20+ population-level databases in Asia-Pacific and partner sites in the UK, US, and Europe. The network's standing methodological expertise covers signal-detection, drug utilisation, and effectiveness or safety comparison.
       </p>
 
-      <!-- What fits well -->
+      <!-- What fits well: three themed boxes, two items each -->
       <div class="mt-10">
         <h3 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-4">What fits well</h3>
-        <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 list-none pl-0">
+        <div class="grid gap-4 md:grid-cols-3">
           {[
-            { t: "Drug utilisation",       d: "Drug-utilisation comparisons across health systems" },
-            { t: "Safety signals",         d: "Multi-country drug-safety signal assessment" },
-            { t: "Validation",             d: "Cross-national validation studies in different healthcare settings" },
-            { t: "Vulnerable populations", d: "Pregnancy, paediatric, older-adult and other vulnerable population safety where Asian databases are under-represented" },
-            { t: "Distributed network",    d: "Studies run on a common data model" },
-            { t: "Regulatory and policy",  d: "Questions where cross-jurisdiction evidence supports decision-making" },
-          ].map((f) => (
-            <li class="border border-slate-200 rounded-lg bg-white p-4 border-l-4 border-l-brand-500">
-              <p class="font-semibold text-slate-900 text-sm">{f.t}</p>
-              <p class="mt-1 text-sm text-slate-600 leading-relaxed">{f.d}</p>
-            </li>
+            {
+              title: "Clinical & Safety Assessments",
+              items: [
+                { t: "Drug utilisation", d: "Drug-utilisation comparisons across health systems" },
+                { t: "Safety signals",   d: "Multi-country drug-safety signal assessment" },
+              ],
+            },
+            {
+              title: "Methodological Robustness",
+              items: [
+                { t: "Validation",          d: "Cross-national validation studies in different healthcare settings" },
+                { t: "Distributed network", d: "Studies run on a common data model" },
+              ],
+            },
+            {
+              title: "Strategic Impact & Targeted Populations",
+              items: [
+                { t: "Vulnerable populations", d: "Pregnancy, paediatric, older-adult and other vulnerable population safety where Asian databases are under-represented" },
+                { t: "Regulatory and policy",  d: "Questions where cross-jurisdiction evidence supports decision-making" },
+              ],
+            },
+          ].map((g) => (
+            <div class="rounded-3xl bg-gradient-to-br from-brand-100/70 via-brand-50/70 to-white p-6 sm:p-7">
+              <h4 class="text-center text-lg font-bold text-slate-900 leading-snug md:min-h-[5.25rem] flex items-center justify-center">
+                <span class="max-w-[14rem]">{g.title}</span>
+              </h4>
+              <ul class="mt-5 border-l-4 border-brand-500/40 pl-5 space-y-6 list-none">
+                {g.items.map((f, i) => (
+                  <li class={i === 0 ? "md:min-h-[7.5rem]" : ""}>
+                    <p class="font-bold text-slate-900">{f.t}</p>
+                    <p class="mt-1 text-sm text-slate-600 leading-relaxed">{f.d}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
 
       <!-- Process -->
@@ -143,7 +167,7 @@ const linkedinGroups = [
           },
           {
             title: "What AsPEN provides",
-            tone: "border-brand-200 bg-brand-50/50",
+            tone: "border-brand-100 bg-brand-50/60",
             items: [
               "Site recruitment across the network; one channel, many databases.",
               "Methodological consultation across the toolkit listed below.",
