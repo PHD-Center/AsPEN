@@ -51,7 +51,7 @@
     "since": 2012,
     "popM": 0.2,
     "lagMonths": 5,
-    "features": ["labs", "genomics"]
+    "features": ["labs", "genomics", "lifestyle"]
   },
   {
     "country": "South Korea",
@@ -84,7 +84,7 @@
     "since": 2002,
     "popM": 50,
     "lagMonths": 7,
-    "features": ["rx", "dx", "labs", "mortality", "cancer", "pregnancy"]
+    "features": ["rx", "dx", "labs", "mortality", "cancer", "pregnancy", "lifestyle"]
   },
   {
     "country": "Japan",
@@ -100,7 +100,7 @@
     "since": 2008,
     "popM": 120,
     "lagMonths": 24,
-    "features": ["rx", "dx"]
+    "features": ["rx", "dx", "lifestyle"]
   },
   {
     "country": "Japan",
@@ -116,7 +116,7 @@
     "since": 2005,
     "popM": 18.3,
     "lagMonths": 5,
-    "features": ["rx", "dx", "labs", "pregnancy"]
+    "features": ["rx", "dx", "labs", "pregnancy", "lifestyle"]
   },
   {
     "country": "Japan",
@@ -132,7 +132,7 @@
     "since": 2014,
     "popM": 20.04,
     "lagMonths": 1,
-    "features": ["rx", "dx", "labs"]
+    "features": ["rx", "dx", "labs", "lifestyle"]
   },
   {
     "country": "Japan",
@@ -197,7 +197,7 @@
     "since": 1987,
     "popM": 60,
     "lagMonths": 1,
-    "features": ["rx", "dx", "mortality", "cancer", "pregnancy"]
+    "features": ["rx", "dx", "labs", "mortality", "cancer", "pregnancy", "lifestyle"]
   },
   {
     "country": "United Kingdom",
@@ -214,7 +214,7 @@
     "since": 1986,
     "popM": 17,
     "lagMonths": 4,
-    "features": ["rx", "dx"]
+    "features": ["rx", "dx", "labs", "lifestyle"]
   },
   {
     "country": "United Kingdom",
@@ -231,7 +231,7 @@
     "since": 2005,
     "popM": 0.5,
     "lagMonths": 18,
-    "features": ["labs", "imaging", "mortality", "cancer", "genomics"]
+    "features": ["labs", "imaging", "mortality", "cancer", "genomics", "lifestyle"]
   },
   {
     "country": "United Kingdom",

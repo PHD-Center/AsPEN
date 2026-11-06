@@ -42,6 +42,7 @@ content:
             - { value: cancer,    label: "Cancer-registry linkage" }
             - { value: pregnancy, label: "Birth / pregnancy linkage" }
             - { value: genomics,  label: "Genomics / biobank linkage" }
+            - { value: lifestyle, label: "Lifestyle (smoking, alcohol, BMI)" }
 
   - name: publications
     label: Publications

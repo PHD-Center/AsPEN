@@ -475,6 +475,7 @@ const otherSites = [
           { id: "cancer",    short: "Can",  label: "Cancer-registry linkage" },
           { id: "pregnancy", short: "Preg", label: "Birth / pregnancy linkage" },
           { id: "genomics",  short: "Gen",  label: "Genomics / biobank linkage" },
+          { id: "lifestyle", short: "Life", label: "Lifestyle (smoking, alcohol, BMI)" },
         ];
 
         // Render helpers shared by all 3 charts
@@ -682,8 +683,8 @@ const otherSites = [
 
         // ── Chart 3: Data scope; what kinds of data each DB actually carries.
         // Matrix: rows = selected DBs (sorted by feature richness, most-loaded
-        // on top), columns = the 8 FEATURES (Rx / Dx / Lab / Img / Mor / Can /
-        // Preg / Gen). Each cell is a filled (●) or empty (○) circle indicating
+        // on top), columns = the 9 FEATURES (Rx / Dx / Lab / Img / Mor / Can /
+        // Preg / Gen / Life). Each cell is a filled (●) or empty (○) circle indicating
         // whether that DB has that feature. Column headers carry full tooltips
         // for the short codes.
         const buildScopeChart = (items) => {
@@ -708,7 +709,7 @@ const otherSites = [
               `;
             }).join("");
             return `
-              <div class="grid grid-cols-[minmax(0,110px)_repeat(8,minmax(0,1fr))] items-center gap-1 py-1.5 hover:bg-brand-50/40 rounded transition">
+              <div class="grid grid-cols-[minmax(0,110px)_repeat(9,minmax(0,1fr))] items-center gap-1 py-1.5 hover:bg-brand-50/40 rounded transition">
                 <a href="#${esc(d.anchor)}" class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-800 hover:text-brand-700 hover:underline truncate" title="${esc(d.name)}">
                   <span class="text-sm leading-none shrink-0" aria-hidden="true">${esc(d.flag)}</span>
                   <span class="truncate">${esc(shortName(d.name))}</span>
@@ -720,7 +721,7 @@ const otherSites = [
 
           // Header row (matches the grid columns of the data rows)
           const headerRow = `
-            <div class="grid grid-cols-[minmax(0,110px)_repeat(8,minmax(0,1fr))] items-center gap-1 pb-1 mb-1 border-b border-slate-100">
+            <div class="grid grid-cols-[minmax(0,110px)_repeat(9,minmax(0,1fr))] items-center gap-1 pb-1 mb-1 border-b border-slate-100">
               <span></span>
               ${headerCells}
             </div>
