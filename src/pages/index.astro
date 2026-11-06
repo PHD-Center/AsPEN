@@ -42,13 +42,15 @@ const primaryNames = [
   "Clinical Practice Research Datalink (CPRD)",
   "Medicare (20% sample)",
 ];
-const flags: Record<string, string> = {
-  Taiwan: "🇹🇼",
-  Japan: "🇯🇵",
-  "South Korea": "🇰🇷",
-  "Hong Kong": "🇭🇰",
-  "United Kingdom": "🇬🇧",
-  "United States": "🇺🇸",
+// ISO codes for the flag images (flagcdn.com, as on the map). Emoji flags
+// do not render on Windows, where they show as two letters.
+const flagCodes: Record<string, string> = {
+  Taiwan: "tw",
+  Japan: "jp",
+  "South Korea": "kr",
+  "Hong Kong": "hk",
+  "United Kingdom": "gb",
+  "United States": "us",
 };
 const featured = primaryNames
   .map((name) => databases.find((d) => d.name === name))
@@ -136,8 +138,18 @@ const countries = featured.length;
             href={`${base}/databases/#${anchor}`}
             class="group block border border-slate-200 rounded-lg p-5 hover:shadow-md hover:border-brand-400 transition bg-white"
           >
-            <p class="text-xs font-semibold text-brand-600 uppercase tracking-wide flex items-center gap-1.5">
-              <span class="text-base leading-none">{flags[d.country] ?? "🏳️"}</span>
+            <p class="text-xs font-semibold text-brand-600 uppercase tracking-wide flex items-center gap-2">
+              {flagCodes[d.country] && (
+                <img
+                  src={`https://flagcdn.com/w40/${flagCodes[d.country]}.png`}
+                  srcset={`https://flagcdn.com/w80/${flagCodes[d.country]}.png 2x`}
+                  alt=""
+                  width="24"
+                  height="16"
+                  loading="lazy"
+                  class="w-6 h-4 rounded-[2px] object-cover shrink-0 ring-1 ring-slate-200"
+                />
+              )}
               {d.country}
             </p>
             <p class="mt-2 font-semibold text-slate-900 leading-snug group-hover:text-brand-700 transition">{d.name}</p>

@@ -82,15 +82,22 @@ const linkedinGroups = [
       </p>
 
       <!-- What fits well -->
-      <div class="mt-10 max-w-3xl">
-        <h3 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-3">What fits well</h3>
-        <ul class="space-y-1.5 text-sm text-slate-700">
-          <li>Drug-utilisation comparisons across health systems</li>
-          <li>Multi-country drug-safety signal assessment</li>
-          <li>Cross-national validation studies in different healthcare settings</li>
-          <li>Pregnancy / paediatric / older-adult / other vulnerable population safety where Asian databases are under-represented</li>
-          <li>Distributed network (common data model)</li>
-          <li>Regulatory or policy questions where cross-jurisdiction evidence supports decision-making</li>
+      <div class="mt-10">
+        <h3 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-4">What fits well</h3>
+        <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 list-none pl-0">
+          {[
+            { t: "Drug utilisation",       d: "Drug-utilisation comparisons across health systems" },
+            { t: "Safety signals",         d: "Multi-country drug-safety signal assessment" },
+            { t: "Validation",             d: "Cross-national validation studies in different healthcare settings" },
+            { t: "Vulnerable populations", d: "Pregnancy, paediatric, older-adult and other vulnerable population safety where Asian databases are under-represented" },
+            { t: "Distributed network",    d: "Studies run on a common data model" },
+            { t: "Regulatory and policy",  d: "Questions where cross-jurisdiction evidence supports decision-making" },
+          ].map((f) => (
+            <li class="border border-slate-200 rounded-lg bg-white p-4 border-l-4 border-l-brand-500">
+              <p class="font-semibold text-slate-900 text-sm">{f.t}</p>
+              <p class="mt-1 text-sm text-slate-600 leading-relaxed">{f.d}</p>
+            </li>
+          ))}
         </ul>
       </div>
 
@@ -122,25 +129,41 @@ const linkedinGroups = [
       </div>
 
       <!-- Bring / provide -->
-      <div class="mt-10 grid gap-6 md:grid-cols-2">
-        <div>
-          <h3 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-3">What you bring</h3>
-          <ul class="space-y-1.5 text-sm text-slate-700">
-            <li>A clearly-scoped research question and draft analysis plan.</li>
-            <li>Willingness to lead protocol drafting and meta-analysis.</li>
-            <li>Database access at your home institution (see FAQ for who this applies to).</li>
-            <li>ISPE membership and a recommendation from a current AsPEN member (both required for AsPEN membership).</li>
-          </ul>
-        </div>
-        <div>
-          <h3 class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-3">What AsPEN provides</h3>
-          <ul class="space-y-1.5 text-sm text-slate-700">
-            <li>Site recruitment across the network; one channel, many databases.</li>
-            <li>Methodological consultation across the toolkit listed below.</li>
-            <li>Protocol review at SIG meetings and ISPE.</li>
-            <li>Multi-site authorship and publication coordination.</li>
-          </ul>
-        </div>
+      <div class="mt-10 grid gap-4 md:grid-cols-2">
+        {[
+          {
+            title: "What you bring",
+            tone: "border-slate-200 bg-slate-50",
+            items: [
+              "A clearly-scoped research question and draft analysis plan.",
+              "Willingness to lead protocol drafting and meta-analysis.",
+              "Database access at your home institution (see FAQ for who this applies to).",
+              "ISPE membership and a recommendation from a current AsPEN member (both required for AsPEN membership).",
+            ],
+          },
+          {
+            title: "What AsPEN provides",
+            tone: "border-brand-200 bg-brand-50/50",
+            items: [
+              "Site recruitment across the network; one channel, many databases.",
+              "Methodological consultation across the toolkit listed below.",
+              "Protocol review at SIG meetings and ISPE.",
+              "Multi-site authorship and publication coordination.",
+            ],
+          },
+        ].map((box) => (
+          <div class={`border rounded-lg p-5 ${box.tone}`}>
+            <h3 class="text-xs uppercase tracking-widest text-brand-700 font-bold mb-3">{box.title}</h3>
+            <ul class="space-y-2 text-sm text-slate-700 list-none pl-0">
+              {box.items.map((it) => (
+                <li class="flex gap-2.5">
+                  <span class="mt-[7px] shrink-0 w-1.5 h-1.5 rounded-full bg-brand-500" aria-hidden="true"></span>
+                  <span>{it}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
 
       <!-- Methods we apply -->
@@ -149,20 +172,44 @@ const linkedinGroups = [
         <p class="text-sm text-slate-600 max-w-3xl mb-5">
           AsPEN studies draw on a broad design and analytic toolkit chosen to fit the question, the available data, and the multi-country setting.
         </p>
-        <dl class="grid gap-x-8 gap-y-4 sm:grid-cols-2 text-sm">
+
+        <!-- Study design holds the design families; the other two boxes sit beside each other below it. -->
+        <div class="border border-slate-200 rounded-lg bg-white p-5">
+          <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wide">Study design</h4>
+          <div class="mt-4 grid gap-x-8 gap-y-5 sm:grid-cols-2">
+            {[
+              { cat: "Cohort and trial emulation", items: ["Active Comparator / New User", "Target Trial Emulation", "Sequential Trial Emulation"] },
+              { cat: "Self-controlled",            items: ["Prescription Sequence Symmetry Analysis (PSSA)", "Self-Controlled Case Series (SCCS)"] },
+              { cat: "Quasi-experimental",         items: ["Regression Discontinuity Design (RDD)", "Difference-in-Differences (DID)", "Instrumental Variable (IV)", "Trend-in-Trend (TIT)", "Proximal Causal Inference"] },
+              { cat: "Trajectory",                 items: ["Group-based trajectory modeling"] },
+            ].map((g) => (
+              <div>
+                <p class="text-sm font-semibold text-brand-700">{g.cat}</p>
+                <ul class="mt-2 flex flex-wrap gap-1.5 list-none pl-0">
+                  {g.items.map((it) => (
+                    <li class="text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1">{it}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div class="mt-4 grid gap-4 md:grid-cols-2">
           {[
-            { cat: "Study design", items: "Active Comparator / New User · Target Trial Emulation · Sequential Trial Emulation" },
-            { cat: "Quasi-experimental", items: "Regression Discontinuity Design (RDD) · Difference-in-Differences (DID) · Instrumental Variable (IV) · Trend-in-Trend (TIT) · Proximal Causal Inference" },
-            { cat: "Self-controlled / signal detection", items: "Prescription Sequence Symmetry Analysis (PSSA) · Self-Controlled Case Series (SCCS)" },
-            { cat: "Confounding control", items: "Propensity Score Matching / IPTW · Clone-Censor-Weight (CCW) · Machine-learning–based confounding adjustment (Causal Forest, TMLE, Doubly Robust)" },
-            { cat: "Trajectory & data infrastructure", items: "Group-based trajectory modeling · Common Data Models (CDM)" },
-          ].map((m) => (
-            <div>
-              <dt class="text-xs font-bold text-slate-800 uppercase tracking-wide">{m.cat}</dt>
-              <dd class="mt-1 text-slate-700 leading-relaxed">{m.items}</dd>
+            { cat: "Confounding control", items: ["Propensity Score Matching / IPTW", "Clone-Censor-Weight (CCW)", "Machine-learning–based confounding adjustment (Causal Forest, TMLE, Doubly Robust)"] },
+            { cat: "Data infrastructure", items: ["Common Data Models (CDM)"] },
+          ].map((g) => (
+            <div class="border border-slate-200 rounded-lg bg-white p-5">
+              <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wide">{g.cat}</h4>
+              <ul class="mt-3 flex flex-wrap gap-1.5 list-none pl-0">
+                {g.items.map((it) => (
+                  <li class="text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1">{it}</li>
+                ))}
+              </ul>
             </div>
           ))}
-        </dl>
+        </div>
       </div>
 
       <!-- FAQ -->
