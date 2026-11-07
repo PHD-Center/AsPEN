@@ -1,10 +1,10 @@
 ---
 // AsPEN Governance; org chart
 // Tier 1: Chair (top, centered)
-// Tier 1: Chair, with the Chair-Elect beside
+// Tier 1: Chair
 // Tier 2: Academic & Education Office | Communications & Engagement Office
 // Tier 3: an office's lead, under it
-// The Immediate Past Chair is introduced in the About page's Leadership section only.
+// The Chair-Elect and Immediate Past Chair are introduced in the About page's Leadership section only.
 import LeaderCard from "./LeaderCard.astro";
 import type { Leader } from "./LeaderCard.astro";
 
@@ -17,14 +17,6 @@ const chair: Leader = {
   photo: "Daniel.jpeg",
   orcid: "0000-0003-2841-0338",
   profile: "https://www.researchgate.net/profile/Daniel-Tsai-8",
-};
-
-const chairElect: Leader = {
-  name: "Shiori Nishimura",
-  role: "Chair-Elect",
-  inst: "Yokohama City University",
-  orcid: "0000-0003-1319-3158",
-  note: "Succession and leadership support",
 };
 
 const educationLead: Leader = {
@@ -60,8 +52,7 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
 <div class="not-prose my-8">
   <!-- ── TIER 1 · CHAIR ──────────────────────────────────────── -->
   <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold mb-3 text-center">Chair</p>
-  <div class="max-w-4xl mx-auto grid gap-4 md:grid-cols-[1fr_15rem] items-stretch">
-  <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm">
+  <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm max-w-4xl mx-auto">
     <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-accent-500 via-brand-500 to-brand-700"></div>
     <div class="flex flex-col sm:flex-row items-center sm:items-stretch gap-5 sm:gap-6 p-5 sm:p-7 pl-7 sm:pl-9">
       <div class="shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden bg-brand-50 border border-slate-200">
@@ -95,8 +86,6 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
       </div>
     </div>
   </article>
-  <LeaderCard m={chairElect} />
-  </div>
 
   <!-- vertical drop from the chair to the offices -->
   <div class="flex justify-center"><div class="w-px h-8 bg-slate-300"></div></div>
