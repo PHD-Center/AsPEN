@@ -1,9 +1,10 @@
 ---
 // AsPEN Governance; org chart
 // Tier 1: Chair (top, centered)
-// Tier 2: Academic & Education | Operations & Coordination | Network & Partnerships
-// Tier 3: Education Lead (under Academic & Education only)
-// Everyone else in the leadership is introduced in the About page's Leadership section.
+// Tier 1: Chair, with the Chair-Elect beside
+// Tier 2: Academic & Education Office | Communications & Engagement Office
+// Tier 3: an office's lead, under it
+// The Immediate Past Chair is introduced in the About page's Leadership section only.
 import LeaderCard from "./LeaderCard.astro";
 import type { Leader } from "./LeaderCard.astro";
 
@@ -18,6 +19,14 @@ const chair: Leader = {
   profile: "https://www.researchgate.net/profile/Daniel-Tsai-8",
 };
 
+const chairElect: Leader = {
+  name: "Shiori Nishimura",
+  role: "Chair-Elect",
+  inst: "Yokohama City University",
+  orcid: "0000-0003-1319-3158",
+  note: "Succession and leadership support",
+};
+
 const educationLead: Leader = {
   name: "Edward Lai",
   role: "Education Lead",
@@ -30,23 +39,18 @@ const educationLead: Leader = {
   profile: "https://researchoutput.ncku.edu.tw/en/persons/edward-lai/",
 };
 
-// The three working branches under the Chair. A branch may name its lead.
-const branches: { title: string; text: string; bar: string; lead?: Leader }[] = [
+// The two functional offices under the Chair. An office may name its lead.
+const offices: { title: string; text: string; bar: string; lead?: Leader }[] = [
   {
-    title: "Academic & Education",
-    text: "Develops educational resources, organises webinars and workshops, and mentors early-career epidemiologists across AsPEN member sites; supporting capacity building and knowledge exchange.",
+    title: "Academic & Education Office",
+    text: "Scientific programmes, workshops, education, and research initiatives; mentoring early-career researchers across AsPEN member sites.",
     bar: "from-accent-500 to-brand-500",
     lead: educationLead,
   },
   {
-    title: "Operations & Coordination",
-    text: "Day-to-day operations are coordinated by the Chair; handling ISPE liaison, multi-country study governance, and collaborative protocols.",
+    title: "Communications & Engagement Office",
+    text: "External communications, public relations, membership, and outreach.",
     bar: "from-brand-500 to-brand-700",
-  },
-  {
-    title: "Network & Partnerships",
-    text: "Links AsPEN with partner networks and regional groups, and supports new member sites joining multi-country studies.",
-    bar: "from-brand-700 to-accent-500",
   },
 ];
 
@@ -56,7 +60,8 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
 <div class="not-prose my-8">
   <!-- ── TIER 1 · CHAIR ──────────────────────────────────────── -->
   <p class="text-[10px] uppercase tracking-[0.25em] text-brand-600 font-bold mb-3 text-center">Chair</p>
-  <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm max-w-4xl mx-auto">
+  <div class="max-w-4xl mx-auto grid gap-4 md:grid-cols-[1fr_15rem] items-stretch">
+  <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm">
     <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-accent-500 via-brand-500 to-brand-700"></div>
     <div class="flex flex-col sm:flex-row items-center sm:items-stretch gap-5 sm:gap-6 p-5 sm:p-7 pl-7 sm:pl-9">
       <div class="shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-xl overflow-hidden bg-brand-50 border border-slate-200">
@@ -70,7 +75,7 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
         <p class="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">{chair.name}</p>
         <p class="text-sm sm:text-base text-slate-600 mt-1">{chair.inst}</p>
         <p class="text-sm text-slate-600 mt-3 leading-relaxed max-w-2xl">
-          Coordinates AsPEN's programme strategy, ISPE liaison, and multi-country study governance.
+          Strategy, governance, operations, and ISPE liaison.
         </p>
         {(chair.orcid || chair.profile) && (
           <div class="mt-4 flex flex-wrap gap-2 justify-center sm:justify-start">
@@ -90,21 +95,23 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
       </div>
     </div>
   </article>
+  <LeaderCard m={chairElect} />
+  </div>
 
-  <!-- vertical drop from the chair to the branches -->
+  <!-- vertical drop from the chair to the offices -->
   <div class="flex justify-center"><div class="w-px h-8 bg-slate-300"></div></div>
 
-  <!-- ── TIER 2 · three branches; TIER 3 · a branch's lead under it ── -->
+  <!-- ── TIER 2 · two offices; TIER 3 · an office's lead under it ── -->
   <div class="relative max-w-4xl mx-auto">
-    <!-- horizontal connector across the three branches (desktop only) -->
-    <div class="hidden md:block absolute top-0 left-[16.666%] right-[16.666%] h-px bg-slate-300"></div>
+    <!-- horizontal connector across the two offices (desktop only) -->
+    <div class="hidden md:block absolute top-0 left-1/4 right-1/4 h-px bg-slate-300"></div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-      {branches.map((b) => (
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      {offices.map((b) => (
         <div class="flex flex-col items-center">
           <div class="hidden md:block w-px h-8 bg-slate-300"></div>
           <div class="md:hidden w-px h-5 bg-slate-300"></div>
-          <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm w-full md:min-h-[14.5rem]">
+          <article class="relative overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-sm w-full md:min-h-[9rem]">
             <div class={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b ${b.bar}`}></div>
             <div class="p-5 pl-7">
               <p class="text-[10px] uppercase tracking-[0.25em] text-brand-700 font-bold">{b.title}</p>

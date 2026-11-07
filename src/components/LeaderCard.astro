@@ -11,6 +11,8 @@ export interface Leader {
   orcid?: string;
   /** Personal / institutional / Scholar profile URL */
   profile?: string;
+  /** One short line on what the role covers */
+  note?: string;
 }
 interface Props {
   m: Leader;
@@ -37,6 +39,7 @@ const initials = (n: string) => n.split(" ").map((p) => p[0]).slice(0, 2).join("
     <p class="font-bold text-slate-900 text-base whitespace-nowrap">{m.name}</p>
     <p class="text-sm text-brand-700 font-medium mt-1 whitespace-nowrap">{m.role}</p>
     <p class="text-xs text-slate-500 mt-0.5">{m.inst}</p>
+    {m.note && <p class="text-xs text-slate-600 mt-2 leading-snug">{m.note}</p>}
   </div>
   {(m.orcid || m.profile) && (
     <div class="mt-1 flex items-center justify-center gap-2">
