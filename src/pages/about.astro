@@ -153,7 +153,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       <div class="shrink-0 mx-auto md:mx-0">
         <div class="relative">
           <div class="absolute -inset-2 bg-gradient-to-br from-accent-500/15 to-brand-500/15 rounded-2xl blur-lg"></div>
-          <div class="relative w-52 h-64 rounded-2xl shadow-md border border-slate-200 bg-brand-50 grid place-items-center text-brand-700 font-bold text-5xl" aria-hidden="true">SN</div>
+          <img
+            src={`${base}/images/Shiori.jpg`}
+            alt="Shiori Nishimura"
+            class="relative w-52 h-64 object-cover object-top rounded-2xl shadow-md border border-slate-200"
+          />
         </div>
       </div>
       <div>
@@ -161,7 +165,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         <h3 class="mt-1 text-3xl font-bold text-slate-900">Shiori Nishimura</h3>
         <p class="mt-1 text-slate-600">Yokohama City University, Graduate School of Data Science</p>
         <p class="mt-5 text-slate-700 leading-relaxed">
-          Dr Shiori Nishimura is a Project Assistant Professor at the Graduate School of Data Science, Yokohama City University, Japan. She trained in health policy and management at Keio University, where she earned her PhD in pharmacoepidemiology, and worked in the Department of Healthcare Quality Assessment at the University of Tokyo before joining Yokohama City University in 2025. Her research uses Japanese claims and registry data to study medication use and safety in cardiovascular medicine, including frailty and clinical outcomes in older adults with atrial fibrillation and heart failure, and the comparative safety of biologic and targeted synthetic disease-modifying antirheumatic drugs.
+          Dr Shiori Nishimura is a Project Assistant Professor at the Graduate School of Data Science, Yokohama City University, Japan. She earned her PhD in Healthcare Management from Keio University. Before joining Yokohama City University in 2025, she worked in the Department of Healthcare Quality Assessment at the University of Tokyo. Her research focuses on pharmacoepidemiology using large-scale Japanese healthcare claims and clinical registry data. Her work includes studies of medication use, safety, frailty, and clinical outcomes among older adults with atrial fibrillation and heart failure, as well as the comparative safety of biologic and targeted synthetic disease-modifying antirheumatic drugs.
         </p>
         <div class="mt-4 flex flex-wrap gap-2">
           <a href="https://orcid.org/0000-0003-1319-3158" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-slate-300 text-xs font-medium text-slate-700 hover:border-[#A6CE39] hover:text-slate-900 transition" aria-label="Shiori Nishimura ORCID profile">
