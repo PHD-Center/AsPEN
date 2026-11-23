@@ -56,7 +56,16 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">Meetings</p>
         <ul data-minutes-nav class="space-y-1"></ul>
       </nav>
-      <article data-minutes-body class="min-w-0 border border-slate-200 rounded-2xl bg-white shadow-sm px-6 py-6 sm:px-8"></article>
+      <div class="min-w-0 space-y-3">
+        <div class="flex justify-end">
+          <button type="button" data-export-word data-logo={`${base}/images/AsPenLogo.png`}
+                  class="inline-flex items-center gap-2 border border-slate-300 bg-white text-slate-700 hover:border-brand-500 hover:text-brand-700 font-semibold px-3 py-1.5 rounded text-sm transition disabled:opacity-60 disabled:cursor-wait">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span data-export-label>Download as Word</span>
+          </button>
+        </div>
+        <article data-minutes-body class="min-w-0 border border-slate-200 rounded-2xl bg-white shadow-sm px-6 py-6 sm:px-8"></article>
+      </div>
     </div>
   </section>
 
@@ -110,6 +119,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 
       const show = (i) => {
         body.innerHTML = docs[i].html;
+        body.dataset.docId = docs[i].id;
         nav.querySelectorAll("button").forEach((b, j) => {
           b.classList.toggle("bg-brand-50", j === i);
           b.classList.toggle("text-brand-800", j === i);
@@ -170,5 +180,27 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
       };
       refresh();
     })();
+  </script>
+
+  <script>
+    // Word export. The converter and the docx library load on first click.
+    const btn = document.querySelector<HTMLButtonElement>("[data-export-word]");
+    const label = btn?.querySelector<HTMLElement>("[data-export-label]");
+    btn?.addEventListener("click", async () => {
+      const body = document.querySelector<HTMLElement>("[data-minutes-body]");
+      if (!body || !body.children.length) return;
+      btn.disabled = true;
+      if (label) label.textContent = "Preparing…";
+      try {
+        const { exportMinutes } = await import("../../scripts/minutes-docx");
+        await exportMinutes(body, { id: body.dataset.docId || "", logoUrl: btn.dataset.logo || "" });
+      } catch (err) {
+        console.error(err);
+        alert("Couldn't create the Word file.");
+      } finally {
+        btn.disabled = false;
+        if (label) label.textContent = "Download as Word";
+      }
+    });
   </script>
 </BaseLayout>
