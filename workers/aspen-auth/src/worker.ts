@@ -16,6 +16,8 @@
  *
  * Backend: PHD-Center/aspen-members private GitHub repo holds
  * members.json (read+write) and papers/, materials/ (read-only proxy).
+ * leadership/ holds leadership-meeting minutes; only members flagged
+ * `leadership` in members.json can list or read it.
  *
  * Secrets (set with `wrangler secret put <NAME>`):
  *   GITHUB_PAT       Fine-grained PAT, scoped to MEMBERS_REPO.
@@ -75,6 +77,9 @@ interface Member {
   passwordHash?: string;
   /** If true, this member can review pending uploads and approve/reject. */
   admin?: boolean;
+  /** If true, this member can read the leadership/ folder (meeting minutes).
+      Not implied by admin or super admin: the Chair grants it by name. */
+  leadership?: boolean;
 }
 
 /** Every address a member can sign in with, primary first, all lowercased. */
@@ -298,6 +303,7 @@ async function handleMe(req: Request, env: Env): Promise<Response> {
       // Super admins are always admin regardless of the file.
       isAdmin: Boolean(member.admin) || superAdmin,
       isSuperAdmin: superAdmin,
+      isLeadership: Boolean(member.leadership),
     },
   });
 }
@@ -484,13 +490,14 @@ async function handleList(req: Request, env: Env, prefix: string): Promise<Respo
   if (clean.includes("..") || clean.startsWith("/")) {
     return jsonResponse({ ok: false }, 400);
   }
-  if (clean !== "papers" && clean !== "materials") {
+  if (clean !== "papers" && clean !== "materials" && clean !== "leadership") {
     return jsonResponse({ ok: false }, 403);
   }
 
   const { members } = await fetchMembersJson(env);
   const member = members.find((m) => m.email.toLowerCase() === email);
   if (!member || member.status !== "active") return jsonResponse({ ok: false }, 401);
+  if (clean === "leadership" && !member.leadership) return jsonResponse({ ok: false }, 403);
 
   // Use the recursive git tree endpoint — single call gets every file under the prefix.
   const url = `https://api.github.com/repos/${env.MEMBERS_REPO}/git/trees/${env.MEMBERS_BRANCH}?recursive=1`;
@@ -1620,6 +1627,8 @@ async function handleAdminMembersUpsert(req: Request, env: Env): Promise<Respons
     role?: string;
     status?: Member["status"];
     admin?: boolean;
+    /** Leadership-folder access. Only a super admin may change it. */
+    leadership?: boolean;
     /** Replace the member's primary address (`email` names who to edit). */
     newEmail?: string;
     /** Replace the member's list of additional sign-in addresses. */
@@ -1710,6 +1719,12 @@ async function handleAdminMembersUpsert(req: Request, env: Env): Promise<Respons
   if (typeof body?.role === "string")        next.role = body.role.trim() || undefined;
   next.status = status;
   if (typeof body?.admin === "boolean")      next.admin = body.admin || undefined;
+  if (typeof body?.leadership === "boolean") {
+    if (!isSuperAdmin(acting.email, env)) {
+      return jsonResponse({ ok: false, error: "Only a super admin can change leadership access." }, 403);
+    }
+    next.leadership = body.leadership || undefined;
+  }
   if (wantsPrimaryChange)                    next.email = finalPrimary;
   if (wantsPrimaryChange || wantsAltChange)  next.altEmails = alt.length ? alt : undefined;
 
@@ -1971,13 +1986,14 @@ async function handleContent(req: Request, env: Env, path: string): Promise<Resp
   if (!email) return new Response("Unauthorized", { status: 401 });
 
   if (path.includes("..") || path.startsWith("/")) return new Response("Bad request", { status: 400 });
-  if (!path.startsWith("papers/") && !path.startsWith("materials/")) {
+  if (!path.startsWith("papers/") && !path.startsWith("materials/") && !path.startsWith("leadership/")) {
     return new Response("Forbidden", { status: 403 });
   }
 
   const { members } = await fetchMembersJson(env);
   const member = members.find((m) => m.email.toLowerCase() === email);
   if (!member || member.status !== "active") return new Response("Unauthorized", { status: 401 });
+  if (path.startsWith("leadership/") && !member.leadership) return new Response("Forbidden", { status: 403 });
 
   return fetchMemberFile(env, path);
 }

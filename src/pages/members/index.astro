@@ -45,6 +45,13 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
         <p class="mt-1 text-sm text-slate-600">ISPE, ACPE, AsPEN teleconferences, abstract deadlines; subscribe in Google Calendar / Outlook.</p>
       </a>
 
+      <!-- ── Leadership-only card (hidden unless isLeadership) ── -->
+      <a data-leadership-card href={`${base}/members/leadership/`} class="hidden group block border border-brand-500/40 rounded-lg p-5 bg-gradient-to-br from-brand-50/60 to-white hover:shadow-md hover:border-brand-500 transition">
+        <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold">Leadership</p>
+        <h3 class="mt-2 font-bold text-slate-900 group-hover:text-brand-700 transition">Leadership meetings</h3>
+        <p class="mt-1 text-sm text-slate-600">Minutes and actions from leadership meetings. Shared with the leadership team only.</p>
+      </a>
+
       <!-- ── What's in here ────────────────────────────────── -->
       <!-- Studies tracker + Protocol templates are super-admin-only for
            the launch; internal coordination tools for the chair, not
@@ -267,6 +274,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, "");
               // Admin section (Admin panel card).
               if (data.member.isAdmin) {
                 document.querySelector("[data-admin-card]")?.classList.remove("hidden");
+              }
+
+              // Leadership-meeting minutes: only members the Chair has flagged.
+              if (data.member.isLeadership) {
+                document.querySelector("[data-leadership-card]")?.classList.remove("hidden");
               }
               return;
             }

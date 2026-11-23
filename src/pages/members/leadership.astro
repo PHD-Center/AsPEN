@@ -1,0 +1,174 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PageHeader from "../../components/PageHeader.astro";
+import { WORKER_URL } from "../../data/site-config";
+
+// Leadership-meeting minutes. The files live in the private members repo
+// under leadership/minutes/YYYY-MM-DD-slug.html (one HTML fragment per
+// meeting, first heading = the meeting title). The worker only lists and
+// serves that folder to members flagged `leadership`; this page is just
+// the viewer, so it carries no content of its own.
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+---
+
+<BaseLayout
+  title="Leadership meetings · AsPEN members"
+  description="Minutes and actions from AsPEN leadership meetings."
+>
+  <PageHeader
+    eyebrow="Members → Leadership"
+    title="Leadership meetings"
+    description="Minutes and actions for the AsPEN leadership team."
+  />
+
+  <section class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+    <p class="text-sm">
+      <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/`}>← Members area</a>
+    </p>
+
+    <div data-state="loading" class="text-sm text-slate-600 italic">
+      Loading…
+    </div>
+
+    <div data-state="signed-out" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm text-slate-700">
+        You're not signed in. <a class="text-brand-700 hover:underline font-semibold" href={`${base}/members/login`}>Sign in →</a>
+      </p>
+    </div>
+
+    <div data-state="forbidden" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm font-semibold text-slate-800">This page is for the AsPEN leadership team.</p>
+      <p class="mt-2 text-sm text-slate-600 leading-relaxed">
+        Minutes here are shared with the Chair, Chair-Elect, Immediate Past Chair and office leads. If you expected access, ask the Chair.
+      </p>
+    </div>
+
+    <div data-state="empty" class="hidden border border-slate-200 rounded-lg p-6 bg-slate-50">
+      <p class="text-sm text-slate-700">No minutes yet.</p>
+    </div>
+
+    <div data-state="error" class="hidden border border-rose-300 bg-rose-50 rounded-lg p-6">
+      <p class="text-sm text-rose-800" data-error-msg></p>
+    </div>
+
+    <div data-state="ready" class="hidden grid gap-6 md:grid-cols-[14rem_1fr] items-start">
+      <nav aria-label="Meetings" class="md:sticky md:top-24">
+        <p class="text-xs uppercase tracking-widest text-brand-600 font-semibold mb-2">Meetings</p>
+        <ul data-minutes-nav class="space-y-1"></ul>
+      </nav>
+      <article data-minutes-body class="min-w-0 border border-slate-200 rounded-2xl bg-white shadow-sm px-6 py-6 sm:px-8"></article>
+    </div>
+  </section>
+
+  <style>
+    /* The minutes arrive as plain HTML fragments; style their elements here. */
+    [data-minutes-body] :global(h1) { font-size: 1.5rem; line-height: 1.25; font-weight: 700; color: #0f172a; }
+    [data-minutes-body] :global(h2) { margin-top: 2rem; font-size: 1.0625rem; font-weight: 700; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.375rem; }
+    [data-minutes-body] :global(h3) { margin-top: 1.25rem; font-size: 0.9375rem; font-weight: 600; color: #1e293b; }
+    [data-minutes-body] :global(p) { margin-top: 0.75rem; font-size: 0.9375rem; line-height: 1.65; color: #334155; }
+    [data-minutes-body] :global(ul), [data-minutes-body] :global(ol) { margin-top: 0.75rem; padding-left: 1.5rem; font-size: 0.9375rem; line-height: 1.65; color: #334155; }
+    [data-minutes-body] :global(ul) { list-style: disc; }
+    [data-minutes-body] :global(ol) { list-style: decimal; }
+    [data-minutes-body] :global(li + li) { margin-top: 0.375rem; }
+    [data-minutes-body] :global(dl) { margin-top: 0.75rem; display: grid; grid-template-columns: max-content 1fr; column-gap: 1rem; row-gap: 0.25rem; font-size: 0.9375rem; color: #334155; }
+    [data-minutes-body] :global(dt) { font-weight: 600; color: #0f172a; }
+    [data-minutes-body] :global(table) { margin-top: 1rem; width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    [data-minutes-body] :global(th), [data-minutes-body] :global(td) { text-align: left; vertical-align: top; padding: 0.5rem 0.625rem; border-bottom: 1px solid #e2e8f0; }
+    [data-minutes-body] :global(th) { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; background: #f8fafc; }
+    [data-minutes-body] :global(strong) { font-weight: 600; color: #0f172a; }
+    [data-minutes-body] :global(a) { color: #1d4ed8; text-decoration: underline; }
+    [data-minutes-body] :global(.meta) { margin-top: 0.5rem; font-size: 0.875rem; color: #64748b; }
+  </style>
+
+  <script is:inline define:vars={{ WORKER_URL }}>
+    (() => {
+      const setState = (name) => {
+        document.querySelectorAll("[data-state]").forEach((el) => {
+          el.classList.toggle("hidden", el.dataset.state !== name);
+        });
+      };
+      const setError = (msg) => {
+        document.querySelector("[data-error-msg]").textContent = msg;
+        setState("error");
+      };
+      const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+      const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const dateOf = (path) => {
+        const m = path.match(/(\d{4})-(\d{2})-(\d{2})/);
+        if (!m) return "";
+        return `${parseInt(m[3], 10)} ${MONTHS[parseInt(m[2], 10) - 1]} ${m[1]}`;
+      };
+      const slugTitle = (path) => {
+        const name = (path.split("/").pop() || "").replace(/\.html$/, "").replace(/^\d{4}-\d{2}-\d{2}-?/, "");
+        return name ? name.charAt(0).toUpperCase() + name.slice(1).replace(/-/g, " ") : "Minutes";
+      };
+
+      const nav = document.querySelector("[data-minutes-nav]");
+      const body = document.querySelector("[data-minutes-body]");
+      let docs = [];
+
+      const show = (i) => {
+        body.innerHTML = docs[i].html;
+        nav.querySelectorAll("button").forEach((b, j) => {
+          b.classList.toggle("bg-brand-50", j === i);
+          b.classList.toggle("text-brand-800", j === i);
+          b.classList.toggle("font-semibold", j === i);
+          b.setAttribute("aria-current", j === i ? "page" : "false");
+        });
+        if (history.replaceState) history.replaceState(null, "", "#" + docs[i].id);
+      };
+
+      const refresh = async () => {
+        try {
+          const meR = await fetch(`${WORKER_URL}/api/me`, { credentials: "include" });
+          if (!meR.ok) return setState("signed-out");
+          const me = await meR.json();
+          if (!me?.member?.isLeadership) return setState("forbidden");
+
+          const listR = await fetch(`${WORKER_URL}/api/list/leadership`, { credentials: "include" });
+          if (listR.status === 401) return setState("signed-out");
+          if (listR.status === 403) return setState("forbidden");
+          if (!listR.ok) return setError("Couldn't load the minutes (" + listR.status + ").");
+          const data = await listR.json();
+          const files = ((data && data.files) || [])
+            .filter((f) => /^leadership\/minutes\/.+\.html$/.test(f.path))
+            .sort((a, b) => b.path.localeCompare(a.path)); // newest first by date prefix
+          if (files.length === 0) return setState("empty");
+
+          docs = await Promise.all(files.map(async (f) => {
+            const r = await fetch(`${WORKER_URL}/api/content/${f.path}`, { credentials: "include" });
+            const html = r.ok ? await r.text() : `<p>Couldn't load ${esc(f.path)} (${r.status}).</p>`;
+            const h1 = new DOMParser().parseFromString(html, "text/html").querySelector("h1");
+            return {
+              id: (f.path.split("/").pop() || "").replace(/\.html$/, ""),
+              date: dateOf(f.path),
+              title: (h1 && h1.textContent.trim()) || slugTitle(f.path),
+              html,
+            };
+          }));
+
+          nav.innerHTML = docs.map((d, i) => `
+            <li>
+              <button type="button" data-i="${i}" class="w-full text-left rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                <span class="block text-[11px] uppercase tracking-wider text-slate-500">${esc(d.date)}</span>
+                <span class="block leading-snug">${esc(d.title)}</span>
+              </button>
+            </li>`).join("");
+          nav.addEventListener("click", (e) => {
+            const b = e.target.closest("button[data-i]");
+            if (b) show(parseInt(b.dataset.i, 10));
+          });
+
+          const wanted = location.hash.slice(1);
+          const start = Math.max(0, docs.findIndex((d) => d.id === wanted));
+          setState("ready");
+          show(start);
+        } catch {
+          setError("Network error — try again.");
+        }
+      };
+      refresh();
+    })();
+  </script>
+</BaseLayout>

@@ -846,6 +846,9 @@ const STAGES = [
             : m.admin
               ? ' <span class="ml-1 text-[9px] uppercase tracking-widest font-bold text-brand-700 align-middle">admin</span>'
               : "";
+          const leadBadge = m.leadership
+            ? ' <span class="ml-1 text-[9px] uppercase tracking-widest font-bold text-white bg-accent-500 rounded px-1.5 py-0.5 align-middle">leadership</span>'
+            : "";
           // Controls for super-admin rows stay disabled (so nobody can
           // accidentally demote them in the UI); just no visible label.
           const sa = m.superAdmin ? " disabled title=\"Cannot be modified\"" : "";
@@ -854,7 +857,7 @@ const STAGES = [
               <details data-member-row data-email="${esc(m.email)}">
                 <summary class="cursor-pointer list-none px-4 py-3 flex items-center justify-between gap-3">
                   <div class="min-w-0">
-                    <p class="text-sm font-semibold text-slate-900 truncate">${esc(m.name || m.email)}${badge}</p>
+                    <p class="text-sm font-semibold text-slate-900 truncate">${esc(m.name || m.email)}${badge}${leadBadge}</p>
                     <p class="text-xs text-slate-600 truncate">${[m.affiliation, m.country, m.role].filter(Boolean).map(esc).join(" · ") || esc(m.email)}</p>
                     <p class="text-[11px] font-mono text-slate-500 truncate">${[m.email, ...(m.altEmails || [])].map(esc).join(" · ")}</p>
                   </div>
@@ -863,6 +866,12 @@ const STAGES = [
                       <input type="checkbox" data-admin-email="${esc(m.email)}"${m.admin ? " checked" : ""}${sa}
                              class="rounded border-slate-400 text-brand-700 focus:ring-brand-500" />
                       admin
+                    </label>
+                    <label class="inline-flex items-center gap-1 text-xs text-slate-600 cursor-pointer" onclick="event.stopPropagation()"
+                           title="Can read leadership-meeting minutes. Only a super admin can change this.">
+                      <input type="checkbox" data-leadership-email="${esc(m.email)}"${m.leadership ? " checked" : ""}
+                             class="rounded border-slate-400 text-accent-500 focus:ring-accent-500" />
+                      leadership
                     </label>
                     ${m.hasPassword ? '<span class="text-[10px] text-slate-500 italic" title="Has set a password">pwd</span>' : ""}
                     <select data-action-email="${esc(m.email)}" onclick="event.stopPropagation()"
@@ -942,6 +951,22 @@ const STAGES = [
       memberRows.addEventListener("change", async (e) => {
         const t = e.target;
         if (!(t instanceof HTMLElement)) return;
+
+        // 1a. leadership flag toggle (the worker refuses it for non-super-admins)
+        if (t instanceof HTMLInputElement && t.dataset.leadershipEmail) {
+          const body = { email: t.dataset.leadershipEmail, leadership: t.checked };
+          const r = await fetch(`${WORKER_URL}/api/admin/members`, {
+            method: "POST", credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          if (!r.ok) {
+            const d = await r.json().catch(() => ({}));
+            alert(d.error || "Couldn't update.");
+            loadMembers(); // revert UI
+          }
+          return;
+        }
 
         // 1. admin flag toggle
         if (t instanceof HTMLInputElement && t.dataset.adminEmail) {
