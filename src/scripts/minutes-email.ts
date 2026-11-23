@@ -101,7 +101,6 @@ export function buildEmailDraft(body: Element, opts: EmailDraftOptions): { subje
     "",
     `Please find the minutes of the ${title}${date ? ` (${date})` : ""} on the AsPEN members site:`,
     opts.pageUrl,
-    "The page needs your AsPEN sign-in and has a Word download.",
   ];
   if (acts.length) {
     lines.push("", "ACTIONS");
@@ -111,7 +110,7 @@ export function buildEmailDraft(body: Element, opts: EmailDraftOptions): { subje
     lines.push("", "MINUTES");
     lines.push(...fullText(body));
   }
-  lines.push("", "Please let me know of any corrections.", "", "Best regards,", opts.sender || "");
+  lines.push("", "Please let me know of any corrections.", "", "Best wishes,", opts.sender || "");
 
   return {
     subject: `Minutes: ${title}${date ? `, ${date}` : ""}`,
